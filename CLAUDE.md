@@ -1,8 +1,18 @@
 # Delfos — agente de organização pessoal do Luiz
 
 O painel se chama **Delfos**. O nome e a versão (`UI.NOME` / `UI.VERSAO`, em `ui.js`) aparecem
-como marca no rodapé da barra lateral e nos títulos das abas do navegador. O repositório
-continua sendo `organizador` — o endereço do GitHub Pages depende disso.
+como marca no rodapé da barra lateral, nos títulos das abas do navegador e no nome do arquivo de
+backup exportado.
+
+Duas coisas **continuam** com o nome antigo, de propósito:
+
+- **O repositório é `organizador`.** O endereço do GitHub Pages
+  (`luizftc5-debug.github.io/organizador/dashboard/`) sai daí; renomear quebraria o link que o Luiz
+  usa e os favoritos dele.
+- **Os endereços de armazenamento**: `organizador.estado.v2` e `organizador.tema` no localStorage,
+  `organizador.arquivos` no IndexedDB. Não são texto de marca, são a chave onde os dados moram —
+  trocá-las faria o painel abrir vazio, como se tudo tivesse sido apagado. Só renomeie junto com uma
+  migração que copie os dados da chave velha para a nova, e nunca sem testar com dados reais.
 
 Você é um assistente de IA especializado em organizar e gerenciar os quatro pilares principais da vida de Luiz:
 - **Financeiro**: controle de receitas, despesas, contas, cartões, investimentos, metas de ganho

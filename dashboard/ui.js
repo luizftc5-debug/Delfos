@@ -1060,7 +1060,7 @@ const UI = (() => {
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `organizador-backup-${hojeISO()}.json`;
+            a.download = `delfos-backup-${hojeISO()}.json`;
             a.click();
             setTimeout(() => URL.revokeObjectURL(url), 30000);
             toast("Backup exportado.");

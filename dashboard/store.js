@@ -44,6 +44,25 @@ const Store = (() => {
     "Outros",
   ];
 
+  /**
+   * Cores oferecidas para as abas que o usuário cria. São hex fixos (não
+   * tokens do tema) porque a aba é dado do usuário, não do design system —
+   * por isso foram escolhidas numa faixa de luminosidade média, que enxerga
+   * bem tanto no tema claro quanto no escuro. Nenhuma é vermelha: vermelho
+   * fica reservado para urgência, e nenhuma repete a cor dos quatro pilares
+   * fixos, para as abas continuarem distinguíveis entre si.
+   */
+  const PALETA_PILAR = [
+    { valor: "#d6398a", rotulo: "Rosa" },
+    { valor: "#0d95b5", rotulo: "Ciano" },
+    { valor: "#b57d0a", rotulo: "Âmbar" },
+    { valor: "#5a4fd4", rotulo: "Índigo" },
+    { valor: "#6e8f22", rotulo: "Oliva" },
+    { valor: "#5b6b7d", rotulo: "Ardósia" },
+  ];
+
+  const ICONES_PILAR = ["◆", "●", "■", "▲", "★", "✦", "♥", "⚑", "⌂", "♪", "☾", "✎"];
+
   let estado = null;
   const ouvintes = [];
 
@@ -51,9 +70,25 @@ const Store = (() => {
     return `${prefixo}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
   }
 
+  /**
+   * Texto puro (com quebras de linha) → HTML de parágrafos. Usado na migração
+   * dos resumos que foram escritos antes do editor formatado existir: o que
+   * era markup vira texto visível, não marcação.
+   */
+  function textoParaHTML(texto) {
+    const bruto = String(texto || "");
+    if (!bruto.trim()) return "";
+    const escapar = (s) =>
+      s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+    return bruto
+      .split(/\n{2,}/)
+      .map((par) => `<p>${escapar(par).replace(/\n/g, "<br>")}</p>`)
+      .join("");
+  }
+
   function estadoVazio() {
     return {
-      versao: 6,
+      versao: 7,
       atualizadoEm: new Date().toISOString(),
       perfil: { ...PERFIL_PADRAO },
       financeiro: {
@@ -70,6 +105,7 @@ const Store = (() => {
       projetos: [],
       oportunidades: [],
       pessoal: { compromissos: [] },
+      pilares: [], // abas criadas pelo próprio usuário — ver PALETA_PILAR
     };
   }
 
@@ -218,7 +254,19 @@ const Store = (() => {
 
       // v3 → v4: material e resumo passam a poder carregar arquivos anexados.
       disc.materiais = (disc.materiais || []).map((m) => ({ anexos: [], ...m }));
-      disc.resumos = (disc.resumos || []).map((r) => ({ anexos: [], ...r }));
+
+      // v6 → v7: o resumo passa a ser escrito no editor formatado, então o
+      // conteúdo vira HTML. `conteudoFormato` marca o que já foi convertido —
+      // sem ele a conversão rodaria de novo a cada carga e escaparia o
+      // próprio escape.
+      disc.resumos = (disc.resumos || []).map((r) => {
+        const res = { anexos: [], ...r };
+        if (res.conteudoFormato !== "html") {
+          res.conteudo = textoParaHTML(res.conteudo);
+          res.conteudoFormato = "html";
+        }
+        return res;
+      });
 
       if (disc.proximaAvaliacao) {
         disc.avaliacoes.push({ id: uid("av"), nome: "Avaliação", data: disc.proximaAvaliacao, nota: null, peso: 1 });
@@ -263,7 +311,16 @@ const Store = (() => {
     out.oportunidades = Array.isArray(e.oportunidades) ? e.oportunidades : [];
     // v4 → v5: aba nova para compromissos pessoais (consultas, tarefas, recados).
     out.pessoal = { compromissos: e.pessoal?.compromissos || [] };
-    out.versao = 6;
+
+    // v6 → v7: o usuário pode criar as próprias abas da barra lateral.
+    out.pilares = (Array.isArray(e.pilares) ? e.pilares : []).map((p) => ({
+      icone: ICONES_PILAR[0],
+      cor: PALETA_PILAR[0].valor,
+      ...p,
+      itens: p.itens || [],
+    }));
+
+    out.versao = 7;
     return out;
   }
 
@@ -295,6 +352,9 @@ const Store = (() => {
   return {
     uid,
     CATEGORIAS_PADRAO,
+    PALETA_PILAR,
+    ICONES_PILAR,
+    textoParaHTML,
 
     estado: () => carregar(),
     aoMudar(fn) { ouvintes.push(fn); },
@@ -394,7 +454,7 @@ const Store = (() => {
       const dados = JSON.parse(texto);
       if (!dados || typeof dados !== "object") throw new Error("Arquivo inválido.");
       if (!dados.financeiro && !dados.faculdade && !dados.projetos) {
-        throw new Error("Este arquivo não parece ser um backup do Organizador.");
+        throw new Error("Este arquivo não parece ser um backup do Delfos.");
       }
 
       let anexos = 0;

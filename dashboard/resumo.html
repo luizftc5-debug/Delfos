@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Resumo · Delfos</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="theme.css" />
+</head>
+<body class="editor-body">
+  <div class="editor" id="editor-raiz">
+    <header class="editor-topo">
+      <a class="editor-voltar" id="voltar" href="faculdade.html">← <span id="voltar-nome">Disciplina</span></a>
+      <div class="editor-estado" id="estado">—</div>
+      <div class="editor-acoes">
+        <button class="btn ghost sm" id="btn-excluir" type="button">Excluir</button>
+        <button class="btn primary sm" id="btn-salvar" type="button">Salvar</button>
+      </div>
+    </header>
+
+    <div class="editor-barra" role="toolbar" aria-label="Formatação do texto">
+      <select class="editor-select" id="fonte" aria-label="Fonte"></select>
+      <select class="editor-select estreito" id="tamanho" aria-label="Tamanho da fonte"></select>
+      <span class="editor-sep"></span>
+      <button class="editor-btn" data-cmd="bold" title="Negrito (Ctrl+B)" aria-label="Negrito" type="button"><b>N</b></button>
+      <button class="editor-btn" data-cmd="italic" title="Itálico (Ctrl+I)" aria-label="Itálico" type="button"><i>I</i></button>
+      <button class="editor-btn" data-cmd="underline" title="Sublinhado (Ctrl+U)" aria-label="Sublinhado" type="button"><u>S</u></button>
+      <span class="editor-sep"></span>
+      <button class="editor-btn largo" id="btn-limpar" title="Remover formatação da seleção" type="button">Limpar estilo</button>
+    </div>
+
+    <div class="editor-folha">
+      <input class="editor-titulo" id="titulo" placeholder="Título do resumo" aria-label="Título do resumo" />
+      <div class="editor-area" id="corpo" contenteditable="true" role="textbox" aria-multiline="true"
+           aria-label="Corpo do resumo" spellcheck="true"></div>
+    </div>
+
+    <footer class="editor-rodape">
+      <span id="contagem">0 palavras</span>
+      <span class="marca">Delfos</span>
+    </footer>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="arquivos.js"></script>
+  <script src="store.js"></script>
+  <script src="ui.js"></script>
+  <script src="resumo.js"></script>
+</body>
+</html>

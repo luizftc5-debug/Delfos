@@ -1,7 +1,8 @@
-# Organizador Pessoal
+# Delfos
 
 Painel para acompanhar quatro frentes ao mesmo tempo — **Financeiro**, **Faculdade**, **Projetos** e
-**Pessoal** — com alerta automático quando prazos de áreas diferentes caem na mesma semana.
+**Pessoal** — com alerta automático quando prazos de áreas diferentes caem na mesma semana. Além
+dessas quatro, você pode criar **abas suas**, com nome, ícone e cor próprios.
 
 Aplicação estática: HTML, CSS e JavaScript puros, sem instalação e sem servidor de dados.
 
@@ -33,6 +34,7 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 | **Faculdade** | Disciplinas, prazos e entregas. Cada disciplina abre em **página própria**, com avaliações e notas, prazos, materiais e resumos — em materiais e resumos dá para **anexar documentos** (PDF, slides, fotos) ou **importar do Google Drive** |
 | **Projetos** | Só iniciativas pessoais que geram renda. Cada projeto abre em **página própria**, com ficha completa, etapas, recebimentos, custos, documentos e anotações |
 | **Pessoal** | Consultas, tarefas e recados que não são financeiro, faculdade nem projeto — ex.: consulta médica, levar o carro à revisão |
+| **Suas abas** | Abas que você mesmo cria, com nome, ícone e cor — ex.: Academia, Leituras, Igreja |
 
 > Trabalhos da faculdade e o TCC ficam em **Faculdade**, não em Projetos.
 
@@ -89,11 +91,37 @@ configuração** — tema e backup ficam ali dentro, junto com sua ficha.
 O cartão também mostra quantas disciplinas e registros você tem, quantos compromissos há nesta
 semana e quanto os documentos anexados ocupam.
 
+### Escrever um resumo
+
+Em **Resumos e anotações**, dentro da página de uma disciplina, o botão **+ Resumo** abre uma página
+inteira só para escrever — sem barra lateral, sem cartões, só o texto.
+
+Na barra de cima dá para trocar a **fonte** e o **tamanho**, e usar **negrito**, **itálico** e
+**sublinhado**. Aplicam-se ao trecho que você selecionou; sem seleção, valem para o que você digitar
+em seguida. **Limpar estilo** desfaz a formatação do trecho selecionado.
+
+O texto é salvo sozinho alguns segundos depois que você para de digitar — o indicador no alto diz se
+há algo não salvo. `Ctrl + S` (ou `Cmd + S`) salva na hora.
+
+> Os documentos anexados a um resumo ficam no botão **Documentos**, na página da disciplina — assim
+> a tela de escrita não tem mais nada além do texto.
+
+### Criar suas próprias abas
+
+O botão **＋ Nova aba**, embaixo da lista da barra lateral, cria uma aba sua: escolha nome, ícone e
+cor. Ela ganha página própria, onde você cadastra itens com data, tipo e local.
+
+O que você cadastrar nela **entra na agenda dos próximos 30 dias e nos alertas de semana cheia** da
+visão geral, junto com os prazos da faculdade, os deadlines dos projetos e os compromissos pessoais.
+
+Na página da aba, em **Ajustes da aba**, dá para renomear, trocar ícone e cor, ou excluir. Renomear
+não mexe no que já está cadastrado; excluir apaga os itens junto.
+
 ### Anexar documentos nas disciplinas
 
-Em **Materiais** e em **Resumos**, dentro da página de uma disciplina, o formulário tem uma área
-pontilhada: clique nela ou arraste os arquivos para cima. Vale PDF, slides, fotos do quadro,
-planilhas — até 25 MB por arquivo.
+Em **Materiais** (no formulário) e em **Resumos** (botão **Documentos**), dentro da página de uma
+disciplina, aparece uma área pontilhada: clique nela ou arraste os arquivos para cima. Vale PDF,
+slides, fotos do quadro, planilhas — até 25 MB por arquivo.
 
 Depois de salvo, o documento aparece como um botão na lista. Clicar abre o PDF ou a imagem em outra
 aba; os demais formatos são baixados.
@@ -160,6 +188,8 @@ dashboard/
   projetos.html        projetos.js       projetos de renda e oportunidades
   projeto.html         projeto.js        página de um projeto
   pessoal.html         pessoal.js        compromissos pessoais
+  pilar.html           pilar.js          página de uma aba criada por você
+  resumo.html          resumo.js         editor de texto dos resumos
   store.js                               dados: localStorage, CRUD e backup
   arquivos.js                            anexos: IndexedDB (PDF, slides, fotos)
   financas.js                            saldo por conta, fatura por cartão, investimentos

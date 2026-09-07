@@ -4,6 +4,10 @@
    =========================================================================== */
 
 const UI = (() => {
+  /** Nome e versão do painel — aparecem na marca do rodapé da barra lateral. */
+  const NOME = "Delfos";
+  const VERSAO = "1.1";
+
   /* ------------------------------ Formatos ------------------------------- */
 
   const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
@@ -44,6 +48,38 @@ const UI = (() => {
       );
     },
   };
+
+  /* ------------------------ HTML dos resumos ------------------------------ */
+
+  // Só sobrevive a marcação que o editor de resumos sabe produzir. O texto é
+  // escrito pelo próprio usuário, mas um backup importado pode trazer
+  // qualquer coisa — e resumo é o único lugar do painel que exibe HTML em vez
+  // de texto escapado.
+  const TAGS_OK = new Set(["P", "BR", "DIV", "SPAN", "B", "STRONG", "I", "EM", "U",
+    "UL", "OL", "LI", "H1", "H2", "H3", "BLOCKQUOTE", "FONT"]);
+  const ESTILOS_OK = new Set(["font-family", "font-size", "font-weight", "font-style", "text-decoration"]);
+  const ATRIBUTOS_OK = new Set(["face", "size"]); // resquícios de <font> do execCommand
+
+  function htmlSeguro(html) {
+    const molde = document.createElement("div");
+    molde.innerHTML = String(html || "");
+    // querySelectorAll devolve lista estática: os filhos de uma tag removida
+    // já estão nela e continuam sendo visitados depois de subirem de nível.
+    molde.querySelectorAll("*").forEach((el) => {
+      if (!TAGS_OK.has(el.tagName)) return el.replaceWith(...el.childNodes);
+      [...el.attributes].forEach((a) => {
+        if (ATRIBUTOS_OK.has(a.name)) return;
+        if (a.name !== "style") return el.removeAttribute(a.name);
+        const mantidos = a.value
+          .split(";")
+          .map((d) => d.trim())
+          .filter((d) => ESTILOS_OK.has(d.split(":")[0]?.trim().toLowerCase()));
+        if (mantidos.length) el.setAttribute("style", mantidos.join("; "));
+        else el.removeAttribute("style");
+      });
+    });
+    return molde.innerHTML;
+  }
 
   /* -------------------------------- Datas -------------------------------- */
 
@@ -89,7 +125,19 @@ const UI = (() => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
 
-  /* -------------------- Compromissos unificados (3 pilares) --------------- */
+  /* ------------- Compromissos unificados (pilares fixos + criados) --------- */
+
+  // Cor e rótulo de cada área fixa. Cada compromisso carrega os seus, para
+  // quem desenha a agenda não precisar saber de onde o item veio — é isso que
+  // deixa as abas criadas pelo usuário entrarem junto com os quatro pilares.
+  const AREAS = {
+    faculdade: { rotulo: "faculdade", cor: "var(--s-faculdade)" },
+    projetos: { rotulo: "projetos", cor: "var(--s-projetos)" },
+    financeiro: { rotulo: "financeiro", cor: "var(--s-financeiro)" },
+    pessoal: { rotulo: "pessoal", cor: "var(--s-pessoal)" },
+  };
+
+  const daArea = (area) => ({ area, areaRotulo: AREAS[area].rotulo, cor: AREAS[area].cor });
 
   function compromissos({ incluirConcluidos = false } = {}) {
     const e = Store.estado();
@@ -97,7 +145,7 @@ const UI = (() => {
 
     e.faculdade.prazos.forEach((p) => {
       if (!p.data || (!incluirConcluidos && p.concluido)) return;
-      itens.push({ id: p.id, titulo: p.descricao, data: p.data, area: "faculdade", tipo: p.tipo || "entrega", concluido: !!p.concluido });
+      itens.push({ id: p.id, titulo: p.descricao, data: p.data, ...daArea("faculdade"), tipo: p.tipo || "entrega", concluido: !!p.concluido });
     });
 
     // Avaliações agendadas de cada disciplina. Uma avaliação com nota lançada
@@ -109,26 +157,38 @@ const UI = (() => {
         if (feita && !incluirConcluidos) return;
         itens.push({
           id: a.id, titulo: `${a.nome || "Avaliação"} — ${d.nome}`, data: a.data,
-          area: "faculdade", tipo: "prova", concluido: feita, disciplinaId: d.id,
+          ...daArea("faculdade"), tipo: "prova", concluido: feita, disciplinaId: d.id,
         });
       });
     });
 
     e.projetos.forEach((p) => {
       if (!p.deadline || (!incluirConcluidos && p.status === "concluído")) return;
-      itens.push({ id: p.id, titulo: p.nome, data: p.deadline, area: "projetos", tipo: "projeto", concluido: p.status === "concluído" });
+      itens.push({ id: p.id, titulo: p.nome, data: p.deadline, ...daArea("projetos"), tipo: "projeto", concluido: p.status === "concluído" });
     });
 
     e.financeiro.metas.forEach((m) => {
       if (!m.prazo) return;
       const pronta = m.valorAlvo > 0 && m.valorAtual >= m.valorAlvo;
       if (pronta && !incluirConcluidos) return;
-      itens.push({ id: m.id, titulo: `Meta — ${m.descricao}`, data: m.prazo, area: "financeiro", tipo: "meta", concluido: pronta });
+      itens.push({ id: m.id, titulo: `Meta — ${m.descricao}`, data: m.prazo, ...daArea("financeiro"), tipo: "meta", concluido: pronta });
     });
 
     (e.pessoal?.compromissos || []).forEach((c) => {
       if (!c.data || (!incluirConcluidos && c.concluido)) return;
-      itens.push({ id: c.id, titulo: c.descricao, data: c.data, area: "pessoal", tipo: c.tipo || "compromisso", concluido: !!c.concluido });
+      itens.push({ id: c.id, titulo: c.descricao, data: c.data, ...daArea("pessoal"), tipo: c.tipo || "compromisso", concluido: !!c.concluido });
+    });
+
+    // Abas criadas pelo usuário: mesma forma de item, cor e rótulo próprios.
+    (e.pilares || []).forEach((pil) => {
+      (pil.itens || []).forEach((it) => {
+        if (!it.data || (!incluirConcluidos && it.concluido)) return;
+        itens.push({
+          id: it.id, titulo: it.descricao, data: it.data,
+          area: `pilar:${pil.id}`, areaRotulo: pil.nome, cor: pil.cor,
+          tipo: it.tipo || "compromisso", concluido: !!it.concluido,
+        });
+      });
     });
 
     return itens.sort((a, b) => a.data.localeCompare(b.data));
@@ -172,19 +232,36 @@ const UI = (() => {
     disciplina: "faculdade", projeto: "projetos",
   };
 
+  /** As abas fixas mais as que o usuário criou, na ordem em que aparecem. */
+  function paginas() {
+    const criadas = (Store.estado().pilares || []).map((p) => ({
+      id: `pilar:${p.id}`,
+      rotulo: p.nome,
+      href: `pilar.html?id=${encodeURIComponent(p.id)}`,
+      cor: "",
+      corHex: p.cor,
+      icone: p.icone,
+    }));
+    return [...PAGINAS, ...criadas];
+  }
+
   function contagens() {
     const e = Store.estado();
     const urgentes = compromissos().filter((i) => {
       const d = diasAte(i.data);
       return d !== null && d <= 7;
     });
-    return {
+    const porArea = (area) => urgentes.filter((i) => i.area === area).length;
+
+    const c = {
       home: urgentes.length,
       financeiro: e.financeiro.transacoes.filter((t) => t.status === "pendente").length,
-      faculdade: urgentes.filter((i) => i.area === "faculdade").length,
-      projetos: urgentes.filter((i) => i.area === "projetos").length,
-      pessoal: urgentes.filter((i) => i.area === "pessoal").length,
+      faculdade: porArea("faculdade"),
+      projetos: porArea("projetos"),
+      pessoal: porArea("pessoal"),
     };
+    (e.pilares || []).forEach((p) => { c[`pilar:${p.id}`] = porArea(`pilar:${p.id}`); });
+    return c;
   }
 
   function iniciais(nome) {
@@ -245,15 +322,24 @@ const UI = (() => {
     if (!el) return;
     const c = contagens();
     const perfil = Store.estado().perfil || {};
-    const grupoAtivo = GRUPO_DE[ativo] || ativo;
+    // Uma aba criada pelo usuário se acende por id próprio; as fixas, pelo
+    // grupo a que a página de detalhe pertence.
+    const grupoAtivo = ativo === "pilar" ? `pilar:${idAtivo}` : GRUPO_DE[ativo] || ativo;
 
-    const itens = PAGINAS.map((p) => {
+    const itens = paginas().map((p) => {
       const aberto = p.id === grupoAtivo;
       const subs = aberto ? subItens(p.id, ativo, idAtivo) : [];
+      // As abas criadas guardam um hex próprio, então a cor vai inline; as
+      // fixas usam a classe do pilar, que segue os tokens do tema.
+      const estiloIcone = p.corHex
+        ? aberto
+          ? ` style="background:${p.corHex}; color:#fff;"`
+          : ` style="background:color-mix(in srgb, ${p.corHex} 15%, transparent); color:${p.corHex};"`
+        : "";
       return `
         <a class="nav-item ${aberto ? "active" : ""}" href="${p.href}">
-          <span class="nav-icon ${p.cor}">${p.icone}</span>
-          <span class="nav-label">${p.rotulo}</span>
+          <span class="nav-icon ${p.cor}"${estiloIcone}>${fmt.escape(p.icone)}</span>
+          <span class="nav-label">${fmt.escape(p.rotulo)}</span>
           ${c[p.id] ? `<span class="nav-count ${p.id === "home" ? "alert" : ""}">${c[p.id]}</span>` : ""}
         </a>
         ${subs.length ? `<div class="nav-sub">${subs
@@ -276,14 +362,35 @@ const UI = (() => {
       </button>
       <div class="nav-eyebrow">Painel</div>
       <nav class="nav">${itens}</nav>
+      <button class="nav-nova" id="btn-nova-aba" type="button">＋ Nova aba</button>
       <div class="sidebar-foot">
-        <button class="sidebar-hint" id="btn-ajustes" type="button">
-          Tema, perfil e backup ficam no seu nome, lá em cima ↑
-        </button>
+        <div class="marca">${fmt.escape(NOME)} <span>v${fmt.escape(VERSAO)}</span></div>
       </div>`;
 
     document.getElementById("btn-perfil").addEventListener("click", abrirPerfil);
-    document.getElementById("btn-ajustes").addEventListener("click", abrirPerfil);
+    document.getElementById("btn-nova-aba").addEventListener("click", novaAba);
+  }
+
+  /* --------------------- Abas criadas pelo usuário ------------------------- */
+
+  const camposPilar = () => [
+    { nome: "nome", rotulo: "Nome da aba", tipo: "text", obrigatorio: true, placeholder: "Ex.: Academia, Leituras, Igreja" },
+    { nome: "icone", rotulo: "Ícone", tipo: "select", opcoes: Store.ICONES_PILAR },
+    { nome: "cor", rotulo: "Cor", tipo: "select", opcoes: Store.PALETA_PILAR },
+    { nome: "descricao", rotulo: "Do que se trata", tipo: "text", placeholder: "Aparece como subtítulo da página" },
+  ];
+
+  /** Cria uma aba nova e já abre a página dela. */
+  async function novaAba() {
+    const v = await formulario({
+      titulo: "Nova aba",
+      descricao: "Uma aba sua na barra lateral, com página própria. O que você cadastrar nela entra na agenda da visão geral junto com os outros pilares.",
+      campos: camposPilar(),
+      rotuloConfirmar: "Criar aba",
+    });
+    if (!v) return;
+    const novo = Store.inserir("pilares", { ...v, itens: [] });
+    location.href = `pilar.html?id=${encodeURIComponent(novo.id)}`;
   }
 
   /* ------------------------------- Perfil ---------------------------------- */
@@ -1105,10 +1212,12 @@ const UI = (() => {
   }
 
   return {
-    fmt, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
+    NOME, VERSAO,
+    fmt, htmlSeguro, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
     compromissos, conflitos, contagens, mediaDisciplina, proximaAvaliacao, resumoProjeto,
     iniciarPagina, montarLayout, tema, toast, formulario, confirmar, abrirModal,
     abrirBackup, abrirPerfil, avatarHTML, iniciais, vazio, barras, colunasMensais, medidor,
+    novaAba, camposPilar,
   };
 })();
 

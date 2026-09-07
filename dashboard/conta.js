@@ -30,7 +30,7 @@
 
   function render() {
     recarregar();
-    document.title = `${item.nome} · Organizador`;
+    document.title = `${item.nome} · ${UI.NOME}`;
     document.getElementById("etiqueta").textContent = tipo === "cartao" ? "Cartão de crédito" : "Conta";
     document.getElementById("swatch-categorias").className = `swatch ${tipo === "cartao" ? "projetos" : "financeiro"}`;
     document.getElementById("titulo").textContent = item.nome;

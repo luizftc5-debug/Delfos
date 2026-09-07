@@ -5,6 +5,11 @@
 
   const { fmt } = UI;
 
+  // Cada compromisso já traz a cor e o rótulo da sua área, então o selo é o
+  // mesmo para os pilares fixos e para as abas que o usuário criou.
+  const seloArea = (i) =>
+    `<span class="badge" style="color:${i.cor}; background:color-mix(in srgb, ${i.cor} 14%, transparent);">${fmt.escape(i.areaRotulo)}</span>`;
+
   /* --------------------------- Cálculos de apoio --------------------------- */
 
   function totaisDoMes(chave) {
@@ -115,7 +120,7 @@
     const outros = proximos.length - 1;
     box.innerHTML = `
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-        <span class="badge ${p.area}">${p.area}</span>
+        ${seloArea(p)}
         <span class="badge ${u.nivel}">${u.rotulo}</span>
       </div>
       <div class="stat-value" style="font-size:19px;">${fmt.escape(p.titulo)}</div>
@@ -160,10 +165,22 @@
       })(),
     ];
 
+    // As abas criadas pelo usuário entram na mesma grade, com a cor delas.
+    (e.pilares || []).forEach((p) => {
+      const abertos = (p.itens || []).filter((i) => !i.concluido);
+      const naSemana = urgentes(`pilar:${p.id}`);
+      cartoes.push({
+        href: `pilar.html?id=${encodeURIComponent(p.id)}`, cor: "", corHex: p.cor,
+        titulo: p.nome,
+        valor: `${abertos.length}`,
+        sub: `${abertos.length === 1 ? "item em aberto" : "itens em aberto"} · ${naSemana} nesta semana`,
+      });
+    });
+
     grid.innerHTML = cartoes
       .map((c) => `
-        <a class="card pillar ${c.cor}" href="${c.href}">
-          <div class="stat-label">${c.titulo}</div>
+        <a class="card pillar ${c.cor}" href="${c.href}"${c.corHex ? ` style="--tint:${c.corHex}"` : ""}>
+          <div class="stat-label">${fmt.escape(c.titulo)}</div>
           <div class="stat-value num">${c.valor}</div>
           <div class="stat-sub">${c.sub}</div>
           <div class="arrow">Ver detalhes →</div>
@@ -199,10 +216,10 @@
       const u = UI.urgencia(i.data);
       const li = document.createElement("li");
       li.innerHTML = `
-        <span class="swatch ${i.area}"></span>
+        <span class="swatch" style="background:${i.cor}"></span>
         <span class="grow">
           <span class="title">${fmt.escape(i.titulo)}</span>
-          <span class="meta">${i.tipo} · ${fmt.data(i.data)}</span>
+          <span class="meta">${fmt.escape(i.tipo)} · ${fmt.data(i.data)}</span>
         </span>
         <span class="badge ${u.nivel}">${u.rotulo}</span>`;
       ul.appendChild(li);

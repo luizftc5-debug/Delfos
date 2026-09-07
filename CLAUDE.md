@@ -1,4 +1,8 @@
-# Agente de Organização Pessoal - Luiz
+# Delfos — agente de organização pessoal do Luiz
+
+O painel se chama **Delfos**. O nome e a versão (`UI.NOME` / `UI.VERSAO`, em `ui.js`) aparecem
+como marca no rodapé da barra lateral e nos títulos das abas do navegador. O repositório
+continua sendo `organizador` — o endereço do GitHub Pages depende disso.
 
 Você é um assistente de IA especializado em organizar e gerenciar os quatro pilares principais da vida de Luiz:
 - **Financeiro**: controle de receitas, despesas, contas, cartões, investimentos, metas de ganho
@@ -27,9 +31,11 @@ Aplicação estática multi-página em `dashboard/`, sem build e sem dependênci
 | `investimentos.html` + `investimentos.js` | Carteira de investimentos: aplicado, valor atual, rentabilidade por tipo |
 | `faculdade.html` + `faculdade.js` | Lista de disciplinas e prazos gerais |
 | `disciplina.html` + `disciplina.js` | Página de uma disciplina: avaliações, prazos, materiais e resumos, com importação do Drive |
+| `resumo.html` + `resumo.js` | Editor de texto de um resumo: página inteira, sem barra lateral |
 | `projetos.html` + `projetos.js` | Projetos pessoais que geram renda + oportunidades |
 | `projeto.html` + `projeto.js` | Página de um projeto: ficha, etapas, recebimentos, custos, documentos e anotações |
 | `pessoal.html` + `pessoal.js` | Compromissos pessoais: consultas, tarefas, recados |
+| `pilar.html` + `pilar.js` | Página de uma aba criada pelo usuário |
 | `store.js` | Camada de dados: localStorage + CRUD + backup em JSON |
 | `arquivos.js` | Anexos (PDF, slides, fotos) no IndexedDB + export/import para o backup |
 | `financas.js` | Cálculos derivados: saldo por conta, ciclo e fatura de cartão, balanço, investimentos |
@@ -96,6 +102,48 @@ Cada disciplina tem `avaliacoes`, `materiais` e `resumos` como listas dentro del
 `Store.subInserir/subAtualizar/subRemover`. A média é ponderada pelo `peso` das avaliações com nota
 lançada (`UI.mediaDisciplina`). Prazos apontam para a disciplina por `disciplinaId`.
 
+### Editor de resumos
+
+O texto de um resumo não é escrito em modal: `resumo.html?disciplina=<id>[&id=<resumo>]` abre uma
+página inteira, **sem barra lateral**, só barra de formatação e folha. Sem `id` na URL o resumo é
+novo; ao salvar pela primeira vez a URL ganha o id por `history.replaceState`, então salvar de novo
+edita em vez de criar outro.
+
+A formatação sai de `document.execCommand` — a única via sem dependência externa. Dois detalhes que
+não são gosto, são necessidade:
+
+- **Tamanho da fonte**: o `execCommand` só aceita 1–7, nunca pixels. O caminho é aplicar o tamanho 7
+  e trocar os `<font size="7">` resultantes por `<span style="font-size:Npx">`.
+- **Botões em `mousedown`, não `click`**: o clique tiraria o cursor do texto antes de o comando
+  rodar, e a seleção se perderia.
+
+Colar é sempre como texto puro: estilo de outra página seria descartado depois pelo sanitizador, e
+a tela mentiria até o próximo carregamento.
+
+`resumo.conteudo` passou a ser **HTML** na v7, com `conteudoFormato: "html"` marcando o que já foi
+convertido — sem essa marca a migração rodaria de novo a cada carga e escaparia o próprio escape.
+Quem exibe o resumo passa por `UI.htmlSeguro()`, que só deixa passar a marcação que o editor sabe
+produzir: é o único lugar do painel que renderiza HTML em vez de texto escapado, e um backup
+importado pode trazer qualquer coisa.
+
+Os anexos do resumo ficaram **fora** do editor (botão "Documentos" na disciplina), para a tela de
+escrita não ter mais nada além do texto.
+
+### Abas criadas pelo usuário
+
+`estado.pilares` guarda abas que o próprio Luiz cria pelo botão "＋ Nova aba" da barra lateral. Cada
+uma tem `nome`, `icone`, `cor`, `descricao` e a lista `itens` — mesma forma dos compromissos da aba
+Pessoal. A página é `pilar.html?id=`, genérica.
+
+A cor é um hex de `Store.PALETA_PILAR`, não um token do tema: aba é dado do usuário, não design
+system. Por isso a paleta fica numa faixa de luminosidade média (lê bem nos dois temas), nenhuma
+cor é vermelha (reservado para urgência) e nenhuma repete os quatro pilares fixos.
+
+Como a cor vem em hex, ela entra **inline**: `--tint` na página (que `.card.tinted` e `.pillar` já
+leem), `style` no ícone da barra e no selo da agenda. Para isso funcionar sem cada renderizador
+saber de onde o item veio, todo item de `UI.compromissos()` carrega `areaRotulo` e `cor` — inclusive
+os dos quatro pilares fixos, que usam `var(--s-*)`.
+
 ### Perfil do usuário — e os ajustes do painel
 
 `estado.perfil` guarda identidade (nome, `dataNascimento`, telefone, e-mail, cidade, `foto`), vida
@@ -106,9 +154,9 @@ mostra as iniciais do nome. A idade sai de `UI.idade(dataNascimento)`, nunca é 
 
 O cartão de perfil (`UI.abrirPerfil`) abre pelo botão do nome na barra lateral e é **o único lugar
 de configuração do painel**: ficha de dados, troca de tema e acesso ao backup ficam todos ali. O
-rodapé da barra lateral não guarda mais botões, só um lembrete de onde eles foram parar. Depois de
-gravar, `abrirPerfil` chama `montarLayout` de novo para a barra refletir a mudança na hora — por
-isso `ui.js` guarda a página ativa em `paginaAtiva`/`opcoesAtivas`.
+rodapé da barra lateral não guarda botões, só a marca "Delfos" com a versão. Depois de gravar,
+`abrirPerfil` chama `montarLayout` de novo para a barra refletir a mudança na hora — por isso
+`ui.js` guarda a página ativa em `paginaAtiva`/`opcoesAtivas`.
 
 Formulários longos (o de perfil, o do projeto) usam o tipo de campo `secao`, que só desenha um
 título divisor e não guarda valor, e a opção `largo: true` para abrir o modal mais largo.

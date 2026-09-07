@@ -35,7 +35,7 @@
 
   function render() {
     recarregar();
-    document.title = `${disciplina.nome} · Organizador`;
+    document.title = `${disciplina.nome} · ${UI.NOME}`;
     document.getElementById("titulo").textContent = disciplina.nome;
     document.getElementById("etiqueta").textContent = `Disciplina ${disciplina.status || "ativa"}`;
     document.getElementById("subtitulo").innerHTML = disciplina.professor
@@ -284,14 +284,16 @@
             <div class="card-note" style="margin-top:2px;">${r.atualizadoEm ? `atualizado em ${fmt.data(r.atualizadoEm)}` : ""}</div>
           </div>
           <span class="row-actions" style="opacity:1;">
-            <button class="btn ghost sm" data-editar>Editar</button>
+            <button class="btn ghost sm" data-editar>Abrir</button>
+            <button class="btn ghost sm" data-anexos>Documentos</button>
             <button class="btn ghost sm" data-excluir>Excluir</button>
           </span>
         </div>
-        <div class="resumo-texto">${fmt.escape(r.conteudo || "")}</div>
+        <div class="resumo-texto rico">${UI.htmlSeguro(r.conteudo || "")}</div>
         ${(r.anexos || []).length ? `<div class="anexos" style="margin-top:14px;">${r.anexos.map(anexoHTML).join("")}</div>` : ""}`;
       ligarAnexos(card, r.anexos || []);
-      card.querySelector("[data-editar]").addEventListener("click", () => editarResumo(r));
+      card.querySelector("[data-editar]").addEventListener("click", () => abrirResumo(r));
+      card.querySelector("[data-anexos]").addEventListener("click", () => editarAnexosResumo(r));
       card.querySelector("[data-excluir]").addEventListener("click", () => excluirResumo(r));
       grid.appendChild(card);
     });
@@ -320,11 +322,31 @@
     { nome: "anexos", rotulo: "Documentos", tipo: "anexos", dica: "PDF, slides, fotos — ficam guardados neste navegador e entram no backup." },
   ];
 
-  const camposResumo = () => [
-    { nome: "titulo", rotulo: "Título", tipo: "text", obrigatorio: true, placeholder: "Ex.: Insuficiência cardíaca" },
-    { nome: "conteudo", rotulo: "Resumo", tipo: "textarea", obrigatorio: true },
-    { nome: "anexos", rotulo: "Documentos", tipo: "anexos", dica: "Anexe a foto do quadro, o PDF do artigo, o mapa mental." },
-  ];
+  /* O texto do resumo é escrito em resumo.html, uma página só dele. Aqui
+     ficam apenas os documentos anexados, que ficariam de fora da tela limpa
+     do editor. */
+
+  const abrirResumo = (r) =>
+    (location.href = `resumo.html?disciplina=${encodeURIComponent(id)}&id=${encodeURIComponent(r.id)}`);
+
+  const novoResumo = () =>
+    (location.href = `resumo.html?disciplina=${encodeURIComponent(id)}`);
+
+  async function editarAnexosResumo(r) {
+    const v = await UI.formulario({
+      titulo: `Documentos de "${r.titulo}"`,
+      descricao: "A foto do quadro, o PDF do artigo, o mapa mental.",
+      campos: [{
+        nome: "anexos", rotulo: "Documentos", tipo: "anexos",
+        dica: "Ficam guardados neste navegador e entram no backup.",
+      }],
+      valores: r,
+    });
+    if (!v) return;
+    Store.subAtualizar(CAMINHO, id, "resumos", r.id, v);
+    UI.toast("Documentos atualizados.");
+    render();
+  }
 
   async function editarDisciplina() {
     const v = await UI.formulario({ titulo: "Editar disciplina", campos: camposDisciplina(), valores: disciplina });
@@ -379,22 +401,6 @@
     if (!v) return;
     Store.subAtualizar(CAMINHO, id, "materiais", m.id, v);
     UI.toast("Material atualizado.");
-    render();
-  }
-
-  async function novoResumo() {
-    const v = await UI.formulario({ titulo: "Novo resumo", campos: camposResumo(), rotuloConfirmar: "Salvar resumo" });
-    if (!v) return;
-    Store.subInserir(CAMINHO, id, "resumos", { ...v, atualizadoEm: UI.hojeISO() });
-    UI.toast("Resumo salvo.");
-    render();
-  }
-
-  async function editarResumo(r) {
-    const v = await UI.formulario({ titulo: "Editar resumo", campos: camposResumo(), valores: r, rotuloConfirmar: "Salvar" });
-    if (!v) return;
-    Store.subAtualizar(CAMINHO, id, "resumos", r.id, { ...v, atualizadoEm: UI.hojeISO() });
-    UI.toast("Resumo atualizado.");
     render();
   }
 
@@ -510,7 +516,15 @@
           btnResumo.textContent = "Importando…";
           try {
             const texto = await driveExportarTexto(f.id);
-            Store.subInserir(CAMINHO, id, "resumos", { titulo: f.name, conteudo: texto, atualizadoEm: UI.hojeISO(), anexos: [] });
+            // O Docs vem como texto puro; o resumo guarda HTML, então as
+            // quebras de linha viram parágrafos antes de entrar.
+            Store.subInserir(CAMINHO, id, "resumos", {
+              titulo: f.name,
+              conteudo: Store.textoParaHTML(texto),
+              conteudoFormato: "html",
+              atualizadoEm: UI.hojeISO(),
+              anexos: [],
+            });
             UI.toast("Resumo importado do Drive.");
             fechar(null);
             render();

@@ -422,29 +422,43 @@ table.sheet th,
 .nav-subitem:hover { background: var(--nav-hover); color: var(--nav-ink); }
 .nav-subitem.active { color: var(--nav-ink); font-weight: 640; background: var(--nav-hover); }
 
+/* Criar uma aba própria — fecha a lista de abas, no mesmo recuo delas. */
+.nav-nova {
+  margin-top: 6px;
+  width: 100%;
+  border: 1px dashed var(--nav-border);
+  background: none;
+  padding: 7px 10px;
+  border-radius: var(--r-md);
+  text-align: left;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 540;
+  color: var(--nav-ink-2);
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s, border-color 0.14s;
+}
+
+.nav-nova:hover { background: var(--nav-hover); color: var(--nav-ink); border-color: var(--ink-muted); }
+
 .sidebar-foot {
   margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid var(--nav-border);
 }
 
-/* Lembrete de onde ficam os ajustes — o rodapé não guarda mais botões. */
-.sidebar-hint {
-  width: 100%;
-  border: none;
-  background: none;
-  padding: 8px 10px;
-  border-radius: var(--r-md);
-  text-align: left;
-  font: inherit;
-  font-size: 11.5px;
-  line-height: 1.45;
+/* Assinatura do painel: nome e versão, discretos. */
+.marca {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
   color: var(--nav-ink-2);
-  cursor: pointer;
-  transition: background 0.14s, color 0.14s;
+  padding: 0 10px;
 }
 
-.sidebar-hint:hover { background: var(--nav-hover); color: var(--nav-ink); }
+.marca span { opacity: 0.6; font-weight: 500; letter-spacing: 0.06em; }
 
 /* -------------------------------- Main ---------------------------------- */
 
@@ -1193,6 +1207,168 @@ a.anexo:hover, button.anexo:hover { border-color: var(--border-strong); backgrou
   overflow-y: auto;
 }
 
+/* Prévia do resumo escrito no editor: já vem em HTML, então as quebras são
+   marcação e não espaço em branco preservado. */
+.resumo-texto.rico { white-space: normal; }
+.resumo-texto.rico p { margin: 0 0 0.7em; }
+.resumo-texto.rico p:last-child { margin-bottom: 0; }
+.resumo-texto.rico h1, .resumo-texto.rico h2, .resumo-texto.rico h3 { font-size: 1.15em; margin: 0.8em 0 0.4em; color: var(--ink); }
+.resumo-texto.rico ul, .resumo-texto.rico ol { margin: 0 0 0.7em; padding-left: 1.4em; }
+.resumo-texto.rico blockquote { margin: 0 0 0.7em; padding-left: 12px; border-left: 2px solid var(--border-strong); }
+
+/* ============================ Editor de resumo ===========================
+   Página inteira, sem barra lateral: o texto é a única coisa em cena. */
+
+/* A página inteira é a folha: fundo de cartão, sem moldura em volta do texto. */
+.editor-body { background: var(--surface); }
+
+.editor { min-height: 100vh; display: flex; flex-direction: column; }
+
+.editor-topo {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.editor-voltar {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-decoration: none;
+  max-width: 40vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.12s;
+}
+.editor-voltar:hover { color: var(--ink); }
+
+.editor-estado {
+  flex: 1;
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+.editor-estado.sujo { color: var(--warning-text); }
+
+.editor-acoes { display: flex; gap: 6px; align-items: center; }
+
+/* Barra de formatação — encostada no topo, sem virar painel. */
+.editor-barra {
+  position: sticky;
+  top: 47px;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  padding: 7px 20px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.editor-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  padding: 5px 8px;
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  font-family: var(--font);
+  cursor: pointer;
+}
+.editor-select.estreito { width: 66px; }
+.editor-select:focus { outline: none; border-color: var(--ink); }
+
+.editor-btn {
+  min-width: 30px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-2);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.editor-btn.largo { font-size: 11.5px; font-weight: 600; }
+.editor-btn:hover { background: var(--surface-3); color: var(--ink); }
+.editor-btn[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); }
+
+.editor-sep { width: 1px; height: 18px; background: var(--border-strong); margin: 0 4px; }
+
+/* A folha: coluna estreita e centrada, medida de leitura confortável. */
+.editor-folha {
+  flex: 1;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 28px 80px;
+}
+
+.editor-titulo {
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.032em;
+  line-height: 1.15;
+  padding: 0 0 14px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.editor-titulo:focus { outline: none; border-bottom-color: var(--ink); }
+.editor-titulo::placeholder { color: var(--ink-muted); opacity: 0.55; }
+
+.editor-area {
+  min-height: 58vh;
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--ink);
+  padding: 18px 0;
+}
+.editor-area:focus { outline: none; }
+.editor-area:empty::before {
+  content: "Comece a escrever…";
+  color: var(--ink-muted);
+  opacity: 0.55;
+}
+.editor-area p { margin: 0 0 0.9em; }
+.editor-area ul, .editor-area ol { padding-left: 1.5em; }
+
+.editor-rodape {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
 .section { margin-top: 32px; }
 
 /* Cabeçalho de seção sublinhado — a régua que divide a página. */
@@ -1271,6 +1447,15 @@ a.anexo:hover, button.anexo:hover { border-color: var(--border-strong); backgrou
   .perfil-topo { padding: 20px; }
   .ficha > div { flex-direction: column; gap: 3px; align-items: flex-start; }
   .ficha dd { text-align: left; }
+  .nav-nova { width: auto; flex-shrink: 0; white-space: nowrap; margin: 0 0 0 4px; }
+
+  .editor-topo { padding: 10px 14px; gap: 10px; }
+  .editor-estado { display: none; }
+  .editor-voltar { max-width: 45vw; }
+  .editor-barra { top: 45px; padding: 6px 14px; }
+  .editor-folha { padding: 26px 16px 60px; }
+  .editor-titulo { font-size: 24px; }
+  .editor-rodape { padding: 7px 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pessoal · Delfos</title>
+  <title>Aba · Delfos</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="theme.css" />
 </head>
@@ -11,30 +11,31 @@
   <div class="app">
     <nav class="sidebar" id="sidebar"></nav>
     <main class="main">
-      <div class="wrap">
+      <div class="wrap" id="conteudo">
         <header class="topbar">
           <div>
-            <div class="eyebrow pessoal">Vida fora da faculdade</div>
-            <h1>Pessoal</h1>
-            <p class="sub">Consultas, tarefas e recados que não são nem financeiro, nem faculdade, nem projeto.</p>
+            <div class="eyebrow" id="etiqueta">Sua aba</div>
+            <h1 id="titulo">—</h1>
+            <p class="sub" id="subtitulo"></p>
           </div>
           <div class="topbar-actions">
-            <button class="btn primary" id="btn-compromisso">+ Compromisso</button>
+            <button class="btn" id="btn-editar-aba">Editar aba</button>
+            <button class="btn primary" id="btn-item">+ Item</button>
           </div>
         </header>
 
         <div class="grid g3" style="margin-bottom:14px;">
-          <div class="card tinted pessoal">
+          <div class="card tinted">
             <div class="stat-label">Em aberto</div>
             <div class="stat-value num" id="s-abertos">—</div>
             <div class="stat-sub" id="s-abertos-d"></div>
           </div>
-          <div class="card tinted pessoal">
+          <div class="card tinted">
             <div class="stat-label">Nesta semana</div>
             <div class="stat-value num" id="s-semana">—</div>
             <div class="stat-sub" id="s-semana-d"></div>
           </div>
-          <div class="card tinted pessoal">
+          <div class="card tinted">
             <div class="stat-label">Atrasados</div>
             <div class="stat-value num" id="s-atrasados">—</div>
             <div class="stat-sub" id="s-atrasados-d"></div>
@@ -43,10 +44,26 @@
 
         <section class="section" style="margin-top:8px;">
           <div class="section-head">
-            <h2 class="section-title"><span class="swatch pessoal"></span>Compromissos</h2>
+            <h2 class="section-title"><span class="swatch" id="swatch-lista"></span>Itens</h2>
             <label class="filters" style="margin:0;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
           </div>
           <div class="card"><div id="lista"></div></div>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <h2 class="section-title">Ajustes da aba</h2>
+          </div>
+          <div class="card">
+            <p class="card-note" style="margin:0 0 12px;">
+              Esta aba foi criada por você. Renomeá-la, trocar ícone e cor não mexe no que já está cadastrado;
+              excluí-la apaga também todos os itens dela.
+            </p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn" id="btn-editar-aba-2">Editar aba</button>
+              <button class="btn danger" id="btn-excluir-aba">Excluir esta aba</button>
+            </div>
+          </div>
         </section>
       </div>
     </main>
@@ -57,6 +74,6 @@
   <script src="store.js"></script>
   <script src="ui.js"></script>
   <script src="financas.js"></script>
-  <script src="pessoal.js"></script>
+  <script src="pilar.js"></script>
 </body>
 </html>

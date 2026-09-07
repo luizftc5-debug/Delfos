@@ -39,7 +39,7 @@
     if (!projeto) return (location.href = "projetos.html");
 
     const r = UI.resumoProjeto(projeto);
-    document.title = `${projeto.nome} · Organizador`;
+    document.title = `${projeto.nome} · ${UI.NOME}`;
     document.getElementById("titulo").textContent = projeto.nome;
     document.getElementById("titulo").className = r.encerrado ? "strike" : "";
     document.getElementById("subtitulo").textContent =

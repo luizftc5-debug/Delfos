@@ -30,7 +30,7 @@ Você é um assistente de IA especializado em organizar e gerenciar os quatro pi
 
 ## Arquitetura do dashboard
 
-Aplicação estática multi-página em `dashboard/`, sem build e sem dependências externas.
+Aplicação estática multi-página em `dashboard/`, sem build. A única dependência externa é a tipografia (Google Fonts).
 
 | Arquivo | Papel |
 |---|---|
@@ -214,24 +214,29 @@ telas (botões "+ Lançamento", "+ Prazo", "+ Disciplina", "+ Projeto"), sem toc
 
 ### Direção visual
 
-"Estúdio": porcelana fria (`--page`) com cartões brancos de traço fino, cantos pequenos e retos
-(9px no cartão, 6px no controle), tipografia grotesca pesada com entrelinha bem apertada nos
-títulos, e micro-rótulos em **monoespaçada** maiúscula (`--font-mono`) — é essa a assinatura
-tipográfica, aplicada de uma vez só a `.eyebrow`, `.stat-label`, `.badge`, `th` e afins.
+**"Oráculo sóbrio"** — o detalhe completo está em `dashboard/DESIGN.md`, que é a
+referência a consultar antes de mexer em qualquer coisa visual.
 
-A regra que organiza tudo: **o cromo é monocromático**. Preto, branco e cinza na interface — botão
-primário, foco, item ativo, todos em `--ink`. Cor só para dado (os quatro pilares) e para urgência.
-Assim nada compete com a informação e a cor sempre significa alguma coisa.
+O princípio, em uma linha: **nada de padrão, textura ou enfeite**. Superfície é
+superfície. O caráter vem de tipografia, espaço e hierarquia — não de uma camada
+por cima. Duas direções anteriores foram descartadas por errar isso: "estúdio"
+(acumulava os vícios de tela gerada por IA — versalete em caixa alta acima de todo
+título, monoespaçada em rótulo, ponto médio colando metadados, preto falso, `→` no
+fim de link) e "azulejo baiano" (trocou aquilo por ornamento temático, que é ruído
+com sotaque).
 
-O bloco escuro é peça pontual, não mais a coluna inteira: a marca do perfil na barra lateral e o
-painel do saldo na home (`.hero`) usam os tokens `--slab-*`, e é esse contraste que ancora a
-página. A barra lateral ficou clara, um tom abaixo da página, com o item aberto virando um cartão
-branco elevado — leitura por elevação, não por cor.
+O cromo **não tem cor**: fundo grafite fosco, botão primário em osso sobre grafite,
+foco em osso. Cor existe só para identificar pilar (`--s-*`, dessaturados e
+terrosos) e marcar urgência (`--st-critical`). O escuro é o padrão; o claro é
+escolha explícita em `[data-theme="light"]`.
 
-Outros sinais: barra do pilar na borda esquerda do cartão (`.card.tinted`, `.pillar`), régua sob o
-cabeçalho de seção (`.section-head`) e sob o topo da página (`.topbar`), e `.swatch` quadrado em vez
-de redondo. A etiqueta acima do título (`.eyebrow`) dá hierarquia sem inventar mais um tamanho de
-fonte — em página de detalhe ela não deve repetir o que o link "voltar" já diz.
+Tipografia: **IBM Plex Sans** em tudo, com peso e tamanho fazendo a hierarquia.
+**IBM Plex Serif** aparece num único lugar — a frase de leitura no alto da visão
+geral (`.leitura`), o momento em que o painel fala. O resto é dado, e dado é sans.
+
+Identidade de pilar é um **filete de 2px** na borda do cartão (`.card.tinted`,
+`.pillar`) — régua, não ornamento. Grupos afins se encostam num campo contíguo
+(`.campo`) separado por 1px, em vez de flutuarem soltos com sombra.
 
 ### Cores de dados
 

@@ -6,7 +6,7 @@
 const UI = (() => {
   /** Nome e versão do painel — aparecem na marca do rodapé da barra lateral. */
   const NOME = "Delfos";
-  const VERSAO = "1.1";
+  const VERSAO = "1.2";
 
   /* ------------------------------ Formatos ------------------------------- */
 
@@ -1212,7 +1212,7 @@ const UI = (() => {
     el.innerHTML = `
       <div class="meter-head">
         <span style="font-size:12.5px; font-weight:550;">${fmt.escape(rotulo)}</span>
-        <span class="num" style="font-size:12.5px; color:var(--tinta-2);">${formatar(atual)} / ${formatar(alvo)}${sufixo}</span>
+        <span class="num" style="font-size:12.5px; color:var(--texto-2);">${formatar(atual)} / ${formatar(alvo)}${sufixo}</span>
       </div>
       <div class="meter-track"><div class="meter-fill" style="width:${pct}%; background:${cor};"></div></div>`;
     return el;

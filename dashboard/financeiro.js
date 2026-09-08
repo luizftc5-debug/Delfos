@@ -239,7 +239,7 @@
         <td><span class="badge">${fmt.escape(item.categoria || "Outros")}</span></td>
         <td class="muted">${fmt.escape(Financas.nomeOrigem(item.origem) || item.forma || "—")}</td>
         <td><span class="badge ${item.status === "pendente" ? "urgente" : "feito"}">${item.status === "pendente" ? "pendente" : "pago"}</span></td>
-        <td class="right" style="color:${receita ? "var(--success-text)" : "var(--tinta)"};">
+        <td class="right" style="color:${receita ? "var(--success-text)" : "var(--texto)"};">
           ${receita ? "+" : "−"}${fmt.moeda(Math.abs(Number(item.valor) || 0))}
         </td>
         <td>

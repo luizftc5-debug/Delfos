@@ -64,12 +64,65 @@
         <br><span class="muted">${fmt.moeda(atual.receita)} entrou, ${fmt.moeda(atual.despesa)} saiu</span>`;
     }
 
+    renderLeitura(atual);
     renderAvisos();
     renderProximo();
     renderPilares(atual);
     renderAgenda();
     renderInsights(atual, anterior, mes);
     UI.montarLayout("home");
+  }
+
+  /**
+   * A leitura — o painel diz numa frase o que está acontecendo. É o que dá
+   * sentido ao nome: um oráculo lê a situação e a enuncia, em vez de só
+   * empilhar números para o leitor interpretar sozinho.
+   *
+   * Uma frase sobre o tempo (o que está atrasado ou mais próximo) e uma sobre
+   * dinheiro. Nunca mais que isso.
+   */
+  function renderLeitura(atual) {
+    const alvo = document.getElementById("leitura");
+    if (!alvo) return;
+
+    const proximos = UI.compromissos();
+    const atrasados = proximos.filter((i) => (UI.diasAte(i.data) ?? 0) < 0);
+    const naSemana = proximos.filter((i) => {
+      const d = UI.diasAte(i.data);
+      return d !== null && d >= 0 && d <= 7;
+    });
+
+    const nome = (c) => fmt.escape(c.titulo);
+    let tempo;
+
+    if (atrasados.length) {
+      const pior = atrasados[0];
+      const dias = Math.abs(UI.diasAte(pior.data));
+      tempo = atrasados.length === 1
+        ? `<b>${nome(pior)}</b> venceu há <span class="destaque">${dias} ${dias === 1 ? "dia" : "dias"}</span>.`
+        : `Você tem <span class="destaque">${atrasados.length} compromissos atrasados</span>. O mais antigo é <b>${nome(pior)}</b>, de ${dias} dias atrás.`;
+    } else if (naSemana.length) {
+      const prox = naSemana[0];
+      const d = UI.diasAte(prox.data);
+      const quando = d === 0 ? "hoje" : d === 1 ? "amanhã" : `em ${d} dias`;
+      tempo = naSemana.length === 1
+        ? `Sua semana tem um compromisso: <b>${nome(prox)}</b>, ${quando}.`
+        : `Sua semana tem ${naSemana.length} compromissos. O próximo é <b>${nome(prox)}</b>, ${quando}.`;
+    } else if (proximos.length) {
+      const prox = proximos[0];
+      tempo = `Nada nos próximos sete dias. Depois disso vem <b>${nome(prox)}</b>, em ${fmt.dataPorExtenso(prox.data)}.`;
+    } else {
+      tempo = "Nenhum compromisso cadastrado ainda.";
+    }
+
+    let dinheiro = "";
+    if (atual.quantidade > 0) {
+      dinheiro = atual.resultado >= 0
+        ? ` No mês, sobrou <b>${fmt.moeda(atual.resultado)}</b>.`
+        : ` No mês, você gastou <span class="destaque">${fmt.moeda(Math.abs(atual.resultado))} a mais</span> do que recebeu.`;
+    }
+
+    alvo.innerHTML = tempo + dinheiro;
   }
 
   function renderAvisos() {

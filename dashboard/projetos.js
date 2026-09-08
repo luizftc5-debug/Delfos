@@ -123,7 +123,7 @@
 
       <p class="card-note" style="margin:10px 0 0;">
         ${proxima
-          ? `<b style="font-weight:640; color:var(--tinta-2);">Próxima etapa:</b> ${fmt.escape(proxima.texto)}`
+          ? `<b style="font-weight:640; color:var(--texto-2);">Próxima etapa:</b> ${fmt.escape(proxima.texto)}`
           : r.passos.total
             ? "Todas as etapas concluídas."
             : "Sem etapas ainda — abra o projeto para quebrá-lo em passos."}

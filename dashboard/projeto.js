@@ -236,7 +236,7 @@
     renderMovimentos({
       campo: "custos",
       alvo: "custos",
-      cor: "var(--tinta)",
+      cor: "var(--texto)",
       sinal: "−",
       vazio: {
         icone: "◍",

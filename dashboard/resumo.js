@@ -35,8 +35,10 @@
 
   /* ------------------------------ Tipografia ------------------------------- */
 
-  // Fontes com nome que o usuário reconhece, todas presentes na maioria dos
-  // sistemas. A primeira segue a fonte do painel.
+  // Fontes com nome que o usuário reconhece. A primeira segue a fonte do
+  // painel; as de sistema (sempre disponíveis, mesmo sem internet) vêm
+  // antes das importadas do Google Fonts (resumo.html carrega o link),
+  // que dão mais variedade para ler, escrever fórmula ou anotar à mão.
   const FONTES = [
     { rotulo: "Padrão do painel", valor: "" },
     { rotulo: "Georgia", valor: "Georgia, serif" },
@@ -44,6 +46,11 @@
     { rotulo: "Arial", valor: "Arial, Helvetica, sans-serif" },
     { rotulo: "Verdana", valor: "Verdana, Geneva, sans-serif" },
     { rotulo: "Courier New", valor: "'Courier New', Courier, monospace" },
+    { rotulo: "Merriweather", valor: "'Merriweather', Georgia, serif" },
+    { rotulo: "Lora", valor: "'Lora', Georgia, serif" },
+    { rotulo: "Inter", valor: "'Inter', Arial, sans-serif" },
+    { rotulo: "Space Mono", valor: "'Space Mono', 'Courier New', monospace" },
+    { rotulo: "Caveat (letra à mão)", valor: "'Caveat', cursive" },
   ];
 
   const TAMANHOS = [12, 14, 16, 18, 20, 24, 30, 36];
@@ -106,6 +113,49 @@
     });
   }
 
+  /* -------------------------------- Imagens --------------------------------
+     Uma imagem inserida no editor vira um anexo no IndexedDB (mesmo lugar
+     dos documentos), mas fica de fora da lista de "Documentos" — não é isso
+     que o usuário está pedindo ao colar uma foto do quadro no meio do texto.
+     Por isso ela não entra em resumo.anexos: quem sabe quais imagens existem
+     é o próprio HTML (<img data-anexo-id>), lido sob demanda. */
+
+  const idsImagensEm = UI.idsImagensEm;
+
+  async function inserirImagem(arquivo) {
+    if (!arquivo || !arquivo.type.startsWith("image/")) {
+      if (arquivo) UI.toast("Só imagens podem ser inseridas no texto.");
+      return;
+    }
+    let anexo;
+    try {
+      anexo = await Arquivos.salvar(arquivo);
+    } catch (err) {
+      UI.toast(err.message);
+      return;
+    }
+    focar();
+    const url = URL.createObjectURL(arquivo);
+    document.execCommand("insertHTML", false,
+      `<img src="${url}" data-anexo-id="${fmt.escape(anexo.id)}" alt="${fmt.escape(arquivo.name)}">`);
+    marcarSujo();
+  }
+
+  function posicionarCursorEm(x, y) {
+    let faixa = null;
+    if (document.caretRangeFromPoint) {
+      faixa = document.caretRangeFromPoint(x, y);
+    } else if (document.caretPositionFromPoint) {
+      const pos = document.caretPositionFromPoint(x, y);
+      if (pos) { faixa = document.createRange(); faixa.setStart(pos.offsetNode, pos.offset); }
+    }
+    if (!faixa) return focar();
+    const sel = getSelection();
+    sel.removeAllRanges();
+    sel.addRange(faixa);
+    corpo.focus();
+  }
+
   /* ------------------------------ Salvamento ------------------------------- */
 
   let sujo = false;
@@ -138,10 +188,20 @@
     const conteudo = UI.htmlSeguro(corpo.innerHTML);
 
     // Resumo em branco não vira registro: sair sem escrever nada não deixa
-    // uma linha vazia na disciplina.
-    if (!titulo && !corpo.innerText.trim()) {
+    // uma linha vazia na disciplina. Uma imagem sozinha, sem texto, já conta
+    // como conteúdo.
+    if (!titulo && !corpo.innerText.trim() && !corpo.querySelector("img")) {
       if (avisar) UI.toast("Escreva um título ou um texto antes de salvar.");
       return false;
+    }
+
+    // Imagem apagada do texto (backspace, selecionar e excluir) some daqui
+    // também — senão o arquivo fica esquecido no IndexedDB para sempre.
+    const anterior = resumoAtual();
+    if (anterior) {
+      const antes = new Set(idsImagensEm(anterior.conteudo));
+      const depois = new Set(idsImagensEm(conteudo));
+      antes.forEach((id) => { if (!depois.has(id)) Arquivos.remover(id); });
     }
 
     const dados = {
@@ -176,9 +236,12 @@
       perigo: true,
     });
     if (!ok) return;
-    const anexos = resumoAtual()?.anexos || [];
+    const atual = resumoAtual();
+    const anexos = atual?.anexos || [];
+    const imagens = idsImagensEm(atual?.conteudo);
     Store.subRemover(CAMINHO, disciplinaId, "resumos", resumoId);
     anexos.forEach((a) => Arquivos.remover(a.id));
+    imagens.forEach((id) => Arquivos.remover(id));
     sujo = false;
     location.href = voltarHref;
   }
@@ -218,11 +281,45 @@
   corpo.addEventListener("mouseup", atualizarBotoes);
 
   // Colar sempre como texto puro: colar de outra página traria estilos que o
-  // sanitizador jogaria fora depois, e a tela mentiria até o próximo carregamento.
+  // sanitizador jogaria fora depois, e a tela mentiria até o próximo
+  // carregamento. Exceção: colar uma imagem (print, foto copiada) — aí vira
+  // uma imagem de verdade, não texto nenhum.
   corpo.addEventListener("paste", (ev) => {
+    const dados = ev.clipboardData || window.clipboardData;
+    const itemImagem = [...(dados.items || [])].find((it) => it.kind === "file" && it.type.startsWith("image/"));
+    if (itemImagem) {
+      ev.preventDefault();
+      const arquivo = itemImagem.getAsFile();
+      if (arquivo) inserirImagem(arquivo);
+      return;
+    }
     ev.preventDefault();
-    const texto = (ev.clipboardData || window.clipboardData).getData("text/plain");
+    const texto = dados.getData("text/plain");
     document.execCommand("insertText", false, texto);
+  });
+
+  // Arrastar uma imagem de outra janela solta ela no ponto exato do texto.
+  corpo.addEventListener("dragover", (ev) => {
+    if (![...(ev.dataTransfer?.items || [])].some((it) => it.kind === "file")) return;
+    ev.preventDefault();
+    corpo.classList.add("dragover");
+  });
+  corpo.addEventListener("dragleave", () => corpo.classList.remove("dragover"));
+  corpo.addEventListener("drop", (ev) => {
+    const arquivos = [...(ev.dataTransfer?.files || [])].filter((f) => f.type.startsWith("image/"));
+    if (!arquivos.length) return;
+    ev.preventDefault();
+    corpo.classList.remove("dragover");
+    posicionarCursorEm(ev.clientX, ev.clientY);
+    arquivos.forEach(inserirImagem);
+  });
+
+  document.getElementById("btn-imagem").addEventListener("mousedown", (ev) => ev.preventDefault());
+  document.getElementById("btn-imagem").addEventListener("click", () => document.getElementById("f-imagem").click());
+  document.getElementById("f-imagem").addEventListener("change", (ev) => {
+    const arquivo = ev.target.files[0];
+    ev.target.value = "";
+    if (arquivo) inserirImagem(arquivo);
   });
 
   document.getElementById("btn-salvar").addEventListener("click", () => salvar({ avisar: true }));
@@ -248,6 +345,7 @@
     document.title = `${existente.titulo} · ${UI.NOME}`;
     campoTitulo.value = existente.titulo || "";
     corpo.innerHTML = UI.htmlSeguro(existente.conteudo || "");
+    UI.resolverImagens(corpo);
     marcarSalvo();
   } else {
     resumoId = "";

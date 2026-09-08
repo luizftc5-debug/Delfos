@@ -129,17 +129,33 @@ não são gosto, são necessidade:
 - **Botões em `mousedown`, não `click`**: o clique tiraria o cursor do texto antes de o comando
   rodar, e a seleção se perderia.
 
-Colar é sempre como texto puro: estilo de outra página seria descartado depois pelo sanitizador, e
-a tela mentiria até o próximo carregamento.
+Colar é sempre como texto puro — **exceto uma imagem** (print, foto copiada), que vira uma imagem
+de verdade, não texto: estilo de outra página seria descartado depois pelo sanitizador, e a tela
+mentiria até o próximo carregamento.
 
 `resumo.conteudo` passou a ser **HTML** na v7, com `conteudoFormato: "html"` marcando o que já foi
 convertido — sem essa marca a migração rodaria de novo a cada carga e escaparia o próprio escape.
 Quem exibe o resumo passa por `UI.htmlSeguro()`, que só deixa passar a marcação que o editor sabe
-produzir: é o único lugar do painel que renderiza HTML em vez de texto escapado, e um backup
-importado pode trazer qualquer coisa.
+produzir (agora incluindo `<img>`): é o único lugar do painel que renderiza HTML em vez de texto
+escapado, e um backup importado pode trazer qualquer coisa.
 
-Os anexos do resumo ficaram **fora** do editor (botão "Documentos" na disciplina), para a tela de
-escrita não ter mais nada além do texto.
+Os documentos anexados a um resumo ficaram **fora** do editor (botão "Documentos" na disciplina),
+para a tela de escrita não ter mais nada além do texto — **imagens são a exceção**: inserir uma
+pelo botão "Imagem" da barra, colar ou arrastar solta a imagem de verdade no meio do texto, não um
+ícone de arquivo. Por baixo ela é um anexo como outro qualquer (`Arquivos.salvar`, no IndexedDB),
+mas fica de fora de `resumo.anexos` — quem sabe quais imagens existem é o próprio HTML
+(`<img data-anexo-id="…">`, sem `src`: a URL do blob não sobrevive a um recarregamento).
+`UI.resolverImagens(container)` é quem repõe o `src` toda vez que um resumo é exibido — no editor e
+na pré-visualização da disciplina (por isso `disciplina.html` carrega as mesmas fontes do editor:
+uma imagem sozinha explica por que precisa de `Arquivos`, uma fonte escolhida no texto só aparece
+certo se a página também carregou aquela fonte). `salvar()` compara os ids de imagem do conteúdo
+antes/depois a cada gravação e apaga do IndexedDB os que sumiram do texto; excluir o resumo inteiro
+(`excluir()` no editor, `excluirComAnexos()` na lista da disciplina) limpa o resto.
+
+O seletor de fonte tem, além das de sistema (Georgia, Arial…), um punhado de fontes do Google Fonts
+importadas só por `resumo.html`/`disciplina.html` (Merriweather, Lora, Inter, Space Mono, Caveat) —
+mais variedade para ler, escrever fórmula ou anotar à mão. É conteúdo do usuário, não design system:
+não confunda com a tipografia do painel (`dashboard/DESIGN.md`), que continua só IBM Plex.
 
 ### Abas criadas pelo usuário
 

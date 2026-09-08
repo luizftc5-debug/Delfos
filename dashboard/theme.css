@@ -1195,6 +1195,15 @@ a.anexo:hover, button.anexo:hover { border-color: var(--linha-forte); background
 .editor-area:empty::before { content: "Comece a escrever…"; color: var(--texto-3); }
 .editor-area p { margin: 0 0 0.9em; }
 .editor-area ul, .editor-area ol { padding-left: 1.5em; }
+.editor-area img,
+.resumo-texto.rico img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 12px 0;
+  border-radius: var(--r-sm);
+}
+.editor-area.dragover { outline: 2px dashed var(--linha-forte); outline-offset: -8px; }
 
 .editor-rodape {
   position: sticky;

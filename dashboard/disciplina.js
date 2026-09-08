@@ -292,6 +292,7 @@
         <div class="resumo-texto rico">${UI.htmlSeguro(r.conteudo || "")}</div>
         ${(r.anexos || []).length ? `<div class="anexos" style="margin-top:14px;">${r.anexos.map(anexoHTML).join("")}</div>` : ""}`;
       ligarAnexos(card, r.anexos || []);
+      UI.resolverImagens(card.querySelector(".resumo-texto"));
       card.querySelector("[data-editar]").addEventListener("click", () => abrirResumo(r));
       card.querySelector("[data-anexos]").addEventListener("click", () => editarAnexosResumo(r));
       card.querySelector("[data-excluir]").addEventListener("click", () => excluirResumo(r));
@@ -416,6 +417,8 @@
   /**
    * Itens com anexo têm exclusão própria: os arquivos só somem do IndexedDB
    * quando o "Desfazer" expira, senão desfazer devolveria a ficha sem o PDF.
+   * Um resumo carrega ainda as imagens embutidas no texto (item.conteudo),
+   * que não aparecem em item.anexos.
    */
   function excluirComAnexos(campo, item, rotulo) {
     Store.subRemover(CAMINHO, id, campo, item.id);
@@ -428,6 +431,7 @@
     setTimeout(() => {
       if (desfeito) return;
       (item.anexos || []).forEach((a) => Arquivos.remover(a.id));
+      UI.idsImagensEm(item.conteudo).forEach((idImg) => Arquivos.remover(idImg));
     }, 6000);
   }
 

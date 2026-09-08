@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;450;500;550;600&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;600&family=Space+Mono:wght@400;700&family=Caveat:wght@500;700&display=swap" />
   <link rel="stylesheet" href="theme.css" />
 </head>
 <body class="editor-body">
@@ -30,6 +31,9 @@
       <button class="editor-btn" data-cmd="underline" title="Sublinhado (Ctrl+U)" aria-label="Sublinhado" type="button"><u>S</u></button>
       <span class="editor-sep"></span>
       <button class="editor-btn largo" id="btn-limpar" title="Remover formatação da seleção" type="button">Limpar estilo</button>
+      <span class="editor-sep"></span>
+      <button class="editor-btn largo" id="btn-imagem" title="Inserir imagem — também dá para colar ou arrastar" type="button">Imagem</button>
+      <input type="file" accept="image/*" class="hidden" id="f-imagem" />
     </div>
 
     <div class="editor-folha">

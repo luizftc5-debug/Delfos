@@ -8,7 +8,7 @@ Aplicação estática: HTML, CSS e JavaScript puros, sem instalação e sem serv
 
 ## Como abrir
 
-**Online (recomendado):** <https://luizftc5-debug.github.io/Delfos>
+**Online (recomendado):** <https://luizftc5-debug.github.io/Delfos/dashboard>
 
 **No seu computador**, pela pasta `dashboard`:
 
@@ -25,8 +25,10 @@ E acesse <http://localhost:8000>.
 
 Um assistente pergunta quem você é, o que faz e quais das quatro abas fixas (Pessoal, Financeiro,
 Faculdade, Projetos) fazem sentido pra você — dá pra desligar ou renomear qualquer uma, e religar
-depois pelo perfil. Dá pra pular e preencher tudo depois. Nada disso mexe em dados que já existam
-no navegador.
+depois pelo perfil. Ele também sugere umas abas prontas para já começar com algo — Academia,
+Religião, Esporte —, com nome editável na hora (por exemplo, trocar "Esporte" por "Corrida" ou
+"Jiu-jitsu"). Dá pra pular e preencher tudo depois. Nada disso mexe em dados que já existam no
+navegador.
 
 ## Como usar
 

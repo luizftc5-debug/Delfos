@@ -840,12 +840,12 @@ table.sheet tbody tr:focus-within .row-actions { opacity: 1; }
 
 .field .err { font-size: 12.5px; color: var(--st-critical); font-weight: 500; }
 
-.seg { display: flex; gap: 2px; border: 1px solid var(--linha-forte); border-radius: var(--r-sm); padding: 2px; background: var(--fundo); }
+.seg { display: flex; gap: 3px; border: 1px solid var(--linha-forte); border-radius: var(--r-sm); padding: 3px; background: var(--fundo); }
 .seg button {
   flex: 1;
-  padding: 8px;
+  padding: 11px;
   border: none;
-  border-radius: 2px;
+  border-radius: 3px;
   background: transparent;
   color: var(--texto-2);
   font-size: 13.5px;
@@ -1246,17 +1246,20 @@ a.anexo:hover, button.anexo:hover { border-color: var(--linha-forte); background
 .assistente-progresso span.ativo { background: var(--texto); }
 .assistente-progresso span.feito { background: var(--texto-2); }
 
-.assistente-card { width: 100%; max-width: 560px; padding: 34px; }
+.assistente-card { width: 100%; max-width: 560px; padding: 40px; }
 
-.assistente-passo h2 { margin: 0 0 6px; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; }
-.assistente-passo > .sub { margin: 0 0 24px; color: var(--texto-2); font-size: 14.5px; }
+.assistente-passo h2 { margin: 0 0 8px; font-size: 24px; font-weight: 600; letter-spacing: -0.01em; }
+.assistente-passo > .sub { margin: 0 0 28px; color: var(--texto-2); font-size: 14px; line-height: 1.5; }
 .assistente-passo .field + .field,
 .assistente-passo .field + .assistente-linha,
 .assistente-passo .assistente-linha + .field,
-.assistente-passo .assistente-linha + .assistente-linha { margin-top: 14px; }
+.assistente-passo .assistente-linha + .assistente-linha { margin-top: 20px; }
+.assistente-passo > #bloco-academico { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--linha); }
+.assistente-sugestoes { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--linha); }
+.assistente-sugestoes > label { font-size: 13px; font-weight: 500; color: var(--texto-2); }
 
-.assistente-linha { display: flex; gap: 12px; }
-.assistente-linha .field { flex: 1; }
+.assistente-linha { display: flex; gap: 16px; align-items: stretch; }
+.assistente-linha .field { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }
 
 .assistente-nav {
   display: flex;
@@ -1336,8 +1339,8 @@ a.anexo:hover, button.anexo:hover { border-color: var(--linha-forte); background
   .editor-rodape { padding: 8px 15px; }
 
   .assistente { padding: 24px 14px 40px; }
-  .assistente-card { padding: 22px; }
-  .assistente-linha { flex-direction: column; gap: 14px; }
+  .assistente-card { padding: 28px 20px; }
+  .assistente-linha { flex-direction: column; gap: 20px; align-items: stretch; }
 }
 
 @media (prefers-reduced-motion: reduce) {

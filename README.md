@@ -111,15 +111,22 @@ semana e quanto os documentos anexados ocupam.
 Em **Resumos e anotações**, dentro da página de uma disciplina, o botão **+ Resumo** abre uma página
 inteira só para escrever — sem barra lateral, sem cartões, só o texto.
 
-Na barra de cima dá para trocar a **fonte** e o **tamanho**, e usar **negrito**, **itálico** e
-**sublinhado**. Aplicam-se ao trecho que você selecionou; sem seleção, valem para o que você digitar
-em seguida. **Limpar estilo** desfaz a formatação do trecho selecionado.
+Na barra de cima dá para trocar a **fonte** (fontes de sistema e mais algumas importadas — serifadas
+para ler, monoespaçada para fórmula, uma de letra à mão para anotação) e o **tamanho**, e usar
+**negrito**, **itálico** e **sublinhado**. Aplicam-se ao trecho que você selecionou; sem seleção,
+valem para o que você digitar em seguida. **Limpar estilo** desfaz a formatação do trecho
+selecionado.
+
+O botão **Imagem** insere uma foto direto no meio do texto — a imagem em si, não um ícone de
+arquivo. Também dá para **colar** (print, foto copiada) ou **arrastar** um arquivo de imagem para
+qualquer ponto do texto.
 
 O texto é salvo sozinho alguns segundos depois que você para de digitar — o indicador no alto diz se
 há algo não salvo. `Ctrl + S` (ou `Cmd + S`) salva na hora.
 
-> Os documentos anexados a um resumo ficam no botão **Documentos**, na página da disciplina — assim
-> a tela de escrita não tem mais nada além do texto.
+> Os documentos anexados a um resumo (PDF, slides — o que não é imagem para o meio do texto) ficam
+> no botão **Documentos**, na página da disciplina, para a tela de escrita não ter mais nada além do
+> texto e das imagens que você inseriu nele.
 
 ### Criar suas próprias abas
 

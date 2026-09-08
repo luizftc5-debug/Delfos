@@ -75,9 +75,13 @@ const UI = (() => {
   // qualquer coisa — e resumo é o único lugar do painel que exibe HTML em vez
   // de texto escapado.
   const TAGS_OK = new Set(["P", "BR", "DIV", "SPAN", "B", "STRONG", "I", "EM", "U",
-    "UL", "OL", "LI", "H1", "H2", "H3", "BLOCKQUOTE", "FONT"]);
+    "UL", "OL", "LI", "H1", "H2", "H3", "BLOCKQUOTE", "FONT", "IMG"]);
   const ESTILOS_OK = new Set(["font-family", "font-size", "font-weight", "font-style", "text-decoration"]);
-  const ATRIBUTOS_OK = new Set(["face", "size"]); // resquícios de <font> do execCommand
+  // "src" fica de fora de propósito: uma imagem inserida no editor vira
+  // <img data-anexo-id> sem src — o navegador nunca guarda a URL do blob,
+  // que morre a cada recarregamento. UI.resolverImagens() é quem repõe o
+  // src na hora de exibir, buscando o arquivo de novo no IndexedDB.
+  const ATRIBUTOS_OK = new Set(["face", "size", "data-anexo-id", "alt"]); // "face"/"size": resquícios de <font> do execCommand
 
   function htmlSeguro(html) {
     const molde = document.createElement("div");
@@ -98,6 +102,35 @@ const UI = (() => {
       });
     });
     return molde.innerHTML;
+  }
+
+  /** Ids dos anexos de imagem embutidos num HTML de resumo (<img data-anexo-id>). */
+  function idsImagensEm(html) {
+    const molde = document.createElement("div");
+    molde.innerHTML = String(html || "");
+    return [...molde.querySelectorAll("img[data-anexo-id]")].map((img) => img.dataset.anexoId).filter(Boolean);
+  }
+
+  /**
+   * Repõe o src das imagens de um resumo (editor ou pré-visualização),
+   * buscando cada arquivo de novo no IndexedDB — é o que faz uma imagem
+   * inserida no editor aparecer de fato, e não um ícone de anexo. Roda toda
+   * vez que o HTML de um resumo é exibido, porque a URL do blob não
+   * sobrevive a um recarregamento.
+   */
+  async function resolverImagens(raiz) {
+    if (!raiz || typeof Arquivos === "undefined") return;
+    const imgs = [...raiz.querySelectorAll("img[data-anexo-id]")].filter((img) => !img.getAttribute("src"));
+    for (const img of imgs) {
+      const id = img.dataset.anexoId;
+      try {
+        const b = await Arquivos.blob({ id, tipo: "" });
+        if (!b) { img.alt = `${img.alt || "Imagem"} (não está neste navegador)`; continue; }
+        img.src = URL.createObjectURL(b);
+      } catch {
+        img.alt = `${img.alt || "Imagem"} (não pôde ser carregada)`;
+      }
+    }
   }
 
   /* -------------------------------- Datas -------------------------------- */
@@ -1472,7 +1505,7 @@ const UI = (() => {
 
   return {
     NOME, VERSAO,
-    fmt, htmlSeguro, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
+    fmt, htmlSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
     compromissos, conflitos, contagens, mediaDisciplina, proximaAvaliacao, resumoProjeto,
     iniciarPagina, montarLayout, tema, toast, formulario, confirmar, abrirModal,
     abrirBackup, abrirPerfil, avatarHTML, iniciais, vazio, barras, colunasMensais, medidor,

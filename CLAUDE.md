@@ -221,6 +221,14 @@ qualquer momento, que só carimba `configuradoEm` sem tocar em mais nada. A mesm
 reconfigurar (botão no perfil): reabrindo, ela pré-preenche com o que já está salvo, e pula a
 pré-marcação automática das abas para não sobrescrever uma escolha que o Luiz já fez.
 
+No passo das abas, além das quatro fixas, `bemvindo.js` oferece uma lista de **sugestões de abas
+sob medida** (`SUGESTOES_PILAR`: Academia, Religião, Esporte) — mesma UI de marcar/renomear das
+abas fixas, mas cada marcada vira de fato uma aba nova (`Store.inserir("pilares", …)`) ao concluir,
+com o modelo já definido por sugestão. O nome é editável na hora, o que serve tanto para ajustar o
+rótulo (ex.: "Esporte" → "Corrida") quanto para o caso geral de qualquer sugestão. Só aparece na
+**primeira configuração** — reabrir pelo perfil não oferece de novo, para não arriscar recriar uma
+aba que o usuário já tenha apagado por não querer.
+
 ### Anexos
 
 Materiais e resumos de uma disciplina têm `anexos: []`. Cada item é só a **ficha** do arquivo

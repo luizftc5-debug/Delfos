@@ -1255,6 +1255,8 @@ a.anexo:hover, button.anexo:hover { border-color: var(--linha-forte); background
 .assistente-passo .assistente-linha + .field,
 .assistente-passo .assistente-linha + .assistente-linha { margin-top: 20px; }
 .assistente-passo > #bloco-academico { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--linha); }
+.assistente-sugestoes { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--linha); }
+.assistente-sugestoes > label { font-size: 13px; font-weight: 500; color: var(--texto-2); }
 
 .assistente-linha { display: flex; gap: 16px; align-items: stretch; }
 .assistente-linha .field { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }

@@ -23,6 +23,18 @@
   const abas = {};
   Personalizacao.abasFixas().forEach((a) => { abas[a.id] = { ativo: a.ativo, rotulo: a.rotulo }; });
 
+  // Pontos de partida opcionais, oferecidos só na primeira configuração — o
+  // nome é editável na hora (é assim que "Esporte" vira "Corrida", por
+  // exemplo). Reabrir pelo perfil não repete a oferta, para não arriscar
+  // criar de novo uma aba que o usuário já tenha apagado por não querer.
+  const SUGESTOES_PILAR = [
+    { id: "academia", nome: "Academia", icone: "●", cor: "#6e8f22", modelo: "habitos" },
+    { id: "religiao", nome: "Religião", icone: "☾", cor: "#5a4fd4", modelo: "compromissos" },
+    { id: "esporte", nome: "Esporte", icone: "★", cor: "#b57d0a", modelo: "habitos" },
+  ];
+  const sugestoes = {};
+  SUGESTOES_PILAR.forEach((s) => { sugestoes[s.id] = { ativo: false, nome: s.nome }; });
+
   /* ------------------------------ Preencher --------------------------------
      Reabrir pelo perfil ("Refazer configuração") já traz o que existe. */
 
@@ -115,18 +127,50 @@
     ul.querySelectorAll("[data-nome]").forEach((inp) => {
       inp.addEventListener("input", () => { abas[inp.dataset.nome].rotulo = inp.value; });
     });
+
+    renderSugestoes();
+  }
+
+  function renderSugestoes() {
+    const bloco = document.getElementById("bloco-sugestoes");
+    bloco.classList.toggle("hidden", !primeiraVez);
+    if (!primeiraVez) return;
+
+    const ul = document.getElementById("lista-sugestoes");
+    ul.innerHTML = SUGESTOES_PILAR.map((s) => `
+      <li>
+        <input type="checkbox" class="check" data-toggle-sugestao="${s.id}" ${sugestoes[s.id].ativo ? "checked" : ""}
+               aria-label="Criar aba ${fmt.escape(s.nome)}" />
+        <span class="grow">
+          <input type="text" class="assistente-aba-nome" data-nome-sugestao="${s.id}"
+                 value="${fmt.escape(sugestoes[s.id].nome)}" ${sugestoes[s.id].ativo ? "" : "disabled"} />
+        </span>
+      </li>`).join("");
+
+    ul.querySelectorAll("[data-toggle-sugestao]").forEach((chk) => {
+      chk.addEventListener("change", () => {
+        const id = chk.dataset.toggleSugestao;
+        sugestoes[id].ativo = chk.checked;
+        ul.querySelector(`[data-nome-sugestao="${id}"]`).disabled = !chk.checked;
+      });
+    });
+    ul.querySelectorAll("[data-nome-sugestao]").forEach((inp) => {
+      inp.addEventListener("input", () => { sugestoes[inp.dataset.nomeSugestao].nome = inp.value; });
+    });
   }
 
   function renderResumo() {
     const nome = document.getElementById("f-nome").value.trim() || "—";
     const ocupacao = document.getElementById("f-ocupacao").value.trim();
     const ativos = Object.values(abas).filter((a) => a.ativo).map((a) => a.rotulo || "—");
+    const novasAbas = SUGESTOES_PILAR.filter((s) => sugestoes[s.id].ativo).map((s) => sugestoes[s.id].nome.trim() || s.nome);
 
     document.getElementById("resumo").innerHTML = `
       <dl>
         <dt>Nome</dt><dd>${fmt.escape(nome)}</dd>
         ${ocupacao ? `<dt>Ocupação</dt><dd>${fmt.escape(ocupacao)}</dd>` : ""}
         <dt>Abas ligadas</dt><dd>${ativos.length ? fmt.escape(ativos.join(", ")) : "nenhuma"}</dd>
+        ${novasAbas.length ? `<dt>Abas novas</dt><dd>${fmt.escape(novasAbas.join(", "))}</dd>` : ""}
       </dl>`;
   }
 
@@ -202,6 +246,23 @@
     });
 
     Personalizacao.concluir({ perfil: dadosPerfil, abasFixas });
+
+    // Cria de fato as abas sob medida que o usuário marcou nas sugestões.
+    SUGESTOES_PILAR.forEach((s) => {
+      if (!sugestoes[s.id].ativo) return;
+      const modelo = Store.MODELOS_PILAR.find((m) => m.id === s.modelo);
+      Store.inserir("pilares", {
+        nome: sugestoes[s.id].nome.trim() || s.nome,
+        icone: s.icone,
+        cor: s.cor,
+        descricao: "",
+        modelo: modelo.id,
+        campos: modelo.campos.map((c) => ({ ...c })),
+        naAgenda: modelo.naAgenda,
+        itens: [],
+      });
+    });
+
     location.href = "index.html";
   }
 

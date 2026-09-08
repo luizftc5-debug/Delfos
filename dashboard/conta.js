@@ -51,7 +51,7 @@
     document.getElementById("stats").innerHTML = `
       <div class="card tinted financeiro">
         <div class="stat-label">Saldo atual</div>
-        <div class="stat-value num" style="color:${r.saldo < 0 ? "var(--st-critical)" : "var(--ink)"};">${fmt.moeda(r.saldo)}</div>
+        <div class="stat-value num" style="color:${r.saldo < 0 ? "var(--st-critical)" : "var(--tinta)"};">${fmt.moeda(r.saldo)}</div>
         <div class="stat-sub">abertura ${fmt.moeda(item.saldoInicial || 0)}</div>
       </div>
       <div class="card tinted financeiro">
@@ -147,7 +147,7 @@
         <td><span class="title">${fmt.escape(t.descricao || "(sem descrição)")}</span></td>
         <td><span class="badge">${fmt.escape(t.categoria || "Outros")}</span></td>
         <td><span class="badge ${t.status === "pendente" ? "urgente" : "feito"}">${t.status === "pendente" ? "pendente" : "pago"}</span></td>
-        <td class="right" style="color:${receita ? "var(--success-text)" : "var(--ink)"};">${receita ? "+" : "−"}${fmt.moeda(Math.abs(Number(t.valor) || 0))}</td>
+        <td class="right" style="color:${receita ? "var(--success-text)" : "var(--tinta)"};">${receita ? "+" : "−"}${fmt.moeda(Math.abs(Number(t.valor) || 0))}</td>
         <td><div class="row-actions">
           <button class="btn ghost sm" data-editar>Editar</button>
           <button class="btn ghost sm" data-excluir>Excluir</button>

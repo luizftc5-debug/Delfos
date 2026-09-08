@@ -47,7 +47,7 @@
       return d !== null && d >= 0 && d <= 7;
     }).length;
     document.getElementById("sub-resumo").textContent =
-      `${naSemana ? `${naSemana} ${naSemana === 1 ? "compromisso" : "compromissos"}` : "Nenhum compromisso"} nos próximos 7 dias · ` +
+      `${naSemana ? `${naSemana} ${naSemana === 1 ? "compromisso" : "compromissos"}` : "Nenhum compromisso"} nos próximos 7 dias. ` +
       `${atual.quantidade} ${atual.quantidade === 1 ? "lançamento" : "lançamentos"} neste mês.`;
 
     // Herói: saldo atual (soma das contas, ou o valor informado à mão enquanto
@@ -61,7 +61,7 @@
       const sinal = atual.resultado >= 0 ? "up" : "down";
       detalhe.innerHTML = `Resultado do mês:
         <span class="delta ${sinal}">${atual.resultado >= 0 ? "▲" : "▼"} ${fmt.moeda(Math.abs(atual.resultado))}</span>
-        <span class="muted">· ${fmt.moeda(atual.receita)} entrou, ${fmt.moeda(atual.despesa)} saiu</span>`;
+        <br><span class="muted">${fmt.moeda(atual.receita)} entrou, ${fmt.moeda(atual.despesa)} saiu</span>`;
     }
 
     renderAvisos();
@@ -81,7 +81,7 @@
       const el = document.createElement("div");
       el.className = "notice critical";
       el.innerHTML = `<span class="ic">!</span><span><strong>${atrasados.length} ${atrasados.length === 1 ? "compromisso atrasado" : "compromissos atrasados"}:</strong>
-        ${atrasados.slice(0, 3).map((i) => fmt.escape(i.titulo)).join(" · ")}${atrasados.length > 3 ? ` e mais ${atrasados.length - 3}` : ""}</span>`;
+        ${atrasados.slice(0, 3).map((i) => fmt.escape(i.titulo)).join(", ")}${atrasados.length > 3 ? ` e mais ${atrasados.length - 3}` : ""}</span>`;
       box.appendChild(el);
     }
 
@@ -92,7 +92,7 @@
         const el = document.createElement("div");
         el.className = "notice warning";
         el.innerHTML = `<span class="ic">▲</span><span><strong>Semana cheia (${fmt.dataCurta(c.semana)}):</strong>
-          ${c.itens.map((i) => `${fmt.escape(i.titulo)} <span class="muted">(${fmt.dataCurta(i.data)})</span>`).join(" · ")}</span>`;
+          ${c.itens.map((i) => `${fmt.escape(i.titulo)} <span class="muted">(${fmt.dataCurta(i.data)})</span>`).join(", ")}</span>`;
         box.appendChild(el);
       });
   }
@@ -124,7 +124,7 @@
         <span class="badge ${u.nivel}">${u.rotulo}</span>
       </div>
       <div class="stat-value" style="font-size:19px;">${fmt.escape(p.titulo)}</div>
-      <div class="stat-sub">${fmt.data(p.data)}${outros > 0 ? ` · mais ${outros} ${outros === 1 ? "compromisso" : "compromissos"} agendados` : ""}</div>`;
+      <div class="stat-sub">${fmt.data(p.data)}${outros > 0 ? `, e mais ${outros} ${outros === 1 ? "compromisso agendado" : "compromissos agendados"}` : ""}</div>`;
   }
 
   function renderPilares(atual) {
@@ -137,12 +137,12 @@
       {
         href: "financeiro.html", cor: "financeiro", titulo: "Financeiro",
         valor: fmt.moedaCurta(atual.resultado),
-        sub: `${atual.quantidade} ${atual.quantidade === 1 ? "lançamento" : "lançamentos"} no mês · ${e.financeiro.metas.length} ${e.financeiro.metas.length === 1 ? "meta" : "metas"}`,
+        sub: `${atual.quantidade} ${atual.quantidade === 1 ? "lançamento" : "lançamentos"} no mês, ${e.financeiro.metas.length} ${e.financeiro.metas.length === 1 ? "meta" : "metas"}`,
       },
       {
         href: "faculdade.html", cor: "faculdade", titulo: "Faculdade",
         valor: `${e.faculdade.disciplinas.length}`,
-        sub: `${e.faculdade.disciplinas.length === 1 ? "disciplina" : "disciplinas"} · ${urgentes("faculdade")} ${urgentes("faculdade") === 1 ? "prazo" : "prazos"} nesta semana`,
+        sub: `${e.faculdade.disciplinas.length === 1 ? "disciplina" : "disciplinas"}, ${urgentes("faculdade")} ${urgentes("faculdade") === 1 ? "prazo" : "prazos"} nesta semana`,
       },
       (() => {
         const ativos = e.projetos.filter((p) => p.status !== "concluído" && p.status !== "arquivado");
@@ -151,8 +151,8 @@
           href: "projetos.html", cor: "projetos", titulo: "Projetos",
           valor: `${ativos.length}`,
           sub: renda
-            ? `${ativos.length === 1 ? "projeto ativo" : "projetos ativos"} · ${fmt.moedaCurta(renda)}/mês estimados`
-            : `${ativos.length === 1 ? "projeto ativo" : "projetos ativos"} · ${e.oportunidades.length} ${e.oportunidades.length === 1 ? "oportunidade" : "oportunidades"}`,
+            ? `${ativos.length === 1 ? "projeto ativo" : "projetos ativos"}, ${fmt.moedaCurta(renda)} por mês estimados`
+            : `${ativos.length === 1 ? "projeto ativo" : "projetos ativos"}, ${e.oportunidades.length} ${e.oportunidades.length === 1 ? "oportunidade" : "oportunidades"}`,
         };
       })(),
       (() => {
@@ -160,7 +160,7 @@
         return {
           href: "pessoal.html", cor: "pessoal", titulo: "Pessoal",
           valor: `${abertos.length}`,
-          sub: `${abertos.length === 1 ? "compromisso em aberto" : "compromissos em aberto"} · ${urgentes("pessoal")} ${urgentes("pessoal") === 1 ? "nesta semana" : "nesta semana"}`,
+          sub: `${abertos.length === 1 ? "compromisso em aberto" : "compromissos em aberto"}, ${urgentes("pessoal")} nesta semana`,
         };
       })(),
     ];
@@ -173,7 +173,7 @@
         href: `pilar.html?id=${encodeURIComponent(p.id)}`, cor: "", corHex: p.cor,
         titulo: p.nome,
         valor: `${abertos.length}`,
-        sub: `${abertos.length === 1 ? "item em aberto" : "itens em aberto"} · ${naSemana} nesta semana`,
+        sub: `${abertos.length === 1 ? "item em aberto" : "itens em aberto"}, ${naSemana} nesta semana`,
       });
     });
 
@@ -183,7 +183,7 @@
           <div class="stat-label">${fmt.escape(c.titulo)}</div>
           <div class="stat-value num">${c.valor}</div>
           <div class="stat-sub">${c.sub}</div>
-          <div class="arrow">Ver detalhes →</div>
+          <div class="arrow">Ver detalhes</div>
         </a>`)
       .join("");
   }
@@ -219,7 +219,7 @@
         <span class="swatch" style="background:${i.cor}"></span>
         <span class="grow">
           <span class="title">${fmt.escape(i.titulo)}</span>
-          <span class="meta">${fmt.escape(i.tipo)} · ${fmt.data(i.data)}</span>
+          <span class="meta">${fmt.escape(fmt.capitalizar(i.tipo))} em ${fmt.dataPorExtenso(i.data)}</span>
         </span>
         <span class="badge ${u.nivel}">${u.rotulo}</span>`;
       ul.appendChild(li);
@@ -280,7 +280,7 @@
         titulo: "Semana mais carregada", cor: "faculdade",
         valor: `${pior.itens.length} compromissos`,
         classe: pior.multiplasAreas ? "down" : "flat",
-        sub: `Semana de ${fmt.data(pior.semana)}${pior.multiplasAreas ? ` · ${pior.areas.join(" + ")}` : ""}`,
+        sub: `Semana de ${fmt.data(pior.semana)}${pior.multiplasAreas ? `, entre ${pior.rotulos.join(" e ")}` : ""}`,
       });
     }
 

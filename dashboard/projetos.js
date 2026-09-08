@@ -123,13 +123,13 @@
 
       <p class="card-note" style="margin:10px 0 0;">
         ${proxima
-          ? `<b style="font-weight:640; color:var(--ink-2);">Próxima etapa:</b> ${fmt.escape(proxima.texto)}`
+          ? `<b style="font-weight:640; color:var(--tinta-2);">Próxima etapa:</b> ${fmt.escape(proxima.texto)}`
           : r.passos.total
             ? "Todas as etapas concluídas."
             : "Sem etapas ainda — abra o projeto para quebrá-lo em passos."}
       </p>
 
-      <a class="btn sm" href="${href}" style="margin-top:12px;">Abrir projeto →</a>`;
+      <a class="btn sm" href="${href}" style="margin-top:12px;">Abrir projeto</a>`;
 
     if (r.passos.total) {
       card.querySelector("[data-progresso]").appendChild(

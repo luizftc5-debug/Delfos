@@ -1076,6 +1076,7 @@ a.anexo:hover, button.anexo:hover { border-color: var(--linha-forte); background
 .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; font-size: 13.5px; color: var(--texto-2); }
 .filters .input { width: auto; min-width: 152px; }
 .check { width: 16px; height: 16px; accent-color: var(--texto-2); cursor: pointer; flex-shrink: 0; }
+.campo-simnao { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--texto); cursor: pointer; }
 .strike { text-decoration: line-through; color: var(--texto-3); }
 
 .google-state { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--texto-3); }
@@ -1211,6 +1212,79 @@ a.anexo:hover, button.anexo:hover { border-color: var(--linha-forte); background
 
 .editor-rodape .marca { color: var(--texto-3); padding: 0; font-size: 12.5px; }
 
+/* ====================== Assistente de boas-vindas =========================
+   Página inteira, sem barra lateral, mesmo gesto do editor de resumo — só
+   que aqui é o painel que pergunta, em vez de escutar. */
+
+.assistente-body { background: var(--fundo); }
+
+.assistente {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px 60px;
+}
+
+.assistente-topo {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 26px;
+}
+
+.assistente-progresso {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  gap: 6px;
+  margin-bottom: 26px;
+}
+.assistente-progresso span { flex: 1; height: 3px; border-radius: 2px; background: var(--linha-forte); }
+.assistente-progresso span.ativo { background: var(--texto); }
+.assistente-progresso span.feito { background: var(--texto-2); }
+
+.assistente-card { width: 100%; max-width: 560px; padding: 34px; }
+
+.assistente-passo h2 { margin: 0 0 6px; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; }
+.assistente-passo > .sub { margin: 0 0 24px; color: var(--texto-2); font-size: 14.5px; }
+.assistente-passo .field + .field,
+.assistente-passo .field + .assistente-linha,
+.assistente-passo .assistente-linha + .field,
+.assistente-passo .assistente-linha + .assistente-linha { margin-top: 14px; }
+
+.assistente-linha { display: flex; gap: 12px; }
+.assistente-linha .field { flex: 1; }
+
+.assistente-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--linha);
+}
+
+.assistente-aba-nome {
+  border: none;
+  background: transparent;
+  color: var(--texto);
+  font-size: 14px;
+  font-weight: 550;
+  font-family: var(--font);
+  padding: 4px 0;
+  width: 100%;
+}
+.assistente-aba-nome:focus { outline: none; border-bottom: 1px solid var(--linha-forte); }
+.assistente-aba-nome:disabled { color: var(--texto-3); }
+
+.assistente-foto { display: flex; align-items: center; gap: 14px; }
+
+.assistente-resumo dl { display: grid; grid-template-columns: auto 1fr; gap: 7px 14px; margin: 0; font-size: 13.5px; }
+.assistente-resumo dt { color: var(--texto-3); }
+.assistente-resumo dd { margin: 0; color: var(--texto); }
+
 /* ------------------------------ Responsivo ------------------------------- */
 
 @media (max-width: 900px) {
@@ -1260,6 +1334,10 @@ a.anexo:hover, button.anexo:hover { border-color: var(--linha-forte); background
   .editor-folha { padding: 28px 17px 60px; }
   .editor-titulo { font-size: 24px; }
   .editor-rodape { padding: 8px 15px; }
+
+  .assistente { padding: 24px 14px 40px; }
+  .assistente-card { padding: 22px; }
+  .assistente-linha { flex-direction: column; gap: 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -15,14 +15,19 @@ const Store = (() => {
 
   const PERFIL_PADRAO = {
     // Identidade
-    nome: "Luiz Felipe Tonhá",
+    nome: "",
     dataNascimento: "",
     cidade: "",
     email: "",
     telefone: "",
+    pronomes: "",
     foto: "", // data URL reduzida — ver UI.redimensionarFoto
-    // Vida acadêmica
-    curso: "Medicina",
+    // Ocupação — o que a pessoa faz, em texto livre, e o tipo que decide
+    // quais abas fixas fazem sentido para ela (ver sugerirAbas em personalizacao.js)
+    ocupacao: "",
+    tipoOcupacao: "", // "estudo" | "trabalho" | "ambos" | "outro"
+    // Vida acadêmica — só aparece no formulário quando tipoOcupacao inclui estudo
+    curso: "",
     instituicao: "",
     semestre: "",
     matricula: "",
@@ -30,7 +35,111 @@ const Store = (() => {
     // Texto livre
     bio: "",
     objetivos: "",
+    // Vazio = o assistente de boas-vindas ainda não rodou neste navegador
+    configuradoEm: "",
   };
+
+  /**
+   * As quatro abas fixas podem ser desligadas (some da barra, nada é
+   * apagado) e renomeadas — rotulo vazio segue o nome padrão da aba.
+   */
+  const PREFERENCIAS_PADRAO = {
+    abasFixas: {
+      pessoal: { ativo: true, rotulo: "" },
+      financeiro: { ativo: true, rotulo: "" },
+      faculdade: { ativo: true, rotulo: "" },
+      projetos: { ativo: true, rotulo: "" },
+    },
+  };
+
+  function preferenciasPadrao() {
+    return JSON.parse(JSON.stringify(PREFERENCIAS_PADRAO));
+  }
+
+  /**
+   * Tipos de campo que uma aba do usuário pode ter — os mesmos que
+   * UI.campoHTML já sabe desenhar, mais "simNao" (caixa de marcar).
+   */
+  const TIPOS_CAMPO = [
+    { valor: "text", rotulo: "Texto curto" },
+    { valor: "textarea", rotulo: "Texto longo" },
+    { valor: "date", rotulo: "Data" },
+    { valor: "number", rotulo: "Número" },
+    { valor: "dinheiro", rotulo: "Valor em R$" },
+    { valor: "select", rotulo: "Lista de opções" },
+    { valor: "simNao", rotulo: "Sim/Não" },
+  ];
+
+  /**
+   * Pontos de partida para uma aba nova. Cada um já vem com os campos que
+   * fazem sentido para aquele uso — o usuário pode ajustar depois em
+   * "Ajustes da aba". naAgenda decide se os itens entram na agenda dos
+   * próximos 30 dias e nos alertas de semana cheia da visão geral.
+   */
+  const MODELOS_PILAR = [
+    {
+      id: "compromissos",
+      rotulo: "Compromissos",
+      descricao: "Data, tipo e local — o formato da aba Pessoal.",
+      naAgenda: true,
+      campos: [
+        { id: "tipo", rotulo: "Tipo", tipo: "select", opcoes: ["compromisso", "tarefa", "lembrete", "meta", "outro"], naLista: true },
+        { id: "local", rotulo: "Local", tipo: "text", naLista: true },
+        { id: "observacoes", rotulo: "Observações", tipo: "textarea", naLista: false },
+      ],
+    },
+    {
+      id: "tarefas",
+      rotulo: "Tarefas",
+      descricao: "Lista de afazeres com prioridade.",
+      naAgenda: true,
+      campos: [
+        { id: "prioridade", rotulo: "Prioridade", tipo: "select", opcoes: ["baixa", "média", "alta"], naLista: true },
+        { id: "observacoes", rotulo: "Observações", tipo: "textarea", naLista: false },
+      ],
+    },
+    {
+      id: "habitos",
+      rotulo: "Hábitos / rotina",
+      descricao: "Checklist que não entra na agenda de prazos.",
+      naAgenda: false,
+      campos: [
+        { id: "frequencia", rotulo: "Frequência", tipo: "select", opcoes: ["diário", "semanal", "mensal"], naLista: true },
+        { id: "observacoes", rotulo: "Observações", tipo: "textarea", naLista: false },
+      ],
+    },
+    {
+      id: "colecao",
+      rotulo: "Coleção",
+      descricao: "Livros, filmes, cursos — algo que se acompanha, não agenda.",
+      naAgenda: false,
+      campos: [
+        { id: "situacao", rotulo: "Situação", tipo: "select", opcoes: ["quero", "em andamento", "concluído", "abandonado"], naLista: true },
+        { id: "autor", rotulo: "Autor / fonte", tipo: "text", naLista: true },
+        { id: "nota", rotulo: "Nota", tipo: "number", naLista: true },
+        { id: "link", rotulo: "Link", tipo: "text", naLista: false },
+        { id: "comentario", rotulo: "Comentário", tipo: "textarea", naLista: false },
+      ],
+    },
+    {
+      id: "registros",
+      rotulo: "Registros com valor",
+      descricao: "Algo com valor — treinos pagos, freelas, gastos de um hobby.",
+      naAgenda: true,
+      campos: [
+        { id: "valor", rotulo: "Valor (R$)", tipo: "dinheiro", naLista: true },
+        { id: "categoria", rotulo: "Categoria", tipo: "text", naLista: true },
+        { id: "observacoes", rotulo: "Observações", tipo: "textarea", naLista: false },
+      ],
+    },
+    {
+      id: "livre",
+      rotulo: "Do zero",
+      descricao: "Sem campos prontos — monte em Ajustes da aba.",
+      naAgenda: true,
+      campos: [],
+    },
+  ];
 
   const CATEGORIAS_PADRAO = [
     "Moradia",
@@ -88,9 +197,10 @@ const Store = (() => {
 
   function estadoVazio() {
     return {
-      versao: 7,
+      versao: 8,
       atualizadoEm: new Date().toISOString(),
       perfil: { ...PERFIL_PADRAO },
+      preferencias: preferenciasPadrao(),
       financeiro: {
         saldoAtual: 0,
         moeda: "BRL",
@@ -233,6 +343,15 @@ const Store = (() => {
     const out = { ...base, ...e };
 
     out.perfil = { ...PERFIL_PADRAO, ...(e.perfil || {}) };
+
+    // v7 → v8: preferências de abas fixas (ligar/desligar, renomear). Mescla
+    // campo a campo para uma preferência salva não perder o que uma versão
+    // nova de PREFERENCIAS_PADRAO venha a acrescentar.
+    out.preferencias = preferenciasPadrao();
+    Object.keys(out.preferencias.abasFixas).forEach((k) => {
+      out.preferencias.abasFixas[k] = { ...out.preferencias.abasFixas[k], ...(e.preferencias?.abasFixas?.[k] || {}) };
+    });
+
     out.financeiro = { ...base.financeiro, ...(e.financeiro || {}) };
     out.faculdade = { ...base.faculdade, ...(e.faculdade || {}) };
 
@@ -313,14 +432,41 @@ const Store = (() => {
     out.pessoal = { compromissos: e.pessoal?.compromissos || [] };
 
     // v6 → v7: o usuário pode criar as próprias abas da barra lateral.
-    out.pilares = (Array.isArray(e.pilares) ? e.pilares : []).map((p) => ({
-      icone: ICONES_PILAR[0],
-      cor: PALETA_PILAR[0].valor,
-      ...p,
-      itens: p.itens || [],
-    }));
+    out.pilares = (Array.isArray(e.pilares) ? e.pilares : []).map((p) => {
+      const pil = {
+        icone: ICONES_PILAR[0],
+        cor: PALETA_PILAR[0].valor,
+        naAgenda: true,
+        ...p,
+        itens: p.itens || [],
+      };
 
-    out.versao = 7;
+      // v7 → v8: toda aba passa a ter um modelo e uma lista de campos
+      // próprios (editáveis em "Ajustes da aba"). Uma aba sem `campos` é de
+      // antes disso existir e vira o modelo "compromissos", que reproduz
+      // exatamente o formulário fixo que ela já tinha — a presença de
+      // `campos` é a marca que impede essa conversão de rodar de novo.
+      if (!Array.isArray(pil.campos)) {
+        const modeloPadrao = MODELOS_PILAR.find((m) => m.id === "compromissos");
+        pil.modelo = "compromissos";
+        pil.campos = modeloPadrao.campos.map((c) => ({ ...c }));
+        pil.naAgenda = true;
+      }
+
+      // v7 → v8: os valores dos campos próprios, que ficavam soltos no item,
+      // vão para `extras` — id/descricao/data/concluido continuam campos de
+      // sistema. A presença de `extras` é a marca que impede a conversão de
+      // rodar de novo e perder valores já convertidos.
+      pil.itens = pil.itens.map((it) => {
+        if (it.extras) return it;
+        const { id, descricao, data, concluido, ...resto } = it;
+        return { id, descricao, data, concluido: !!concluido, extras: resto };
+      });
+
+      return pil;
+    });
+
+    out.versao = 8;
     return out;
   }
 
@@ -354,6 +500,8 @@ const Store = (() => {
     CATEGORIAS_PADRAO,
     PALETA_PILAR,
     ICONES_PILAR,
+    MODELOS_PILAR,
+    TIPOS_CAMPO,
     textoParaHTML,
 
     estado: () => carregar(),
@@ -433,6 +581,22 @@ const Store = (() => {
       e.perfil = { ...e.perfil, ...patch };
       persistir();
       return e.perfil;
+    },
+
+    // patch.abasFixas mescla campo a campo (ativo/rotulo) em vez de
+    // substituir o objeto inteiro, para desligar uma aba não apagar o
+    // rótulo que já tinha sido escolhido para ela.
+    definirPreferencias(patch) {
+      const e = carregar();
+      const { abasFixas, ...resto } = patch;
+      e.preferencias = { ...e.preferencias, ...resto };
+      if (abasFixas) {
+        Object.entries(abasFixas).forEach(([k, v]) => {
+          e.preferencias.abasFixas[k] = { ...e.preferencias.abasFixas[k], ...v };
+        });
+      }
+      persistir();
+      return e.preferencias;
     },
 
     /* ------------------------- Backup completo --------------------------

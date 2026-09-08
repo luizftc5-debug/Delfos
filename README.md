@@ -8,7 +8,7 @@ Aplicação estática: HTML, CSS e JavaScript puros, sem instalação e sem serv
 
 ## Como abrir
 
-**Online (recomendado):** <https://luizftc5-debug.github.io/Delfos>
+**Online (recomendado):** <https://luizftc5-debug.github.io/Delfos/dashboard>
 
 **No seu computador**, pela pasta `dashboard`:
 

@@ -165,7 +165,7 @@ function ajuda({ titulo, passos, origem, detalhe }) {
       <h2 class="modal-title">${UI.fmt.escape(titulo)}</h2>
     </div>
     <div class="modal-body">
-      <ol style="margin:0; padding-left:18px; display:flex; flex-direction:column; gap:8px; font-size:13px; color:var(--ink-2);">
+      <ol style="margin:0; padding-left:18px; display:flex; flex-direction:column; gap:8px; font-size:13px; color:var(--texto-2);">
         ${passos.map((p) => `<li>${UI.fmt.escape(p)}</li>`).join("")}
       </ol>
       ${origem ? `

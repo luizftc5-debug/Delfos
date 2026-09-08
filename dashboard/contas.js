@@ -92,7 +92,7 @@
           </span>
         </div>
         <a href="conta.html?tipo=conta&id=${fmt.escape(c.id)}" style="text-decoration:none; color:inherit; display:block;">
-          <div class="stat-value num" style="font-size:22px; color:${c.saldo < 0 ? "var(--st-critical)" : "var(--ink)"};">${fmt.moeda(c.saldo)}</div>
+          <div class="stat-value num" style="font-size:22px; color:${c.saldo < 0 ? "var(--st-critical)" : "var(--texto)"};">${fmt.moeda(c.saldo)}</div>
           <div class="stat-sub">
             abertura ${fmt.moeda(c.saldoInicial || 0)} · ${c.movimentos} ${c.movimentos === 1 ? "lançamento" : "lançamentos"}
           </div>

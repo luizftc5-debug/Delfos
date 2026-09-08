@@ -172,7 +172,7 @@
       <dl class="ficha">
         ${linhas.map(([k, v]) => `<div><dt>${fmt.escape(k)}</dt><dd>${fmt.escape(v)}</dd></div>`).join("")}
       </dl>
-      ${projeto.link ? `<a class="btn sm" href="${fmt.escape(projeto.link)}" target="_blank" rel="noopener" style="margin-top:12px;">Abrir link do projeto ↗</a>` : ""}`;
+      ${projeto.link ? `<a class="btn sm" href="${fmt.escape(projeto.link)}" target="_blank" rel="noopener" style="margin-top:12px;">Abrir o link do projeto</a>` : ""}`;
   }
 
   /* ---------------------- Recebimentos e custos (dinheiro) ------------------- */
@@ -236,7 +236,7 @@
     renderMovimentos({
       campo: "custos",
       alvo: "custos",
-      cor: "var(--ink)",
+      cor: "var(--texto)",
       sinal: "−",
       vazio: {
         icone: "◍",
@@ -278,7 +278,7 @@
             <span class="anexo-nome">${fmt.escape(a.nome)}
               <span class="anexo-meta">${fmt.escape(Arquivos.tamanhoLegivel(a.tamanho))}</span>
             </span>
-            <span class="muted" style="font-size:11px;">abrir ↗</span>
+            <span class="muted" style="font-size:12px;">abrir</span>
           </button>`;
       })
       .join("");

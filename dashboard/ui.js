@@ -6,11 +6,13 @@
 const UI = (() => {
   /** Nome e versão do painel — aparecem na marca do rodapé da barra lateral. */
   const NOME = "Delfos";
-  const VERSAO = "1.1";
+  const VERSAO = "1.2";
 
   /* ------------------------------ Formatos ------------------------------- */
 
   const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  const MESES_LONGOS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
+    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 
   const fmt = {
     moeda(v) {
@@ -41,6 +43,23 @@ const UI = (() => {
       if (!chave) return "—";
       const [a, m] = chave.split("-");
       return `${MESES[Number(m) - 1]}/${a.slice(2)}`;
+    },
+    /**
+     * "10 de setembro" — para linhas de leitura corrida, onde uma data em
+     * números coladas com ponto médio soava a etiqueta de sistema. O ano só
+     * aparece quando não é o corrente.
+     */
+    dataPorExtenso(iso) {
+      if (!iso) return "sem data";
+      const [a, m, d] = iso.split("-");
+      const mes = MESES_LONGOS[Number(m) - 1];
+      if (!mes) return fmt.data(iso);
+      const ano = Number(a) === new Date().getFullYear() ? "" : ` de ${a}`;
+      return `${Number(d)} de ${mes}${ano}`;
+    },
+    capitalizar(s) {
+      const t = String(s ?? "");
+      return t ? t[0].toUpperCase() + t.slice(1) : t;
     },
     escape(s) {
       return String(s ?? "").replace(/[&<>"']/g, (c) =>
@@ -211,6 +230,8 @@ const UI = (() => {
         semana,
         itens,
         areas: [...new Set(itens.map((i) => i.area))],
+        // Rótulos legíveis: o id da área ("pilar:pl1") não serve para exibir.
+        rotulos: [...new Set(itens.map((i) => i.areaRotulo))],
         multiplasAreas: new Set(itens.map((i) => i.area)).size > 1,
       }))
       .sort((a, b) => a.semana.localeCompare(b.semana));
@@ -674,21 +695,19 @@ const UI = (() => {
   const tema = {
     KEY: "organizador.tema",
     OPCOES: [
-      { valor: "auto", rotulo: "Automático" },
-      { valor: "light", rotulo: "Claro" },
       { valor: "dark", rotulo: "Escuro" },
+      { valor: "light", rotulo: "Claro" },
     ],
+    // O padrão é a noite: sem escolha gravada, o painel abre escuro.
     atual() {
-      try { return localStorage.getItem(tema.KEY) || "auto"; } catch { return "auto"; }
+      try { return localStorage.getItem(tema.KEY) || "dark"; } catch { return "dark"; }
     },
     definir(v) {
       try { localStorage.setItem(tema.KEY, v); } catch { /* modo anônimo */ }
-      if (v === "auto") document.documentElement.removeAttribute("data-theme");
-      else document.documentElement.setAttribute("data-theme", v);
+      document.documentElement.setAttribute("data-theme", v);
     },
     iniciar() {
-      const v = tema.atual();
-      if (v !== "auto") document.documentElement.setAttribute("data-theme", v);
+      document.documentElement.setAttribute("data-theme", tema.atual());
     },
   };
 
@@ -1060,7 +1079,7 @@ const UI = (() => {
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `organizador-backup-${hojeISO()}.json`;
+            a.download = `delfos-backup-${hojeISO()}.json`;
             a.click();
             setTimeout(() => URL.revokeObjectURL(url), 30000);
             toast("Backup exportado.");
@@ -1193,7 +1212,7 @@ const UI = (() => {
     el.innerHTML = `
       <div class="meter-head">
         <span style="font-size:12.5px; font-weight:550;">${fmt.escape(rotulo)}</span>
-        <span class="num" style="font-size:12.5px; color:var(--ink-2);">${formatar(atual)} / ${formatar(alvo)}${sufixo}</span>
+        <span class="num" style="font-size:12.5px; color:var(--texto-2);">${formatar(atual)} / ${formatar(alvo)}${sufixo}</span>
       </div>
       <div class="meter-track"><div class="meter-fill" style="width:${pct}%; background:${cor};"></div></div>`;
     return el;

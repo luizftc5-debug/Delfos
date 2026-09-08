@@ -235,7 +235,7 @@
         <span class="anexo-nome">${fmt.escape(a.nome)}
           <span class="anexo-meta">${fmt.escape(Arquivos.tamanhoLegivel(a.tamanho))}</span>
         </span>
-        <span class="muted" style="font-size:11px;">abrir ↗</span>
+        <span class="muted" style="font-size:12px;">abrir</span>
       </button>`;
   }
 

@@ -34,12 +34,12 @@
             <div class="stat-sub" id="s-abertos-d"></div>
           </div>
           <div class="card tinted">
-            <div class="stat-label">Nesta semana</div>
+            <div class="stat-label" id="lbl-semana">Nesta semana</div>
             <div class="stat-value num" id="s-semana">—</div>
             <div class="stat-sub" id="s-semana-d"></div>
           </div>
           <div class="card tinted">
-            <div class="stat-label">Atrasados</div>
+            <div class="stat-label" id="lbl-atrasados">Atrasados</div>
             <div class="stat-value num" id="s-atrasados">—</div>
             <div class="stat-sub" id="s-atrasados-d"></div>
           </div>
@@ -59,11 +59,12 @@
           </div>
           <div class="card">
             <p class="card-note" style="margin:0 0 12px;">
-              Esta aba foi criada por você. Renomeá-la, trocar ícone e cor não mexe no que já está cadastrado;
-              excluí-la apaga também todos os itens dela.
+              Esta aba foi criada por você. Renomeá-la, trocar ícone e cor, ou ajustar os campos não mexe no
+              que já está cadastrado; excluí-la apaga também todos os itens dela.
             </p>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button class="btn" id="btn-editar-aba-2">Editar aba</button>
+              <button class="btn" id="btn-campos">Campos desta aba</button>
               <button class="btn danger" id="btn-excluir-aba">Excluir esta aba</button>
             </div>
           </div>
@@ -75,6 +76,7 @@
   <script src="data.js"></script>
   <script src="arquivos.js"></script>
   <script src="store.js"></script>
+  <script src="personalizacao.js"></script>
   <script src="ui.js"></script>
   <script src="financas.js"></script>
   <script src="pilar.js"></script>

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bem-vindo · Delfos</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;450;500;550;600&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" />
+  <link rel="stylesheet" href="theme.css" />
+</head>
+<body class="assistente-body">
+  <div class="assistente">
+    <header class="assistente-topo">
+      <span class="marca">Delfos</span>
+      <button class="btn ghost sm" id="btn-pular" type="button">Pular por enquanto</button>
+    </header>
+
+    <div class="assistente-progresso" id="progresso"></div>
+
+    <main class="assistente-card card">
+      <p class="leitura" id="frase" style="margin-bottom:22px;"></p>
+
+      <!-- Passo 1 — identidade -->
+      <section class="assistente-passo" id="passo-1">
+        <h2>Quem é você</h2>
+        <p class="sub">Seu nome aparece na barra lateral e nas saudações do painel.</p>
+
+        <div class="assistente-foto">
+          <div class="avatar" id="avatar-preview">•</div>
+          <div>
+            <button class="btn sm" id="btn-foto" type="button">Enviar foto</button>
+            <input type="file" accept="image/*" class="hidden" id="f-foto" />
+            <div class="hint" style="margin-top:6px;">Opcional — sem foto, o avatar usa suas iniciais.</div>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:16px;">
+          <label for="f-nome">Nome completo</label>
+          <input type="text" id="f-nome" placeholder="Como quer ser chamado" />
+        </div>
+
+        <div class="assistente-linha">
+          <div class="field">
+            <label for="f-nascimento">Data de nascimento <span class="muted">(opcional)</span></label>
+            <input type="date" id="f-nascimento" />
+          </div>
+          <div class="field">
+            <label for="f-cidade">Cidade <span class="muted">(opcional)</span></label>
+            <input type="text" id="f-cidade" placeholder="Ex.: Salvador, BA" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-pronomes">Pronomes <span class="muted">(opcional)</span></label>
+          <input type="text" id="f-pronomes" placeholder="Ex.: ela/dela, ele/dele, elu/delu" />
+        </div>
+      </section>
+
+      <!-- Passo 2 — ocupação -->
+      <section class="assistente-passo hidden" id="passo-2">
+        <h2>O que você faz</h2>
+        <p class="sub">Isso decide o que o painel sugere ligar no próximo passo.</p>
+
+        <div class="field">
+          <label for="f-ocupacao">Sua ocupação</label>
+          <input type="text" id="f-ocupacao" placeholder="Ex.: Estudante de Medicina, Advogada, Autônomo" />
+        </div>
+
+        <div class="field">
+          <label>Como descreveria seu momento?</label>
+          <div class="seg" id="seg-tipo">
+            <button type="button" data-valor="estudo">Estudo</button>
+            <button type="button" data-valor="trabalho">Trabalho</button>
+            <button type="button" data-valor="ambos">Os dois</button>
+            <button type="button" data-valor="outro">Outro</button>
+          </div>
+        </div>
+
+        <div id="bloco-academico" class="hidden">
+          <div class="assistente-linha">
+            <div class="field">
+              <label for="f-curso">Curso</label>
+              <input type="text" id="f-curso" placeholder="Ex.: Medicina" />
+            </div>
+            <div class="field">
+              <label for="f-semestre">Semestre atual</label>
+              <input type="number" step="1" id="f-semestre" placeholder="Ex.: 6" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="f-instituicao">Instituição <span class="muted">(opcional)</span></label>
+            <input type="text" id="f-instituicao" placeholder="Ex.: UFBA" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Passo 3 — abas -->
+      <section class="assistente-passo hidden" id="passo-3">
+        <h2>O que você quer acompanhar</h2>
+        <p class="sub">Ligue as abas que fazem sentido para você e renomeie à vontade. Desligar não apaga nada — dá para religar quando quiser, pelo seu perfil.</p>
+        <ul class="list" id="lista-abas"></ul>
+      </section>
+
+      <!-- Passo 4 — ajustes finais -->
+      <section class="assistente-passo hidden" id="passo-4">
+        <h2>Últimos ajustes</h2>
+        <p class="sub">É só isso — o resto você cadastra pelas telas, quando quiser.</p>
+
+        <div class="field">
+          <label>Tema do painel</label>
+          <div class="seg" id="seg-tema">
+            <button type="button" data-valor="dark">Escuro</button>
+            <button type="button" data-valor="light">Claro</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-objetivos">Objetivos do momento <span class="muted">(opcional)</span></label>
+          <textarea id="f-objetivos" placeholder="O que quer alcançar nos próximos meses."></textarea>
+        </div>
+
+        <div class="assistente-resumo" id="resumo" style="margin-top:22px;"></div>
+      </section>
+
+      <div class="assistente-nav">
+        <button class="btn" id="btn-voltar" type="button">Voltar</button>
+        <button class="btn primary" id="btn-avancar" type="button">Continuar</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="arquivos.js"></script>
+  <script src="store.js"></script>
+  <script src="personalizacao.js"></script>
+  <script src="ui.js"></script>
+  <script src="bemvindo.js"></script>
+</body>
+</html>

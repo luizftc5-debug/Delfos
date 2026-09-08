@@ -37,16 +37,17 @@
     });
 
     // A página abre falando com ele pelo primeiro nome, não com "usuário".
-    const primeiroNome = String(e.perfil?.nome || "").trim().split(/\s+/)[0] || "";
-    const hora = new Date().getHours();
-    const parte = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
-    document.getElementById("saudacao").textContent = primeiroNome ? `${parte}, ${primeiroNome}` : "Visão geral";
+    document.getElementById("saudacao").textContent = Personalizacao.saudacao();
 
     const naSemana = UI.compromissos().filter((i) => {
       const d = UI.diasAte(i.data);
       return d !== null && d >= 0 && d <= 7;
     }).length;
+    // A ocupação abre a linha quando preenchida — o painel fala com quem a
+    // pessoa disse ser, em vez de presumir um perfil fixo.
+    const ocupacao = Personalizacao.ocupacaoResumo();
     document.getElementById("sub-resumo").textContent =
+      (ocupacao ? `${ocupacao} · ` : "") +
       `${naSemana ? `${naSemana} ${naSemana === 1 ? "compromisso" : "compromissos"}` : "Nenhum compromisso"} nos próximos 7 dias. ` +
       `${atual.quantidade} ${atual.quantidade === 1 ? "lançamento" : "lançamentos"} neste mês.`;
 
@@ -188,12 +189,12 @@
 
     const cartoes = [
       {
-        href: "financeiro.html", cor: "financeiro", titulo: "Financeiro",
+        id: "financeiro", href: "financeiro.html", cor: "financeiro",
         valor: fmt.moedaCurta(atual.resultado),
         sub: `${atual.quantidade} ${atual.quantidade === 1 ? "lançamento" : "lançamentos"} no mês, ${e.financeiro.metas.length} ${e.financeiro.metas.length === 1 ? "meta" : "metas"}`,
       },
       {
-        href: "faculdade.html", cor: "faculdade", titulo: "Faculdade",
+        id: "faculdade", href: "faculdade.html", cor: "faculdade",
         valor: `${e.faculdade.disciplinas.length}`,
         sub: `${e.faculdade.disciplinas.length === 1 ? "disciplina" : "disciplinas"}, ${urgentes("faculdade")} ${urgentes("faculdade") === 1 ? "prazo" : "prazos"} nesta semana`,
       },
@@ -201,7 +202,7 @@
         const ativos = e.projetos.filter((p) => p.status !== "concluído" && p.status !== "arquivado");
         const renda = ativos.reduce((s, p) => s + (Number(p.rendaEstimada) || 0), 0);
         return {
-          href: "projetos.html", cor: "projetos", titulo: "Projetos",
+          id: "projetos", href: "projetos.html", cor: "projetos",
           valor: `${ativos.length}`,
           sub: renda
             ? `${ativos.length === 1 ? "projeto ativo" : "projetos ativos"}, ${fmt.moedaCurta(renda)} por mês estimados`
@@ -211,12 +212,15 @@
       (() => {
         const abertos = (e.pessoal?.compromissos || []).filter((c) => !c.concluido);
         return {
-          href: "pessoal.html", cor: "pessoal", titulo: "Pessoal",
+          id: "pessoal", href: "pessoal.html", cor: "pessoal",
           valor: `${abertos.length}`,
           sub: `${abertos.length === 1 ? "compromisso em aberto" : "compromissos em aberto"}, ${urgentes("pessoal")} nesta semana`,
         };
       })(),
-    ];
+    ]
+      // Aba fixa desligada: some do painel de resumo, sem apagar nada.
+      .filter((c) => Personalizacao.abaAtiva(c.id))
+      .map((c) => ({ ...c, titulo: Personalizacao.rotuloAba(c.id) }));
 
     // As abas criadas pelo usuário entram na mesma grade, com a cor delas.
     (e.pilares || []).forEach((p) => {

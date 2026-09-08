@@ -25,7 +25,6 @@
 
   UI.iniciarPagina("pilar", { idAtivo: id });
 
-  const TIPOS = ["compromisso", "tarefa", "lembrete", "meta", "outro"];
   const itens = () => (Store.achar(CAMINHO, id) || {}).itens || [];
 
   /* --------------------------------- Render --------------------------------- */
@@ -62,16 +61,35 @@
     document.getElementById("s-abertos-d").textContent =
       `${todos.length} ${todos.length === 1 ? "registro no total" : "registros no total"}`;
 
-    document.getElementById("s-semana").textContent = semana.length;
-    document.getElementById("s-semana-d").textContent = semana[0]
-      ? `próximo: ${semana[0].descricao}`
-      : "nada nos próximos 7 dias";
+    // Uma aba fora da agenda (hábitos, coleção…) não tem "esta semana" nem
+    // "atrasado" — os mesmos dois cartões passam a mostrar concluídos e total.
+    if (pilar.naAgenda) {
+      document.getElementById("lbl-semana").textContent = "Nesta semana";
+      document.getElementById("s-semana").textContent = semana.length;
+      document.getElementById("s-semana-d").textContent = semana[0]
+        ? `próximo: ${semana[0].descricao}`
+        : "nada nos próximos 7 dias";
 
-    const elAtr = document.getElementById("s-atrasados");
-    elAtr.textContent = atrasados.length;
-    elAtr.className = `stat-value num ${atrasados.length ? "delta down" : ""}`;
-    document.getElementById("s-atrasados-d").textContent =
-      atrasados.length ? "vale reagendar ou concluir" : "nada atrasado";
+      document.getElementById("lbl-atrasados").textContent = "Atrasados";
+      const elAtr = document.getElementById("s-atrasados");
+      elAtr.textContent = atrasados.length;
+      elAtr.className = `stat-value num ${atrasados.length ? "delta down" : ""}`;
+      document.getElementById("s-atrasados-d").textContent =
+        atrasados.length ? "vale reagendar ou concluir" : "nada atrasado";
+    } else {
+      const concluidos = todos.filter((c) => c.concluido).length;
+      document.getElementById("lbl-semana").textContent = "Concluídos";
+      document.getElementById("s-semana").textContent = concluidos;
+      document.getElementById("s-semana-d").textContent =
+        todos.length ? `${Math.round((concluidos / todos.length) * 100)}% do total` : "";
+
+      document.getElementById("lbl-atrasados").textContent = "Total";
+      const elAtr = document.getElementById("s-atrasados");
+      elAtr.textContent = todos.length;
+      elAtr.className = "stat-value num";
+      document.getElementById("s-atrasados-d").textContent =
+        todos.length === 1 ? "registro nesta aba" : "registros nesta aba";
+    }
 
     renderLista(todos);
     UI.montarLayout("pilar", { idAtivo: id });
@@ -91,7 +109,9 @@
         UI.vazio({
           icone: pilar.icone,
           titulo: todos.length ? "Nada em aberto" : `Nenhum item em ${pilar.nome} ainda`,
-          texto: "Cada item tem data, tipo e local — e aparece na agenda dos próximos 30 dias da visão geral.",
+          texto: pilar.naAgenda
+            ? "Cada item pode ter data e os campos que você configurar — e entra na agenda dos próximos 30 dias da visão geral."
+            : "Cada item pode ter data e os campos que você configurar. Esta aba não entra na agenda.",
           rotuloAcao: "Adicionar item",
           aoAcionar: novoItem,
         })
@@ -104,13 +124,16 @@
     visiveis.forEach((c) => {
       const u = UI.urgencia(c.data);
       const li = document.createElement("li");
+      const badge = pilar.naAgenda
+        ? `<span class="badge ${c.concluido ? "feito" : u.nivel}">${c.concluido ? "concluído" : u.rotulo}</span>`
+        : c.concluido ? `<span class="badge feito">concluído</span>` : "";
       li.innerHTML = `
         <input type="checkbox" class="check" ${c.concluido ? "checked" : ""} aria-label="Marcar como concluído" />
         <span class="grow">
           <span class="title ${c.concluido ? "strike" : ""}">${fmt.escape(c.descricao)}</span>
-          <span class="meta">${fmt.escape(c.tipo || "compromisso")}${c.local ? ` · ${fmt.escape(c.local)}` : ""} · ${fmt.data(c.data)}</span>
+          <span class="meta">${metaLista(c)}</span>
         </span>
-        <span class="badge ${c.concluido ? "feito" : u.nivel}">${c.concluido ? "concluído" : u.rotulo}</span>
+        ${badge}
         <span class="row-actions">
           <button class="btn ghost sm" data-editar>Editar</button>
           <button class="btn ghost sm" data-excluir>Excluir</button>
@@ -126,28 +149,52 @@
     box.appendChild(ul);
   }
 
+  /** Os campos próprios marcados "na lista", formatados, mais a data se houver. */
+  function metaLista(c) {
+    const partes = (pilar.campos || [])
+      .filter((campo) => campo.naLista)
+      .map((campo) => {
+        const v = (c.extras || {})[campo.id];
+        if (v === undefined || v === null || v === "") return "";
+        if (campo.tipo === "simNao") return v ? campo.rotulo : "";
+        if (campo.tipo === "dinheiro") return fmt.moeda(v);
+        return String(v);
+      })
+      .filter(Boolean)
+      .map(fmt.escape);
+    if (c.data) partes.push(fmt.data(c.data));
+    return partes.join(" · ") || "sem detalhes";
+  }
+
   /* --------------------------------- Ações ---------------------------------- */
 
+  // descricao e data são campos de sistema — o resto vem dos campos próprios
+  // da aba (modelo escolhido na criação, ajustáveis em "Campos desta aba").
   const camposItem = () => [
     { nome: "descricao", rotulo: "O que é", tipo: "text", obrigatorio: true, placeholder: `Ex.: algo de ${pilar.nome}` },
-    { nome: "data", rotulo: "Data", tipo: "date", obrigatorio: true, valorPadrao: UI.hojeISO() },
-    { nome: "tipo", rotulo: "Tipo", tipo: "select", opcoes: TIPOS },
-    { nome: "local", rotulo: "Local", tipo: "text", placeholder: "Opcional" },
-    { nome: "observacoes", rotulo: "Observações", tipo: "textarea" },
+    { nome: "data", rotulo: pilar.naAgenda ? "Data" : "Data (opcional)", tipo: "date", obrigatorio: !!pilar.naAgenda, valorPadrao: UI.hojeISO() },
+    ...UI.camposItemPilar(pilar),
   ];
+
+  // Separa descricao/data (sistema) do resto (extras), nos dois sentidos.
+  const paraExtras = (v) => {
+    const { descricao, data, ...resto } = v;
+    return { descricao, data, extras: resto };
+  };
+  const deExtras = (c) => ({ descricao: c.descricao, data: c.data, ...(c.extras || {}) });
 
   async function novoItem() {
     const v = await UI.formulario({ titulo: `Novo item em ${pilar.nome}`, campos: camposItem() });
     if (!v) return;
-    Store.subInserir(CAMINHO, id, "itens", { ...v, concluido: false });
+    Store.subInserir(CAMINHO, id, "itens", { ...paraExtras(v), concluido: false });
     UI.toast("Item cadastrado.");
     render();
   }
 
   async function editarItem(c) {
-    const v = await UI.formulario({ titulo: "Editar item", campos: camposItem(), valores: c });
+    const v = await UI.formulario({ titulo: "Editar item", campos: camposItem(), valores: deExtras(c) });
     if (!v) return;
-    Store.subAtualizar(CAMINHO, id, "itens", c.id, v);
+    Store.subAtualizar(CAMINHO, id, "itens", c.id, paraExtras(v));
     UI.toast("Item atualizado.");
     render();
   }
@@ -193,6 +240,10 @@
   document.getElementById("btn-item").addEventListener("click", novoItem);
   document.getElementById("btn-editar-aba").addEventListener("click", editarAba);
   document.getElementById("btn-editar-aba-2").addEventListener("click", editarAba);
+  document.getElementById("btn-campos").addEventListener("click", async () => {
+    await UI.editorCampos(pilar.id);
+    render();
+  });
   document.getElementById("btn-excluir-aba").addEventListener("click", excluirAba);
   document.getElementById("f-concluidos").addEventListener("change", (ev) => {
     verConcluidos = ev.target.checked;

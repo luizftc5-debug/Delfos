@@ -21,6 +21,13 @@ E acesse <http://localhost:8000>.
 > Abrir o arquivo direto (`file://`) funciona para tudo, **menos** o login do Google — ele exige
 > `http://` ou `https://`.
 
+## Na primeira vez que você abrir
+
+Um assistente pergunta quem você é, o que faz e quais das quatro abas fixas (Pessoal, Financeiro,
+Faculdade, Projetos) fazem sentido pra você — dá pra desligar ou renomear qualquer uma, e religar
+depois pelo perfil. Dá pra pular e preencher tudo depois. Nada disso mexe em dados que já existam
+no navegador.
+
 ## Como usar
 
 Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
@@ -34,7 +41,7 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 | **Faculdade** | Disciplinas, prazos e entregas. Cada disciplina abre em **página própria**, com avaliações e notas, prazos, materiais e resumos — em materiais e resumos dá para **anexar documentos** (PDF, slides, fotos) ou **importar do Google Drive** |
 | **Projetos** | Só iniciativas pessoais que geram renda. Cada projeto abre em **página própria**, com ficha completa, etapas, recebimentos, custos, documentos e anotações |
 | **Pessoal** | Consultas, tarefas e recados que não são financeiro, faculdade nem projeto — ex.: consulta médica, levar o carro à revisão |
-| **Suas abas** | Abas que você mesmo cria, com nome, ícone e cor — ex.: Academia, Leituras, Igreja |
+| **Suas abas** | Abas que você mesmo cria, com nome, ícone, cor e um modelo de partida (Compromissos, Tarefas, Hábitos, Coleção, Registros com valor, Do zero) — ex.: Academia, Leituras, Igreja. Depois, em "Ajustes da aba", dá pra adicionar seus próprios campos |
 
 > Trabalhos da faculdade e o TCC ficam em **Faculdade**, não em Projetos.
 
@@ -79,14 +86,20 @@ Na lista de projetos, o cartão continua mostrando o resumo e a **próxima etapa
 Clique no seu nome, no alto da barra lateral, para abrir o cartão de perfil. **É o único lugar de
 configuração** — tema e backup ficam ali dentro, junto com sua ficha.
 
-- **Editar perfil** abre um formulário em três partes: quem você é (nome, data de nascimento,
-  telefone, e-mail, cidade), faculdade (curso, instituição, semestre, matrícula, início do curso) e
-  dois textos livres — sobre você e seus objetivos do momento. Só o que estiver preenchido aparece
-  na ficha; a idade é calculada sozinha a partir da data de nascimento.
+- **Editar perfil** abre um formulário em partes: quem você é (nome, data de nascimento, pronomes,
+  telefone, e-mail, cidade), ocupação (o que você faz e o momento — estudo, trabalho, os dois),
+  vida acadêmica (só aparece para quem estuda: curso, instituição, semestre, matrícula, início do
+  curso) e dois textos livres — sobre você e seus objetivos do momento. Só o que estiver preenchido
+  aparece na ficha; a idade é calculada sozinha a partir da data de nascimento.
 - **Enviar foto** troca as iniciais por uma foto sua. A imagem é recortada e reduzida antes de
   salvar, então ocupa poucos KB.
-- **Tema do painel**: automático (segue o sistema), claro ou escuro. Muda na hora.
+- **Abas do painel**: ligue ou desligue Pessoal, Financeiro, Faculdade e Projetos, e renomeie cada
+  uma à vontade — útil se alguma não fizer sentido para você. Desligar não apaga nada, só tira da
+  barra lateral; dá para religar a qualquer momento.
+- **Tema do painel**: claro ou escuro. Muda na hora.
 - **Backup e dados**: exportar, importar ou apagar tudo.
+- **Refazer configuração inicial**: reabre o assistente de boas-vindas (veja abaixo), já preenchido
+  com o que você tinha salvo.
 
 O cartão também mostra quantas disciplinas e registros você tem, quantos compromissos há nesta
 semana e quanto os documentos anexados ocupam.
@@ -108,14 +121,23 @@ há algo não salvo. `Ctrl + S` (ou `Cmd + S`) salva na hora.
 
 ### Criar suas próprias abas
 
-O botão **＋ Nova aba**, embaixo da lista da barra lateral, cria uma aba sua: escolha nome, ícone e
-cor. Ela ganha página própria, onde você cadastra itens com data, tipo e local.
+O botão **＋ Nova aba**, embaixo da lista da barra lateral, cria uma aba sua: escolha nome, ícone,
+cor e um **modelo** de partida — Compromissos (o formato de sempre: data, tipo, local), Tarefas,
+Hábitos/rotina, Coleção (livros, filmes, cursos), Registros com valor, ou Do zero. O modelo só
+decide os campos com que a aba começa; dá para ajustar depois.
 
-O que você cadastrar nela **entra na agenda dos próximos 30 dias e nos alertas de semana cheia** da
-visão geral, junto com os prazos da faculdade, os deadlines dos projetos e os compromissos pessoais.
+Abas dos modelos Compromissos, Tarefas e Registros com valor **entram na agenda dos próximos 30
+dias e nos alertas de semana cheia** da visão geral, junto com os prazos da faculdade, os deadlines
+dos projetos e os compromissos pessoais. Hábitos e Coleção ficam de fora — não fazem sentido como
+prazo.
 
-Na página da aba, em **Ajustes da aba**, dá para renomear, trocar ícone e cor, ou excluir. Renomear
-não mexe no que já está cadastrado; excluir apaga os itens junto.
+Na página da aba, em **Ajustes da aba**, dá para:
+
+- **Editar aba**: renomear, trocar ícone e cor. Não mexe no que já está cadastrado.
+- **Campos desta aba**: adicionar, editar, excluir e reordenar os campos próprios dos itens — texto,
+  texto longo, data, número, valor em R$, lista de opções ou sim/não. Marque "mostrar na listagem"
+  para um campo aparecer direto na lista, sem precisar abrir o item.
+- **Excluir esta aba**: some da barra e apaga os itens junto.
 
 ### Anexar documentos nas disciplinas
 

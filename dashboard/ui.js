@@ -6,7 +6,7 @@
 const UI = (() => {
   /** Nome e versão do painel — aparecem na marca do rodapé da barra lateral. */
   const NOME = "Delfos";
-  const VERSAO = "1.2";
+  const VERSAO = "1.3";
 
   /* ------------------------------ Formatos ------------------------------- */
 
@@ -253,8 +253,16 @@ const UI = (() => {
     disciplina: "faculdade", projeto: "projetos",
   };
 
-  /** As abas fixas mais as que o usuário criou, na ordem em que aparecem. */
+  /**
+   * As abas fixas ligadas (com o nome que o usuário escolheu, se escolheu
+   * algum) mais as que o usuário criou, na ordem em que aparecem. "Visão
+   * geral" não é uma aba fixa configurável — sempre aparece.
+   */
   function paginas() {
+    const home = PAGINAS[0];
+    const fixas = Personalizacao.abasFixas()
+      .filter((a) => a.ativo)
+      .map((a) => ({ ...PAGINAS.find((p) => p.id === a.id), rotulo: a.rotulo }));
     const criadas = (Store.estado().pilares || []).map((p) => ({
       id: `pilar:${p.id}`,
       rotulo: p.nome,
@@ -263,7 +271,7 @@ const UI = (() => {
       corHex: p.cor,
       icone: p.icone,
     }));
-    return [...PAGINAS, ...criadas];
+    return [home, ...fixas, ...criadas];
   }
 
   function contagens() {
@@ -394,24 +402,166 @@ const UI = (() => {
 
   /* --------------------- Abas criadas pelo usuário ------------------------- */
 
-  const camposPilar = () => [
+  // O modelo só entra no formulário de criação — trocar de modelo depois de
+  // já ter itens cadastrados bagunçaria os campos deles, então a edição
+  // (pilar.js → editarAba) chama camposPilar() sem argumento nenhum.
+  const camposPilar = ({ comModelo = false } = {}) => [
     { nome: "nome", rotulo: "Nome da aba", tipo: "text", obrigatorio: true, placeholder: "Ex.: Academia, Leituras, Igreja" },
     { nome: "icone", rotulo: "Ícone", tipo: "select", opcoes: Store.ICONES_PILAR },
     { nome: "cor", rotulo: "Cor", tipo: "select", opcoes: Store.PALETA_PILAR },
     { nome: "descricao", rotulo: "Do que se trata", tipo: "text", placeholder: "Aparece como subtítulo da página" },
+    ...(comModelo ? [{
+      nome: "modelo", rotulo: "Modelo", tipo: "select",
+      opcoes: Store.MODELOS_PILAR.map((m) => ({ valor: m.id, rotulo: m.rotulo })),
+      dica: "Decide os campos iniciais dos itens — dá para ajustar depois em \"Ajustes da aba\".",
+    }] : []),
   ];
 
-  /** Cria uma aba nova e já abre a página dela. */
+  /** Cria uma aba nova, já com os campos do modelo escolhido, e abre a página dela. */
   async function novaAba() {
     const v = await formulario({
       titulo: "Nova aba",
       descricao: "Uma aba sua na barra lateral, com página própria. O que você cadastrar nela entra na agenda da visão geral junto com os outros pilares.",
-      campos: camposPilar(),
+      campos: camposPilar({ comModelo: true }),
       rotuloConfirmar: "Criar aba",
     });
     if (!v) return;
-    const novo = Store.inserir("pilares", { ...v, itens: [] });
+    const modelo = Store.MODELOS_PILAR.find((m) => m.id === v.modelo) || Store.MODELOS_PILAR[0];
+    const { modelo: _idModelo, ...dadosAba } = v;
+    const novo = Store.inserir("pilares", {
+      ...dadosAba,
+      modelo: modelo.id,
+      campos: modelo.campos.map((c) => ({ ...c })),
+      naAgenda: modelo.naAgenda,
+      itens: [],
+    });
     location.href = `pilar.html?id=${encodeURIComponent(novo.id)}`;
+  }
+
+  /**
+   * Traduz os campos próprios de uma aba (modelo ou editor) para o formato
+   * que UI.formulario entende. Quem chama junta o resultado com os campos de
+   * sistema (descricao, data) e depois separa os valores em `extras`.
+   */
+  function camposItemPilar(pilar) {
+    return (pilar.campos || []).map((c) => ({
+      nome: c.id,
+      rotulo: c.rotulo,
+      tipo: c.tipo,
+      opcoes: c.opcoes,
+      obrigatorio: !!c.obrigatorio,
+      dica: c.dica || "",
+    }));
+  }
+
+  /** Formulário para criar/editar um campo próprio (usado por editorCampos). */
+  function formularioCampo(valores = {}) {
+    return formulario({
+      titulo: valores.id ? "Editar campo" : "Novo campo",
+      campos: [
+        { nome: "rotulo", rotulo: "Nome do campo", tipo: "text", obrigatorio: true, placeholder: "Ex.: Prioridade" },
+        { nome: "tipo", rotulo: "Tipo", tipo: "select", opcoes: Store.TIPOS_CAMPO },
+        { nome: "opcoes", rotulo: "Opções (uma por linha)", tipo: "textarea", dica: 'Só é usado quando o tipo é "Lista de opções".' },
+        { nome: "naLista", rotulo: "Mostrar na listagem", tipo: "simNao" },
+        { nome: "obrigatorio", rotulo: "Obrigatório ao cadastrar", tipo: "simNao" },
+      ],
+      valores: { ...valores, opcoes: Array.isArray(valores.opcoes) ? valores.opcoes.join("\n") : (valores.opcoes || "") },
+      rotuloConfirmar: "Salvar campo",
+    }).then((v) => {
+      if (!v) return null;
+      return {
+        rotulo: v.rotulo,
+        tipo: v.tipo,
+        opcoes: v.opcoes ? v.opcoes.split("\n").map((s) => s.trim()).filter(Boolean) : [],
+        naLista: !!v.naLista,
+        obrigatorio: !!v.obrigatorio,
+      };
+    });
+  }
+
+  /**
+   * Gerenciador dos campos próprios de uma aba — adicionar, editar, excluir e
+   * reordenar. Cada ação salva e reabre o próprio modal, o mesmo padrão de
+   * abrirPerfil ao trocar a foto.
+   */
+  function editorCampos(pilarId) {
+    const pilar = Store.achar("pilares", pilarId);
+    if (!pilar) return;
+    const campos = pilar.campos || [];
+
+    const linhaCampo = (c, i) => {
+      const tipoRotulo = Store.TIPOS_CAMPO.find((t) => t.valor === c.tipo)?.rotulo || c.tipo;
+      const meta = [tipoRotulo, c.naLista ? "na lista" : "", c.obrigatorio ? "obrigatório" : ""].filter(Boolean).join(" · ");
+      return `
+        <li data-id="${fmt.escape(c.id)}">
+          <span class="grow">
+            <span class="title">${fmt.escape(c.rotulo)}</span>
+            <span class="meta">${fmt.escape(meta)}</span>
+          </span>
+          <span class="row-actions" style="opacity:1;">
+            <button class="btn ghost sm" data-subir type="button" aria-label="Mover para cima" ${i === 0 ? "disabled" : ""}>↑</button>
+            <button class="btn ghost sm" data-descer type="button" aria-label="Mover para baixo" ${i === campos.length - 1 ? "disabled" : ""}>↓</button>
+            <button class="btn ghost sm" data-editar type="button">Editar</button>
+            <button class="btn ghost sm" data-excluir type="button">Excluir</button>
+          </span>
+        </li>`;
+    };
+
+    const html = `
+      <div class="modal-head">
+        <h2 class="modal-title">Campos de "${fmt.escape(pilar.nome)}"</h2>
+        <p class="modal-desc">O que cada item desta aba guarda, além de nome e data. Marque "na lista" para o campo aparecer direto na listagem.</p>
+      </div>
+      <div class="modal-body">
+        ${campos.length ? `<ul class="list" data-lista>${campos.map(linhaCampo).join("")}</ul>` : `<p class="card-note" style="margin:0 0 12px;">Nenhum campo próprio ainda.</p>`}
+        <button class="btn block" data-novo type="button" style="margin-top:12px;">+ Campo</button>
+      </div>
+      <div class="modal-foot">
+        <button class="btn primary" data-acao="fechar" type="button">Pronto</button>
+      </div>`;
+
+    return abrirModal(html, {
+      aoMontar(modal, fechar) {
+        modal.querySelector('[data-acao="fechar"]').addEventListener("click", () => fechar(null));
+
+        modal.querySelector("[data-novo]")?.addEventListener("click", async () => {
+          const novo = await formularioCampo();
+          if (!novo) return;
+          Store.atualizar("pilares", pilar.id, { campos: [...campos, { id: Store.uid("cp"), ...novo }] });
+          fechar(null);
+          editorCampos(pilar.id);
+        });
+
+        modal.querySelectorAll("[data-lista] li").forEach((li, i) => {
+          const id = li.dataset.id;
+
+          li.querySelector("[data-editar]").addEventListener("click", async () => {
+            const atual = campos.find((c) => c.id === id);
+            const editado = await formularioCampo(atual);
+            if (!editado) return;
+            Store.atualizar("pilares", pilar.id, { campos: campos.map((c) => (c.id === id ? { ...c, ...editado } : c)) });
+            fechar(null);
+            editorCampos(pilar.id);
+          });
+
+          li.querySelector("[data-excluir]").addEventListener("click", () => {
+            Store.atualizar("pilares", pilar.id, { campos: campos.filter((c) => c.id !== id) });
+            fechar(null);
+            editorCampos(pilar.id);
+          });
+
+          const trocar = (a, b) => {
+            const atualizados = [...campos];
+            [atualizados[a], atualizados[b]] = [atualizados[b], atualizados[a]];
+            Store.atualizar("pilares", pilar.id, { campos: atualizados });
+            fechar(null);
+            editorCampos(pilar.id);
+          };
+          li.querySelector("[data-subir]")?.addEventListener("click", () => { if (i > 0) trocar(i - 1, i); });
+          li.querySelector("[data-descer]")?.addEventListener("click", () => { if (i < campos.length - 1) trocar(i, i + 1); });
+        });
+      },
+    });
   }
 
   /* ------------------------------- Perfil ---------------------------------- */
@@ -462,16 +612,29 @@ const UI = (() => {
     { tipo: "secao", rotulo: "Quem é você" },
     { nome: "nome", rotulo: "Nome completo", tipo: "text", obrigatorio: true },
     { nome: "dataNascimento", rotulo: "Data de nascimento", tipo: "date" },
+    { nome: "pronomes", rotulo: "Pronomes", tipo: "text", placeholder: "Ex.: ela/dela, ele/dele" },
     { nome: "telefone", rotulo: "Telefone", tipo: "text", placeholder: "(71) 90000-0000" },
     { nome: "email", rotulo: "E-mail", tipo: "text", placeholder: "voce@exemplo.com" },
     { nome: "cidade", rotulo: "Cidade", tipo: "text", placeholder: "Ex.: Salvador, BA" },
 
-    { tipo: "secao", rotulo: "Faculdade" },
-    { nome: "curso", rotulo: "Curso", tipo: "text", placeholder: "Ex.: Medicina" },
-    { nome: "instituicao", rotulo: "Instituição", tipo: "text", placeholder: "Ex.: UFBA" },
-    { nome: "semestre", rotulo: "Semestre atual", tipo: "number", step: "1", placeholder: "Ex.: 6" },
-    { nome: "matricula", rotulo: "Matrícula", tipo: "text", placeholder: "Número de matrícula" },
-    { nome: "ingresso", rotulo: "Início do curso", tipo: "text", placeholder: "Ex.: 2023.1" },
+    { tipo: "secao", rotulo: "Ocupação" },
+    { nome: "ocupacao", rotulo: "O que você faz", tipo: "text", placeholder: "Ex.: Estudante de Medicina, Advogada, Autônomo" },
+    { nome: "tipoOcupacao", rotulo: "Momento", tipo: "select", opcoes: [
+        { valor: "estudo", rotulo: "Estudo" },
+        { valor: "trabalho", rotulo: "Trabalho" },
+        { valor: "ambos", rotulo: "Os dois" },
+        { valor: "outro", rotulo: "Outro" },
+      ] },
+
+    // Só aparece para quem estuda — para os demais, ocupação já basta.
+    ...(Personalizacao.eEstudante() ? [
+      { tipo: "secao", rotulo: "Vida acadêmica" },
+      { nome: "curso", rotulo: "Curso", tipo: "text", placeholder: "Ex.: Medicina" },
+      { nome: "instituicao", rotulo: "Instituição", tipo: "text", placeholder: "Ex.: UFBA" },
+      { nome: "semestre", rotulo: "Semestre atual", tipo: "number", step: "1", placeholder: "Ex.: 6" },
+      { nome: "matricula", rotulo: "Matrícula", tipo: "text", placeholder: "Número de matrícula" },
+      { nome: "ingresso", rotulo: "Início do curso", tipo: "text", placeholder: "Ex.: 2023.1" },
+    ] : []),
 
     { tipo: "secao", rotulo: "Em poucas linhas" },
     { nome: "bio", rotulo: "Sobre você", tipo: "textarea", placeholder: "Área de interesse, pesquisa, o que está tocando agora…" },
@@ -499,7 +662,7 @@ const UI = (() => {
 
     const anos = idade(p.dataNascimento);
     const linha = [p.instituicao, p.cidade].filter(Boolean).join(" · ");
-    const curso = [p.curso, p.semestre ? `${p.semestre}º semestre` : ""].filter(Boolean).join(" · ");
+    const ocupacao = Personalizacao.ocupacaoResumo();
 
     // Só entram na ficha as informações preenchidas — campo vazio não vira linha.
     const dados = [
@@ -520,7 +683,7 @@ const UI = (() => {
         ${avatarHTML(p, "avatar")}
         <div style="min-width:0;">
           <div class="perfil-nome">${fmt.escape(p.nome || "Seu nome")}</div>
-          <div class="perfil-linha">${fmt.escape(curso || "Curso não informado")}</div>
+          <div class="perfil-linha">${fmt.escape(ocupacao || "Ocupação não informada")}</div>
           ${linha ? `<div class="perfil-linha muted">${fmt.escape(linha)}</div>` : ""}
           <div class="perfil-foto-acoes">
             <button class="btn sm" data-acao="foto" type="button">${p.foto ? "Trocar foto" : "Enviar foto"}</button>
@@ -553,8 +716,26 @@ const UI = (() => {
               ${tema.OPCOES.map((o) => `<button type="button" data-valor="${o.valor}" aria-pressed="${String(o.valor === atual)}">${o.rotulo}</button>`).join("")}
             </div>
           </div>
+
+          <div class="field">
+            <label>Abas do painel</label>
+            <ul class="list" data-abas>
+              ${Personalizacao.abasFixas().map((a) => `
+                <li>
+                  <input type="checkbox" class="check" data-toggle-aba="${a.id}" ${a.ativo ? "checked" : ""}
+                         aria-label="Incluir aba ${fmt.escape(a.rotuloPadrao)}" />
+                  <span class="grow">
+                    <input type="text" class="assistente-aba-nome" data-nome-aba="${a.id}"
+                           value="${fmt.escape(a.rotulo)}" ${a.ativo ? "" : "disabled"} />
+                  </span>
+                </li>`).join("")}
+            </ul>
+            <span class="hint">Desligar não apaga o que já está cadastrado — só some da barra.</span>
+          </div>
+
           <button class="btn block" data-acao="backup" type="button">⤓ Backup e dados</button>
           <span class="hint" data-uso>Calculando o que está guardado…</span>
+          <button class="btn block" data-acao="reconfigurar" type="button">↻ Refazer configuração inicial</button>
         </div>
       </div>
       <div class="modal-foot">
@@ -603,6 +784,29 @@ const UI = (() => {
         modal.querySelector('[data-acao="backup"]').addEventListener("click", () => {
           fechar(null);
           abrirBackup();
+        });
+
+        modal.querySelector('[data-acao="reconfigurar"]').addEventListener("click", () => {
+          fechar(null);
+          location.href = "bemvindo.html";
+        });
+
+        // Abas fixas: liga/desliga e renomeia na hora, sem precisar de "Salvar".
+        modal.querySelector("[data-abas]").addEventListener("change", (ev) => {
+          const chk = ev.target.closest("[data-toggle-aba]");
+          if (!chk) return;
+          const id = chk.dataset.toggleAba;
+          Store.definirPreferencias({ abasFixas: { [id]: { ativo: chk.checked } } });
+          modal.querySelector(`[data-nome-aba="${id}"]`).disabled = !chk.checked;
+          montarLayout(paginaAtiva, opcoesAtivas);
+        });
+        modal.querySelector("[data-abas]").addEventListener("input", (ev) => {
+          const inp = ev.target.closest("[data-nome-aba]");
+          if (!inp) return;
+          const id = inp.dataset.nomeAba;
+          const padrao = Personalizacao.ROTULOS_PADRAO[id];
+          Store.definirPreferencias({ abasFixas: { [id]: { rotulo: inp.value.trim() === padrao ? "" : inp.value } } });
+          montarLayout(paginaAtiva, opcoesAtivas);
         });
 
         modal.querySelector('[data-acao="editar"]').addEventListener("click", async () => {
@@ -817,6 +1021,7 @@ const UI = (() => {
               if (c.tipo === "secao") return; // divisor visual, não guarda valor
               if (c.tipo === "anexos") return; // tratado depois, é assíncrono
               const input = form.querySelector(`[name="${c.nome}"]`);
+              if (c.tipo === "simNao") { saida[c.nome] = input.checked; return; }
               let v = input.value;
               if (c.tipo === "number" || c.tipo === "dinheiro") {
                 v = v === "" ? null : Number(String(v).replace(",", "."));
@@ -912,6 +1117,9 @@ const UI = (() => {
       }
       case "date":
         controle = `<input type="date" name="${c.nome}" value="${v}" />`;
+        break;
+      case "simNao":
+        controle = `<label class="campo-simnao"><input type="checkbox" class="check" name="${c.nome}" ${valor ? "checked" : ""} /> ${fmt.escape(c.rotuloMarcado || "Sim")}</label>`;
         break;
       case "number":
       case "dinheiro":
@@ -1222,7 +1430,39 @@ const UI = (() => {
 
   function iniciarPagina(ativo, opcoes) {
     tema.iniciar();
+    // Primeira abertura (ou "Pular" ainda não tocado): o assistente de
+    // boas-vindas coleta o perfil antes de qualquer outra tela aparecer.
+    // bemvindo.js não passa por aqui, então não há loop de redirecionamento.
+    if (typeof Personalizacao !== "undefined" && Personalizacao.precisaConfigurar()) {
+      location.href = "bemvindo.html";
+      return;
+    }
     montarLayout(ativo, opcoes);
+    avisarSeAbaDesligada(ativo);
+  }
+
+  /**
+   * Uma aba fixa desligada some da barra, mas os links que já apontam para
+   * ela (favoritos, um material salvo) continuam abrindo — só ganham um
+   * aviso no topo, com atalho para religar. Nada é escondido nem apagado.
+   */
+  function avisarSeAbaDesligada(ativo) {
+    const grupo = GRUPO_DE[ativo] || ativo;
+    if (!Personalizacao.ROTULOS_PADRAO[grupo] || Personalizacao.abaAtiva(grupo)) return;
+
+    const alvo = document.querySelector(".wrap");
+    if (!alvo) return;
+
+    const el = document.createElement("div");
+    el.className = "notice warning";
+    el.innerHTML = `<span class="ic">▲</span><span>Esta aba está desligada no seu painel.
+      <button class="btn ghost sm" data-religar type="button" style="margin-left:6px;">Religar</button></span>`;
+    alvo.insertBefore(el, alvo.firstChild);
+
+    el.querySelector("[data-religar]").addEventListener("click", () => {
+      Store.definirPreferencias({ abasFixas: { [grupo]: { ativo: true } } });
+      location.reload();
+    });
   }
 
   /** Lê um parâmetro da URL (usado pelas páginas de detalhe). */
@@ -1236,7 +1476,7 @@ const UI = (() => {
     compromissos, conflitos, contagens, mediaDisciplina, proximaAvaliacao, resumoProjeto,
     iniciarPagina, montarLayout, tema, toast, formulario, confirmar, abrirModal,
     abrirBackup, abrirPerfil, avatarHTML, iniciais, vazio, barras, colunasMensais, medidor,
-    novaAba, camposPilar,
+    novaAba, camposPilar, redimensionarFoto, camposItemPilar, editorCampos,
   };
 })();
 

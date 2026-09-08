@@ -45,8 +45,10 @@ Aplicação estática multi-página em `dashboard/`, sem build. A única depend�
 | `projetos.html` + `projetos.js` | Projetos pessoais que geram renda + oportunidades |
 | `projeto.html` + `projeto.js` | Página de um projeto: ficha, etapas, recebimentos, custos, documentos e anotações |
 | `pessoal.html` + `pessoal.js` | Compromissos pessoais: consultas, tarefas, recados |
-| `pilar.html` + `pilar.js` | Página de uma aba criada pelo usuário |
+| `pilar.html` + `pilar.js` | Página de uma aba criada pelo usuário, com modelo e campos próprios |
+| `bemvindo.html` + `bemvindo.js` | Assistente de boas-vindas: identidade, ocupação, abas fixas, ajustes finais |
 | `store.js` | Camada de dados: localStorage + CRUD + backup em JSON |
+| `personalizacao.js` | Traduz perfil/preferências em como o painel se apresenta (abas ligadas, saudação, ocupação) |
 | `arquivos.js` | Anexos (PDF, slides, fotos) no IndexedDB + export/import para o backup |
 | `financas.js` | Cálculos derivados: saldo por conta, ciclo e fatura de cartão, balanço, investimentos |
 | `ui.js` | Componentes: layout, perfil, modais de formulário, avisos, gráficos, datas/urgência |
@@ -142,8 +144,8 @@ escrita não ter mais nada além do texto.
 ### Abas criadas pelo usuário
 
 `estado.pilares` guarda abas que o próprio Luiz cria pelo botão "＋ Nova aba" da barra lateral. Cada
-uma tem `nome`, `icone`, `cor`, `descricao` e a lista `itens` — mesma forma dos compromissos da aba
-Pessoal. A página é `pilar.html?id=`, genérica.
+uma tem `nome`, `icone`, `cor`, `descricao`, `modelo`, `naAgenda`, a lista `campos` (os campos
+próprios dela) e a lista `itens`. A página é `pilar.html?id=`, genérica.
 
 A cor é um hex de `Store.PALETA_PILAR`, não um token do tema: aba é dado do usuário, não design
 system. Por isso a paleta fica numa faixa de luminosidade média (lê bem nos dois temas), nenhuma
@@ -154,22 +156,70 @@ leem), `style` no ícone da barra e no selo da agenda. Para isso funcionar sem c
 saber de onde o item veio, todo item de `UI.compromissos()` carrega `areaRotulo` e `cor` — inclusive
 os dos quatro pilares fixos, que usam `var(--s-*)`.
 
-### Perfil do usuário — e os ajustes do painel
+**Modelo e campos próprios.** Ao criar uma aba, o Luiz escolhe um modelo em `Store.MODELOS_PILAR`
+(Compromissos, Tarefas, Hábitos/rotina, Coleção, Registros com valor, Do zero) — só decide os campos
+iniciais e se a aba entra na agenda (`naAgenda`); dá para ajustar depois, sem limite, em "Campos
+desta aba" (`UI.editorCampos`), que abre, edita, exclui e reordena os campos um a um. Cada campo é
+`{ id, rotulo, tipo, opcoes, obrigatorio, naLista }`, com `tipo` vindo de `Store.TIPOS_CAMPO` (os
+mesmos tipos que `UI.campoHTML` já sabe desenhar, mais `simNao`). O modelo só entra no formulário de
+**criação** da aba — trocar de modelo depois de já ter itens bagunçaria os campos deles, então a
+edição da aba (nome/ícone/cor) nunca mexe em `campos`.
 
-`estado.perfil` guarda identidade (nome, `dataNascimento`, telefone, e-mail, cidade, `foto`), vida
-acadêmica (curso, instituição, semestre, matrícula, `ingresso`) e dois textos livres (`bio`,
-`objetivos`). A foto é uma data URL: `UI.redimensionarFoto` recorta o centro em quadrado e reduz
-para 256px em JPEG antes de salvar, para caber com folga no localStorage. Sem foto, o avatar
-mostra as iniciais do nome. A idade sai de `UI.idade(dataNascimento)`, nunca é guardada.
+Cada item guarda `descricao`, `data` e `concluido` como campos de sistema — são o que
+`UI.compromissos()` precisa para a aba entrar na agenda — e o resto em `extras`, com uma chave por
+`campo.id`. `UI.camposItemPilar(pilar)` traduz `pilar.campos` para o formato que `UI.formulario`
+entende; `pilar.js` junta esses campos com `descricao`/`data` e depois separa o resultado em
+`extras` (`paraExtras`/`deExtras`). Só os campos marcados `naLista` aparecem na linha da listagem.
+
+Uma aba com `naAgenda: false` (Hábitos, Coleção) não entra na agenda dos 30 dias nem nos alertas de
+semana cheia, e os dois cartões de estatística que seriam "Nesta semana"/"Atrasados" viram
+"Concluídos"/"Total" — não faz sentido cobrar prazo de um livro que se está lendo.
+
+### Perfil, ocupação e as abas fixas ligáveis
+
+`estado.perfil` guarda identidade (nome, `dataNascimento`, `pronomes`, telefone, e-mail, cidade,
+`foto`), ocupação (`ocupacao` em texto livre, `tipoOcupacao`: `estudo`/`trabalho`/`ambos`/`outro`),
+vida acadêmica (curso, instituição, semestre, matrícula, `ingresso` — só relevante para quem estuda)
+e dois textos livres (`bio`, `objetivos`). A foto é uma data URL: `UI.redimensionarFoto` recorta o
+centro em quadrado e reduz para 256px em JPEG antes de salvar, para caber com folga no localStorage.
+Sem foto, o avatar mostra as iniciais do nome. A idade sai de `UI.idade(dataNascimento)`, nunca é
+guardada. `perfil.configuradoEm` fica vazio até o assistente de boas-vindas rodar (ou "Pular" ser
+tocado) — é o que decide se ele aparece.
+
+`estado.preferencias.abasFixas` guarda, para cada um dos quatro pilares fixos (`pessoal`,
+`financeiro`, `faculdade`, `projetos`), `{ ativo, rotulo }`. `rotulo` vazio segue o nome padrão —
+só grava algo quando o Luiz escolhe um nome diferente, para continuar seguindo o padrão se ele
+mudar depois. Desligar uma aba fixa só a tira da barra e dos cartões da visão geral: nada é
+apagado, e quem abre um link direto para uma página desligada (`faculdade.html` etc.) vê um aviso
+no topo com atalho para religar (`UI.avisarSeAbaDesligada`, chamado por `UI.iniciarPagina`).
+
+`personalizacao.js` centraliza a leitura desses dois ramos do estado: `Personalizacao.abasFixas()`,
+`rotuloAba(id)`, `abaAtiva(id)`, `ocupacaoResumo()`, `eEstudante()`, `saudacao()`. `UI.paginas()` (a
+barra lateral) e `home.js` (os cartões da visão geral) leem daqui, nunca direto do estado — para as
+duas telas nunca ficarem dessincronizadas sobre quais abas estão ligadas ou como se chamam.
 
 O cartão de perfil (`UI.abrirPerfil`) abre pelo botão do nome na barra lateral e é **o único lugar
-de configuração do painel**: ficha de dados, troca de tema e acesso ao backup ficam todos ali. O
-rodapé da barra lateral não guarda botões, só a marca "Delfos" com a versão. Depois de gravar,
-`abrirPerfil` chama `montarLayout` de novo para a barra refletir a mudança na hora — por isso
-`ui.js` guarda a página ativa em `paginaAtiva`/`opcoesAtivas`.
+de configuração do painel**: ficha de dados, ocupação, abas do painel (liga/desliga e renomeia na
+hora, sem "Salvar"), troca de tema, acesso ao backup e "Refazer configuração inicial" (reabre o
+assistente) ficam todos ali. O rodapé da barra lateral não guarda botões, só a marca "Delfos" com a
+versão. Depois de gravar, `abrirPerfil` chama `montarLayout` de novo para a barra refletir a mudança
+na hora — por isso `ui.js` guarda a página ativa em `paginaAtiva`/`opcoesAtivas`. `camposPerfil()`
+omite a seção "Vida acadêmica" quando `Personalizacao.eEstudante()` é falso — ela decide na hora de
+abrir o formulário, não reage a trocar `tipoOcupacao` dentro do mesmo formulário.
 
 Formulários longos (o de perfil, o do projeto) usam o tipo de campo `secao`, que só desenha um
 título divisor e não guarda valor, e a opção `largo: true` para abrir o modal mais largo.
+
+### O assistente de boas-vindas
+
+`bemvindo.html` + `bemvindo.js` é a primeira tela — sem barra lateral, mesmo gesto do editor de
+resumo. `UI.iniciarPagina()` redireciona para lá sempre que `Personalizacao.precisaConfigurar()`
+(ou seja, `perfil.configuradoEm` vazio); `bemvindo.js` nunca chama `iniciarPagina`, então não há
+loop. Quatro passos — identidade, ocupação, abas (com pré-marcação de `Personalizacao.sugerirAbas`
+conforme `tipoOcupacao`, só na primeira configuração), ajustes finais — e "Pular por enquanto" a
+qualquer momento, que só carimba `configuradoEm` sem tocar em mais nada. A mesma tela serve para
+reconfigurar (botão no perfil): reabrindo, ela pré-preenche com o que já está salvo, e pula a
+pré-marcação automática das abas para não sobrescrever uma escolha que o Luiz já fez.
 
 ### Anexos
 

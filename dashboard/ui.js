@@ -467,6 +467,9 @@ const UI = (() => {
       campos: modelo.campos.map((c) => ({ ...c })),
       naAgenda: modelo.naAgenda,
       itens: [],
+      ...(modelo.especial === "academia"
+        ? { academia: { configuradoEm: "", objetivo: "", experiencia: "", frequenciaSemanal: 0, divisao: "" }, dias: [] }
+        : {}),
     });
     location.href = `pilar.html?id=${encodeURIComponent(novo.id)}`;
   }

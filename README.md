@@ -130,10 +130,11 @@ há algo não salvo. `Ctrl + S` (ou `Cmd + S`) salva na hora.
 
 ### Criar suas próprias abas
 
-O botão **＋ Nova aba**, embaixo da lista da barra lateral, cria uma aba sua: escolha nome, ícone,
-cor e um **modelo** de partida — Compromissos (o formato de sempre: data, tipo, local), Tarefas,
-Hábitos/rotina, Coleção (livros, filmes, cursos), Registros com valor, ou Do zero. O modelo só
-decide os campos com que a aba começa; dá para ajustar depois.
+O botão **＋ Nova aba**, embaixo da lista da barra lateral, cria uma aba sua: escolha nome, um dos
+vários **ícones** disponíveis, cor e um **modelo** de partida — Compromissos (o formato de sempre:
+data, tipo, local), Tarefas, Hábitos/rotina, Coleção (livros, filmes, cursos), Registros com valor,
+Academia (treino) ou Do zero. O modelo só decide os campos com que a aba começa; dá para ajustar
+depois.
 
 Abas dos modelos Compromissos, Tarefas e Registros com valor **entram na agenda dos próximos 30
 dias e nos alertas de semana cheia** da visão geral, junto com os prazos da faculdade, os deadlines
@@ -147,6 +148,26 @@ Na página da aba, em **Ajustes da aba**, dá para:
   texto longo, data, número, valor em R$, lista de opções ou sim/não. Marque "mostrar na listagem"
   para um campo aparecer direto na lista, sem precisar abrir o item.
 - **Excluir esta aba**: some da barra e apaga os itens junto.
+
+### Academia
+
+O modelo **Academia (treino)** é diferente dos outros: em vez de itens com campos, a aba vira **dias
+de treino** (ex.: "Peito e tríceps", "Superior A") com **exercícios escolhidos de um catálogo** —
+mais de 80, organizados por grupo muscular. O Delfos não é personal trainer e não prescreve treino
+nenhum — só ajuda a organizar o que você já decidiu fazer.
+
+Na primeira vez que você abre essa aba, um questionário rápido pergunta objetivo, experiência e
+quantos dias por semana você treina, e sugere uma divisão de treino a partir disso (com base em
+achados conhecidos sobre frequência de treino — mas é só uma sugestão, dá para escolher qualquer
+outra). Dá para refazer esse questionário depois em **Ajustes da aba**, sem mexer nos dias que você
+já montou.
+
+Em cada dia, o botão **+ Exercício** abre o catálogo. Ao adicionar um, você anota:
+
+- **Carga atual**: o peso que você está usando agora.
+- **Séries e repetições**: quantas séries e quantas repetições por série.
+- **Recorde pessoal**: fica em branco por padrão, começa igual à carga atual, e se atualiza
+  sozinho sempre que você editar o exercício com uma carga maior que o recorde anterior.
 
 ### Anexar documentos nas disciplinas
 

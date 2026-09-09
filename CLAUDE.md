@@ -55,6 +55,7 @@ Aplicação estática multi-página em `dashboard/`, sem build. A única depend�
 | `theme.css` | Design system (tema claro/escuro) |
 | `config.js` + `google-integration.js` | Integração OAuth com Google Calendar e Drive (inclui busca/exportação de arquivos, usada pela importação em disciplina.js) |
 | `data.js` | Conteúdo inicial (seed), lido só na primeira abertura |
+| `exercicios.js` | Catálogo de exercícios da aba Academia (`const EXERCICIOS`), carregado só por `pilar.html` |
 
 ### Divisão entre Faculdade e Projetos
 
@@ -165,7 +166,10 @@ próprios dela) e a lista `itens`. A página é `pilar.html?id=`, genérica.
 
 A cor é um hex de `Store.PALETA_PILAR`, não um token do tema: aba é dado do usuário, não design
 system. Por isso a paleta fica numa faixa de luminosidade média (lê bem nos dois temas), nenhuma
-cor é vermelha (reservado para urgência) e nenhuma repete os quatro pilares fixos.
+cor é vermelha (reservado para urgência) e nenhuma repete os quatro pilares fixos. O ícone vem de
+`Store.ICONES_PILAR` — glifos monocromáticos (geométricos, símbolos, nunca emoji colorido, para não
+fugir do cromo sem cor do "oráculo sóbrio") — com bastante variedade, para não repetir sempre os
+mesmos doze.
 
 Como a cor vem em hex, ela entra **inline**: `--tint` na página (que `.card.tinted` e `.pillar` já
 leem), `style` no ícone da barra e no selo da agenda. Para isso funcionar sem cada renderizador
@@ -190,6 +194,35 @@ entende; `pilar.js` junta esses campos com `descricao`/`data` e depois separa o 
 Uma aba com `naAgenda: false` (Hábitos, Coleção) não entra na agenda dos 30 dias nem nos alertas de
 semana cheia, e os dois cartões de estatística que seriam "Nesta semana"/"Atrasados" viram
 "Concluídos"/"Total" — não faz sentido cobrar prazo de um livro que se está lendo.
+
+**O modelo "academia" é especial.** Um modelo de `MODELOS_PILAR` pode carregar `especial: "academia"`
+— quando `pilar.modelo === "academia"`, `pilar.js` troca a tela inteira (stats genéricas, lista de
+itens, "Campos desta aba") pela de dias de treino, em vez de usar `campos`/`itens` como as outras
+abas. Nada disso prescreve treino: o Delfos não é personal trainer, só ajuda a organizar o que o
+próprio Luiz decide fazer.
+
+- `pilar.academia = { configuradoEm, objetivo, experiencia, frequenciaSemanal, divisao }` — um
+  questionário rápido (`abrirQuestionario` em `pilar.js`) roda na primeira vez que a aba é aberta
+  (`configuradoEm` vazio) e pode ser refeito depois pelo botão "Refazer o questionário inicial" em
+  "Ajustes da aba". Refazer só atualiza esses campos — nunca mexe em `pilar.dias`, que o usuário edita
+  direto na tela.
+- A sugestão de divisão (`Store.sugerirDivisaoAcademia`, a partir da frequência semanal) e os nomes de
+  dia sugeridos (`Store.diasSugeridosAcademia`) vêm de achados com razoável consenso na literatura de
+  treinamento de força — cada grupo muscular treinado ~2x/semana tende a render tanto ou mais que 1x,
+  no mesmo volume total — mas são só o ponto de partida do passo 2 do questionário: o Luiz escolhe
+  livremente a divisão final (`Store.ACADEMIA_DIVISOES`), e os dias criados a partir dela podem ser
+  renomeados, apagados ou criados do zero a qualquer momento.
+- `pilar.dias = [{ id, nome, exercicios: [{ id, exercicioId, cargaAtual, unidade, seriesAtual,
+  repeticoesAtual, recorde }] }]` — cada dia é um molde de treino (não uma data), e `exercicioId`
+  aponta pro catálogo em `exercicios.js` (`const EXERCICIOS`, ~90 exercícios comuns com `id`, `nome`,
+  `grupo`), carregado só por `pilar.html`. O Delfos nunca sugere qual exercício fazer: o Luiz escolhe
+  do catálogo pelo seletor (`catalogoOpcoes()`, rotulado "Grupo — Nome") e anota o que já está
+  fazendo. Editar um exercício com carga maior que o recorde anterior atualiza o recorde sozinho
+  ("Novo recorde pessoal!"); `pilar.itens` continua vazio e sem uso neste modelo.
+- Migração v8 → v9 (`normalizar` em `store.js`): uma aba com `modelo === "academia"` sem `academia`
+  ganha os valores em branco — a presença de `academia` é a marca que impede a conversão de rodar de
+  novo. `novaAba()` (`ui.js`) e a sugestão "Academia" do assistente de boas-vindas (`bemvindo.js`)
+  inicializam `academia`/`dias` na criação.
 
 ### Perfil, ocupação e as abas fixas ligáveis
 

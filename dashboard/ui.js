@@ -1042,6 +1042,26 @@ const UI = (() => {
             gravarAnexos[c.nome] = ligarAnexos(modal, c, valores[c.nome] ?? c.valorPadrao ?? []);
           });
 
+          // buscaSelect: escolher uma sugestão do <datalist> preenche o texto
+          // com o rótulo inteiro ("Grupo — Nome"), então isso sempre resolve.
+          // Mas digitar só o nome do exercício (sem escolher a sugestão) e
+          // aquele texto achar exatamente uma opção também resolve — só fica
+          // vazio se não achar nada ou achar mais de uma (ambíguo).
+          campos.filter((c) => c.tipo === "buscaSelect").forEach((c) => {
+            const busca = form.querySelector(`[name="${c.nome}__busca"]`);
+            const escondido = form.querySelector(`[name="${c.nome}"]`);
+            const opcoes = c.opcoes || [];
+            busca.addEventListener("input", () => {
+              const texto = busca.value.trim().toLowerCase();
+              let bate = texto ? opcoes.find((o) => o.rotulo.toLowerCase() === texto) : null;
+              if (!bate && texto) {
+                const candidatos = opcoes.filter((o) => o.rotulo.toLowerCase().includes(texto));
+                if (candidatos.length === 1) bate = candidatos[0];
+              }
+              escondido.value = bate ? bate.valor : "";
+            });
+          });
+
           const primeiro = form.querySelector("input:not([type=hidden]):not([type=file]), select, textarea");
           primeiro?.focus();
           if (primeiro?.select) setTimeout(() => primeiro.select(), 0);
@@ -1128,6 +1148,22 @@ const UI = (() => {
           })
           .join("")}</select>`;
         break;
+      // Como "select", mas com um catálogo grande demais pra rolar numa lista
+      // só — digitar filtra as opções (<datalist>, sem biblioteca nenhuma). O
+      // texto visível e o valor guardado são coisas diferentes: um campo
+      // escondido junto é quem carrega o valor de verdade, e o script em
+      // formulario() é quem os mantém em sincronia.
+      case "buscaSelect": {
+        const opcoes = c.opcoes || [];
+        const rotuloAtual = opcoes.find((o) => String(o.valor) === String(valor))?.rotulo || "";
+        const listId = `dl-${c.nome}-${Math.random().toString(36).slice(2, 8)}`;
+        controle = `
+          <input type="text" list="${listId}" name="${c.nome}__busca" value="${fmt.escape(rotuloAtual)}"
+                 placeholder="${fmt.escape(c.placeholder || "Digite para buscar…")}" autocomplete="off" />
+          <datalist id="${listId}">${opcoes.map((o) => `<option value="${fmt.escape(o.rotulo)}"></option>`).join("")}</datalist>
+          <input type="hidden" name="${c.nome}" value="${fmt.escape(valor)}" />`;
+        break;
+      }
       case "segmento": {
         const atual = valor || c.opcoes[0].valor;
         controle = `<div class="seg">

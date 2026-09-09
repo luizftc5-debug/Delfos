@@ -178,7 +178,7 @@ const Store = (() => {
     { valor: "upperlower", rotulo: "Superior / Inferior (upper/lower)" },
     { valor: "ppl", rotulo: "Empurrar / Puxar / Pernas (push/pull/legs)" },
     { valor: "grupomuscular", rotulo: "Um ou dois grupos musculares por dia" },
-    { valor: "livre", rotulo: "Prefiro montar meus próprios dias" },
+    { valor: "livre", rotulo: "Prefiro nomear meus próprios dias (cria \"Dia 1\", \"Dia 2\"... pra eu renomear)" },
   ];
 
   /**
@@ -207,7 +207,10 @@ const Store = (() => {
     if (divisao === "grupomuscular") {
       return ["Peito e tríceps", "Costas e bíceps", "Pernas", "Ombro", "Braços e abdômen"].slice(0, Math.max(3, Math.min(5, f)));
     }
-    if (divisao === "livre") return [];
+    // "Livre" ainda ganha dias — só que sem nome sugerido, porque foi isso
+    // que a pessoa escolheu. Chegar no fim do questionário sem nenhum dia
+    // criado é pior do que um nome genérico fácil de trocar.
+    if (divisao === "livre") return Array.from({ length: f }, (_, i) => `Dia ${i + 1}`);
     // fullbody
     return ["Treino A", "Treino B", "Treino C"].slice(0, Math.max(1, Math.min(3, f)));
   }

@@ -213,6 +213,43 @@
     render();
   }
 
+  /**
+   * Quantas séries por grupo muscular já estão cadastradas — soma o campo
+   * "Séries" de cada exercício, agrupado pelo grupo do catálogo. Não é uma
+   * meta nem uma recomendação (o Delfos não prescreve treino): é só juntar,
+   * por grupo, o que o usuário já anotou exercício a exercício.
+   */
+  function calcularSeriesPorGrupo(lista) {
+    const somas = {};
+    lista.forEach((dia) => {
+      dia.exercicios.forEach((ex) => {
+        const grupo = grupoExercicio(ex.exercicioId);
+        if (!grupo || !ex.seriesAtual) return;
+        somas[grupo] = (somas[grupo] || 0) + Number(ex.seriesAtual);
+      });
+    });
+    return somas;
+  }
+
+  function renderResumoGrupos(box, lista) {
+    const somas = calcularSeriesPorGrupo(lista);
+    const grupos = Object.keys(somas).sort((a, b) => a.localeCompare(b, "pt-BR"));
+    if (!grupos.length) return;
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.marginBottom = "12px";
+    card.innerHTML = `
+      <h3 class="card-title" style="margin-bottom:10px;">Séries por grupo muscular</h3>
+      <p class="card-note" style="margin:0 0 10px;">
+        Soma das séries de cada exercício cadastrado nos dias abaixo — não é meta nem recomendação,
+        só o que já está anotado.
+      </p>
+      <div class="assistente-resumo"><dl>${grupos
+        .map((g) => `<dt>${fmt.escape(g)}</dt><dd>${somas[g]} ${somas[g] === 1 ? "série" : "séries"}</dd>`)
+        .join("")}</dl></div>`;
+    box.appendChild(card);
+  }
+
   function renderAcademia() {
     const box = document.getElementById("academia-conteudo");
     box.innerHTML = "";
@@ -243,6 +280,8 @@
       );
       return;
     }
+
+    renderResumoGrupos(box, lista);
 
     lista.forEach((dia) => {
       const card = document.createElement("div");
@@ -389,7 +428,10 @@
   async function abrirExercicioForm(dia, exercicioExistente) {
     const editando = !!exercicioExistente;
     const campos = [
-      ...(editando ? [] : [{ nome: "exercicioId", rotulo: "Exercício", tipo: "select", opcoes: catalogoOpcoes(), obrigatorio: true }]),
+      ...(editando ? [] : [{
+        nome: "exercicioId", rotulo: "Exercício", tipo: "buscaSelect", opcoes: catalogoOpcoes(), obrigatorio: true,
+        placeholder: "Digite o nome do exercício ou o grupo muscular…",
+      }]),
       { nome: "cargaAtual", rotulo: "Carga atual", tipo: "number", step: "0.5", placeholder: "Ex.: 40" },
       { nome: "unidade", rotulo: "Unidade", tipo: "select", opcoes: ["kg", "lb"] },
       { nome: "seriesAtual", rotulo: "Séries", tipo: "number", placeholder: "Ex.: 4" },

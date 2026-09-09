@@ -157,17 +157,22 @@ mais de 80, organizados por grupo muscular. O Delfos não é personal trainer e 
 nenhum — só ajuda a organizar o que você já decidiu fazer.
 
 Na primeira vez que você abre essa aba, um questionário rápido pergunta objetivo, experiência e
-quantos dias por semana você treina, e sugere uma divisão de treino a partir disso (com base em
-achados conhecidos sobre frequência de treino — mas é só uma sugestão, dá para escolher qualquer
-outra). Dá para refazer esse questionário depois em **Ajustes da aba**, sem mexer nos dias que você
-já montou.
+quantos dias por semana você treina e, assim que você confirma, **já cria os dias de treino**
+sugeridos para aquela divisão — sem precisar de mais nenhum passo. A sugestão vem de achados
+conhecidos sobre frequência de treino (mas é só uma sugestão, dá para escolher qualquer outra). Dá
+para refazer esse questionário depois em **Ajustes da aba**, sem mexer nos dias que você já montou.
 
-Em cada dia, o botão **+ Exercício** abre o catálogo. Ao adicionar um, você anota:
+Em cada dia, o botão **+ Exercício** abre o catálogo — **digite pra buscar** (pelo nome do exercício
+ou pelo grupo muscular, ex.: "supino" ou "peito"). Ao adicionar um, você anota:
 
 - **Carga atual**: o peso que você está usando agora.
 - **Séries e repetições**: quantas séries e quantas repetições por série.
 - **Recorde pessoal**: fica em branco por padrão, começa igual à carga atual, e se atualiza
   sozinho sempre que você editar o exercício com uma carga maior que o recorde anterior.
+
+Acima dos dias, um cartão **Séries por grupo muscular** soma sozinho, a partir do que você já
+cadastrou exercício a exercício, quantas séries de peito, costas, perna etc. você tem na semana —
+não é meta nem recomendação, só a conta pronta.
 
 ### Anexar documentos nas disciplinas
 

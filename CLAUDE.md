@@ -215,14 +215,26 @@ próprio Luiz decide fazer.
 - `pilar.dias = [{ id, nome, exercicios: [{ id, exercicioId, cargaAtual, unidade, seriesAtual,
   repeticoesAtual, recorde }] }]` — cada dia é um molde de treino (não uma data), e `exercicioId`
   aponta pro catálogo em `exercicios.js` (`const EXERCICIOS`, ~90 exercícios comuns com `id`, `nome`,
-  `grupo`), carregado só por `pilar.html`. O Delfos nunca sugere qual exercício fazer: o Luiz escolhe
-  do catálogo pelo seletor (`catalogoOpcoes()`, rotulado "Grupo — Nome") e anota o que já está
-  fazendo. Editar um exercício com carga maior que o recorde anterior atualiza o recorde sozinho
-  ("Novo recorde pessoal!"); `pilar.itens` continua vazio e sem uso neste modelo.
+  `grupo`), carregado só por `pilar.html`. O Delfos nunca sugere qual exercício fazer: o Luiz busca
+  por texto no catálogo (`catalogoOpcoes()`, campo `tipo: "buscaSelect"` — ver abaixo) e anota o que
+  já está fazendo. Editar um exercício com carga maior que o recorde anterior atualiza o recorde
+  sozinho ("Novo recorde pessoal!"); `pilar.itens` continua vazio e sem uso neste modelo.
+- `renderResumoGrupos` soma, por grupo muscular, as séries de todo exercício cadastrado nos dias —
+  não é meta nem recomendação (o Delfos não prescreve treino), só agrega o que já foi anotado
+  exercício a exercício, pra responder "quantas séries eu faço de perna" sem precisar somar na mão.
 - Migração v8 → v9 (`normalizar` em `store.js`): uma aba com `modelo === "academia"` sem `academia`
   ganha os valores em branco — a presença de `academia` é a marca que impede a conversão de rodar de
   novo. `novaAba()` (`ui.js`) e a sugestão "Academia" do assistente de boas-vindas (`bemvindo.js`)
-  inicializam `academia`/`dias` na criação.
+  inicializam `academia`/`dias` na criação; os dias já saem prontos assim que o questionário é
+  confirmado, sem precisar de um passo extra.
+
+**Campo `buscaSelect`.** Como `select`, mas para catálogos grandes demais pra rolar numa lista só —
+`UI.campoHTML` desenha um `<input list>` + `<datalist>` nativos (sem biblioteca) mais um campo
+escondido (`nome`, sem `__busca`) que é quem carrega o valor de verdade; `UI.formulario` mantém os
+dois em sincronia. Escolher uma sugestão do `<datalist>` sempre resolve; digitar um texto que ache
+exatamente **uma** opção também resolve (por exemplo, só o nome do exercício, sem o grupo na
+frente); ambíguo ou sem bater com nada, o campo fica vazio até a pessoa completar a busca. Único uso
+hoje é `exercicioId` em `pilar.js`.
 
 ### Perfil, ocupação e as abas fixas ligáveis
 

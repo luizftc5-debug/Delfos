@@ -26,6 +26,7 @@
   UI.iniciarPagina("pilar", { idAtivo: id });
 
   const itens = () => (Store.achar(CAMINHO, id) || {}).itens || [];
+  const ehAcademia = () => pilar.modelo === "academia";
 
   /* --------------------------------- Render --------------------------------- */
 
@@ -47,7 +48,29 @@
 
     document.getElementById("titulo").textContent = pilar.nome;
     document.getElementById("subtitulo").textContent =
-      pilar.descricao || "Cadastre aqui o que pertence a esta aba — entra na agenda da visão geral junto com os outros pilares.";
+      pilar.descricao ||
+      (ehAcademia()
+        ? "Seus dias de treino, com carga, repetições e recorde de cada exercício."
+        : "Cadastre aqui o que pertence a esta aba — entra na agenda da visão geral junto com os outros pilares.");
+
+    const academia = ehAcademia();
+    document.getElementById("bloco-stats").classList.toggle("hidden", academia);
+    document.getElementById("secao-itens").classList.toggle("hidden", academia);
+    document.getElementById("secao-academia").classList.toggle("hidden", !academia);
+    document.getElementById("btn-item").classList.toggle("hidden", academia);
+    document.getElementById("btn-campos").classList.toggle("hidden", academia);
+    document.getElementById("btn-refazer-questionario").hidden = !academia;
+    document.getElementById("btn-dia").classList.toggle("hidden", !(academia && pilar.academia?.configuradoEm));
+    document.getElementById("nota-ajustes").textContent = academia
+      ? "Esta aba foi criada por você. Renomeá-la, trocar ícone e cor, ou refazer o questionário não mexe nos dias já montados; excluí-la apaga também os dias e exercícios cadastrados."
+      : "Esta aba foi criada por você. Renomeá-la, trocar ícone e cor, ou ajustar os campos não mexe no que já está cadastrado; excluí-la apaga também todos os itens dela.";
+
+    if (academia) {
+      document.getElementById("swatch-academia").style.background = pilar.cor;
+      renderAcademia();
+      UI.montarLayout("pilar", { idAtivo: id });
+      return;
+    }
 
     const todos = itens();
     const abertos = todos.filter((c) => !c.concluido);
@@ -166,6 +189,256 @@
     return partes.join(" · ") || "sem detalhes";
   }
 
+  /* -------------------------------- Academia --------------------------------
+     Modelo "academia": em vez de uma lista de itens com campos, a aba vira
+     dias de treino, cada um com exercícios escolhidos do catálogo
+     (exercicios.js). O Delfos nunca decide o que treinar — só guarda o que o
+     usuário decidiu: carga atual, séries, repetições e recorde de cada
+     exercício. Ver Store.ACADEMIA_* e sugerirDivisaoAcademia/diasSugeridosAcademia
+     em store.js para a lógica (baseada em evidência) por trás da sugestão de
+     divisão — o usuário sempre pode escolher outra coisa. */
+
+  const dias = () => (Store.achar(CAMINHO, id) || {}).dias || [];
+
+  const catalogoOpcoes = () =>
+    [...EXERCICIOS]
+      .sort((a, b) => a.grupo.localeCompare(b.grupo, "pt-BR") || a.nome.localeCompare(b.nome, "pt-BR"))
+      .map((e) => ({ valor: e.id, rotulo: `${e.grupo} — ${e.nome}` }));
+
+  const nomeExercicio = (exercicioId) => EXERCICIOS.find((e) => e.id === exercicioId)?.nome || "Exercício removido do catálogo";
+  const grupoExercicio = (exercicioId) => EXERCICIOS.find((e) => e.id === exercicioId)?.grupo || "";
+
+  function salvarDias(novosDias) {
+    Store.atualizar(CAMINHO, id, { dias: novosDias });
+    render();
+  }
+
+  function renderAcademia() {
+    const box = document.getElementById("academia-conteudo");
+    box.innerHTML = "";
+
+    if (!pilar.academia?.configuradoEm) {
+      box.appendChild(
+        UI.vazio({
+          icone: pilar.icone,
+          titulo: "Antes de começar",
+          texto: "Um questionário rápido — objetivo, experiência e frequência semanal — só para sugerir como organizar seus dias de treino. Você monta o que entra em cada um, escolhendo do catálogo de exercícios.",
+          rotuloAcao: "Começar",
+          aoAcionar: () => abrirQuestionario({ primeiraVez: true }),
+        })
+      );
+      return;
+    }
+
+    const lista = dias();
+    if (!lista.length) {
+      box.appendChild(
+        UI.vazio({
+          icone: pilar.icone,
+          titulo: "Nenhum dia de treino ainda",
+          texto: "Crie um dia (ex.: \"Peito e tríceps\") e adicione os exercícios que você faz nele.",
+          rotuloAcao: "+ Dia de treino",
+          aoAcionar: abrirNovoDia,
+        })
+      );
+      return;
+    }
+
+    lista.forEach((dia) => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.style.marginBottom = "12px";
+      card.innerHTML = `
+        <div class="card-head">
+          <h3 class="card-title">${fmt.escape(dia.nome)}</h3>
+          <span class="row-actions" style="opacity:1;">
+            <button class="btn ghost sm" data-renomear>Renomear</button>
+            <button class="btn ghost sm" data-excluir-dia>Excluir dia</button>
+          </span>
+        </div>
+        <div data-lista-exercicios></div>
+        <button class="btn ghost sm" data-add-exercicio style="margin-top:10px;">+ Exercício</button>`;
+
+      const listaEx = card.querySelector("[data-lista-exercicios]");
+      if (!dia.exercicios.length) {
+        listaEx.innerHTML = `<p class="card-note" style="margin:6px 0 0;">Nenhum exercício ainda.</p>`;
+      } else {
+        const ul = document.createElement("ul");
+        ul.className = "list";
+        dia.exercicios.forEach((ex) => {
+          const li = document.createElement("li");
+          const partes = [];
+          if (ex.seriesAtual || ex.repeticoesAtual) {
+            partes.push(`${ex.seriesAtual || "—"}x${ex.repeticoesAtual || "—"}`);
+          }
+          if (ex.cargaAtual !== null && ex.cargaAtual !== undefined) partes.push(`carga atual: ${ex.cargaAtual}${ex.unidade}`);
+          if (ex.recorde !== null && ex.recorde !== undefined) partes.push(`recorde: ${ex.recorde}${ex.unidade}`);
+          li.innerHTML = `
+            <span class="grow">
+              <span class="title">${fmt.escape(nomeExercicio(ex.exercicioId))}</span>
+              <span class="meta">${fmt.escape(grupoExercicio(ex.exercicioId))}${partes.length ? " · " + fmt.escape(partes.join(" · ")) : ""}</span>
+            </span>
+            <span class="row-actions">
+              <button class="btn ghost sm" data-editar-ex>Editar</button>
+              <button class="btn ghost sm" data-excluir-ex>Excluir</button>
+            </span>`;
+          li.querySelector("[data-editar-ex]").addEventListener("click", () => abrirExercicioForm(dia, ex));
+          li.querySelector("[data-excluir-ex]").addEventListener("click", () => excluirExercicio(dia, ex));
+          ul.appendChild(li);
+        });
+        listaEx.appendChild(ul);
+      }
+
+      card.querySelector("[data-renomear]").addEventListener("click", () => renomearDia(dia));
+      card.querySelector("[data-excluir-dia]").addEventListener("click", () => excluirDia(dia));
+      card.querySelector("[data-add-exercicio]").addEventListener("click", () => abrirExercicioForm(dia));
+      box.appendChild(card);
+    });
+  }
+
+  /**
+   * Objetivo + experiência + frequência decidem uma sugestão de divisão
+   * (Store.sugerirDivisaoAcademia) — o segundo passo mostra essa sugestão já
+   * marcada, mas o usuário pode trocar por qualquer outra. Na primeira vez,
+   * confirmar também cria os dias sugeridos para aquela divisão
+   * (Store.diasSugeridosAcademia); refazer o questionário depois só atualiza
+   * objetivo/experiência/divisão — os dias já criados não são tocados, o
+   * usuário quem adiciona, renomeia ou apaga pela tela normal.
+   */
+  async function abrirQuestionario({ primeiraVez }) {
+    const atual = pilar.academia || {};
+    const passo1 = await UI.formulario({
+      titulo: primeiraVez ? "Antes de começar" : "Refazer o questionário",
+      descricao: "Isso não prescreve treino nenhum — só ajuda a sugerir como organizar seus dias. O que entra em cada um é você quem escolhe, do catálogo de exercícios.",
+      campos: [
+        { nome: "objetivo", rotulo: "Objetivo principal", tipo: "select", opcoes: Store.ACADEMIA_OBJETIVOS, obrigatorio: true },
+        { nome: "experiencia", rotulo: "Experiência com treino", tipo: "select", opcoes: Store.ACADEMIA_EXPERIENCIAS, obrigatorio: true },
+        {
+          nome: "frequenciaSemanal", rotulo: "Quantos dias por semana você treina", tipo: "select", obrigatorio: true,
+          opcoes: [1, 2, 3, 4, 5, 6, 7].map((n) => ({ valor: String(n), rotulo: `${n} ${n === 1 ? "dia" : "dias"} por semana` })),
+        },
+      ],
+      valores: atual,
+      rotuloConfirmar: "Continuar",
+    });
+    if (!passo1) return;
+
+    const frequenciaSemanal = Number(passo1.frequenciaSemanal);
+    const sugestao = Store.sugerirDivisaoAcademia(frequenciaSemanal);
+
+    const passo2 = await UI.formulario({
+      titulo: "Como você organiza o treino",
+      descricao: "Treinar cada grupo muscular umas duas vezes por semana costuma render mais do que uma vez só, com o mesmo volume total — por isso a sugestão abaixo. Mas a divisão que você já usa e gosta também é uma escolha válida.",
+      campos: [
+        { nome: "divisao", rotulo: "Divisão de treino", tipo: "select", opcoes: Store.ACADEMIA_DIVISOES, valorPadrao: sugestao, obrigatorio: true },
+      ],
+      rotuloConfirmar: primeiraVez ? "Criar meus dias" : "Salvar",
+    });
+    if (!passo2) return;
+
+    const academia = {
+      configuradoEm: atual.configuradoEm || new Date().toISOString(),
+      objetivo: passo1.objetivo,
+      experiencia: passo1.experiencia,
+      frequenciaSemanal,
+      divisao: passo2.divisao,
+    };
+
+    const patch = { academia };
+    if (primeiraVez) {
+      patch.dias = Store.diasSugeridosAcademia(passo2.divisao, frequenciaSemanal)
+        .map((nome) => ({ id: Store.uid("dia"), nome, exercicios: [] }));
+    }
+    Store.atualizar(CAMINHO, id, patch);
+    UI.toast(primeiraVez ? "Pronto — agora monte seus dias com exercícios do catálogo." : "Questionário atualizado.");
+    render();
+  }
+
+  async function abrirNovoDia() {
+    const v = await UI.formulario({
+      titulo: "Novo dia de treino",
+      campos: [{ nome: "nome", rotulo: "Nome do dia", tipo: "text", obrigatorio: true, placeholder: "Ex.: Peito e tríceps" }],
+    });
+    if (!v) return;
+    salvarDias([...dias(), { id: Store.uid("dia"), nome: v.nome, exercicios: [] }]);
+  }
+
+  async function renomearDia(dia) {
+    const v = await UI.formulario({
+      titulo: "Renomear dia",
+      campos: [{ nome: "nome", rotulo: "Nome do dia", tipo: "text", obrigatorio: true }],
+      valores: dia,
+    });
+    if (!v) return;
+    salvarDias(dias().map((d) => (d.id === dia.id ? { ...d, nome: v.nome } : d)));
+  }
+
+  async function excluirDia(dia) {
+    const ok = await UI.confirmar({
+      titulo: `Excluir o dia "${dia.nome}"?`,
+      descricao: dia.exercicios.length
+        ? `Os ${dia.exercicios.length} exercícios cadastrados nele também somem.`
+        : "Este dia não tem exercícios cadastrados.",
+      rotuloConfirmar: "Excluir dia",
+      perigo: true,
+    });
+    if (!ok) return;
+    salvarDias(dias().filter((d) => d.id !== dia.id));
+  }
+
+  async function abrirExercicioForm(dia, exercicioExistente) {
+    const editando = !!exercicioExistente;
+    const campos = [
+      ...(editando ? [] : [{ nome: "exercicioId", rotulo: "Exercício", tipo: "select", opcoes: catalogoOpcoes(), obrigatorio: true }]),
+      { nome: "cargaAtual", rotulo: "Carga atual", tipo: "number", step: "0.5", placeholder: "Ex.: 40" },
+      { nome: "unidade", rotulo: "Unidade", tipo: "select", opcoes: ["kg", "lb"] },
+      { nome: "seriesAtual", rotulo: "Séries", tipo: "number", placeholder: "Ex.: 4" },
+      { nome: "repeticoesAtual", rotulo: "Repetições por série", tipo: "number", placeholder: "Ex.: 10" },
+      { nome: "recorde", rotulo: "Recorde pessoal", tipo: "number", step: "0.5", dica: "Deixe em branco pra começar igual à carga atual." },
+    ];
+    const v = await UI.formulario({
+      titulo: editando ? `Editar "${nomeExercicio(exercicioExistente.exercicioId)}"` : "Adicionar exercício",
+      campos,
+      valores: exercicioExistente || { unidade: "kg" },
+    });
+    if (!v) return;
+
+    const cargaAtual = v.cargaAtual;
+    const recordeAnterior = exercicioExistente?.recorde ?? null;
+    let recorde = v.recorde;
+    if (recorde === null && cargaAtual !== null) recorde = cargaAtual; // sem recorde informado, começa igual à carga atual
+    const bateuRecorde = cargaAtual !== null && recordeAnterior !== null && cargaAtual > recordeAnterior;
+    if (bateuRecorde) recorde = cargaAtual;
+
+    const dados = {
+      exercicioId: editando ? exercicioExistente.exercicioId : v.exercicioId,
+      cargaAtual,
+      unidade: v.unidade || "kg",
+      seriesAtual: v.seriesAtual,
+      repeticoesAtual: v.repeticoesAtual,
+      recorde,
+    };
+
+    const novosDias = dias().map((d) => {
+      if (d.id !== dia.id) return d;
+      const exercicios = editando
+        ? d.exercicios.map((e) => (e.id === exercicioExistente.id ? { ...dados, id: e.id } : e))
+        : [...d.exercicios, { ...dados, id: Store.uid("ex") }];
+      return { ...d, exercicios };
+    });
+    salvarDias(novosDias);
+    if (bateuRecorde) UI.toast("Novo recorde pessoal!");
+  }
+
+  function excluirExercicio(dia, exercicio) {
+    const antes = dias();
+    salvarDias(dias().map((d) => (d.id === dia.id ? { ...d, exercicios: d.exercicios.filter((e) => e.id !== exercicio.id) } : d)));
+    UI.toast("Exercício removido do dia.", {
+      acaoRotulo: "Desfazer",
+      aoAcionar: () => salvarDias(antes),
+    });
+  }
+
   /* --------------------------------- Ações ---------------------------------- */
 
   // descricao e data são campos de sistema — o resto vem dos campos próprios
@@ -223,11 +496,15 @@
   }
 
   async function excluirAba() {
-    const quantos = itens().length;
+    const quantos = ehAcademia()
+      ? dias().reduce((n, d) => n + d.exercicios.length, 0)
+      : itens().length;
+    const rotuloItem = ehAcademia() ? "exercício cadastrado" : "item cadastrado";
+    const rotuloItens = ehAcademia() ? "exercícios cadastrados" : "itens cadastrados";
     const ok = await UI.confirmar({
       titulo: `Excluir a aba "${pilar.nome}"?`,
       descricao: quantos
-        ? `Os ${quantos} ${quantos === 1 ? "item cadastrado" : "itens cadastrados"} nela também serão apagados. Isso não pode ser desfeito depois que você sair da página.`
+        ? `Os ${quantos} ${quantos === 1 ? rotuloItem : rotuloItens} nela também serão apagados. Isso não pode ser desfeito depois que você sair da página.`
         : "A aba some da barra lateral. Você pode criar outra a qualquer momento.",
       rotuloConfirmar: "Excluir aba",
       perigo: true,
@@ -245,6 +522,8 @@
     render();
   });
   document.getElementById("btn-excluir-aba").addEventListener("click", excluirAba);
+  document.getElementById("btn-dia").addEventListener("click", abrirNovoDia);
+  document.getElementById("btn-refazer-questionario").addEventListener("click", () => abrirQuestionario({ primeiraVez: false }));
   document.getElementById("f-concluidos").addEventListener("change", (ev) => {
     verConcluidos = ev.target.checked;
     render();

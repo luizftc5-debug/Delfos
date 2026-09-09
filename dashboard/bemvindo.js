@@ -28,7 +28,7 @@
   // exemplo). Reabrir pelo perfil não repete a oferta, para não arriscar
   // criar de novo uma aba que o usuário já tenha apagado por não querer.
   const SUGESTOES_PILAR = [
-    { id: "academia", nome: "Academia", icone: "●", cor: "#6e8f22", modelo: "habitos" },
+    { id: "academia", nome: "Academia", icone: "⚡", cor: "#6e8f22", modelo: "academia" },
     { id: "religiao", nome: "Religião", icone: "☾", cor: "#5a4fd4", modelo: "compromissos" },
     { id: "esporte", nome: "Esporte", icone: "★", cor: "#b57d0a", modelo: "habitos" },
   ];
@@ -260,6 +260,9 @@
         campos: modelo.campos.map((c) => ({ ...c })),
         naAgenda: modelo.naAgenda,
         itens: [],
+        ...(modelo.especial === "academia"
+          ? { academia: { configuradoEm: "", objetivo: "", experiencia: "", frequenciaSemanal: 0, divisao: "" }, dias: [] }
+          : {}),
       });
     });
 

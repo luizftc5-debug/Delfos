@@ -139,7 +139,78 @@ const Store = (() => {
       naAgenda: true,
       campos: [],
     },
+    {
+      id: "academia",
+      rotulo: "Academia (treino)",
+      descricao: "Dias de treino com exercícios do catálogo — carga, repetições e recorde de cada um.",
+      naAgenda: false,
+      campos: [],
+      // Marca que troca a interface genérica (itens com campos) pela tela
+      // própria de dias/exercícios em pilar.js — ver ACADEMIA_OBJETIVOS,
+      // ACADEMIA_DIVISOES e sugerirDivisaoAcademia() logo abaixo.
+      especial: "academia",
+    },
   ];
+
+  /**
+   * O que se sabe, com razoável consenso na literatura de treinamento de
+   * força, sobre como o objetivo e a frequência semanal decidem o tipo de
+   * divisão — não o que treinar, só como organizar os dias. O Delfos nunca
+   * prescreve exercício, carga ou repetição: quem decide o que vai em cada
+   * dia é o próprio usuário, escolhendo do catálogo.
+   */
+  const ACADEMIA_OBJETIVOS = [
+    { valor: "hipertrofia", rotulo: "Ganhar massa muscular (hipertrofia)" },
+    { valor: "forca", rotulo: "Ganhar força" },
+    { valor: "resistencia", rotulo: "Resistência e condicionamento" },
+    { valor: "emagrecimento", rotulo: "Emagrecimento" },
+    { valor: "saude", rotulo: "Saúde geral e disposição" },
+  ];
+
+  const ACADEMIA_EXPERIENCIAS = [
+    { valor: "iniciante", rotulo: "Iniciante (menos de 1 ano de treino)" },
+    { valor: "intermediario", rotulo: "Intermediário (1 a 3 anos)" },
+    { valor: "avancado", rotulo: "Avançado (mais de 3 anos)" },
+  ];
+
+  const ACADEMIA_DIVISOES = [
+    { valor: "fullbody", rotulo: "Corpo inteiro (full body) a cada sessão" },
+    { valor: "upperlower", rotulo: "Superior / Inferior (upper/lower)" },
+    { valor: "ppl", rotulo: "Empurrar / Puxar / Pernas (push/pull/legs)" },
+    { valor: "grupomuscular", rotulo: "Um ou dois grupos musculares por dia" },
+    { valor: "livre", rotulo: "Prefiro montar meus próprios dias" },
+  ];
+
+  /**
+   * Sugestão de divisão a partir da frequência semanal — ponto de partida
+   * editável, não regra fixa. Vem de duas ideias com bom suporte na
+   * literatura: treinar cada grupo muscular com mais frequência (~2x por
+   * semana) tende a ser tão ou mais eficaz que uma vez só, contanto que o
+   * volume da semana seja parecido — por isso full body/upper-lower ganham
+   * espaço nas frequências baixas e médias, e só em 5 dias (onde dividir por
+   * grupo muscular sem repetir nenhum é mais prático) a sugestão vira "um
+   * grupo por dia", já avisando essa troca no texto que acompanha.
+   */
+  function sugerirDivisaoAcademia(frequenciaSemanal) {
+    const f = Number(frequenciaSemanal) || 0;
+    if (f <= 3) return "fullbody";
+    if (f === 4) return "upperlower";
+    if (f === 5) return "grupomuscular";
+    return "ppl"; // 6-7x: dá pra repetir push/pull/legs na semana
+  }
+
+  /** Nomes de dia sugeridos para a divisão escolhida — só o ponto de partida; dá pra renomear, apagar e criar outros. */
+  function diasSugeridosAcademia(divisao, frequenciaSemanal) {
+    const f = Math.max(1, Math.min(7, Number(frequenciaSemanal) || 3));
+    if (divisao === "upperlower") return ["Superior A", "Inferior A", "Superior B", "Inferior B"].slice(0, Math.max(2, f));
+    if (divisao === "ppl") return ["Empurrar (peito, ombro, tríceps)", "Puxar (costas, bíceps)", "Pernas"];
+    if (divisao === "grupomuscular") {
+      return ["Peito e tríceps", "Costas e bíceps", "Pernas", "Ombro", "Braços e abdômen"].slice(0, Math.max(3, Math.min(5, f)));
+    }
+    if (divisao === "livre") return [];
+    // fullbody
+    return ["Treino A", "Treino B", "Treino C"].slice(0, Math.max(1, Math.min(3, f)));
+  }
 
   const CATEGORIAS_PADRAO = [
     "Moradia",
@@ -170,7 +241,12 @@ const Store = (() => {
     { valor: "#5b6b7d", rotulo: "Ardósia" },
   ];
 
-  const ICONES_PILAR = ["◆", "●", "■", "▲", "★", "✦", "♥", "⚑", "⌂", "♪", "☾", "✎"];
+  const ICONES_PILAR = [
+    "◆", "●", "■", "▲", "★", "✦", "♥", "⚑", "⌂", "♪", "☾", "✎",
+    "▪", "▼", "◀", "▶", "○", "□", "△", "◇", "✚", "✕", "✳", "❖",
+    "➤", "⚙", "⚡", "⚓", "⛊", "⚔", "♛", "♞", "⚖", "⚗", "✂", "⌘",
+    "∞", "Ω", "Σ", "§", "❦", "⚘", "⛰", "☂", "✈", "⛵",
+  ];
 
   let estado = null;
   const ouvintes = [];
@@ -197,7 +273,7 @@ const Store = (() => {
 
   function estadoVazio() {
     return {
-      versao: 8,
+      versao: 9,
       atualizadoEm: new Date().toISOString(),
       perfil: { ...PERFIL_PADRAO },
       preferencias: preferenciasPadrao(),
@@ -463,10 +539,19 @@ const Store = (() => {
         return { id, descricao, data, concluido: !!concluido, extras: resto };
       });
 
+      // v8 → v9: o modelo "academia" ganhou tela própria (dias de treino com
+      // exercícios do catálogo). Uma aba desse modelo sem `academia` ainda
+      // não passou pelo questionário inicial — a presença de `academia` é a
+      // marca que impede essa conversão de rodar de novo.
+      if (pil.modelo === "academia" && !pil.academia) {
+        pil.academia = { configuradoEm: "", objetivo: "", experiencia: "", frequenciaSemanal: 0, divisao: "" };
+        pil.dias = Array.isArray(pil.dias) ? pil.dias : [];
+      }
+
       return pil;
     });
 
-    out.versao = 8;
+    out.versao = 9;
     return out;
   }
 
@@ -502,6 +587,11 @@ const Store = (() => {
     ICONES_PILAR,
     MODELOS_PILAR,
     TIPOS_CAMPO,
+    ACADEMIA_OBJETIVOS,
+    ACADEMIA_EXPERIENCIAS,
+    ACADEMIA_DIVISOES,
+    sugerirDivisaoAcademia,
+    diasSugeridosAcademia,
     textoParaHTML,
 
     estado: () => carregar(),

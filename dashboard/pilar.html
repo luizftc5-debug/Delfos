@@ -27,7 +27,7 @@
           </div>
         </header>
 
-        <div class="grid g3" style="margin-bottom:14px;">
+        <div class="grid g3" id="bloco-stats" style="margin-bottom:14px;">
           <div class="card tinted">
             <div class="stat-label">Em aberto</div>
             <div class="stat-value num" id="s-abertos">—</div>
@@ -45,7 +45,15 @@
           </div>
         </div>
 
-        <section class="section" style="margin-top:8px;">
+        <section class="section hidden" id="secao-academia">
+          <div class="section-head">
+            <h2 class="section-title"><span class="swatch" id="swatch-academia"></span>Dias de treino</h2>
+            <button class="btn ghost sm" id="btn-dia">+ Dia de treino</button>
+          </div>
+          <div id="academia-conteudo"></div>
+        </section>
+
+        <section class="section" id="secao-itens" style="margin-top:8px;">
           <div class="section-head">
             <h2 class="section-title"><span class="swatch" id="swatch-lista"></span>Itens</h2>
             <label class="filters" style="margin:0;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
@@ -58,13 +66,11 @@
             <h2 class="section-title">Ajustes da aba</h2>
           </div>
           <div class="card">
-            <p class="card-note" style="margin:0 0 12px;">
-              Esta aba foi criada por você. Renomeá-la, trocar ícone e cor, ou ajustar os campos não mexe no
-              que já está cadastrado; excluí-la apaga também todos os itens dela.
-            </p>
+            <p class="card-note" id="nota-ajustes" style="margin:0 0 12px;"></p>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button class="btn" id="btn-editar-aba-2">Editar aba</button>
               <button class="btn" id="btn-campos">Campos desta aba</button>
+              <button class="btn" id="btn-refazer-questionario" hidden>Refazer o questionário inicial</button>
               <button class="btn danger" id="btn-excluir-aba">Excluir esta aba</button>
             </div>
           </div>
@@ -74,6 +80,7 @@
   </div>
 
   <script src="data.js"></script>
+  <script src="exercicios.js"></script>
   <script src="arquivos.js"></script>
   <script src="store.js"></script>
   <script src="personalizacao.js"></script>

@@ -1,21 +1,27 @@
 /* ===========================================================================
    Delfos — back end (Cloudflare Worker + banco D1).
 
-   O painel continua sendo um site estático no GitHub Pages e continua
-   funcionando sem este servidor. O que ele acrescenta:
+   O painel é um site estático no GitHub Pages; este servidor é quem guarda
+   as contas e os dados de cada uma:
 
-   - Sincronização: o mesmo estado em todos os aparelhos (celular, notebook).
-   - Anexos na nuvem: PDFs e imagens dos resumos deixam de existir só num
-     navegador.
-   - Versões anteriores: cópias automáticas do estado para desfazer uma
-     sobrescrita ou um conflito.
-   - Senha: só quem tem a senha lê ou grava.
+   - Contas: cadastro com e-mail e senha (a senha nunca chega aqui — ver
+     contas.js), sessões de 90 dias, troca de senha, exclusão da conta.
+   - Sincronização: o mesmo estado em todos os aparelhos da pessoa.
+   - Anexos na nuvem: PDFs e imagens dos resumos.
+   - Versões anteriores: cópias automáticas para desfazer uma sobrescrita.
 
-   Rotas (todas sob /api; só /api/saude e /api/entrar dispensam token):
+   Rotas (todas sob /api; só saude, cadastro e entrar dispensam sessão):
 
-     GET  /api/saude                  o servidor está no ar? tem senha?
-     POST /api/entrar                 { senha } → { token, expiraEm }
-     GET  /api/sessao                 o token ainda vale?
+     GET  /api/saude                  no ar? o cadastro pede convite?
+     POST /api/cadastro               { email, chave, convite?, manter? } → { token, usuario, codigoRecuperacao }
+     POST /api/entrar                 { email, chave, manter? } → { token, usuario }
+     POST /api/recuperar              { email, codigo, chaveNova } — esqueceu a senha
+     POST /api/sair                   encerra a sessão deste aparelho
+     GET  /api/conta                  e-mail, datas e uso de anexos
+     POST /api/conta/senha            { chaveAtual, chaveNova }
+     POST /api/conta/sair-dos-outros  encerra as sessões dos outros aparelhos
+     POST /api/conta/excluir          { chave } — apaga a conta e tudo dela
+     POST /api/conta/codigo-recuperacao { chave } → { codigoRecuperacao } (o anterior deixa de valer)
      GET  /api/estado[?desde=N]       estado em vigor
      PUT  /api/estado?base=N          grava (409 se outro aparelho gravou antes)
      GET  /api/versoes                cópias antigas (sem o conteúdo)
@@ -26,14 +32,17 @@
      GET  /api/arquivos/:id           baixa um anexo
    =========================================================================== */
 
-import { entrar, exigirSessao, senhaConfigurada } from "./auth.js";
 import { baixarArquivo, enviarArquivo, listarArquivos } from "./arquivos.js";
+import {
+  cadastrar, entrar, excluirConta, exigirSessao, novoCodigoRecuperacao, obterConta, recuperar, sair,
+  sairDosOutros, trocarSenha,
+} from "./contas.js";
 import { gravarEstado, guardarCopia, listarVersoes, obterEstado, obterVersao } from "./estado.js";
 import { limpar } from "./limpeza.js";
 import { ErroHttp, json } from "./respostas.js";
 
 // Só `default` pode ser exportado: o Worker trata toda exportação nomeada como handler.
-const VERSAO_API = "1";
+const VERSAO_API = "2";
 
 /* ---------------------------------- CORS ---------------------------------- */
 
@@ -67,34 +76,43 @@ async function rotear(request, env) {
     return json({ servico: "Delfos API", versao: VERSAO_API, documentacao: "backend/README.md no repositório" });
   }
   if (caminho === "/api/saude" && metodo === "GET") {
-    return json({ ok: true, versao: VERSAO_API, senhaConfigurada: senhaConfigurada(env) });
+    return json({ ok: true, versao: VERSAO_API, cadastro: env.CODIGO_CONVITE ? "convite" : "aberto" });
   }
+  if (caminho === "/api/cadastro" && metodo === "POST") return cadastrar(request, env);
   if (caminho === "/api/entrar" && metodo === "POST") return entrar(request, env);
+  if (caminho === "/api/recuperar" && metodo === "POST") return recuperar(request, env);
 
-  // Daqui para baixo, só com token.
+  // Daqui para baixo, só com sessão — e só com os dados do dono dela.
   if (!caminho.startsWith("/api/")) throw new ErroHttp(404, "Rota não encontrada.");
-  await exigirSessao(request, env);
+  const usuario = await exigirSessao(request, env);
 
-  if (caminho === "/api/sessao" && metodo === "GET") return json({ ok: true });
+  if (metodo === "POST") {
+    if (caminho === "/api/sair") return sair(env, usuario);
+    if (caminho === "/api/conta/senha") return trocarSenha(request, env, usuario);
+    if (caminho === "/api/conta/sair-dos-outros") return sairDosOutros(env, usuario);
+    if (caminho === "/api/conta/excluir") return excluirConta(request, env, usuario);
+    if (caminho === "/api/conta/codigo-recuperacao") return novoCodigoRecuperacao(request, env, usuario);
+  }
+  if (caminho === "/api/conta" && metodo === "GET") return obterConta(env, usuario);
 
   if (caminho === "/api/estado") {
-    if (metodo === "GET") return obterEstado(request, env);
-    if (metodo === "PUT") return gravarEstado(request, env);
+    if (metodo === "GET") return obterEstado(request, env, usuario);
+    if (metodo === "PUT") return gravarEstado(request, env, usuario);
   }
 
   if (caminho === "/api/versoes") {
-    if (metodo === "GET") return listarVersoes(request, env);
-    if (metodo === "POST") return guardarCopia(request, env);
+    if (metodo === "GET") return listarVersoes(env, usuario);
+    if (metodo === "POST") return guardarCopia(request, env, usuario);
   }
   const versao = /^\/api\/versoes\/(\d+)$/.exec(caminho);
-  if (versao && metodo === "GET") return obterVersao(env, Number(versao[1]));
+  if (versao && metodo === "GET") return obterVersao(env, usuario, Number(versao[1]));
 
-  if (caminho === "/api/arquivos" && metodo === "GET") return listarArquivos(request, env);
+  if (caminho === "/api/arquivos" && metodo === "GET") return listarArquivos(env, usuario);
   const arquivo = /^\/api\/arquivos\/([^/]+)$/.exec(caminho);
   if (arquivo) {
     const id = decodeURIComponent(arquivo[1]);
-    if (metodo === "PUT") return enviarArquivo(request, env, id);
-    if (metodo === "GET") return baixarArquivo(request, env, id);
+    if (metodo === "PUT") return enviarArquivo(request, env, usuario, id);
+    if (metodo === "GET") return baixarArquivo(env, usuario, id);
   }
 
   throw new ErroHttp(404, "Rota não encontrada.");

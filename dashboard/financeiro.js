@@ -235,7 +235,10 @@
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td class="num muted" style="white-space:nowrap;">${fmt.dataCurta(item.data)}</td>
-        <td><span class="title">${fmt.escape(item.descricao || "(sem descrição)")}</span></td>
+        <td>
+          <span class="title">${fmt.escape(item.descricao || "(sem descrição)")}</span>
+          <span class="meta so-celular">${fmt.escape([fmt.dataCurta(item.data), item.categoria || "Outros", Financas.nomeOrigem(item.origem) || item.forma].filter(Boolean).join(" · "))}</span>
+        </td>
         <td><span class="badge">${fmt.escape(item.categoria || "Outros")}</span></td>
         <td class="muted">${fmt.escape(Financas.nomeOrigem(item.origem) || item.forma || "—")}</td>
         <td><span class="badge ${item.status === "pendente" ? "urgente" : "feito"}">${item.status === "pendente" ? "pendente" : "pago"}</span></td>

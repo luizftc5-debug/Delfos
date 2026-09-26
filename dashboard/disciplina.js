@@ -43,10 +43,30 @@
       : `<span class="muted">Professor(a) não informado</span>`;
 
     const media = UI.mediaDisciplina(disciplina);
-    document.getElementById("s-media").textContent = media ? media.media.toFixed(1) : "—";
-    document.getElementById("s-media-d").textContent = media
-      ? `Ponderada por ${media.quantidade} ${media.quantidade === 1 ? "nota lançada" : "notas lançadas"}`
-      : "Nenhuma nota lançada ainda";
+    document.getElementById("s-media").textContent = media ? UI.fmt.decimal(media.media) : "—";
+    // Abaixo da média, o que importa para o estudante: quanto falta tirar.
+    const meta = UI.notaNecessaria(disciplina);
+    const minima = meta ? UI.fmt.decimal(meta.minima) : "";
+    const alvo = document.getElementById("s-media-d");
+    alvo.classList.remove("up", "down");
+    if (!meta) {
+      alvo.textContent = "Nenhuma avaliação cadastrada ainda";
+    } else if (meta.situacao === "aprovado") {
+      alvo.textContent = `Fechou acima da média ${minima}`;
+      alvo.classList.add("up");
+    } else if (meta.situacao === "abaixo") {
+      alvo.textContent = `Fechou abaixo da média ${minima}`;
+      alvo.classList.add("down");
+    } else if (meta.situacao === "garantida") {
+      alvo.textContent = `Média ${minima} já garantida, mesmo com zero no resto`;
+      alvo.classList.add("up");
+    } else if (meta.situacao === "impossivel") {
+      alvo.textContent = `Não dá mais para chegar a ${minima} só com as notas que faltam`;
+      alvo.classList.add("down");
+    } else {
+      const quais = meta.quantasFaltam === 1 ? "na avaliação que falta" : `em média nas ${meta.quantasFaltam} que faltam`;
+      alvo.innerHTML = `Para fechar com ${minima}: precisa de <b>${UI.fmt.decimal(meta.precisa)}</b> ${quais}`;
+    }
 
     const prox = UI.proximaAvaliacao(disciplina);
     document.getElementById("s-proxima").textContent = prox ? prox.nome || "Avaliação" : "Nada agendado";
@@ -108,7 +128,7 @@
           ].join(" · ")}</span>
         </span>
         ${temNota
-          ? `<span class="nota-chip">${fmt.escape(String(a.nota))}</span>`
+          ? `<span class="nota-chip">${fmt.escape(Number(a.nota).toLocaleString("pt-BR", { maximumFractionDigits: 2 }))}</span>`
           : u ? `<span class="badge ${u.nivel}">${u.rotulo}</span>` : `<span class="badge">a lançar</span>`}
         <span class="row-actions">
           <button class="btn ghost sm" data-editar>Editar</button>
@@ -306,6 +326,7 @@
   const camposDisciplina = () => [
     { nome: "nome", rotulo: "Nome da disciplina", tipo: "text", obrigatorio: true },
     { nome: "professor", rotulo: "Professor(a)", tipo: "text" },
+    { nome: "mediaMinima", rotulo: "Média para passar", tipo: "number", step: "0.1", placeholder: "7", dica: "Usada para calcular quanto falta tirar. Vazio = 7." },
     { nome: "status", rotulo: "Situação", tipo: "select", opcoes: ["ativa", "concluída", "trancada"] },
   ];
 

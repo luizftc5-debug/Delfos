@@ -22,6 +22,15 @@ const UI = (() => {
         maximumFractionDigits: 2,
       });
     },
+    /** Número decimal no formato brasileiro (8,2 — não 8.2). */
+    decimal(v, casas = 1) {
+      return (Number(v) || 0).toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
+    },
+    /** "6" ou "6º" viram "6º" — o ordinal nunca sai dobrado. */
+    ordinal(v) {
+      const n = String(v ?? "").trim().replace(/[ºª°.\s]+$/u, "");
+      return n ? `${n}º` : "";
+    },
     moedaCurta(v) {
       const n = Number(v) || 0;
       const abs = Math.abs(n);
@@ -409,7 +418,7 @@ const UI = (() => {
           .join("")}</div>` : ""}`;
     }).join("");
 
-    const linhaCurso = [perfil.curso, perfil.semestre ? `${perfil.semestre}º sem` : ""]
+    const linhaCurso = [perfil.curso, perfil.semestre ? `${fmt.ordinal(perfil.semestre)} sem` : ""]
       .filter(Boolean)
       .join(" · ");
 
@@ -431,6 +440,13 @@ const UI = (() => {
 
     document.getElementById("btn-perfil").addEventListener("click", abrirPerfil);
     document.getElementById("btn-nova-aba").addEventListener("click", novaAba);
+
+    // No celular a barra vira uma faixa rolável: traz a aba atual para a vista,
+    // senão quem está em "Financeiro" vê o próprio nome cortado na borda.
+    const atual = el.querySelector(".nav-item.active");
+    if (atual && el.scrollWidth > el.clientWidth) {
+      el.scrollLeft = Math.max(0, atual.offsetLeft - (el.clientWidth - atual.offsetWidth) / 2);
+    }
   }
 
   /* --------------------- Abas criadas pelo usuário ------------------------- */
@@ -903,6 +919,37 @@ const UI = (() => {
     const pesoTotal = comNota.reduce((s, a) => s + (Number(a.peso) || 1), 0);
     const soma = comNota.reduce((s, a) => s + Number(a.nota) * (Number(a.peso) || 1), 0);
     return { media: soma / pesoTotal, quantidade: comNota.length };
+  }
+
+  /**
+   * Quanto falta: a nota que as avaliações ainda sem nota precisam ter, em
+   * média (ponderada pelo peso), para a disciplina fechar na média mínima
+   * (`d.mediaMinima`, 7 se não informada). Escala de 0 a 10.
+   * Devolve null quando não há o que calcular (nenhuma avaliação cadastrada).
+   */
+  function notaNecessaria(d) {
+    const minima = Number(d.mediaMinima) > 0 ? Number(d.mediaMinima) : 7;
+    const avs = (d.avaliacoes || []).filter((a) => !(Number(a.peso) < 0));
+    if (!avs.length) return null;
+    const temNota = (a) => a.nota !== null && a.nota !== undefined && a.nota !== "" && !Number.isNaN(Number(a.nota));
+    const peso = (a) => Number(a.peso) || 1;
+    const feitas = avs.filter(temNota);
+    const faltam = avs.filter((a) => !temNota(a));
+    const pesoTotal = avs.reduce((s, a) => s + peso(a), 0);
+    const pontos = feitas.reduce((s, a) => s + Number(a.nota) * peso(a), 0);
+    const pesoFaltando = faltam.reduce((s, a) => s + peso(a), 0);
+
+    if (!pesoFaltando) {
+      const final = pontos / pesoTotal;
+      return { minima, final, situacao: final >= minima ? "aprovado" : "abaixo" };
+    }
+    const precisa = (minima * pesoTotal - pontos) / pesoFaltando;
+    return {
+      minima,
+      precisa: Math.max(0, precisa),
+      quantasFaltam: faltam.length,
+      situacao: precisa <= 0 ? "garantida" : precisa > 10 ? "impossivel" : "possivel",
+    };
   }
 
   /** Próxima avaliação ainda sem nota. */
@@ -1571,7 +1618,7 @@ const UI = (() => {
   return {
     NOME, VERSAO,
     fmt, htmlSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
-    compromissos, conflitos, contagens, mediaDisciplina, proximaAvaliacao, resumoProjeto,
+    compromissos, conflitos, contagens, mediaDisciplina, notaNecessaria, proximaAvaliacao, resumoProjeto,
     iniciarPagina, montarLayout, tema, toast, formulario, confirmar, abrirModal,
     abrirBackup, abrirPerfil, avatarHTML, iniciais, vazio, barras, colunasMensais, medidor,
     novaAba, camposPilar, redimensionarFoto, camposItemPilar, editorCampos,

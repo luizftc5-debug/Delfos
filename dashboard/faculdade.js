@@ -21,7 +21,7 @@
 
     const medias = disciplinas().map(UI.mediaDisciplina).filter(Boolean);
     document.getElementById("s-disciplinas-d").textContent = medias.length
-      ? `Média geral: ${(medias.reduce((s, m) => s + m.media, 0) / medias.length).toFixed(1)}`
+      ? `Média geral: ${UI.fmt.decimal(medias.reduce((s, m) => s + m.media, 0) / medias.length)}`
       : "Nenhuma nota lançada ainda";
 
     document.getElementById("s-prazos").textContent = abertos.length;
@@ -102,7 +102,7 @@
               (d.resumos || []).length ? `${d.resumos.length} ${d.resumos.length === 1 ? "resumo" : "resumos"}` : null,
             ].filter(Boolean).join(" · ")}</span>
           </a>
-          ${media ? `<span class="nota-chip">${media.media.toFixed(1)}</span>` : ""}
+          ${media ? `<span class="nota-chip">${UI.fmt.decimal(media.media)}</span>` : ""}
           ${u ? `<span class="badge ${u.nivel}">${u.rotulo}</span>` : ""}
           <span class="row-actions">
             <a class="btn ghost sm" href="${linkDisciplina(d)}">Abrir</a>
@@ -171,6 +171,7 @@
   const camposDisciplina = () => [
     { nome: "nome", rotulo: "Nome da disciplina", tipo: "text", obrigatorio: true, placeholder: "Ex.: Clínica Médica" },
     { nome: "professor", rotulo: "Professor(a)", tipo: "text" },
+    { nome: "mediaMinima", rotulo: "Média para passar", tipo: "number", step: "0.1", placeholder: "7", dica: "Usada para calcular quanto falta tirar. Vazio = 7." },
     { nome: "status", rotulo: "Situação", tipo: "select", opcoes: ["ativa", "concluída", "trancada"] },
   ];
 

@@ -56,7 +56,7 @@ const Personalizacao = (() => {
   /** Uma linha curta com o que a pessoa faz, para a leitura da home e o perfil. */
   function ocupacaoResumo() {
     const p = perfil();
-    const semestre = eEstudante() && p.semestre ? `${p.semestre}º semestre` : "";
+    const semestre = eEstudante() && p.semestre ? `${UI.fmt.ordinal(p.semestre)} semestre` : "";
     if (p.ocupacao) return [p.ocupacao, semestre].filter(Boolean).join(" · ");
     if (p.curso) return [p.curso, semestre].filter(Boolean).join(" · ");
     return "";

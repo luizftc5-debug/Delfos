@@ -19,7 +19,7 @@
     const elGanho = document.getElementById("s-ganho");
     elGanho.textContent = `${t.ganho >= 0 ? "+" : "−"}${fmt.moeda(Math.abs(t.ganho))}`;
     elGanho.className = `stat-value num delta ${t.ganho >= 0 ? "up" : "down"}`;
-    document.getElementById("s-ganho-d").textContent = t.aplicado > 0 ? `${t.percentual >= 0 ? "+" : ""}${t.percentual.toFixed(1)}% sobre o aplicado` : "Cadastre o valor aplicado para calcular";
+    document.getElementById("s-ganho-d").textContent = t.aplicado > 0 ? `${t.percentual >= 0 ? "+" : ""}${UI.fmt.decimal(t.percentual)}% sobre o aplicado` : "Cadastre o valor aplicado para calcular";
 
     const tipos = new Set(lista.map((i) => i.tipo).filter(Boolean));
     document.getElementById("s-tipos").textContent = tipos.size;
@@ -89,7 +89,7 @@
           </div>
           <div class="stat-value num" style="font-size:22px;">${fmt.moeda(Number(inv.valorAtual ?? inv.valorAplicado) || 0)}</div>
           <div class="stat-sub delta ${r.ganho >= 0 ? "up" : "down"}">
-            ${r.ganho >= 0 ? "▲" : "▼"} ${fmt.moeda(Math.abs(r.ganho))} (${r.percentual >= 0 ? "+" : ""}${r.percentual.toFixed(1)}%)
+            ${r.ganho >= 0 ? "▲" : "▼"} ${fmt.moeda(Math.abs(r.ganho))} (${r.percentual >= 0 ? "+" : ""}${UI.fmt.decimal(r.percentual)}%)
           </div>
           <div class="stat-sub">aplicado ${fmt.moeda(Number(inv.valorAplicado) || 0)}${inv.dataAplicacao ? ` em ${fmt.data(inv.dataAplicacao)}` : ""}</div>
           ${inv.observacoes ? `<div class="stat-sub" style="margin-top:8px;">${fmt.escape(inv.observacoes)}</div>` : ""}`;

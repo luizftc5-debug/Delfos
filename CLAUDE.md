@@ -166,6 +166,11 @@ Cada disciplina tem `avaliacoes`, `materiais` e `resumos` como listas dentro del
 `Store.subInserir/subAtualizar/subRemover`. A média é ponderada pelo `peso` das avaliações com nota
 lançada (`UI.mediaDisciplina`). Prazos apontam para a disciplina por `disciplinaId`.
 
+`UI.notaNecessaria(d)` responde "quanto preciso tirar": a nota média (ponderada, escala 0–10) que as
+avaliações ainda sem nota precisam ter para a disciplina fechar em `d.mediaMinima` (campo opcional
+do formulário, 7 se vazio). Aparece embaixo da média na página da disciplina, com os casos "já
+garantida" e "não dá mais" ditos com todas as letras.
+
 ### Editor de resumos
 
 O texto de um resumo não é escrito em modal: `resumo.html?disciplina=<id>[&id=<resumo>]` abre uma
@@ -404,6 +409,14 @@ escolha explícita em `[data-theme="light"]`.
 Tipografia: **IBM Plex Sans** em tudo, com peso e tamanho fazendo a hierarquia.
 **IBM Plex Serif** aparece num único lugar — a frase de leitura no alto da visão
 geral (`.leitura`), o momento em que o painel fala. O resto é dado, e dado é sans.
+
+Números decimais saem por `UI.fmt.decimal` (8,2 — nunca `toFixed`, que escreve 8.2) e ordinais
+por `UI.fmt.ordinal` (nunca "6ºº"). `[hidden]` tem `display: none !important` no tema: sem isso,
+`el.hidden = true` não esconde nada que tenha `display` próprio (`.btn`, `.card`).
+
+No celular (≤ 900px), faixas de números `.g3`/`.g4` ficam 2 por linha, a barra lateral vira uma
+faixa rolável que se posiciona na aba atual, e a planilha de lançamentos (`table.sheet`) vira lista
+de cartões — data, categoria e "pago com" viram a linha `.so-celular` debaixo da descrição.
 
 Identidade de pilar é um **filete de 2px** na borda do cartão (`.card.tinted`,
 `.pillar`) — régua, não ornamento. Grupos afins se encostam num campo contíguo

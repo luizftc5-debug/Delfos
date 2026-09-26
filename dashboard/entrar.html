@@ -27,20 +27,33 @@
       </div>
 
       <form id="form" class="entrada-form" novalidate>
+        <h2 class="entrada-titulo so-recuperar hidden">Redefinir a senha</h2>
+        <p class="card-note so-recuperar hidden" style="margin:0;">
+          Use o código de recuperação que apareceu quando você criou a conta (ou o último que gerou no painel).
+        </p>
+
         <div class="field so-criar hidden">
           <label for="f-nome">Seu nome</label>
           <input type="text" id="f-nome" autocomplete="name" />
         </div>
         <div class="field">
           <label for="f-email">E-mail</label>
-          <input type="email" id="f-email" autocomplete="username" inputmode="email" spellcheck="false" />
+          <input type="email" id="f-email" autocomplete="username" inputmode="email" spellcheck="false" autocapitalize="off" />
+        </div>
+        <div class="field so-recuperar hidden">
+          <label for="f-codigo">Código de recuperação</label>
+          <input type="text" id="f-codigo" autocomplete="off" spellcheck="false" autocapitalize="characters" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" />
         </div>
         <div class="field">
-          <label for="f-senha">Senha</label>
-          <input type="password" id="f-senha" autocomplete="current-password" />
-          <span class="hint so-criar hidden">Pelo menos 8 caracteres. Uma frase longa é mais forte e mais fácil de lembrar do que uma sigla com símbolos.</span>
+          <label for="f-senha"><span class="so-entrar">Senha</span><span class="so-criar so-recuperar hidden">Senha nova</span></label>
+          <div class="senha-campo">
+            <input type="password" id="f-senha" autocomplete="current-password" />
+            <button class="btn ghost sm" type="button" data-mostrar="f-senha" aria-label="Mostrar senha">Mostrar</button>
+          </div>
+          <span class="hint caps hidden" data-caps>Caps Lock ligado.</span>
+          <span class="hint so-criar so-recuperar hidden">Pelo menos 8 caracteres. Uma frase longa é mais forte e mais fácil de lembrar do que uma sigla com símbolos.</span>
         </div>
-        <div class="field so-criar hidden">
+        <div class="field so-criar so-recuperar hidden">
           <label for="f-confirmar">Repita a senha</label>
           <input type="password" id="f-confirmar" autocomplete="new-password" />
         </div>
@@ -50,14 +63,24 @@
           <span class="hint">Criar conta neste Delfos pede um convite de quem cuida dele.</span>
         </div>
 
+        <label class="entrada-manter">
+          <input type="checkbox" class="check" id="f-manter" />
+          <span>Manter conectado neste aparelho
+            <span class="hint">Sem marcar, o Delfos pede a senha de novo toda vez que o navegador for aberto. Não marque em computador dos outros.</span>
+          </span>
+        </label>
+
         <span class="err" id="erro" role="alert"></span>
 
         <button class="btn primary block" id="btn-enviar" type="submit">Entrar</button>
+        <button class="btn ghost block so-entrar" id="btn-esqueci" type="button">Esqueci minha senha</button>
+        <button class="btn ghost block so-recuperar hidden" id="btn-voltar-entrar" type="button">Voltar para entrar</button>
       </form>
 
-      <p class="card-note entrada-nota so-entrar">
-        Esqueceu a senha? Por enquanto não há recuperação por e-mail. Se ainda estiver conectado em outro
-        aparelho, exporte um backup por lá (Perfil → Backup e dados) antes de criar uma conta nova.
+      <p class="card-note entrada-nota so-recuperar hidden">
+        Perdeu também o código? Sem ele não há como provar que a conta é sua — é o preço de o servidor não
+        guardar sua senha. Se ainda estiver conectado em algum aparelho, troque a senha ou gere um código
+        novo por lá (Perfil → Conta e sincronização).
       </p>
       <p class="card-note entrada-nota so-criar hidden">
         Sua senha não sai deste aparelho: ela vira uma chave embaralhada antes de ir para o servidor, que

@@ -1365,3 +1365,26 @@ a.anexo:hover, button.anexo:hover { border-color: var(--linha-forte); background
 .entrada-form .err:empty { display: none; }
 .entrada-form .err { font-size: 13px; color: var(--st-critical); font-weight: 500; line-height: 1.5; }
 .entrada-nota { margin: 22px 0 0; line-height: 1.6; }
+.entrada-titulo { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+.senha-campo { position: relative; display: flex; }
+.senha-campo input { padding-right: 84px; }
+.senha-campo .btn { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); }
+.field .hint.caps { color: var(--st-warning); }
+.entrada-manter { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--texto); cursor: pointer; }
+.entrada-manter .check { margin-top: 2px; flex-shrink: 0; }
+.entrada-manter .hint { display: block; margin-top: 3px; font-size: 12.5px; color: var(--texto-3); line-height: 1.5; }
+
+/* Código de recuperação: mostrado uma vez, para copiar ou baixar. */
+.codigo-recuperacao {
+  font-size: clamp(15px, 4.4vw, 19px);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-align: center;
+  padding: 16px 12px;
+  border: 1px solid var(--linha-forte);
+  border-radius: var(--r-sm);
+  background: var(--fundo);
+  font-variant-numeric: tabular-nums;
+  user-select: all;
+  overflow-wrap: normal; /* quebra só nos hífens, nunca no meio de um grupo */
+}

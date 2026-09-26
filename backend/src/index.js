@@ -13,13 +13,15 @@
    Rotas (todas sob /api; só saude, cadastro e entrar dispensam sessão):
 
      GET  /api/saude                  no ar? o cadastro pede convite?
-     POST /api/cadastro               { email, chave, convite? } → { token, usuario }
-     POST /api/entrar                 { email, chave } → { token, usuario }
+     POST /api/cadastro               { email, chave, convite?, manter? } → { token, usuario, codigoRecuperacao }
+     POST /api/entrar                 { email, chave, manter? } → { token, usuario }
+     POST /api/recuperar              { email, codigo, chaveNova } — esqueceu a senha
      POST /api/sair                   encerra a sessão deste aparelho
      GET  /api/conta                  e-mail, datas e uso de anexos
      POST /api/conta/senha            { chaveAtual, chaveNova }
      POST /api/conta/sair-dos-outros  encerra as sessões dos outros aparelhos
      POST /api/conta/excluir          { chave } — apaga a conta e tudo dela
+     POST /api/conta/codigo-recuperacao { chave } → { codigoRecuperacao } (o anterior deixa de valer)
      GET  /api/estado[?desde=N]       estado em vigor
      PUT  /api/estado?base=N          grava (409 se outro aparelho gravou antes)
      GET  /api/versoes                cópias antigas (sem o conteúdo)
@@ -32,7 +34,8 @@
 
 import { baixarArquivo, enviarArquivo, listarArquivos } from "./arquivos.js";
 import {
-  cadastrar, entrar, excluirConta, exigirSessao, obterConta, sair, sairDosOutros, trocarSenha,
+  cadastrar, entrar, excluirConta, exigirSessao, novoCodigoRecuperacao, obterConta, recuperar, sair,
+  sairDosOutros, trocarSenha,
 } from "./contas.js";
 import { gravarEstado, guardarCopia, listarVersoes, obterEstado, obterVersao } from "./estado.js";
 import { limpar } from "./limpeza.js";
@@ -77,6 +80,7 @@ async function rotear(request, env) {
   }
   if (caminho === "/api/cadastro" && metodo === "POST") return cadastrar(request, env);
   if (caminho === "/api/entrar" && metodo === "POST") return entrar(request, env);
+  if (caminho === "/api/recuperar" && metodo === "POST") return recuperar(request, env);
 
   // Daqui para baixo, só com sessão — e só com os dados do dono dela.
   if (!caminho.startsWith("/api/")) throw new ErroHttp(404, "Rota não encontrada.");
@@ -87,6 +91,7 @@ async function rotear(request, env) {
     if (caminho === "/api/conta/senha") return trocarSenha(request, env, usuario);
     if (caminho === "/api/conta/sair-dos-outros") return sairDosOutros(env, usuario);
     if (caminho === "/api/conta/excluir") return excluirConta(request, env, usuario);
+    if (caminho === "/api/conta/codigo-recuperacao") return novoCodigoRecuperacao(request, env, usuario);
   }
   if (caminho === "/api/conta" && metodo === "GET") return obterConta(env, usuario);
 

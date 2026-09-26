@@ -373,3 +373,79 @@ test("migração 0002 preserva as tabelas da versão de senha única como legado
     assert.ok(nomes.includes(t), t);
   }
 });
+
+/* ------------------- Manter conectado e recuperação de senha ------------------- */
+
+test("sem 'manter conectado' a sessão vale 12 horas; com, 30 dias", async () => {
+  const env = ambiente();
+  await criarConta(env, "a@b.co", "senha-senha");
+  const agora = Date.now();
+  const curta = (await chamar(env, "POST", "/api/entrar", { corpo: { email: "a@b.co", chave: chave("senha-senha") } })).dados;
+  const longa = (await chamar(env, "POST", "/api/entrar", { corpo: { email: "a@b.co", chave: chave("senha-senha"), manter: true } })).dados;
+  const horas = (iso) => (Date.parse(iso) - agora) / 3.6e6;
+  assert.ok(horas(curta.expiraEm) > 11.9 && horas(curta.expiraEm) < 12.1, curta.expiraEm);
+  assert.ok(horas(longa.expiraEm) > 719 && horas(longa.expiraEm) < 721, longa.expiraEm);
+  assert.equal(curta.manter, false);
+  assert.equal(longa.manter, true);
+  // "manter" só vale com true de verdade, não com qualquer valor.
+  const texto = (await chamar(env, "POST", "/api/entrar", { corpo: { email: "a@b.co", chave: chave("senha-senha"), manter: "sim" } })).dados;
+  assert.equal(texto.manter, false);
+});
+
+test("cadastro devolve código de recuperação; o banco guarda só o hash", async () => {
+  const env = ambiente();
+  const conta = await criarConta(env, "a@b.co");
+  assert.match(conta.codigoRecuperacao, /^[A-Z2-9]{4}(-[A-Z2-9]{4}){4}$/);
+  assert.doesNotMatch(conta.codigoRecuperacao, /[01IOL]/);
+  const tudo = JSON.stringify(env.DB.sqlite.prepare("SELECT * FROM usuarios").all());
+  assert.ok(!tudo.includes(conta.codigoRecuperacao));
+  assert.ok(!tudo.includes(conta.codigoRecuperacao.replace(/-/g, "")));
+});
+
+test("esqueci a senha: o código redefine, derruba as sessões e é trocado por outro", async () => {
+  const env = ambiente();
+  const { token, codigoRecuperacao } = await criarConta(env, "a@b.co", "senha-antiga-1");
+
+  const errado = await chamar(env, "POST", "/api/recuperar", { corpo: { email: "a@b.co", codigo: "AAAA-BBBB-CCCC-DDDD-EEEE", chaveNova: chave("nova-1234") } });
+  assert.equal(errado.status, 401);
+
+  // Aceita minúsculas e sem hífen, como alguém digitaria.
+  const digitado = codigoRecuperacao.toLowerCase().replace(/-/g, " ");
+  const ok = await chamar(env, "POST", "/api/recuperar", { corpo: { email: "A@B.co", codigo: digitado, chaveNova: chave("nova-1234") } });
+  assert.equal(ok.status, 200);
+  assert.ok(ok.dados.token);
+  assert.notEqual(ok.dados.codigoRecuperacao, codigoRecuperacao);
+
+  assert.equal((await chamar(env, "GET", "/api/conta", { token })).status, 401, "sessão antiga cai");
+  assert.equal((await chamar(env, "GET", "/api/conta", { token: ok.dados.token })).status, 200);
+  assert.equal((await chamar(env, "POST", "/api/entrar", { corpo: { email: "a@b.co", chave: chave("senha-antiga-1") } })).status, 401);
+  assert.equal((await chamar(env, "POST", "/api/entrar", { corpo: { email: "a@b.co", chave: chave("nova-1234") } })).status, 200);
+
+  // O código usado não serve de novo.
+  const repetido = await chamar(env, "POST", "/api/recuperar", { corpo: { email: "a@b.co", codigo: codigoRecuperacao, chaveNova: chave("outra") } });
+  assert.equal(repetido.status, 401);
+});
+
+test("chutar códigos de recuperação conta como senha errada e trava", async () => {
+  const env = ambiente();
+  await criarConta(env, "a@b.co");
+  for (let i = 0; i < 10; i++) {
+    await chamar(env, "POST", "/api/recuperar", { corpo: { email: "a@b.co", codigo: `X${i}`, chaveNova: chave("n") } });
+  }
+  assert.equal((await chamar(env, "POST", "/api/recuperar", { corpo: { email: "a@b.co", codigo: "x", chaveNova: chave("n") } })).status, 429);
+});
+
+test("gerar novo código pede a senha e invalida o anterior", async () => {
+  const env = ambiente();
+  const { token, codigoRecuperacao: antigo } = await criarConta(env, "a@b.co", "senha-certa-1");
+  assert.equal((await chamar(env, "POST", "/api/conta/codigo-recuperacao", { token, corpo: { chave: chave("chute") } })).status, 403);
+  const r = await chamar(env, "POST", "/api/conta/codigo-recuperacao", { token, corpo: { chave: chave("senha-certa-1") } });
+  assert.equal(r.status, 200);
+  const velho = await chamar(env, "POST", "/api/recuperar", { corpo: { email: "a@b.co", codigo: antigo, chaveNova: chave("n") } });
+  assert.equal(velho.status, 401);
+  const novo = await chamar(env, "POST", "/api/recuperar", { corpo: { email: "a@b.co", codigo: r.dados.codigoRecuperacao, chaveNova: chave("n") } });
+  assert.equal(novo.status, 200);
+  const conta = (await chamar(env, "GET", "/api/conta", { token: novo.dados.token })).dados;
+  assert.ok(conta.usuario.codigoRecuperacaoGeradoEm);
+  assert.ok(conta.sessao.expiraEm);
+});

@@ -7,9 +7,15 @@
    só no navegador — é o que permite publicar o servidor sem trancar ninguém
    fora dos próprios dados no meio do caminho.
 
-   O que fica neste navegador, em `organizador.sessao` (localStorage):
-   o token da sessão (aleatório, vale 90 dias, o servidor guarda só um hash
-   dele), o id e o e-mail da conta. A senha nunca é guardada, nem aqui nem
+   Toda vez que o navegador é aberto de novo, o painel pede para entrar — a
+   menos que a pessoa marque "Manter conectado":
+   - sem marcar, o token vai para o sessionStorage (some quando o navegador
+     fecha) e o servidor o aceita por 12 horas no máximo. Uma aba nova pede
+     o token às abas já abertas (BroadcastChannel), para não pedir a senha a
+     cada aba;
+   - marcando, o token vai para o localStorage e vale 30 dias.
+   Em `organizador.sessao` (localStorage) ficam sempre o id e o e-mail da
+   última conta — para preencher o e-mail e saber de quem são os dados. A senha nunca é guardada, nem aqui nem
    no servidor: ela vira uma chave de 32 bytes por PBKDF2-SHA256 com 600 mil
    iterações (derivarChave) e só a chave é enviada. Detalhes em
    backend/src/contas.js.
@@ -38,19 +44,43 @@ const Sessao = (() => {
     return (local || API_PUBLICA).trim().replace(/\/+$/, "");
   }
 
-  function ler() {
-    try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; }
+  function lerDe(armazem) {
+    try { return JSON.parse(armazem.getItem(KEY) || "{}") || {}; }
     catch { return {}; }
   }
 
+  function ler() {
+    return { ...lerDe(localStorage), ...lerDe(sessionStorage) };
+  }
+
+  function gravarEm(armazem, dados) {
+    try { armazem.setItem(KEY, JSON.stringify(dados)); } catch { /* sem espaço */ }
+  }
+
+  /** Guarda o token no lugar certo (ver o cabeçalho) e o resto no localStorage. */
   function gravar(patch) {
-    const s = { ...ler(), ...patch };
-    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* sem espaço */ }
+    const atual = ler();
+    const s = { ...atual, ...patch };
+    const { token, expiraEm, ...fixo } = s;
+    if (s.manter) {
+      gravarEm(localStorage, s);
+      try { sessionStorage.removeItem(KEY); } catch { /* nada */ }
+    } else {
+      gravarEm(localStorage, fixo);
+      gravarEm(sessionStorage, { token, expiraEm });
+    }
     return s;
   }
 
+  function esquecerToken() {
+    gravar({ token: "", expiraEm: "" });
+  }
+
   const ativo = () => !!api();
-  const logado = () => !!ler().token;
+  const logado = () => {
+    const s = ler();
+    return !!s.token && !(s.expiraEm && Date.parse(s.expiraEm) <= Date.now());
+  };
   const usuario = () => ler().usuario || null;
 
   function nomeDoAparelho() {
@@ -167,7 +197,7 @@ const Sessao = (() => {
 
   function sessaoEncerrada() {
     if (!ler().token) return;
-    gravar({ token: "", expiraEm: "" });
+    esquecerToken();
     if (typeof UI !== "undefined") {
       UI.toast("Sua sessão terminou. Entre de novo para continuar sincronizando.", {
         acaoRotulo: "Entrar", aoAcionar: irParaEntrar, duracao: 12000,
@@ -178,7 +208,7 @@ const Sessao = (() => {
   /* ------------------------------- Conta ---------------------------------- */
 
   function guardarSessao(r) {
-    gravar({ token: r.token, expiraEm: r.expiraEm, usuario: r.usuario });
+    gravar({ token: r.token, expiraEm: r.expiraEm, usuario: r.usuario, manter: !!r.manter });
     return r.usuario;
   }
 
@@ -186,28 +216,46 @@ const Sessao = (() => {
     return pedir("GET", "/api/saude", { publica: true });
   }
 
-  async function cadastrar({ email, senha, convite }) {
+  /** Devolve { usuario, codigoRecuperacao } — o código aparece só desta vez. */
+  async function cadastrar({ email, senha, convite, manter = false }) {
     const chave = await derivarChave(email, senha);
     const r = await pedir("POST", "/api/cadastro", {
       publica: true, tipo: "application/json",
-      corpo: { email: normalizarEmail(email), chave, convite: convite || undefined, dispositivo: nomeDoAparelho() },
+      corpo: { email: normalizarEmail(email), chave, convite: convite || undefined, manter, dispositivo: nomeDoAparelho() },
+    });
+    return { usuario: guardarSessao(r), codigoRecuperacao: r.codigoRecuperacao };
+  }
+
+  async function entrar({ email, senha, manter = false }) {
+    const chave = await derivarChave(email, senha);
+    const r = await pedir("POST", "/api/entrar", {
+      publica: true, tipo: "application/json",
+      corpo: { email: normalizarEmail(email), chave, manter, dispositivo: nomeDoAparelho() },
     });
     return guardarSessao(r);
   }
 
-  async function entrar({ email, senha }) {
-    const chave = await derivarChave(email, senha);
-    const r = await pedir("POST", "/api/entrar", {
+  /** Esqueceu a senha: código de recuperação + senha nova. Devolve { usuario, codigoRecuperacao } (o novo). */
+  async function recuperar({ email, codigo, senha, manter = false }) {
+    const chaveNova = await derivarChave(email, senha);
+    const r = await pedir("POST", "/api/recuperar", {
       publica: true, tipo: "application/json",
-      corpo: { email: normalizarEmail(email), chave, dispositivo: nomeDoAparelho() },
+      corpo: { email: normalizarEmail(email), codigo, chaveNova, manter, dispositivo: nomeDoAparelho() },
     });
-    return guardarSessao(r);
+    return { usuario: guardarSessao(r), codigoRecuperacao: r.codigoRecuperacao };
+  }
+
+  async function novoCodigoRecuperacao(senha) {
+    const chave = await derivarChave(usuario()?.email, senha);
+    const r = await pedir("POST", "/api/conta/codigo-recuperacao", { tipo: "application/json", corpo: { chave } });
+    return r.codigoRecuperacao;
   }
 
   /** Encerra a sessão no servidor (se der) e esquece o token aqui. */
   async function sair() {
     try { await pedir("POST", "/api/sair"); } catch { /* sem rede: o token vence sozinho */ }
-    gravar({ token: "", expiraEm: "" });
+    esquecerToken();
+    canal?.postMessage({ tipo: "saiu" });
   }
 
   function conta() {
@@ -227,7 +275,8 @@ const Sessao = (() => {
   async function excluirConta(senha) {
     const chave = await derivarChave(usuario()?.email, senha);
     await pedir("POST", "/api/conta/excluir", { tipo: "application/json", corpo: { chave } });
-    try { localStorage.removeItem(KEY); } catch { /* nada */ }
+    try { localStorage.removeItem(KEY); sessionStorage.removeItem(KEY); } catch { /* nada */ }
+    canal?.postMessage({ tipo: "saiu" });
   }
 
   /* ------------------------------ Porta ----------------------------------- */
@@ -246,6 +295,41 @@ const Sessao = (() => {
     return /^[a-z]+\.html(\?[\w=&%.-]*)?$/.test(volta) && !volta.startsWith("entrar.html") ? volta : "index.html";
   }
 
+  /* ---------------------- Sessão entre abas abertas ----------------------
+     Sem "manter conectado", o token mora no sessionStorage, que é de cada aba.
+     Uma aba nova pergunta às outras; se alguma está aberta e conectada, ela
+     responde com o token. Com o navegador fechado não há quem responda — e o
+     painel pede para entrar, que é o combinado. */
+
+  const canal = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("delfos-sessao") : null;
+  canal?.addEventListener("message", (ev) => {
+    const m = ev.data || {};
+    if (m.tipo === "pedir" && logado() && ativo()) {
+      const s = ler();
+      canal.postMessage({ tipo: "token", token: s.token, expiraEm: s.expiraEm, usuario: s.usuario, manter: !!s.manter });
+    }
+    // Saiu da conta em outra aba: esta também deixa de estar dentro.
+    if (m.tipo === "saiu") {
+      try { sessionStorage.removeItem(KEY); } catch { /* nada */ }
+      if (!/(^|\/)entrar\.html$/.test(location.pathname)) location.replace("entrar.html?saiu=1");
+    }
+  });
+
+  function pedirTokenAsOutrasAbas(esperaMs = 400) {
+    if (!canal) return Promise.resolve(false);
+    return new Promise((resolve) => {
+      const aoReceber = (ev) => {
+        if (ev.data?.tipo !== "token" || !ev.data.token) return;
+        canal.removeEventListener("message", aoReceber);
+        gravar({ token: ev.data.token, expiraEm: ev.data.expiraEm, usuario: ev.data.usuario, manter: ev.data.manter });
+        resolve(true);
+      };
+      canal.addEventListener("message", aoReceber);
+      canal.postMessage({ tipo: "pedir" });
+      setTimeout(() => { canal.removeEventListener("message", aoReceber); resolve(false); }, esperaMs);
+    });
+  }
+
   // Roda assim que o script carrega, antes do script da página: sem conta,
   // esconde tudo e vai para a entrada. `saindo` avisa UI.iniciarPagina para
   // não disputar o redirecionamento (com o assistente de boas-vindas, p.ex.).
@@ -254,14 +338,18 @@ const Sessao = (() => {
   if (ativo() && !logado() && !naEntrada) {
     saindo = true;
     document.documentElement.style.visibility = "hidden";
-    location.replace(`entrar.html?volta=${encodeURIComponent(paginaAtual())}`);
+    pedirTokenAsOutrasAbas().then((achou) => {
+      if (achou) location.reload();
+      else location.replace(`entrar.html?volta=${encodeURIComponent(paginaAtual())}`);
+    });
   }
 
   return {
     ativo, logado, usuario, api, nomeDoAparelho, normalizarEmail,
     saindo: () => saindo,
     pedir, ErroApi, problemaNaSenha,
-    saude, cadastrar, entrar, sair, conta, trocarSenha, sairDosOutros, excluirConta,
+    saude, cadastrar, entrar, recuperar, novoCodigoRecuperacao, sair, conta, trocarSenha, sairDosOutros, excluirConta,
+    mantido: () => !!ler().manter,
     irParaEntrar, destinoDepoisDeEntrar,
   };
 })();

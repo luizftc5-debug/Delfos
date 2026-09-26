@@ -12,7 +12,8 @@ Roda na **Cloudflare** (Workers + banco D1), no plano gratuito, sem máquina par
 | **Contas** | Cadastro com nome, e-mail e senha. Na primeira abertura, o painel pede para entrar ou criar conta. |
 | **Senha guardada do jeito certo** | A senha nunca sai do aparelho: vira uma chave por PBKDF2-SHA256 com 600 mil iterações (recomendação da OWASP) e só essa chave viaja. O servidor guarda um hash dela com sal aleatório por conta. Nem quem tiver o banco inteiro vê a senha. |
 | **Senha vazada é recusada** | Ao criar ou trocar a senha, o painel confere na base do *Have I Been Pwned* se ela já apareceu em vazamentos, como pede a norma do NIST (SP 800-63B). Só os 5 primeiros caracteres de um hash da senha saem do aparelho. |
-| **Sessões** | Token aleatório de 90 dias; no banco fica só o hash dele. Sair encerra na hora. Trocar a senha desconecta os outros aparelhos. "Sair dos outros aparelhos" serve para celular perdido. |
+| **Sessões** | Toda vez que o navegador é aberto, o Delfos pede a senha — a menos que se marque **Manter conectado** (aí vale 30 dias). Sem marcar, a sessão vale no máximo 12 h e some ao fechar o navegador. No banco fica só o hash do token. Sair encerra na hora (em todas as abas). Trocar a senha desconecta os outros aparelhos. |
+| **Esqueci a senha** | Ao criar a conta aparece um **código de recuperação** (ex.: `K7QP-2MXA-…`), uma única vez. Com ele, "Esqueci minha senha" na tela de entrada troca a senha sem precisar de e-mail. Usar o código gera outro e desconecta todos os aparelhos. Dá para gerar um novo pelo painel. |
 | **Contra tentativa e erro** | 10 senhas erradas para o mesmo e-mail travam o login por 15 min; no máximo 5 contas novas por hora do mesmo endereço de internet. |
 | **Dados separados por conta** | Estado, versões e anexos são sempre buscados pelo dono da sessão — uma conta não alcança a outra nem sabendo o id de um arquivo. |
 | **Sincronização** | Cada mudança sobe sozinha ~1 s depois. Se dois aparelhos mudaram ao mesmo tempo, o painel pergunta qual versão fica. |
@@ -76,9 +77,11 @@ conta nova — diga que sim. Nos outros aparelhos, só **Entrar**.
 
 ## Perguntas comuns
 
-**Esqueci a senha.** Ainda não há recuperação por e-mail — exigiria um serviço de envio de e-mail
-(outra conta, outra chave). Enquanto isso: se estiver conectado em algum aparelho, troque a senha
-por lá (Conta e sincronização → Trocar senha), ou exporte um backup antes de criar conta nova.
+**Esqueci a senha.** Tela de entrada → **Esqueci minha senha** → e-mail, código de recuperação e
+senha nova. Perdeu também o código? Se estiver conectado em algum aparelho, troque a senha ou gere
+um código novo por lá (Conta e sincronização). Sem código e sem aparelho conectado não há volta —
+é o preço de o servidor não conhecer a senha. Recuperação por e-mail exigiria um serviço de envio
+(outra conta, outra chave); dá para acrescentar depois.
 
 **Fico sem internet?** O painel funciona normal. As mudanças ficam no aparelho e sobem quando a
 conexão voltar. Só entrar pela primeira vez num aparelho precisa de rede.
@@ -134,13 +137,15 @@ Todas as rotas exigem `Authorization: Bearer <token>`, menos `saude`, `cadastro`
 | Rota | O quê |
 |---|---|
 | `GET /api/saude` | `{ ok, versao, cadastro: "aberto" \| "convite" }` |
-| `POST /api/cadastro` | `{ email, chave, convite? }` → `{ token, expiraEm, usuario }` |
-| `POST /api/entrar` | `{ email, chave }` → `{ token, expiraEm, usuario }` |
+| `POST /api/cadastro` | `{ email, chave, convite?, manter? }` → `{ token, expiraEm, usuario, codigoRecuperacao }` |
+| `POST /api/entrar` | `{ email, chave, manter? }` → `{ token, expiraEm, usuario }` |
+| `POST /api/recuperar` | `{ email, codigo, chaveNova, manter? }` → `{ token, usuario, codigoRecuperacao }` |
 | `POST /api/sair` | encerra esta sessão |
 | `GET /api/conta` | `{ usuario, anexos: { usadoBytes, limiteBytes } }` |
 | `POST /api/conta/senha` | `{ chaveAtual, chaveNova }` — encerra as outras sessões |
 | `POST /api/conta/sair-dos-outros` | encerra as outras sessões |
 | `POST /api/conta/excluir` | `{ chave }` — apaga a conta e tudo dela |
+| `POST /api/conta/codigo-recuperacao` | `{ chave }` → `{ codigoRecuperacao }` (o anterior deixa de valer) |
 | `GET /api/estado[?desde=N]` | `{ revisao, atualizadoEm, dispositivo, estado }`; com `desde` igual à revisão, só `{ inalterado: true }` |
 | `PUT /api/estado?base=N[&forcar=1][&motivo=][&dispositivo=]` | corpo = JSON do estado → `{ revisao }` ou **409** |
 | `GET /api/versoes` · `GET /api/versoes/:id` · `POST /api/versoes` | cópias do estado |

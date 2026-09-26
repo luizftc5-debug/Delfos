@@ -17,7 +17,12 @@
    centenas de milissegundos aqui.
 
    Sessões: token aleatório de 32 bytes entregue ao navegador; no banco fica
-   só o SHA-256 dele. Vale 90 dias, e sair (ou trocar a senha) apaga na hora.
+   só o SHA-256 dele. Com "manter conectado" vale 30 dias; sem, 12 horas (e o
+   navegador ainda o esquece ao fechar). Sair ou trocar a senha apaga na hora.
+
+   Esqueceu a senha: o código de recuperação, gerado no cadastro e mostrado
+   uma única vez, redefine a senha sem depender de e-mail. No banco fica só o
+   SHA-256 dele; usá-lo gera outro e derruba todas as sessões.
    =========================================================================== */
 
 import { ErroHttp, agora, json, textoCurto } from "./respostas.js";
@@ -25,7 +30,11 @@ import { ErroHttp, agora, json, textoCurto } from "./respostas.js";
 const enc = new TextEncoder();
 
 export const ALGORITMO_SENHA = "cliente:pbkdf2-sha256-600000/servidor:hmac-sha256";
-const VALIDADE_SESSAO_MS = 90 * 24 * 60 * 60 * 1000;
+const DIA = 24 * 60 * 60 * 1000;
+const VALIDADE_MANTER_MS = 30 * DIA;
+const VALIDADE_CURTA_MS = 12 * 60 * 60 * 1000;
+// Sem letras e números que se confundem (0/O, 1/I/L): o código é copiado à mão.
+const ALFABETO_CODIGO = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const MINUTO = 60 * 1000;
 
 // [janela, máximo] por tipo de tentativa.
@@ -118,14 +127,46 @@ function registrarTentativa(db, tipo, valor) {
 
 /* -------------------------------- Sessões --------------------------------- */
 
-async function criarSessao(db, usuarioId, dispositivo) {
+async function criarSessao(db, usuarioId, dispositivo, manter) {
   const token = b64url(aleatorio(32));
-  const expira = Date.now() + VALIDADE_SESSAO_MS;
+  const expira = Date.now() + (manter === true ? VALIDADE_MANTER_MS : VALIDADE_CURTA_MS);
   await db
     .prepare("INSERT INTO sessoes (token_hash, usuario_id, criada_em, expira_em, dispositivo) VALUES (?, ?, ?, ?, ?)")
     .bind(await sha256Hex(token), usuarioId, agora(), expira, textoCurto(dispositivo))
     .run();
-  return { token, expiraEm: new Date(expira).toISOString() };
+  return { token, expiraEm: new Date(expira).toISOString(), manter: manter === true };
+}
+
+/* -------------------------- Código de recuperação -------------------------- */
+
+/** 20 caracteres em 5 grupos (ex.: K7QP-2MXA-…): ~98 bits de acaso. */
+function novoCodigo() {
+  // Descarta bytes acima do maior múltiplo de 31 para cada letra ser igualmente provável.
+  const teto = 256 - (256 % ALFABETO_CODIGO.length);
+  let letras = "";
+  while (letras.length < 20) {
+    for (const b of aleatorio(32)) {
+      if (b < teto && letras.length < 20) letras += ALFABETO_CODIGO[b % ALFABETO_CODIGO.length];
+    }
+  }
+  return letras.match(/.{4}/g).join("-");
+}
+
+function normalizarCodigo(codigo) {
+  return String(codigo || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
+async function hashCodigo(codigo) {
+  return sha256Hex(`delfos:recuperacao:${normalizarCodigo(codigo)}`);
+}
+
+async function gravarCodigo(db, usuarioId) {
+  const codigo = novoCodigo();
+  return {
+    codigo,
+    comando: db.prepare("UPDATE usuarios SET recuperacao_hash = ?, recuperacao_gerada_em = ? WHERE id = ?")
+      .bind(await hashCodigo(codigo), agora(), usuarioId),
+  };
 }
 
 function tokenDe(request) {
@@ -151,7 +192,7 @@ export async function exigirSessao(request, env) {
     .bind(tokenHash)
     .first();
   if (!s || s.expira_em <= Date.now()) throw expirada;
-  return { id: s.id, email: s.email, tokenHash };
+  return { id: s.id, email: s.email, tokenHash, expiraEm: s.expira_em };
 }
 
 /* --------------------------------- Rotas ---------------------------------- */
@@ -178,12 +219,15 @@ export async function cadastrar(request, env) {
   const id = crypto.randomUUID();
   const sal = b64url(aleatorio(16));
   const quando = agora();
+  const codigo = novoCodigo();
   try {
     await db.batch([
       db.prepare(
-        `INSERT INTO usuarios (id, email, senha_sal, senha_hash, senha_algoritmo, criado_em, senha_trocada_em)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-      ).bind(id, email, sal, await hashDaChave(corpo.chave, sal), ALGORITMO_SENHA, quando, quando),
+        `INSERT INTO usuarios (id, email, senha_sal, senha_hash, senha_algoritmo, criado_em, senha_trocada_em,
+                               recuperacao_hash, recuperacao_gerada_em)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(id, email, sal, await hashDaChave(corpo.chave, sal), ALGORITMO_SENHA, quando, quando,
+        await hashCodigo(codigo), quando),
       registrarTentativa(db, "cadastro-ip", ip),
     ]);
   } catch (e) {
@@ -193,8 +237,8 @@ export async function cadastrar(request, env) {
     throw e;
   }
 
-  const sessao = await criarSessao(db, id, corpo.dispositivo);
-  return json({ ...sessao, usuario: { id, email } }, 201);
+  const sessao = await criarSessao(db, id, corpo.dispositivo, corpo.manter);
+  return json({ ...sessao, usuario: { id, email }, codigoRecuperacao: codigo }, 201);
 }
 
 /** POST /api/entrar { email, chave, dispositivo? } */
@@ -218,8 +262,54 @@ export async function entrar(request, env) {
   }
 
   await db.prepare("DELETE FROM tentativas WHERE chave = ?").bind(`entrar-email:${email}`).run();
-  const sessao = await criarSessao(db, u.id, corpo.dispositivo);
+  const sessao = await criarSessao(db, u.id, corpo.dispositivo, corpo.manter);
   return json({ ...sessao, usuario: { id: u.id, email: u.email } });
+}
+
+/**
+ * POST /api/recuperar { email, codigo, chaveNova, manter? }
+ * Esqueceu a senha: o código de recuperação troca a senha, é consumido (vem
+ * outro na resposta) e todas as sessões abertas caem. Conta os erros junto
+ * com os de senha — o código não vira um segundo jeito de chutar.
+ */
+export async function recuperar(request, env) {
+  const db = env.DB;
+  const ip = ipDe(request);
+  const corpo = await lerJson(request);
+  const email = normalizarEmail(corpo.email);
+  validarChave(corpo.chaveNova, "chaveNova");
+
+  await conferirLimite(db, "entrar-ip", ip);
+  await conferirLimite(db, "entrar-email", email);
+
+  const u = await db.prepare("SELECT id, email, recuperacao_hash FROM usuarios WHERE email = ?").bind(email).first();
+  const calculado = await hashCodigo(corpo.codigo);
+  if (!u || !u.recuperacao_hash || !iguaisTempoConstante(calculado, u.recuperacao_hash)) {
+    await db.batch([registrarTentativa(db, "entrar-ip", ip), registrarTentativa(db, "entrar-email", email)]);
+    throw new ErroHttp(401, "E-mail ou código de recuperação incorretos.");
+  }
+
+  const sal = b64url(aleatorio(16));
+  const novo = await gravarCodigo(db, u.id);
+  await db.batch([
+    db.prepare("UPDATE usuarios SET senha_sal = ?, senha_hash = ?, senha_algoritmo = ?, senha_trocada_em = ? WHERE id = ?")
+      .bind(sal, await hashDaChave(corpo.chaveNova, sal), ALGORITMO_SENHA, agora(), u.id),
+    novo.comando,
+    db.prepare("DELETE FROM sessoes WHERE usuario_id = ?").bind(u.id),
+    db.prepare("DELETE FROM tentativas WHERE chave = ?").bind(`entrar-email:${email}`),
+  ]);
+  const sessao = await criarSessao(db, u.id, corpo.dispositivo, corpo.manter);
+  return json({ ...sessao, usuario: { id: u.id, email: u.email }, codigoRecuperacao: novo.codigo });
+}
+
+/** POST /api/conta/codigo-recuperacao { chave } — gera um código novo (o anterior deixa de valer). */
+export async function novoCodigoRecuperacao(request, env, usuario) {
+  const db = env.DB;
+  const corpo = await lerJson(request);
+  await conferirSenha(db, usuario, corpo.chave, request);
+  const novo = await gravarCodigo(db, usuario.id);
+  await novo.comando.run();
+  return json({ codigoRecuperacao: novo.codigo });
 }
 
 /** POST /api/sair — encerra só a sessão deste aparelho. */
@@ -241,11 +331,15 @@ export async function sairDosOutros(env, usuario) {
 export async function obterConta(env, usuario) {
   const db = env.DB;
   const [u, uso] = await Promise.all([
-    db.prepare("SELECT criado_em, senha_trocada_em FROM usuarios WHERE id = ?").bind(usuario.id).first(),
+    db.prepare("SELECT criado_em, senha_trocada_em, recuperacao_gerada_em FROM usuarios WHERE id = ?").bind(usuario.id).first(),
     db.prepare("SELECT COALESCE(SUM(tamanho), 0) AS bytes FROM arquivos WHERE usuario_id = ?").bind(usuario.id).first(),
   ]);
   return json({
-    usuario: { id: usuario.id, email: usuario.email, criadoEm: u?.criado_em, senhaTrocadaEm: u?.senha_trocada_em },
+    usuario: {
+      id: usuario.id, email: usuario.email, criadoEm: u?.criado_em, senhaTrocadaEm: u?.senha_trocada_em,
+      codigoRecuperacaoGeradoEm: u?.recuperacao_gerada_em || "",
+    },
+    sessao: { expiraEm: new Date(usuario.expiraEm).toISOString() },
     anexos: { usadoBytes: uso?.bytes || 0, limiteBytes: cotaAnexosBytes(env) },
   });
 }

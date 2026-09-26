@@ -446,6 +446,51 @@ const Nuvem = (() => {
     });
   }
 
+  /**
+   * Mostra o código de recuperação — a única vez que ele existe em claro.
+   * Só libera "Continuar" depois de a pessoa confirmar que guardou.
+   */
+  function mostrarCodigoRecuperacao(codigo, { introducao = "" } = {}) {
+    return new Promise((resolve) => {
+      UI.abrirModal(`
+        <div class="modal-head">
+          <h2 class="modal-title">Guarde seu código de recuperação</h2>
+          <p class="modal-desc">${esc(introducao || "Este código substitui o anterior. É o único jeito de redefinir a senha se você esquecê-la.")}</p>
+        </div>
+        <div class="modal-body">
+          <div class="codigo-recuperacao" data-codigo>${esc(codigo)}</div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn block" data-acao="copiar" type="button">Copiar</button>
+            <button class="btn block" data-acao="baixar" type="button">Baixar como arquivo</button>
+          </div>
+          <span class="hint">Guarde fora deste aparelho: num gerenciador de senhas, anotado em papel, numa foto no celular. Ele não aparece de novo, e o servidor não tem como mostrá-lo — guarda só uma impressão dele. Quem tiver o código e o seu e-mail consegue trocar sua senha, então trate-o como uma senha.</span>
+          <label class="entrada-manter"><input type="checkbox" class="check" data-guardei /> <span>Guardei o código em lugar seguro</span></label>
+        </div>
+        <div class="modal-foot"><button class="btn primary" data-acao="ok" type="button" disabled>Continuar</button></div>`, {
+        aoMontar(modal, fechar) {
+          const ok = modal.querySelector('[data-acao="ok"]');
+          modal.querySelector("[data-guardei]").addEventListener("change", (ev) => { ok.disabled = !ev.target.checked; });
+          ok.addEventListener("click", () => fechar(true));
+          modal.querySelector('[data-acao="copiar"]').addEventListener("click", async (ev) => {
+            try { await navigator.clipboard.writeText(codigo); ev.target.textContent = "Copiado"; }
+            catch { UI.toast("Não deu para copiar sozinho — selecione o código e copie."); }
+          });
+          modal.querySelector('[data-acao="baixar"]').addEventListener("click", () => {
+            const email = Sessao.usuario()?.email || "";
+            const texto = `Delfos — código de recuperação\n\nConta: ${email}\nCódigo: ${codigo}\nGerado em: ${new Date().toLocaleString("pt-BR")}\n\nUse em "Esqueci minha senha" na tela de entrada. Vale uma vez: ao usar, um código novo é gerado.\n`;
+            const url = URL.createObjectURL(new Blob([texto], { type: "text/plain" }));
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "delfos-codigo-de-recuperacao.txt";
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 30000);
+          });
+        },
+        aoFechar: () => resolve(),
+      });
+    });
+  }
+
   function abrirPainel() {
     if (!Sessao.ativo() || !Sessao.logado()) {
       UI.abrirModal(`
@@ -477,11 +522,14 @@ const Nuvem = (() => {
           <div><dt>Conta</dt><dd>${esc(u.email)}</dd></div>
           <div><dt>Situação</dt><dd>${esc(s.texto.replace(`${u.email}: `, ""))}</dd></div>
           <div><dt>Este aparelho</dt><dd>${esc(Sessao.nomeDoAparelho())}</dd></div>
+          <div><dt>Conectado</dt><dd data-validade>${Sessao.mantido() ? "…" : "até fechar o navegador"}</dd></div>
+          <div><dt>Código de recuperação</dt><dd data-recuperacao>…</dd></div>
           <div><dt>Anexos na nuvem</dt><dd data-cota>…</dd></div>
         </dl>
         <button class="btn primary block" data-acao="sincronizar" type="button">↻ Sincronizar agora</button>
         <button class="btn block" data-acao="versoes" type="button">Versões anteriores</button>
         <button class="btn block" data-acao="senha" type="button">Trocar senha</button>
+        <button class="btn block" data-acao="codigo" type="button">Gerar novo código de recuperação</button>
         <button class="btn block" data-acao="outros" type="button">Sair dos outros aparelhos</button>
         <button class="btn block" data-acao="sair" type="button">Sair da conta</button>
         <span class="hint">Sair apaga os dados deste navegador — eles continuam na sua conta e voltam quando você entrar.</span>
@@ -496,7 +544,31 @@ const Nuvem = (() => {
           const usado = Arquivos.tamanhoLegivel(c.anexos.usadoBytes);
           const limite = `${Math.round(c.anexos.limiteBytes / (1024 * 1024))} MB`;
           modal.querySelector("[data-cota]").textContent = `${usado} de ${limite}`;
-        }).catch(() => { modal.querySelector("[data-cota]").textContent = "—"; });
+          const gerado = c.usuario.codigoRecuperacaoGeradoEm;
+          modal.querySelector("[data-recuperacao]").textContent = gerado
+            ? `gerado em ${new Date(gerado).toLocaleDateString("pt-BR")}`
+            : "nenhum — gere um";
+          if (Sessao.mantido() && c.sessao?.expiraEm) {
+            modal.querySelector("[data-validade]").textContent = `até ${new Date(c.sessao.expiraEm).toLocaleDateString("pt-BR")}`;
+          }
+        }).catch(() => {
+          modal.querySelectorAll("[data-cota], [data-recuperacao]").forEach((el) => { el.textContent = "—"; });
+        });
+
+        acao("codigo", () => {
+          fechar(null);
+          formularioSenha({
+            titulo: "Gerar novo código de recuperação",
+            descricao: "O código que você tem hoje deixa de valer. Use se perdeu o anterior ou acha que alguém o viu.",
+            rotuloConfirmar: "Gerar código",
+            campos: [{ id: "senha", rotulo: "Sua senha, para confirmar", autocomplete: "current-password" }],
+            async aoConfirmar(v) {
+              const codigo = await Sessao.novoCodigoRecuperacao(v.senha);
+              setTimeout(() => mostrarCodigoRecuperacao(codigo), 0);
+              return "";
+            },
+          });
+        });
 
         acao("sincronizar", async (ev) => {
           ev.target.disabled = true;
@@ -631,5 +703,8 @@ const Nuvem = (() => {
 
   iniciar();
 
-  return { conectado, situacao, abrirPainel, baixarAnexo, enviar, conferir, aposEntrar, sairDaConta };
+  return {
+    conectado, situacao, abrirPainel, baixarAnexo, enviar, conferir, aposEntrar, sairDaConta,
+    mostrarCodigoRecuperacao,
+  };
 })();

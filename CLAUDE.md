@@ -51,7 +51,7 @@ Aplicação estática multi-página em `dashboard/`, sem build. Dependências ex
 | `store.js` | Camada de dados: localStorage + CRUD + backup em JSON |
 | `personalizacao.js` | Traduz perfil/preferências em como o painel se apresenta (abas ligadas, saudação, ocupação) |
 | `arquivos.js` | Anexos (PDF, slides, fotos) no IndexedDB + export/import para o backup |
-| `entrar.html` + `entrar.js` | Entrar / criar conta: página sem barra lateral, a única que abre sem sessão |
+| `entrar.html` + `entrar.js` | Entrar / criar conta / esqueci a senha: página sem barra lateral, a única que abre sem sessão |
 | `sessao.js` | Conta do usuário: endereço da API, login, cadastro, derivação da senha, porta de entrada das páginas |
 | `nuvem.js` | Sincronização com a conta (`backend/`): envio, conferência, conflito, versões, anexos, sair |
 | `financas.js` | Cálculos derivados: saldo por conta, ciclo e fatura de cartão, balanço, investimentos |
@@ -79,9 +79,18 @@ contas e os dados de cada uma. O localStorage continua sendo a cópia de trabalh
   HMAC-SHA256(sal aleatório da conta, chave). As iterações ficam no navegador por causa do limite de
   CPU do plano gratuito (mesmo desenho do Bitwarden). Senha nova passa por `problemaNaSenha`: mínimo
   8 caracteres e consulta k-anônima ao Have I Been Pwned (falha aberta, sem rede não bloqueia).
-- **Sessão.** Token aleatório de 90 dias em `organizador.sessao`; no banco só o SHA-256 dele. Um
-  401 numa rota com token tira o token e mostra um aviso com "Entrar" — nunca recarrega sozinho no
-  meio do que a pessoa está digitando.
+- **Sessão.** Token aleatório; no banco só o SHA-256 dele. **Sem "Manter conectado"** (o padrão),
+  o token vai para o sessionStorage e vale no máximo 12 h no servidor: reabrir o navegador pede a
+  senha de novo. Uma aba nova pede o token às abas abertas por `BroadcastChannel("delfos-sessao")`,
+  e sair numa aba leva as outras para a entrada. **Com "Manter conectado"**, o token vai para o
+  localStorage e vale 30 dias. `organizador.sessao` no localStorage guarda sempre o id/e-mail da
+  última conta (preenche o e-mail e diz de quem são os dados). Um 401 numa rota com token tira o
+  token e mostra um aviso com "Entrar" — nunca recarrega sozinho no meio do que a pessoa digita.
+- **Esqueci a senha** = código de recuperação (20 caracteres, ~98 bits), gerado no cadastro e
+  mostrado uma única vez (`Nuvem.mostrarCodigoRecuperacao`, que só libera "Continuar" depois de a
+  pessoa marcar que guardou). No banco, só o SHA-256. Usar o código (`/api/recuperar`) troca a senha,
+  gera outro código e derruba todas as sessões; erros contam no mesmo limite das senhas erradas. Dá
+  para gerar um novo pelo painel, confirmando a senha. Não há e-mail de recuperação.
 - **Um navegador nunca mistura contas.** `organizador.nuvem.usuarioId` diz de quem são os dados do
   navegador; `Nuvem.conectado()` só sincroniza quando bate com a sessão. **Sair apaga os dados
   locais** (continuam na conta). Entrar com outra conta apaga os dados da anterior antes de baixar.
@@ -95,8 +104,7 @@ contas e os dados de cada uma. O localStorage continua sendo a cópia de trabalh
 - **Isolamento.** Toda rota de dados usa o id que sai de `exigirSessao`, nunca um id da requisição;
   anexos têm chave `(usuario_id, id)`. Cota de anexos por conta em `COTA_ANEXOS_MB`
   (`wrangler.toml`) — o D1 gratuito tem 500 MB no total.
-- **Cadastro** aberto, ou com convite se o segredo `CODIGO_CONVITE` existir. Não há recuperação de
-  senha por e-mail (precisaria de um serviço de envio).
+- **Cadastro** aberto, ou com convite se o segredo `CODIGO_CONVITE` existir.
 - Migrações só se acrescentam (`0002_contas.sql` renomeou as tabelas da versão de senha única para
   `legado_*` em vez de apagar). Módulo Worker só exporta `default`. Testes: `cd backend && npm test`.
 

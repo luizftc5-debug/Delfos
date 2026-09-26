@@ -90,16 +90,43 @@ const Arquivos = (() => {
 
   /* -------------------------------- Leitura ------------------------------- */
 
-  async function blob(anexo) {
+  /**
+   * O arquivo de um anexo. Se ele não está neste navegador (foi anexado em
+   * outro aparelho) e a sincronização está ligada, busca na nuvem e guarda
+   * aqui, para a próxima abertura não precisar da rede. `soLocal` é para
+   * quem está justamente enviando à nuvem e não pode buscar lá.
+   */
+  async function blob(anexo, { soLocal = false } = {}) {
     const reg = await transacao("readonly", (loja) => loja.get(anexo.id));
-    if (!reg) return null;
-    return new Blob([reg.dados], { type: reg.tipo || anexo.tipo || "application/octet-stream" });
+    if (reg) return new Blob([reg.dados], { type: reg.tipo || anexo.tipo || "application/octet-stream" });
+    if (soLocal || typeof Nuvem === "undefined" || !Nuvem.conectado()) return null;
+
+    const remoto = await Nuvem.baixarAnexo(anexo.id);
+    if (!remoto) return null;
+    const tipo = remoto.type || anexo.tipo || "";
+    try {
+      const dados = await remoto.arrayBuffer();
+      await transacao("readwrite", (loja) => loja.put({ id: anexo.id, dados, tipo }));
+    } catch (e) {
+      console.warn("Anexo baixado da nuvem, mas não guardado neste navegador.", e);
+    }
+    return new Blob([remoto], { type: tipo || "application/octet-stream" });
+  }
+
+  /** Ids de todos os anexos guardados neste navegador (usado pela sincronização). */
+  async function ids() {
+    const db = await abrir();
+    return new Promise((ok, falha) => {
+      const req = db.transaction(LOJA, "readonly").objectStore(LOJA).getAllKeys();
+      req.onsuccess = () => ok(req.result || []);
+      req.onerror = () => falha(req.error);
+    });
   }
 
   /** Abre em outra aba (PDF/imagem) ou baixa (o resto). */
   async function abrirAnexo(anexo) {
     const b = await blob(anexo);
-    if (!b) throw new Error("Este anexo não está neste navegador. Importe o backup que o contém.");
+    if (!b) throw new Error("Este anexo não está neste navegador nem na nuvem. Importe o backup que o contém.");
     const url = URL.createObjectURL(b);
     const visualizavel = b.type === "application/pdf" || b.type.startsWith("image/") || b.type.startsWith("text/");
     if (visualizavel) {
@@ -197,7 +224,7 @@ const Arquivos = (() => {
 
   return {
     LIMITE_MB, disponivel,
-    salvar, remover, blob, abrirAnexo, baixar,
+    salvar, remover, blob, ids, abrirAnexo, baixar,
     exportarTodos, importarTodos, limpar, uso,
     tamanhoLegivel, classificar,
   };

@@ -769,6 +769,9 @@ const UI = (() => {
             <span class="hint">Desligar não apaga o que já está cadastrado — só some da barra.</span>
           </div>
 
+          ${typeof Nuvem !== "undefined" ? `
+          <button class="btn block" data-acao="nuvem" type="button">☁ Sincronização na nuvem</button>
+          <span class="hint">${fmt.escape(Nuvem.situacao().texto)}</span>` : ""}
           <button class="btn block" data-acao="backup" type="button">⤓ Backup e dados</button>
           <span class="hint" data-uso>Calculando o que está guardado…</span>
           <button class="btn block" data-acao="reconfigurar" type="button">↻ Refazer configuração inicial</button>
@@ -820,6 +823,11 @@ const UI = (() => {
         modal.querySelector('[data-acao="backup"]').addEventListener("click", () => {
           fechar(null);
           abrirBackup();
+        });
+
+        modal.querySelector('[data-acao="nuvem"]')?.addEventListener("click", () => {
+          fechar(null);
+          Nuvem.abrirPainel();
         });
 
         modal.querySelector('[data-acao="reconfigurar"]').addEventListener("click", () => {
@@ -1323,7 +1331,9 @@ const UI = (() => {
     const html = `
       <div class="modal-head">
         <h2 class="modal-title">Backup e dados</h2>
-        <p class="modal-desc">Tudo que você cadastra fica salvo só neste navegador. Exporte um arquivo para não perder nada ao trocar de computador ou limpar o cache.</p>
+        <p class="modal-desc">${typeof Nuvem !== "undefined" && Nuvem.conectado()
+          ? "Seus dados estão sincronizados com a nuvem. Um arquivo de backup continua útil como cópia sua, fora do servidor."
+          : "Tudo que você cadastra fica salvo só neste navegador. Exporte um arquivo para não perder nada ao trocar de computador ou limpar o cache — ou conecte a sincronização na nuvem, no seu perfil."}</p>
       </div>
       <div class="modal-body">
         <div class="perfil-stats">
@@ -1379,6 +1389,9 @@ const UI = (() => {
           leitor.onload = async () => {
             try {
               const r = await Store.importar(leitor.result);
+              // Com a nuvem ligada, o backup importado vale para todos os
+              // aparelhos — sobe já, com a versão anterior guardada como cópia.
+              if (typeof Nuvem !== "undefined" && Nuvem.conectado()) await Nuvem.enviar({ motivo: "Antes de importar um backup" });
               fechar();
               toast(r.anexos ? `Backup importado com ${r.anexos} anexos. Recarregando…` : "Backup importado. Recarregando…");
               setTimeout(() => location.reload(), 800);
@@ -1392,12 +1405,15 @@ const UI = (() => {
         modal.querySelector('[data-acao="limpar"]').addEventListener("click", async () => {
           const ok = await confirmar({
             titulo: "Apagar todos os dados?",
-            descricao: "Isso remove tudo que você cadastrou neste navegador, inclusive os documentos anexados. Exporte um backup antes se quiser poder voltar atrás.",
+            descricao: typeof Nuvem !== "undefined" && Nuvem.conectado()
+              ? "Isso remove tudo que você cadastrou, neste navegador e na nuvem — os outros aparelhos conectados também ficam vazios. O que existe agora fica em Versões anteriores, na sincronização, para poder voltar atrás."
+              : "Isso remove tudo que você cadastrou neste navegador, inclusive os documentos anexados. Exporte um backup antes se quiser poder voltar atrás.",
             rotuloConfirmar: "Apagar tudo",
             perigo: true,
           });
           if (!ok) return;
           await Store.limpar();
+          if (typeof Nuvem !== "undefined" && Nuvem.conectado()) await Nuvem.enviar({ motivo: "Antes de apagar todos os dados" });
           fechar();
           location.reload();
         });

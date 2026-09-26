@@ -1,0 +1,2 @@
+# Copie para .dev.vars para rodar localmente (npm run dev). Nunca suba .dev.vars.
+SENHA="uma-senha-de-teste-longa"

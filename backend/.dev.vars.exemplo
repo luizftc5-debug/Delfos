@@ -1,2 +1,3 @@
 # Copie para .dev.vars para rodar localmente (npm run dev). Nunca suba .dev.vars.
-SENHA="uma-senha-de-teste-longa"
+# Opcional: com um código aqui, criar conta passa a exigir o convite.
+# CODIGO_CONVITE="convite-de-teste"

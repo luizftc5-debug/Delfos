@@ -1,15 +1,18 @@
 /* ===========================================================================
-   Estado do painel — a sincronização entre aparelhos.
+   Estado do painel — a sincronização entre aparelhos, por conta.
 
-   O servidor guarda o mesmo JSON que o navegador tem no localStorage e um
-   número de revisão. Cada gravação diz em qual revisão se baseou (`?base=`):
-   se outro aparelho gravou nesse meio-tempo, a revisão não bate e a resposta
-   é 409 — o painel então pergunta ao usuário qual versão fica, em vez de
-   um aparelho apagar em silêncio o que o outro fez.
+   O servidor guarda, para cada usuário, o mesmo JSON que o navegador tem no
+   localStorage e um número de revisão. Cada gravação diz em qual revisão se
+   baseou (`?base=`): se outro aparelho gravou nesse meio-tempo, a revisão não
+   bate e a resposta é 409 — o painel então pergunta qual versão fica, em vez
+   de um aparelho apagar em silêncio o que o outro fez.
 
    O JSON nunca é interpretado aqui, só guardado e devolvido: o formato é
    responsabilidade de store.js (normalizar), e o servidor não precisa mudar
    quando o painel ganha um campo novo.
+
+   Toda função recebe `usuario` de exigirSessao (contas.js) e só toca as
+   linhas daquele id.
    =========================================================================== */
 
 import { ErroHttp, agora, json, jsonBruto, textoCurto } from "./respostas.js";
@@ -47,8 +50,13 @@ function envelope(meta, estadoTexto) {
   );
 }
 
-async function metaAtual(db) {
-  return db.prepare("SELECT revisao, atualizado_em, dispositivo FROM estado_atual WHERE id = 1").first();
+const chaveAtual = (uid) => `atual:${uid}`;
+
+async function metaAtual(db, uid) {
+  return db
+    .prepare("SELECT revisao, atualizado_em, dispositivo FROM estado_atual WHERE usuario_id = ?")
+    .bind(uid)
+    .first();
 }
 
 function conflito(meta) {
@@ -61,26 +69,28 @@ function conflito(meta) {
   }, 409);
 }
 
-/** Copia o estado em vigor para `versoes` antes de ele ser sobrescrito. */
-function copiarAtualParaVersoes(db, guardadoEm, motivo) {
+/** Copia o estado em vigor do usuário para `versoes` antes de ele ser sobrescrito. */
+function copiarAtualParaVersoes(db, uid, guardadoEm, motivo) {
   return [
     db.prepare(
-      `INSERT INTO versoes (revisao, salvo_em, guardado_em, dispositivo, motivo, tamanho, anexos)
-       SELECT revisao, atualizado_em, ?, dispositivo, ?, tamanho, anexos FROM estado_atual WHERE id = 1`
-    ).bind(guardadoEm, motivo),
+      `INSERT INTO versoes (usuario_id, revisao, salvo_em, guardado_em, dispositivo, motivo, tamanho, anexos)
+       SELECT usuario_id, revisao, atualizado_em, ?, dispositivo, ?, tamanho, anexos FROM estado_atual WHERE usuario_id = ?`
+    ).bind(guardadoEm, motivo, uid),
+    // O batch é uma transação só, então o MAX(id) é a linha inserida acima.
     db.prepare(
       `INSERT INTO textos (chave, indice, conteudo)
-       SELECT 'v:' || (SELECT MAX(id) FROM versoes), indice, conteudo FROM textos WHERE chave = 'atual'`
-    ),
+       SELECT 'v:' || (SELECT MAX(id) FROM versoes), indice, conteudo FROM textos WHERE chave = ?`
+    ).bind(chaveAtual(uid)),
   ];
 }
 
-/** Mantém só as MAX_VERSOES cópias mais recentes. */
-export function podarVersoes(db) {
-  const mantidas = `SELECT id FROM versoes ORDER BY id DESC LIMIT ${MAX_VERSOES}`;
+/** Mantém só as MAX_VERSOES cópias mais recentes do usuário. */
+export function podarVersoes(db, uid) {
+  const excedentes = `SELECT id FROM versoes WHERE usuario_id = ?1
+                      AND id NOT IN (SELECT id FROM versoes WHERE usuario_id = ?1 ORDER BY id DESC LIMIT ${MAX_VERSOES})`;
   return [
-    db.prepare(`DELETE FROM textos WHERE chave LIKE 'v:%' AND CAST(substr(chave, 3) AS INTEGER) NOT IN (${mantidas})`),
-    db.prepare(`DELETE FROM versoes WHERE id NOT IN (${mantidas})`),
+    db.prepare(`DELETE FROM textos WHERE chave IN (SELECT 'v:' || id FROM (${excedentes}))`).bind(uid),
+    db.prepare(`DELETE FROM versoes WHERE id IN (${excedentes})`).bind(uid),
   ];
 }
 
@@ -89,15 +99,15 @@ export function podarVersoes(db) {
  * Com `desde` igual à revisão atual, responde só { inalterado: true } —
  * é o que o painel pergunta a cada página aberta, e sai quase de graça.
  */
-export async function obterEstado(request, env) {
-  const meta = await metaAtual(env.DB);
+export async function obterEstado(request, env, usuario) {
+  const meta = await metaAtual(env.DB, usuario.id);
   if (!meta) return json({ revisao: 0, atualizadoEm: null, dispositivo: "", estado: null });
 
   const desde = new URL(request.url).searchParams.get("desde");
   if (desde !== null && Number(desde) === meta.revisao) {
     return json({ revisao: meta.revisao, atualizadoEm: meta.atualizado_em, dispositivo: meta.dispositivo, inalterado: true });
   }
-  return jsonBruto(envelope(meta, await lerTexto(env.DB, "atual")));
+  return jsonBruto(envelope(meta, await lerTexto(env.DB, chaveAtual(usuario.id))));
 }
 
 /**
@@ -106,8 +116,9 @@ export async function obterEstado(request, env) {
  * `forcar=1` grava mesmo com revisão diferente (o usuário escolheu ficar com
  * a versão deste aparelho) — e aí a versão substituída sempre vira cópia.
  */
-export async function gravarEstado(request, env) {
+export async function gravarEstado(request, env, usuario) {
   const db = env.DB;
+  const uid = usuario.id;
   const url = new URL(request.url);
   const baseBruta = url.searchParams.get("base");
   const base = Number(baseBruta);
@@ -120,15 +131,18 @@ export async function gravarEstado(request, env) {
   const quando = agora();
   const anexos = JSON.stringify(idsDeAnexos(texto));
 
-  const meta = await metaAtual(db);
+  const meta = await metaAtual(db, uid);
   const revisaoAtual = meta?.revisao || 0;
   if (!forcar && base !== revisaoAtual) return conflito(meta);
 
   const comandos = [];
   if (meta) {
-    const ultima = await db.prepare("SELECT guardado_em FROM versoes ORDER BY id DESC LIMIT 1").first();
+    const ultima = await db
+      .prepare("SELECT guardado_em FROM versoes WHERE usuario_id = ? ORDER BY id DESC LIMIT 1")
+      .bind(uid)
+      .first();
     const guardar = forcar || motivo || !ultima || Date.now() - Date.parse(ultima.guardado_em) >= INTERVALO_VERSAO_MS;
-    if (guardar) comandos.push(...copiarAtualParaVersoes(db, quando, motivo || (forcar ? "Substituída por outro aparelho" : "")));
+    if (guardar) comandos.push(...copiarAtualParaVersoes(db, uid, quando, motivo || (forcar ? "Substituída por outro aparelho" : "")));
 
     // Trava contra duas gravações simultâneas: se a revisão mudou depois da
     // leitura acima, o CASE vira NULL, a coluna NOT NULL recusa e o batch
@@ -138,22 +152,22 @@ export async function gravarEstado(request, env) {
         `UPDATE estado_atual
             SET revisao = CASE WHEN revisao = ?1 THEN revisao + 1 END,
                 atualizado_em = ?2, dispositivo = ?3, tamanho = ?4, anexos = ?5
-          WHERE id = 1`
-      ).bind(revisaoAtual, quando, dispositivo, texto.length, anexos)
+          WHERE usuario_id = ?6`
+      ).bind(revisaoAtual, quando, dispositivo, texto.length, anexos, uid)
     );
   } else {
     comandos.push(
       db.prepare(
-        "INSERT INTO estado_atual (id, revisao, atualizado_em, dispositivo, tamanho, anexos) VALUES (1, 1, ?, ?, ?, ?)"
-      ).bind(quando, dispositivo, texto.length, anexos)
+        "INSERT INTO estado_atual (usuario_id, revisao, atualizado_em, dispositivo, tamanho, anexos) VALUES (?, 1, ?, ?, ?, ?)"
+      ).bind(uid, quando, dispositivo, texto.length, anexos)
     );
   }
-  comandos.push(...gravarTexto(db, "atual", texto), ...podarVersoes(db));
+  comandos.push(...gravarTexto(db, chaveAtual(uid), texto), ...podarVersoes(db, uid));
 
   try {
     await db.batch(comandos);
   } catch (e) {
-    if (/constraint/i.test(String(e?.message || e))) return conflito(await metaAtual(db));
+    if (/constraint/i.test(String(e?.message || e))) return conflito(await metaAtual(db, uid));
     throw e;
   }
   return json({ revisao: revisaoAtual + 1, atualizadoEm: quando });
@@ -161,10 +175,14 @@ export async function gravarEstado(request, env) {
 
 /* ------------------------------- Versões ---------------------------------- */
 
-/** GET /api/versoes → lista, da mais recente para a mais antiga (sem o conteúdo). */
-export async function listarVersoes(request, env) {
+/** GET /api/versoes → lista do usuário, da mais recente para a mais antiga (sem o conteúdo). */
+export async function listarVersoes(env, usuario) {
   const { results } = await env.DB
-    .prepare("SELECT id, revisao, salvo_em, guardado_em, dispositivo, motivo, tamanho FROM versoes ORDER BY id DESC")
+    .prepare(
+      `SELECT id, revisao, salvo_em, guardado_em, dispositivo, motivo, tamanho
+         FROM versoes WHERE usuario_id = ? ORDER BY id DESC`
+    )
+    .bind(usuario.id)
     .all();
   return json({
     versoes: results.map((v) => ({
@@ -174,11 +192,11 @@ export async function listarVersoes(request, env) {
   });
 }
 
-/** GET /api/versoes/:id → mesmo formato de GET /api/estado. */
-export async function obterVersao(env, id) {
+/** GET /api/versoes/:id → mesmo formato de GET /api/estado. Versão de outra conta = 404. */
+export async function obterVersao(env, usuario, id) {
   const v = await env.DB
-    .prepare("SELECT revisao, salvo_em, dispositivo FROM versoes WHERE id = ?")
-    .bind(id)
+    .prepare("SELECT revisao, salvo_em, dispositivo FROM versoes WHERE id = ? AND usuario_id = ?")
+    .bind(id, usuario.id)
     .first();
   if (!v) throw new ErroHttp(404, "Versão não encontrada — pode ter saído da lista das 60 mais recentes.");
   const texto = await lerTexto(env.DB, `v:${id}`);
@@ -191,26 +209,28 @@ export async function obterVersao(env, id) {
  * fica com a versão da nuvem num conflito: a deste aparelho vem para cá
  * antes de ser descartada, e dá para recuperar depois.
  */
-export async function guardarCopia(request, env) {
+export async function guardarCopia(request, env, usuario) {
   const db = env.DB;
+  const uid = usuario.id;
   const url = new URL(request.url);
   const texto = await lerCorpoEstado(request);
   const quando = agora();
-  const meta = await metaAtual(db);
+  const meta = await metaAtual(db, uid);
+  const temporaria = `nova:${uid}`;
 
   await db.batch([
     db.prepare(
-      `INSERT INTO versoes (revisao, salvo_em, guardado_em, dispositivo, motivo, tamanho, anexos)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO versoes (usuario_id, revisao, salvo_em, guardado_em, dispositivo, motivo, tamanho, anexos)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
-      meta?.revisao || 0, quando, quando,
+      uid, meta?.revisao || 0, quando, quando,
       textoCurto(url.searchParams.get("dispositivo")),
       textoCurto(url.searchParams.get("motivo")) || "Cópia guardada",
       texto.length, JSON.stringify(idsDeAnexos(texto))
     ),
-    ...gravarTexto(db, "__nova__", texto),
-    db.prepare("UPDATE textos SET chave = 'v:' || (SELECT MAX(id) FROM versoes) WHERE chave = '__nova__'"),
-    ...podarVersoes(db),
+    ...gravarTexto(db, temporaria, texto),
+    db.prepare("UPDATE textos SET chave = 'v:' || (SELECT MAX(id) FROM versoes) WHERE chave = ?").bind(temporaria),
+    ...podarVersoes(db, uid),
   ]);
   return json({ ok: true }, 201);
 }

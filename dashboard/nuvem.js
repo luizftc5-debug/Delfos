@@ -1,28 +1,27 @@
 /* ===========================================================================
-   Nuvem — sincroniza o painel com o back end (pasta backend/ do repositório).
+   Nuvem — sincroniza o painel com a conta do usuário no back end.
 
-   Opcional: sem conectar, tudo continua como sempre foi, só no navegador.
-   Conectado (Perfil → Sincronização na nuvem), cada mudança sobe sozinha
-   pouco depois de feita, e cada página aberta confere se outro aparelho
-   gravou algo antes.
+   Quem cuida do login é sessao.js; aqui fica o que acontece com os dados:
+   cada mudança sobe sozinha pouco depois de feita, e cada página aberta
+   confere se outro aparelho da mesma conta gravou algo antes.
 
    Como não perder nada:
    - Toda gravação diz em qual revisão da nuvem se baseou. Se outro aparelho
      gravou nesse meio-tempo, o servidor recusa (409) e aqui se pergunta ao
      usuário qual versão fica — nunca um aparelho apaga o outro em silêncio.
-   - A versão que perde o conflito vai para "Versões anteriores" no servidor.
+   - A versão que perde o conflito vai para "Versões anteriores".
    - O servidor nunca apaga um anexo que alguma versão ainda cite.
 
-   A configuração deste aparelho mora em `organizador.nuvem` no localStorage
-   (mesmo prefixo das outras chaves — ver CLAUDE.md), separada do estado: o
-   token e a revisão são do aparelho, não entram no backup nem sobem.
+   Como um navegador nunca mistura duas contas:
+   - `usuarioId` (em `organizador.nuvem`) diz de quem são os dados que estão
+     neste navegador. Só sincroniza quando ele é o da sessão aberta.
+   - Sair da conta apaga os dados deste navegador (eles continuam na nuvem).
+   - Entrar com outra conta num navegador que ainda tem dados de alguém
+     apaga esses dados antes de baixar os da conta nova.
    =========================================================================== */
 
 const Nuvem = (() => {
   const KEY = "organizador.nuvem";
-  // Endereço do servidor já preenchido no formulário de conexão. Vazio até o
-  // back end ser publicado — ver backend/README.md.
-  const URL_PADRAO = "";
   const ESPERA_ENVIO_MS = 1200;
   const INTERVALO_CONFERENCIA_MS = 30 * 1000;
 
@@ -33,6 +32,9 @@ const Nuvem = (() => {
   let conflitoAberto = false;
   let mudancasLocais = 0;
   let ultimaConferencia = 0;
+
+  const pedir = (...args) => Sessao.pedir(...args);
+  const esc = (s) => UI.fmt.escape(s);
 
   /* ----------------------------- Configuração ----------------------------- */
 
@@ -48,56 +50,10 @@ const Nuvem = (() => {
     return cfg;
   }
 
+  /** Sincroniza só com sessão aberta e dados deste navegador sendo da mesma conta. */
   function conectado() {
-    const c = ler();
-    return !!(c.url && c.token);
-  }
-
-  function nomeDoAparelho() {
-    const ua = navigator.userAgent;
-    const navegador = /Edg\//.test(ua) ? "Edge" : /OPR\//.test(ua) ? "Opera" : /Firefox\//.test(ua) ? "Firefox"
-      : /Chrome\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : "Navegador";
-    const sistema = /Android/.test(ua) ? "Android" : /iPhone/.test(ua) ? "iPhone" : /iPad/.test(ua) ? "iPad"
-      : /Windows/.test(ua) ? "Windows" : /Mac OS X/.test(ua) ? "Mac" : /Linux/.test(ua) ? "Linux" : "";
-    return sistema ? `${navegador} no ${sistema}` : navegador;
-  }
-
-  /* ------------------------------ Requisições ----------------------------- */
-
-  class ErroNuvem extends Error {
-    constructor(mensagem, status = 0, dados = {}) {
-      super(mensagem);
-      this.status = status;
-      this.dados = dados;
-    }
-  }
-
-  async function pedir(metodo, caminho, { corpo, tipo, bruto = false, semToken = false, url } = {}) {
-    const cfg = ler();
-    const base = url || cfg.url;
-    if (!base) throw new ErroNuvem("Nenhum servidor configurado.");
-    const headers = {};
-    if (!semToken) headers.Authorization = `Bearer ${cfg.token || ""}`;
-    if (tipo) headers["Content-Type"] = tipo;
-
-    let r;
-    try {
-      r = await fetch(base + caminho, { method: metodo, headers, body: corpo });
-    } catch {
-      throw new ErroNuvem("Sem conexão com o servidor. As mudanças ficam guardadas aqui e sobem quando a conexão voltar.");
-    }
-
-    if (bruto && r.ok) return r;
-    let dados = {};
-    try { dados = await r.json(); } catch { /* resposta sem corpo */ }
-
-    if (r.status === 401 && !semToken) {
-      // Token vencido ou senha trocada no servidor: guarda o endereço e a
-      // revisão, só pede a senha de novo.
-      gravar({ token: "", ultimoErro: "Sessão expirada — entre de novo com a senha." });
-    }
-    if (!r.ok) throw new ErroNuvem(dados.erro || `O servidor respondeu ${r.status}.`, r.status, dados);
-    return dados;
+    const u = Sessao.usuario();
+    return Sessao.ativo() && Sessao.logado() && !!u && ler().usuarioId === u.id;
   }
 
   /* ----------------------------- Estado local ----------------------------- */
@@ -118,6 +74,15 @@ const Nuvem = (() => {
     try { Store.substituir(remoto.estado); }
     finally { aplicandoRemoto = false; }
     gravar({ revisao: remoto.revisao, pendente: false, ultimaSync: new Date().toISOString(), ultimoErro: "" });
+  }
+
+  /** Apaga estado e anexos deste navegador (não mexe na nuvem). */
+  async function apagarDadosLocais() {
+    clearTimeout(temporizador);
+    aplicandoRemoto = true;
+    try { await Store.limpar(); }
+    finally { aplicandoRemoto = false; }
+    try { localStorage.removeItem(KEY); } catch { /* nada */ }
   }
 
   function recarregarPagina() {
@@ -148,7 +113,7 @@ const Nuvem = (() => {
     envioEmCurso = (async () => {
       const cfg = ler();
       const marca = mudancasLocais;
-      const params = new URLSearchParams({ base: String(cfg.revisao || 0), dispositivo: nomeDoAparelho() });
+      const params = new URLSearchParams({ base: String(cfg.revisao || 0), dispositivo: Sessao.nomeDoAparelho() });
       if (forcar) params.set("forcar", "1");
       if (motivo) params.set("motivo", motivo);
       try {
@@ -195,10 +160,10 @@ const Nuvem = (() => {
 
     if (r.inalterado) {
       gravar({ ultimaSync: new Date().toISOString(), ultimoErro: "" });
-      if (cfg.pendente) enviar();
+      if (cfg.pendente) await enviar();
       return;
     }
-    // Nuvem vazia (servidor novo ou banco recriado): este aparelho repovoa.
+    // Nuvem vazia (conta nova, ou banco recriado): este aparelho repovoa.
     if (!r.estado) {
       gravar({ revisao: 0 });
       return enviar();
@@ -220,9 +185,11 @@ const Nuvem = (() => {
     return `${d.toLocaleDateString("pt-BR")} às ${d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
   }
 
-  /** Modal com duas saídas explícitas. Resolve com o `valor` escolhido ou null. */
-  function escolher({ titulo, descricao, nota, opcoes }) {
-    const esc = UI.fmt.escape;
+  /**
+   * Modal com saídas explícitas. Resolve com o `valor` escolhido, ou null se
+   * a pessoa adiar (só quando `adiavel`; senão, fechar escolhe a primeira).
+   */
+  function escolher({ titulo, descricao, nota, opcoes, adiavel = true }) {
     return new Promise((resolve) => {
       UI.abrirModal(`
         <div class="modal-head">
@@ -235,14 +202,14 @@ const Nuvem = (() => {
             ${o.dica ? `<span class="hint">${esc(o.dica)}</span>` : ""}`).join("")}
           ${nota ? `<span class="hint">${esc(nota)}</span>` : ""}
         </div>
-        <div class="modal-foot"><button class="btn" data-valor="" type="button">Decidir depois</button></div>`, {
+        ${adiavel ? `<div class="modal-foot"><button class="btn" data-valor="" type="button">Decidir depois</button></div>` : ""}`, {
         aoMontar(modal, fechar) {
           modal.addEventListener("click", (ev) => {
             const b = ev.target.closest("[data-valor]");
             if (b) fechar(b.dataset.valor || null);
           });
         },
-        aoFechar: (v) => resolve(v || null),
+        aoFechar: (v) => resolve(v || (adiavel ? null : opcoes[0].valor)),
       });
     });
   }
@@ -256,7 +223,7 @@ const Nuvem = (() => {
       const escolha = await escolher({
         titulo: "Mudanças nos dois lugares",
         descricao: `Este aparelho tem alterações que ainda não subiram, e ${quem} salvou na nuvem em ${quandoLegivel(remoto.atualizadoEm)}. Qual versão fica valendo?`,
-        nota: "A versão que não ficar não se perde: vai para Versões anteriores, em Sincronização na nuvem.",
+        nota: "A versão que não ficar não se perde: vai para Versões anteriores, em Conta e sincronização.",
         opcoes: [
           { valor: "local", rotulo: "Ficar com a deste aparelho", primario: true },
           { valor: "nuvem", rotulo: `Ficar com a da nuvem (${quem})` },
@@ -264,10 +231,10 @@ const Nuvem = (() => {
       });
 
       if (escolha === "local") {
-        await enviar({ forcar: true, motivo: `Substituída por ${nomeDoAparelho()} num conflito` });
+        await enviar({ forcar: true, motivo: `Substituída por ${Sessao.nomeDoAparelho()} num conflito` });
         UI.toast("Versão deste aparelho enviada.");
       } else if (escolha === "nuvem") {
-        await guardarCopiaLocal(`Deste aparelho (${nomeDoAparelho()}), antes de ficar com a da nuvem`);
+        await guardarCopiaLocal(`Deste aparelho (${Sessao.nomeDoAparelho()}), antes de ficar com a da nuvem`);
         aplicarRemoto(remoto);
         recarregarPagina();
       } else {
@@ -282,7 +249,7 @@ const Nuvem = (() => {
   }
 
   function guardarCopiaLocal(motivo) {
-    const params = new URLSearchParams({ motivo, dispositivo: nomeDoAparelho() });
+    const params = new URLSearchParams({ motivo, dispositivo: Sessao.nomeDoAparelho() });
     return pedir("POST", `/api/versoes?${params}`, { corpo: JSON.stringify(Store.estado()), tipo: "application/json" });
   }
 
@@ -326,160 +293,212 @@ const Nuvem = (() => {
     }
   }
 
-  /* ------------------------------- Conexão -------------------------------- */
-
-  function normalizarUrl(url) {
-    let u = String(url || "").trim().replace(/\/+$/, "");
-    if (u && !/^https?:\/\//i.test(u)) u = `https://${u}`;
-    return u;
-  }
+  /* --------------------------- Entrar e sair ------------------------------ */
 
   /**
-   * Primeira conexão deste aparelho (ou nova senha depois de a sessão vencer).
-   * Decide para que lado os dados vão quando os dois lados já têm algo.
+   * Chamado por entrar.js logo depois do login ou do cadastro. Decide o que
+   * fazer com os dados que já estão neste navegador antes de liberar o painel.
    */
-  async function conectar(url, senha) {
-    const endereco = normalizarUrl(url);
-    if (!endereco) throw new ErroNuvem("Informe o endereço do servidor.");
+  async function aposEntrar(usuario, { novaConta = false, nome = "" } = {}) {
+    const cfg = ler();
 
-    const { token, expiraEm } = await pedir("POST", "/api/entrar", {
-      url: endereco, semToken: true, corpo: JSON.stringify({ senha }), tipo: "application/json",
-    });
+    if (cfg.usuarioId === usuario.id) {
+      // A mesma pessoa de volta (a sessão tinha vencido): o que ficou
+      // pendente sobe, com a checagem de conflito de sempre.
+      await conferir();
+    } else {
+      // Dados de outra conta neste navegador: não podem ser vistos nem subir.
+      if (cfg.usuarioId) await apagarDadosLocais();
+      await adotarDados(usuario);
+    }
 
-    const anterior = ler();
-    const mesmoServidor = anterior.url === endereco && anterior.revisao > 0;
-    gravar({
-      url: endereco, token, expiraEm, ultimoErro: "",
-      ...(mesmoServidor ? {} : { revisao: 0, pendente: false, ultimaSync: "" }),
-    });
-
-    // Só renovou a sessão: segue a vida normal, com a checagem de conflito de sempre.
-    if (mesmoServidor) return conferir({ aoAbrir: true });
-
-    const remoto = await pedir("GET", "/api/estado");
-    if (!remoto.estado) {
+    if (novaConta) {
+      const p = Store.estado().perfil;
+      Store.definirPerfil({ nome: p.nome || nome, email: p.email || usuario.email });
       await enviar();
-      return "enviado";
     }
-    if (!temDadosLocais()) {
-      aplicarRemoto(remoto);
-      recarregarPagina();
-      return "recebido";
-    }
-
-    const escolha = await escolher({
-      titulo: "A nuvem já tem dados",
-      descricao: `A nuvem tem dados salvos por ${remoto.dispositivo || "outro aparelho"} em ${quandoLegivel(remoto.atualizadoEm)}, e este aparelho também tem os seus. Qual fica valendo?`,
-      nota: "O que não ficar vai para Versões anteriores, então dá para voltar atrás.",
-      opcoes: [
-        { valor: "nuvem", rotulo: "Usar os dados da nuvem", primario: true, dica: "O certo num aparelho novo." },
-        { valor: "local", rotulo: "Enviar os deste aparelho para a nuvem", dica: "A nuvem passa a ter o que está aqui." },
-      ],
-    });
-    if (escolha === "nuvem") {
-      await guardarCopiaLocal(`De ${nomeDoAparelho()}, antes de conectar`);
-      aplicarRemoto(remoto);
-      recarregarPagina();
-      return "recebido";
-    }
-    if (escolha === "local") {
-      gravar({ revisao: remoto.revisao });
-      await enviar({ forcar: true, motivo: `Substituída ao conectar ${nomeDoAparelho()}` });
-      return "enviado";
-    }
-    // Não decidiu: desfaz a conexão para não sincronizar nada sem escolha.
-    desconectar();
-    return "cancelado";
   }
 
-  function desconectar() {
-    const { url } = ler();
-    try { localStorage.setItem(KEY, JSON.stringify({ url })); } catch { /* nada a fazer */ }
+  /** Navegador sem dono (dados de antes das contas, ou vazio) + conta recém-aberta. */
+  async function adotarDados(usuario) {
+    const remoto = await pedir("GET", "/api/estado");
+    const locais = temDadosLocais();
+
+    if (remoto.estado) {
+      let escolha = "nuvem";
+      if (locais) {
+        escolha = await escolher({
+          titulo: "Sua conta já tem dados",
+          descricao: `Sua conta tem dados salvos por ${remoto.dispositivo || "outro aparelho"} em ${quandoLegivel(remoto.atualizadoEm)}, e este navegador também tem os seus. Qual fica valendo?`,
+          nota: "O que não ficar vai para Versões anteriores, então dá para voltar atrás.",
+          adiavel: false,
+          opcoes: [
+            { valor: "nuvem", rotulo: "Usar os dados da conta", primario: true, dica: "O certo num aparelho novo." },
+            { valor: "local", rotulo: "Enviar os deste navegador para a conta", dica: "A conta passa a ter o que está aqui." },
+          ],
+        });
+      }
+      gravar({ usuarioId: usuario.id, revisao: remoto.revisao, pendente: false });
+      if (escolha === "local") {
+        await enviar({ forcar: true, motivo: `Substituída ao entrar em ${Sessao.nomeDoAparelho()}` });
+      } else {
+        if (locais) await guardarCopiaLocal(`De ${Sessao.nomeDoAparelho()}, antes de entrar na conta`);
+        aplicarRemoto(remoto);
+      }
+      return;
+    }
+
+    // Conta vazia na nuvem.
+    let levar = false;
+    if (locais) {
+      levar = (await escolher({
+        titulo: "Este navegador já tem dados",
+        descricao: "Há coisas cadastradas neste navegador de antes de você ter conta. Quer levá-las para a sua conta?",
+        adiavel: false,
+        opcoes: [
+          { valor: "levar", rotulo: "Levar para a minha conta", primario: true, dica: "Tudo o que está aqui passa a ser seu, em todos os aparelhos." },
+          { valor: "zero", rotulo: "Começar do zero", dica: "O que está neste navegador é apagado daqui." },
+        ],
+      })) === "levar";
+      if (!levar) await apagarDadosLocais();
+    }
+    gravar({ usuarioId: usuario.id, revisao: 0, pendente: levar });
+    if (levar) await enviar();
+  }
+
+  /** Sai da conta: sobe o que faltar, encerra a sessão e limpa este navegador. */
+  async function sairDaConta() {
+    if (ler().pendente) await enviar();
+    if (ler().pendente) {
+      const ok = await UI.confirmar({
+        titulo: "Sair sem enviar as últimas mudanças?",
+        descricao: "Algumas mudanças ainda não chegaram à nuvem (sem conexão?). Sair agora apaga este navegador, e elas se perdem. Tente de novo quando a conexão voltar.",
+        rotuloConfirmar: "Sair mesmo assim",
+        perigo: true,
+      });
+      if (!ok) return;
+    }
+    await Sessao.sair();
+    await apagarDadosLocais();
+    location.replace("entrar.html?saiu=1");
   }
 
   /* ------------------------------ Situação -------------------------------- */
 
   function situacao() {
-    const c = ler();
-    if (!c.url || !c.token) {
-      return { conectado: false, texto: c.url && c.ultimoErro ? c.ultimoErro : "Só neste navegador — não sincroniza." };
+    if (!Sessao.ativo()) {
+      return { texto: "Contas desligadas até o servidor ser publicado — os dados ficam só neste navegador." };
     }
-    if (c.ultimoErro) return { conectado: true, texto: c.ultimoErro, erro: true };
-    if (c.pendente) return { conectado: true, texto: "Há mudanças aguardando envio." };
-    return { conectado: true, texto: c.ultimaSync ? `Sincronizado em ${quandoLegivel(c.ultimaSync)}.` : "Conectado." };
+    const u = Sessao.usuario();
+    if (!Sessao.logado()) return { texto: "Sessão encerrada — entre de novo para sincronizar.", erro: true };
+    const c = ler();
+    const quem = u?.email || "";
+    if (c.ultimoErro) return { texto: `${quem}: ${c.ultimoErro}`, erro: true };
+    if (c.pendente) return { texto: `${quem}: mudanças aguardando envio.` };
+    return { texto: c.ultimaSync ? `${quem}: sincronizado em ${quandoLegivel(c.ultimaSync)}.` : quem };
   }
 
   /* ------------------------------- Telas ---------------------------------- */
 
-  function abrirPainel() {
-    const cfg = ler();
-    const esc = UI.fmt.escape;
-    const ligado = !!(cfg.url && cfg.token);
-    const s = situacao();
-
-    const corpoDesconectado = () => `
-      <div class="field">
-        <label for="nuvem-url">Endereço do servidor</label>
-        <input type="text" id="nuvem-url" value="${esc(cfg.url || URL_PADRAO)}" placeholder="https://delfos-api.seu-nome.workers.dev" autocomplete="url" />
-        <span class="hint">Aparece no fim da publicação do servidor — ver backend/README.md.</span>
-      </div>
-      <div class="field">
-        <label for="nuvem-senha">Senha</label>
-        <input type="password" id="nuvem-senha" autocomplete="current-password" />
-      </div>
-      <span class="hint" data-erro>${cfg.ultimoErro ? esc(cfg.ultimoErro) : ""}</span>`;
-
-    // Funções, não textos: só a que vale é montada (a outra leria cfg.url vazio).
-    const corpoConectado = () => `
-      <dl class="ficha">
-        <div><dt>Servidor</dt><dd>${esc(cfg.url.replace(/^https?:\/\//, ""))}</dd></div>
-        <div><dt>Situação</dt><dd>${esc(s.texto)}</dd></div>
-        <div><dt>Este aparelho</dt><dd>${esc(nomeDoAparelho())}</dd></div>
-        <div><dt>Revisão</dt><dd>${esc(String(cfg.revisao || 0))}</dd></div>
-      </dl>
-      <button class="btn primary block" data-acao="sincronizar" type="button">↻ Sincronizar agora</button>
-      <button class="btn block" data-acao="versoes" type="button">Versões anteriores</button>
-      <button class="btn ghost block" data-acao="desconectar" type="button">Desconectar este aparelho</button>
-      <span class="hint">Desconectar não apaga nada: os dados ficam aqui e na nuvem, só param de se falar.</span>`;
-
+  /**
+   * Formulário com campos de senha (UI.formulario não tem esse tipo, e senha
+   * não deve passar por onde o navegador guardaria o valor em outro lugar).
+   * `aoConfirmar` devolve uma mensagem de erro, ou "" para fechar.
+   */
+  function formularioSenha({ titulo, descricao, campos, rotuloConfirmar, perigo = false, aoConfirmar }) {
     UI.abrirModal(`
       <div class="modal-head">
-        <h2 class="modal-title">Sincronização na nuvem</h2>
-        <p class="modal-desc">${ligado
-          ? "Cada mudança sobe sozinha e aparece nos outros aparelhos conectados."
-          : "Conecte para ter os mesmos dados no celular e no computador, com anexos e versões anteriores guardados no seu servidor."}</p>
+        <h2 class="modal-title">${esc(titulo)}</h2>
+        ${descricao ? `<p class="modal-desc">${esc(descricao)}</p>` : ""}
       </div>
-      <div class="modal-body">${ligado ? corpoConectado() : corpoDesconectado()}</div>
+      <form class="modal-body" novalidate>
+        ${campos.map((c) => `
+          <div class="field">
+            <label for="f-${c.id}">${esc(c.rotulo)}</label>
+            <input type="password" id="f-${c.id}" autocomplete="${c.autocomplete}" />
+          </div>`).join("")}
+        <span class="hint" data-erro style="color: var(--st-critical);"></span>
+      </form>
       <div class="modal-foot">
-        <button class="btn" data-acao="fechar" type="button">Fechar</button>
-        ${ligado ? "" : `<button class="btn primary" data-acao="conectar" type="button">Conectar</button>`}
+        <button class="btn" data-acao="cancelar" type="button">Cancelar</button>
+        <button class="btn ${perigo ? "danger" : "primary"}" data-acao="ok" type="button">${esc(rotuloConfirmar)}</button>
       </div>`, {
       aoMontar(modal, fechar) {
-        modal.querySelector('[data-acao="fechar"]').addEventListener("click", () => fechar(null));
+        const btn = modal.querySelector('[data-acao="ok"]');
+        const erro = modal.querySelector("[data-erro]");
+        modal.querySelector("input").focus();
+        const confirmar = async () => {
+          const valores = Object.fromEntries(campos.map((c) => [c.id, modal.querySelector(`#f-${c.id}`).value]));
+          btn.disabled = true;
+          btn.textContent = "Conferindo…";
+          erro.textContent = "";
+          let msg = "";
+          try { msg = await aoConfirmar(valores); } catch (e) { msg = e.message; }
+          if (!msg) return fechar(true);
+          erro.textContent = msg;
+          btn.disabled = false;
+          btn.textContent = rotuloConfirmar;
+        };
+        btn.addEventListener("click", confirmar);
+        modal.querySelector("form").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); confirmar(); } });
+        modal.querySelector('[data-acao="cancelar"]').addEventListener("click", () => fechar(null));
+      },
+    });
+  }
 
-        const btnConectar = modal.querySelector('[data-acao="conectar"]');
-        if (btnConectar) {
-          const senha = modal.querySelector("#nuvem-senha");
-          (cfg.url || URL_PADRAO ? senha : modal.querySelector("#nuvem-url")).focus();
-          const tentar = async () => {
-            btnConectar.disabled = true;
-            btnConectar.textContent = "Conectando…";
-            try {
-              const r = await conectar(modal.querySelector("#nuvem-url").value, senha.value);
-              fechar(null);
-              if (r === "enviado") UI.toast("Conectado. Os dados deste aparelho estão na nuvem.");
-              else if (r === "cancelado") UI.toast("Conexão cancelada — nada foi alterado.");
-            } catch (e) {
-              modal.querySelector("[data-erro]").textContent = e.message;
-              btnConectar.disabled = false;
-              btnConectar.textContent = "Conectar";
-            }
-          };
-          btnConectar.addEventListener("click", tentar);
-          senha.addEventListener("keydown", (e) => { if (e.key === "Enter") tentar(); });
-        }
+  function abrirPainel() {
+    if (!Sessao.ativo() || !Sessao.logado()) {
+      UI.abrirModal(`
+        <div class="modal-head">
+          <h2 class="modal-title">Conta e sincronização</h2>
+          <p class="modal-desc">${esc(situacao().texto)}</p>
+        </div>
+        <div class="modal-foot" style="padding-top: 20px;">
+          ${Sessao.ativo() ? `<button class="btn primary" data-acao="entrar" type="button">Entrar</button>` : ""}
+          <button class="btn" data-acao="fechar" type="button">Fechar</button>
+        </div>`, {
+        aoMontar(modal, fechar) {
+          modal.querySelector('[data-acao="fechar"]').addEventListener("click", () => fechar(null));
+          modal.querySelector('[data-acao="entrar"]')?.addEventListener("click", Sessao.irParaEntrar);
+        },
+      });
+      return;
+    }
 
-        modal.querySelector('[data-acao="sincronizar"]')?.addEventListener("click", async (ev) => {
+    const u = Sessao.usuario();
+    const s = situacao();
+    UI.abrirModal(`
+      <div class="modal-head">
+        <h2 class="modal-title">Conta e sincronização</h2>
+        <p class="modal-desc">Cada mudança sobe sozinha e aparece nos seus outros aparelhos.</p>
+      </div>
+      <div class="modal-body">
+        <dl class="ficha">
+          <div><dt>Conta</dt><dd>${esc(u.email)}</dd></div>
+          <div><dt>Situação</dt><dd>${esc(s.texto.replace(`${u.email}: `, ""))}</dd></div>
+          <div><dt>Este aparelho</dt><dd>${esc(Sessao.nomeDoAparelho())}</dd></div>
+          <div><dt>Anexos na nuvem</dt><dd data-cota>…</dd></div>
+        </dl>
+        <button class="btn primary block" data-acao="sincronizar" type="button">↻ Sincronizar agora</button>
+        <button class="btn block" data-acao="versoes" type="button">Versões anteriores</button>
+        <button class="btn block" data-acao="senha" type="button">Trocar senha</button>
+        <button class="btn block" data-acao="outros" type="button">Sair dos outros aparelhos</button>
+        <button class="btn block" data-acao="sair" type="button">Sair da conta</button>
+        <span class="hint">Sair apaga os dados deste navegador — eles continuam na sua conta e voltam quando você entrar.</span>
+        <button class="btn ghost danger block" data-acao="excluir" type="button">Excluir minha conta</button>
+      </div>
+      <div class="modal-foot"><button class="btn" data-acao="fechar" type="button">Fechar</button></div>`, {
+      aoMontar(modal, fechar) {
+        const acao = (nome, fn) => modal.querySelector(`[data-acao="${nome}"]`).addEventListener("click", fn);
+        acao("fechar", () => fechar(null));
+
+        Sessao.conta().then((c) => {
+          const usado = Arquivos.tamanhoLegivel(c.anexos.usadoBytes);
+          const limite = `${Math.round(c.anexos.limiteBytes / (1024 * 1024))} MB`;
+          modal.querySelector("[data-cota]").textContent = `${usado} de ${limite}`;
+        }).catch(() => { modal.querySelector("[data-cota]").textContent = "—"; });
+
+        acao("sincronizar", async (ev) => {
           ev.target.disabled = true;
           ev.target.textContent = "Sincronizando…";
           await conferir();
@@ -488,21 +507,57 @@ const Nuvem = (() => {
           UI.toast(situacao().texto);
         });
 
-        modal.querySelector('[data-acao="versoes"]')?.addEventListener("click", () => {
+        acao("versoes", () => { fechar(null); abrirVersoes(); });
+
+        acao("senha", () => {
           fechar(null);
-          abrirVersoes();
+          formularioSenha({
+            titulo: "Trocar senha",
+            descricao: "Os seus outros aparelhos vão pedir a senha nova. Este continua conectado.",
+            rotuloConfirmar: "Trocar senha",
+            campos: [
+              { id: "atual", rotulo: "Senha atual", autocomplete: "current-password" },
+              { id: "nova", rotulo: "Senha nova (mínimo 8 caracteres)", autocomplete: "new-password" },
+              { id: "conf", rotulo: "Repita a senha nova", autocomplete: "new-password" },
+            ],
+            async aoConfirmar(v) {
+              const problema = await Sessao.problemaNaSenha(v.nova, v.conf);
+              if (problema) return problema;
+              await Sessao.trocarSenha(v.atual, v.nova);
+              UI.toast("Senha trocada.");
+              return "";
+            },
+          });
         });
 
-        modal.querySelector('[data-acao="desconectar"]')?.addEventListener("click", async () => {
+        acao("outros", async () => {
           const ok = await UI.confirmar({
-            titulo: "Desconectar este aparelho?",
-            descricao: "Os dados continuam aqui e na nuvem. Este aparelho só para de enviar e receber mudanças.",
-            rotuloConfirmar: "Desconectar",
+            titulo: "Sair dos outros aparelhos?",
+            descricao: "Todo aparelho conectado à sua conta, menos este, vai pedir a senha de novo. Use se perdeu um celular ou entrou num computador que não é seu.",
+            rotuloConfirmar: "Sair dos outros",
           });
           if (!ok) return;
-          desconectar();
+          try { await Sessao.sairDosOutros(); UI.toast("Os outros aparelhos foram desconectados."); }
+          catch (e) { UI.toast(e.message); }
+        });
+
+        acao("sair", async () => { fechar(null); await sairDaConta(); });
+
+        acao("excluir", () => {
           fechar(null);
-          UI.toast("Aparelho desconectado da nuvem.");
+          formularioSenha({
+            titulo: "Excluir sua conta?",
+            descricao: "Apaga para sempre a conta e tudo nela — dados, anexos e versões anteriores — do servidor e deste navegador. Não dá para desfazer. Se quiser guardar algo, exporte um backup antes (Perfil → Backup e dados).",
+            rotuloConfirmar: "Excluir para sempre",
+            perigo: true,
+            campos: [{ id: "senha", rotulo: "Sua senha, para confirmar", autocomplete: "current-password" }],
+            async aoConfirmar(v) {
+              await Sessao.excluirConta(v.senha);
+              await apagarDadosLocais();
+              location.replace("entrar.html?excluida=1");
+              return "";
+            },
+          });
         });
       },
     });
@@ -513,7 +568,6 @@ const Nuvem = (() => {
     try { ({ versoes } = await pedir("GET", "/api/versoes")); }
     catch (e) { return UI.toast(e.message); }
 
-    const esc = UI.fmt.escape;
     UI.abrirModal(`
       <div class="modal-head">
         <h2 class="modal-title">Versões anteriores</h2>
@@ -563,7 +617,7 @@ const Nuvem = (() => {
 
   function iniciar() {
     Store.aoMudar(aoMudarLocal);
-    if (!conectado()) return;
+    if (!conectado() || Sessao.saindo()) return;
     conferir({ aoAbrir: true }).then(() => enviarAnexos());
 
     // Voltou para a aba depois de um tempo: talvez o celular tenha mudado algo.
@@ -577,5 +631,5 @@ const Nuvem = (() => {
 
   iniciar();
 
-  return { conectado, situacao, abrirPainel, baixarAnexo, enviar, conferir };
+  return { conectado, situacao, abrirPainel, baixarAnexo, enviar, conferir, aposEntrar, sairDaConta };
 })();

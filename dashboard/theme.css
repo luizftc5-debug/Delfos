@@ -1355,3 +1355,13 @@ a.anexo:hover, button.anexo:hover { border-color: var(--linha-forte); background
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* --------------------------- Entrada (entrar.html) --------------------------- */
+
+.entrada { max-width: 440px; }
+.entrada .leitura { margin: 0 0 22px; }
+.entrada .notice { margin-bottom: 18px; }
+.entrada-form { display: flex; flex-direction: column; gap: 16px; margin-top: 22px; }
+.entrada-form .err:empty { display: none; }
+.entrada-form .err { font-size: 13px; color: var(--st-critical); font-weight: 500; line-height: 1.5; }
+.entrada-nota { margin: 22px 0 0; line-height: 1.6; }

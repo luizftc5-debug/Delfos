@@ -9,8 +9,9 @@ Duas coisas **continuam** com o nome antigo, de propósito:
 - **O repositório é `organizador`.** O endereço do GitHub Pages
   (`luizftc5-debug.github.io/organizador/dashboard/`) sai daí; renomear quebraria o link que o Luiz
   usa e os favoritos dele.
-- **Os endereços de armazenamento**: `organizador.estado.v2` e `organizador.tema` no localStorage,
-  `organizador.arquivos` no IndexedDB. Não são texto de marca, são a chave onde os dados moram —
+- **Os endereços de armazenamento**: `organizador.estado.v2`, `organizador.tema`,
+  `organizador.sessao`, `organizador.nuvem` e `organizador.api` no localStorage, `organizador.arquivos`
+  no IndexedDB. Não são texto de marca, são a chave onde os dados moram —
   trocá-las faria o painel abrir vazio, como se tudo tivesse sido apagado. Só renomeie junto com uma
   migração que copie os dados da chave velha para a nova, e nunca sem testar com dados reais.
 
@@ -30,7 +31,7 @@ Você é um assistente de IA especializado em organizar e gerenciar os quatro pi
 
 ## Arquitetura do dashboard
 
-Aplicação estática multi-página em `dashboard/`, sem build. A única dependência externa é a tipografia (Google Fonts).
+Aplicação estática multi-página em `dashboard/`, sem build. Dependências externas: a tipografia (Google Fonts) e, só ao criar ou trocar senha, a consulta k-anônima ao Have I Been Pwned (`sessao.js`).
 
 | Arquivo | Papel |
 |---|---|
@@ -50,7 +51,9 @@ Aplicação estática multi-página em `dashboard/`, sem build. A única depend�
 | `store.js` | Camada de dados: localStorage + CRUD + backup em JSON |
 | `personalizacao.js` | Traduz perfil/preferências em como o painel se apresenta (abas ligadas, saudação, ocupação) |
 | `arquivos.js` | Anexos (PDF, slides, fotos) no IndexedDB + export/import para o backup |
-| `nuvem.js` | Sincronização opcional com o back end (`backend/`): envio, conferência, conflito, versões, anexos |
+| `entrar.html` + `entrar.js` | Entrar / criar conta: página sem barra lateral, a única que abre sem sessão |
+| `sessao.js` | Conta do usuário: endereço da API, login, cadastro, derivação da senha, porta de entrada das páginas |
+| `nuvem.js` | Sincronização com a conta (`backend/`): envio, conferência, conflito, versões, anexos, sair |
 | `financas.js` | Cálculos derivados: saldo por conta, ciclo e fatura de cartão, balanço, investimentos |
 | `ui.js` | Componentes: layout, perfil, modais de formulário, avisos, gráficos, datas/urgência |
 | `theme.css` | Design system (tema claro/escuro) |
@@ -58,30 +61,44 @@ Aplicação estática multi-página em `dashboard/`, sem build. A única depend�
 | `data.js` | Conteúdo inicial (seed), lido só na primeira abertura |
 | `exercicios.js` | Catálogo de exercícios da aba Academia (`const EXERCICIOS`), carregado só por `pilar.html` |
 
-### Back end e sincronização na nuvem
+### Contas de usuário e back end
 
-`backend/` é um Cloudflare Worker + banco D1 (guia de publicação em `backend/README.md`, publicado
-pelo workflow `.github/workflows/backend.yml`). É **opcional**: o painel continua estático no
-GitHub Pages e funciona inteiro sem ele. O localStorage continua sendo a cópia de trabalho; a nuvem
-é o ponto de encontro entre aparelhos.
+`backend/` é um Cloudflare Worker + banco D1 (guia em `backend/README.md`, publicado pelo workflow
+`.github/workflows/backend.yml`). O painel continua estático no GitHub Pages; o servidor guarda as
+contas e os dados de cada uma. O localStorage continua sendo a cópia de trabalho.
 
-- **O servidor não interpreta o estado.** Guarda o JSON como texto (em pedaços de 400 mil
-  caracteres, pelo limite de linha do D1), com um número de `revisao`, e devolve como veio. O
-  formato continua sendo só de `store.js`/`normalizar` — mudar o estado não exige mudar o servidor,
-  e `Store.substituir()` passa o que chega por `normalizar` como qualquer carga.
+- **A porta.** `sessao.js` roda em toda página antes do script dela: sem sessão, esconde a página e
+  manda para `entrar.html?volta=<página>` (`volta` só aceita páginas do próprio painel).
+  `UI.iniciarPagina` consulta `Sessao.saindo()` para não disputar o redirecionamento com o
+  assistente de boas-vindas. **Enquanto `API_PUBLICA` (no alto de `sessao.js`) estiver vazia, as
+  contas ficam desligadas** e o painel abre sem login, como antes — é o que permite publicar o
+  servidor sem trancar ninguém. Para testar local, `localStorage["organizador.api"]` sobrepõe o
+  endereço só naquele navegador.
+- **Senha.** Nunca é guardada nem enviada: `Sessao.derivarChave` faz PBKDF2-SHA256, 600 mil
+  iterações, sal = `delfos:v1:<email>`, e só a chave de 32 bytes vai ao servidor, que guarda
+  HMAC-SHA256(sal aleatório da conta, chave). As iterações ficam no navegador por causa do limite de
+  CPU do plano gratuito (mesmo desenho do Bitwarden). Senha nova passa por `problemaNaSenha`: mínimo
+  8 caracteres e consulta k-anônima ao Have I Been Pwned (falha aberta, sem rede não bloqueia).
+- **Sessão.** Token aleatório de 90 dias em `organizador.sessao`; no banco só o SHA-256 dele. Um
+  401 numa rota com token tira o token e mostra um aviso com "Entrar" — nunca recarrega sozinho no
+  meio do que a pessoa está digitando.
+- **Um navegador nunca mistura contas.** `organizador.nuvem.usuarioId` diz de quem são os dados do
+  navegador; `Nuvem.conectado()` só sincroniza quando bate com a sessão. **Sair apaga os dados
+  locais** (continuam na conta). Entrar com outra conta apaga os dados da anterior antes de baixar.
+  Dados sem dono (de antes das contas) disparam a pergunta "levar para a minha conta?" em
+  `Nuvem.aposEntrar`, chamado por `entrar.js` antes de liberar o painel.
+- **O servidor não interpreta o estado.** Guarda o JSON como texto (pedaços de 400 mil caracteres,
+  pelo limite de linha do D1), com `revisao`, e devolve como veio. `Store.substituir()` passa o que
+  chega por `normalizar` como qualquer carga.
 - **Conflito nunca é silencioso.** `PUT /api/estado?base=N` recusa com 409 se outro aparelho gravou
-  depois da revisão N; `nuvem.js` então pergunta qual versão fica. A que perde vai para `versoes`
-  no servidor (60 mais recentes, restauráveis pelo painel).
-- **Anexos**: mesmo id (`arq-…`) no IndexedDB e no servidor. `nuvem.js` sobe só os citados no
-  estado; `Arquivos.blob()` busca na nuvem o que falta no aparelho. Não há rota para apagar: a
-  limpeza diária (`limpeza.js`) remove só o que nenhuma versão guardada cita.
-- **Senha única** no segredo `SENHA` do Worker; o token é assinado com uma chave derivada dela, então
-  trocar a senha desconecta todos os aparelhos.
-- A configuração do aparelho (endereço, token, revisão, `pendente`) fica em `organizador.nuvem` no
-  localStorage — fora do estado, fora do backup. `URL_PADRAO` em `nuvem.js` pode receber o endereço
-  do Worker para o Luiz só digitar a senha.
-- Módulo Worker só exporta `default` (toda exportação nomeada vira handler e quebra a publicação).
-  Testes: `cd backend && npm test`.
+  depois; `nuvem.js` pergunta qual versão fica. A que perde vai para `versoes` (60 por conta).
+- **Isolamento.** Toda rota de dados usa o id que sai de `exigirSessao`, nunca um id da requisição;
+  anexos têm chave `(usuario_id, id)`. Cota de anexos por conta em `COTA_ANEXOS_MB`
+  (`wrangler.toml`) — o D1 gratuito tem 500 MB no total.
+- **Cadastro** aberto, ou com convite se o segredo `CODIGO_CONVITE` existir. Não há recuperação de
+  senha por e-mail (precisaria de um serviço de envio).
+- Migrações só se acrescentam (`0002_contas.sql` renomeou as tabelas da versão de senha única para
+  `legado_*` em vez de apagar). Módulo Worker só exporta `default`. Testes: `cd backend && npm test`.
 
 ### Divisão entre Faculdade e Projetos
 
@@ -352,8 +369,8 @@ telas (botões "+ Lançamento", "+ Prazo", "+ Disciplina", "+ Projeto"), sem toc
 - `dashboard/data.js` é só o seed inicial: é lido **uma única vez**, quando o navegador ainda não tem
   dados salvos. Alterar esse arquivo **não** muda o que Luiz já vê.
 - Para levar dados entre computadores ou fazer backup, use o botão **Backup e dados** na barra
-  lateral (exporta/importa um `.json` com o estado completo e os anexos) — ou, com o back end
-  publicado, **Sincronização na nuvem** no perfil, que mantém os aparelhos iguais sozinha.
+  lateral (exporta/importa um `.json` com o estado completo e os anexos). Com as contas ligadas, os
+  dados já acompanham a conta em qualquer aparelho; o backup continua como cópia fora do servidor.
 - Ao mudar o formato do estado, trate a migração em `store.js` (`normalizar`, que roda em toda carga
   e precisa ser idempotente). Nunca troque a chave do localStorage: isso apagaria os dados de quem
   já usa. A conversão é gravada assim que a versão salva difere da atual.

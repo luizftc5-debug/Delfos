@@ -8,9 +8,10 @@
    Backup: use "Exportar backup" (gera um .json com TUDO) e "Importar backup"
    para restaurar ou levar os dados para outro computador/navegador.
 
-   Sincronização (opcional): com a nuvem conectada, nuvem.js ouve aoMudar e
-   sobe cada mudança para o back end (pasta backend/). O localStorage
-   continua sendo a cópia de trabalho — o painel funciona igual sem rede.
+   Contas: com o back end publicado, cada pessoa entra na própria conta
+   (sessao.js) e nuvem.js ouve aoMudar para subir cada mudança para ela
+   (pasta backend/). O localStorage continua sendo a cópia de trabalho — o
+   painel funciona igual sem rede.
    =========================================================================== */
 
 const Store = (() => {

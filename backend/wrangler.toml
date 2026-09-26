@@ -14,6 +14,9 @@ crons = ["17 6 * * *"]
 # Endereços de onde o painel pode chamar a API, separados por vírgula.
 # O GitHub Pages usa só o domínio (sem /Delfos/dashboard) como origem.
 ORIGENS = "https://luizftc5-debug.github.io,http://localhost:8000,http://127.0.0.1:8000"
+# Espaço de anexos por conta, em MB. O banco gratuito do D1 tem 500 MB no
+# total, somando todas as contas — suba com cuidado.
+COTA_ANEXOS_MB = "100"
 
 [[d1_databases]]
 binding = "DB"

@@ -3,9 +3,11 @@
 # Roda sozinho quando algo em backend/ muda no branch principal, e também
 # pelo botão "Run workflow" na aba Actions do GitHub.
 #
-# Precisa de três segredos do repositório (Settings → Secrets and variables →
+# Precisa de dois segredos do repositório (Settings → Secrets and variables →
 # Actions) — passo a passo em backend/README.md:
-#   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, SENHA_DELFOS
+#   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+# E aceita um terceiro, opcional: CODIGO_CONVITE (criar conta passa a exigir
+# esse código).
 
 name: Back end
 
@@ -54,19 +56,12 @@ jobs:
           cache-dependency-path: backend/package-lock.json
 
       - name: Conferir os segredos
-        env:
-          SENHA_DELFOS: ${{ secrets.SENHA_DELFOS }}
         run: |
           falta=""
           [ -n "$CLOUDFLARE_API_TOKEN" ] || falta="$falta CLOUDFLARE_API_TOKEN"
           [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || falta="$falta CLOUDFLARE_ACCOUNT_ID"
-          [ -n "$SENHA_DELFOS" ] || falta="$falta SENHA_DELFOS"
           if [ -n "$falta" ]; then
             echo "::error::Faltam segredos do repositório:$falta. Veja backend/README.md."
-            exit 1
-          fi
-          if [ ${#SENHA_DELFOS} -lt 8 ]; then
-            echo "::error::SENHA_DELFOS precisa ter pelo menos 8 caracteres."
             exit 1
           fi
 
@@ -88,7 +83,19 @@ jobs:
       - name: Publicar o Worker
         run: npx wrangler deploy
 
-      - name: Gravar a senha
+      # Com CODIGO_CONVITE, só cria conta quem tiver o código. Sem ele, o
+      # cadastro fica aberto — e o código antigo, se havia, é removido.
+      - name: Código de convite
         env:
-          SENHA_DELFOS: ${{ secrets.SENHA_DELFOS }}
-        run: printf '%s' "$SENHA_DELFOS" | npx wrangler secret put SENHA
+          CODIGO_CONVITE: ${{ secrets.CODIGO_CONVITE }}
+        run: |
+          if [ -n "$CODIGO_CONVITE" ]; then
+            printf '%s' "$CODIGO_CONVITE" | npx wrangler secret put CODIGO_CONVITE
+          else
+            npx wrangler secret delete CODIGO_CONVITE < /dev/null 2>/dev/null || true
+          fi
+
+      - name: Endereço publicado
+        run: |
+          echo "Servidor no ar. O endereço (https://delfos-api.<subdomínio>.workers.dev) aparece"
+          echo "no fim do passo 'Publicar o Worker' acima — é ele que vai em dashboard/sessao.js (API_PUBLICA)."

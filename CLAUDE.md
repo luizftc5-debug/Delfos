@@ -50,12 +50,38 @@ Aplicação estática multi-página em `dashboard/`, sem build. A única depend�
 | `store.js` | Camada de dados: localStorage + CRUD + backup em JSON |
 | `personalizacao.js` | Traduz perfil/preferências em como o painel se apresenta (abas ligadas, saudação, ocupação) |
 | `arquivos.js` | Anexos (PDF, slides, fotos) no IndexedDB + export/import para o backup |
+| `nuvem.js` | Sincronização opcional com o back end (`backend/`): envio, conferência, conflito, versões, anexos |
 | `financas.js` | Cálculos derivados: saldo por conta, ciclo e fatura de cartão, balanço, investimentos |
 | `ui.js` | Componentes: layout, perfil, modais de formulário, avisos, gráficos, datas/urgência |
 | `theme.css` | Design system (tema claro/escuro) |
 | `config.js` + `google-integration.js` | Integração OAuth com Google Calendar e Drive (inclui busca/exportação de arquivos, usada pela importação em disciplina.js) |
 | `data.js` | Conteúdo inicial (seed), lido só na primeira abertura |
 | `exercicios.js` | Catálogo de exercícios da aba Academia (`const EXERCICIOS`), carregado só por `pilar.html` |
+
+### Back end e sincronização na nuvem
+
+`backend/` é um Cloudflare Worker + banco D1 (guia de publicação em `backend/README.md`, publicado
+pelo workflow `.github/workflows/backend.yml`). É **opcional**: o painel continua estático no
+GitHub Pages e funciona inteiro sem ele. O localStorage continua sendo a cópia de trabalho; a nuvem
+é o ponto de encontro entre aparelhos.
+
+- **O servidor não interpreta o estado.** Guarda o JSON como texto (em pedaços de 400 mil
+  caracteres, pelo limite de linha do D1), com um número de `revisao`, e devolve como veio. O
+  formato continua sendo só de `store.js`/`normalizar` — mudar o estado não exige mudar o servidor,
+  e `Store.substituir()` passa o que chega por `normalizar` como qualquer carga.
+- **Conflito nunca é silencioso.** `PUT /api/estado?base=N` recusa com 409 se outro aparelho gravou
+  depois da revisão N; `nuvem.js` então pergunta qual versão fica. A que perde vai para `versoes`
+  no servidor (60 mais recentes, restauráveis pelo painel).
+- **Anexos**: mesmo id (`arq-…`) no IndexedDB e no servidor. `nuvem.js` sobe só os citados no
+  estado; `Arquivos.blob()` busca na nuvem o que falta no aparelho. Não há rota para apagar: a
+  limpeza diária (`limpeza.js`) remove só o que nenhuma versão guardada cita.
+- **Senha única** no segredo `SENHA` do Worker; o token é assinado com uma chave derivada dela, então
+  trocar a senha desconecta todos os aparelhos.
+- A configuração do aparelho (endereço, token, revisão, `pendente`) fica em `organizador.nuvem` no
+  localStorage — fora do estado, fora do backup. `URL_PADRAO` em `nuvem.js` pode receber o endereço
+  do Worker para o Luiz só digitar a senha.
+- Módulo Worker só exporta `default` (toda exportação nomeada vira handler e quebra a publicação).
+  Testes: `cd backend && npm test`.
 
 ### Divisão entre Faculdade e Projetos
 
@@ -326,7 +352,8 @@ telas (botões "+ Lançamento", "+ Prazo", "+ Disciplina", "+ Projeto"), sem toc
 - `dashboard/data.js` é só o seed inicial: é lido **uma única vez**, quando o navegador ainda não tem
   dados salvos. Alterar esse arquivo **não** muda o que Luiz já vê.
 - Para levar dados entre computadores ou fazer backup, use o botão **Backup e dados** na barra
-  lateral (exporta/importa um `.json` com o estado completo e os anexos).
+  lateral (exporta/importa um `.json` com o estado completo e os anexos) — ou, com o back end
+  publicado, **Sincronização na nuvem** no perfil, que mantém os aparelhos iguais sozinha.
 - Ao mudar o formato do estado, trate a migração em `store.js` (`normalizar`, que roda em toda carga
   e precisa ser idempotente). Nunca troque a chave do localStorage: isso apagaria os dados de quem
   já usa. A conversão é gravada assim que a versão salva difere da atual.

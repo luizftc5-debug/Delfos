@@ -7,6 +7,10 @@
 
    Backup: use "Exportar backup" (gera um .json com TUDO) e "Importar backup"
    para restaurar ou levar os dados para outro computador/navegador.
+
+   Sincronização (opcional): com a nuvem conectada, nuvem.js ouve aoMudar e
+   sobe cada mudança para o back end (pasta backend/). O localStorage
+   continua sendo a cópia de trabalho — o painel funciona igual sem rede.
    =========================================================================== */
 
 const Store = (() => {
@@ -723,6 +727,18 @@ const Store = (() => {
       estado = normalizar(dados);
       persistir();
       return { estado, anexos };
+    },
+
+    /**
+     * Troca o estado inteiro pelo que veio da nuvem (nuvem.js). Passa por
+     * normalizar como qualquer carga, então um aparelho com versão mais nova
+     * do painel converte o que um mais antigo enviou.
+     */
+    substituir(dados) {
+      if (!dados || typeof dados !== "object") throw new Error("Estado inválido.");
+      estado = normalizar(dados);
+      persistir();
+      return estado;
     },
 
     async limpar() {

@@ -204,6 +204,11 @@
     document.querySelectorAll("#seg-tema button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
   });
 
+  // Aparelho novo de quem já usa o Delfos: conectar à nuvem traz o perfil
+  // pronto, e o assistente não tem mais nada a perguntar (nuvem.js segue
+  // para a visão geral sozinho depois de baixar os dados).
+  document.getElementById("btn-nuvem").addEventListener("click", () => Nuvem.abrirPainel());
+
   document.getElementById("btn-pular").addEventListener("click", () => {
     Personalizacao.pular();
     location.href = "index.html";

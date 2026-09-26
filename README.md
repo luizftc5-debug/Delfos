@@ -4,7 +4,9 @@ Painel para acompanhar quatro frentes ao mesmo tempo — **Financeiro**, **Facul
 **Pessoal** — com alerta automático quando prazos de áreas diferentes caem na mesma semana. Além
 dessas quatro, você pode criar **abas suas**, com nome, ícone e cor próprios.
 
-Aplicação estática: HTML, CSS e JavaScript puros, sem instalação e sem servidor de dados.
+Aplicação estática: HTML, CSS e JavaScript puros, sem instalação. Os dados ficam no navegador — e,
+se você publicar o [back end](backend/README.md) (gratuito, na Cloudflare), sincronizam entre
+celular e computador, com anexos e versões anteriores guardados na nuvem.
 
 ## Como abrir
 

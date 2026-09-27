@@ -794,6 +794,7 @@ table.sheet tbody tr:focus-within .row-actions { opacity: 1; }
 }
 
 .modal.wide { max-width: 590px; }
+.modal.xwide { max-width: 860px; }
 
 .modal-head { padding: 24px 26px 0; }
 .modal-title { font-size: 21px; font-weight: 600; margin: 0; letter-spacing: -0.018em; line-height: 1.2; }
@@ -832,6 +833,10 @@ table.sheet tbody tr:focus-within .row-actions { opacity: 1; }
 }
 
 .field textarea { resize: vertical; min-height: 92px; line-height: 1.6; }
+
+.input.sm { padding: 6px 8px; font-size: 13px; }
+.seg.sm { padding: 2px; }
+.seg.sm button { padding: 5px 10px; font-size: 12.5px; }
 
 .input:focus,
 .field input:focus,
@@ -944,6 +949,20 @@ table.sheet tbody tr:focus-within .row-actions { opacity: 1; }
 }
 
 .dropzone:hover, .dropzone.dragover { border-color: var(--texto-2); background: var(--superficie-2); color: var(--texto); }
+
+/* Linha que o Delfos suspeita já ter sido lançada à mão — some destacada,
+   mas sem tirar o fio de leitura das outras (nada de vermelho vibrante). */
+table.sheet tr.linha-duvidosa { background: var(--st-warning-wash); }
+table.sheet tr.linha-duvidosa:hover { background: var(--st-warning-wash); }
+
+/* Colunas fixas pela revisão de importação: o texto que mais importa aqui é
+   a descrição (é o que a pessoa confere e às vezes reescreve), então ela
+   recebe o espaço que sobra em vez de ser espremida pelas colunas ao lado. */
+table.tabela-importar { table-layout: fixed; }
+table.tabela-importar td, table.tabela-importar th { overflow: hidden; padding: 8px 6px; }
+table.tabela-importar th:first-child, table.tabela-importar td:first-child { padding-left: 10px; }
+table.tabela-importar [data-descricao] { width: 100%; }
+table.tabela-importar .seg.sm button { padding: 5px 7px; }
 .dropzone strong { display: block; font-size: 14px; margin-bottom: 3px; color: var(--texto); }
 
 .anexos { display: flex; flex-direction: column; gap: 6px; }
@@ -1373,6 +1392,44 @@ table.sheet .meta { font-size: 12.5px; color: var(--texto-3); margin-top: 3px; }
   table.sheet .so-celular { display: block; }
   table.sheet .row-actions { justify-content: flex-start; margin-left: -8px; opacity: 1; }
   table.sheet tfoot td { font-size: 13px; }
+
+  /* Tabela de revisão da importação (importar.js): campos de verdade
+     (checkbox, texto, seletor, select), não só texto — a versão em cartões
+     de table.sheet acima (pensada para linhas só de leitura) esconderia
+     metade dos controles. Cada lançamento vira um bloco empilhado, um campo
+     por linha, em vez de dividir a largura pequena entre sete colunas. */
+  table.tabela-importar,
+  table.tabela-importar thead,
+  table.tabela-importar tbody,
+  table.tabela-importar tr,
+  table.tabela-importar td { display: block; width: auto !important; }
+  table.tabela-importar thead { display: none; }
+  table.tabela-importar td { padding: 0; border: none; overflow: visible; }
+  table.tabela-importar tr {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: "check data valor" "desc desc desc" "tipo tipo tipo" "cat cat cat" "badge badge badge";
+    column-gap: 10px;
+    row-gap: 8px;
+    padding: 14px 4px;
+    border-bottom: 1px solid var(--linha);
+  }
+  table.tabela-importar tbody tr:last-child { border-bottom: none; }
+  /* Com "tbody" no seletor para empatar em especificidade com as regras de
+     table.sheet tbody td:nth-child(…) acima (mesma tabela, duas classes) —
+     sem isso, aquelas ganham por serem "mais específicas" e escondem
+     checkbox, descrição e tipo aqui, que têm outro sentido nesta tabela. */
+  table.tabela-importar tbody td:nth-child(1) { display: block; grid-area: check; align-self: center; }
+  table.tabela-importar tbody td:nth-child(2) { display: block; grid-area: data; align-self: center; font-size: 12.5px; color: var(--texto-3); }
+  table.tabela-importar tbody td:nth-child(3) { display: block; grid-area: desc; }
+  table.tabela-importar tbody td:nth-child(4) { display: block; grid-area: tipo; }
+  table.tabela-importar tbody td:nth-child(5) { display: block; grid-area: cat; }
+  table.tabela-importar tbody td:nth-child(6) { display: block; grid-area: valor; text-align: right; align-self: center; }
+  table.tabela-importar tbody td:nth-child(7):empty { display: none; }
+  table.tabela-importar tbody td:nth-child(7) { display: block; grid-area: badge; }
+  table.tabela-importar .seg.sm { display: flex; }
+  table.tabela-importar .seg.sm button { flex: 1; }
+
   .cols { gap: 8px; }
   .topbar { align-items: flex-start; }
   .topbar h1 { font-size: 25px; }

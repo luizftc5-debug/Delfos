@@ -40,7 +40,7 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 | Onde | O que dá para fazer |
 |---|---|
 | **Visão geral** | Saldo, alertas de atraso e de semana cheia, agenda dos próximos 30 dias, leitura automática da situação |
-| **Financeiro** | Lançar receitas e despesas (dizendo de qual conta ou cartão saíram), ver gastos por categoria e por mês, acompanhar metas |
+| **Financeiro** | Lançar receitas e despesas (dizendo de qual conta ou cartão saíram), ver gastos por categoria e por mês, acompanhar metas, **importar o extrato do banco** (.ofx/.csv) para não esquecer de lançar |
 | **Contas e cartões** | Cadastrar contas com saldo, cadastrar cartões com fechamento e vencimento. Cada uma abre numa **página própria**, com saldo/fatura, gastos por categoria só dela e a lista de lançamentos |
 | **Investimentos** | Renda fixa, ações, fundos, cripto — o que já aplicou e quanto vale hoje, com rentabilidade calculada e distribuição por tipo |
 | **Faculdade** | Disciplinas, prazos e entregas. Cada disciplina abre em **página própria**, com avaliações e notas, prazos, materiais e resumos — em materiais e resumos dá para **anexar documentos** (PDF, slides, fotos) ou **importar do Google Drive** |
@@ -58,6 +58,22 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 - Para um lançamento entrar nesse balanço, escolha em **"Pago com"** de qual conta ou cartão ele saiu.
 
 Excluiu algo sem querer? O aviso que aparece embaixo traz **Desfazer**.
+
+### Importar o extrato do banco
+
+Esquece de lançar? Em **Financeiro → Importar extrato**, exporte o extrato pelo app do seu banco
+(a maioria oferece .ofx/.qfx; se não tiver, .csv também serve) e importe aqui. **Nenhuma senha de
+banco entra no Delfos** — o arquivo é só lido neste navegador, você confere cada linha antes de
+qualquer coisa ser salva, e pode cancelar a qualquer momento.
+
+1. No app do banco, procure por algo como "Exportar extrato" ou "Extrato para Excel/OFX".
+2. No Delfos, escolha de qual conta ou cartão é aquele extrato e selecione o arquivo.
+3. Se for .csv, confirme qual coluna é data, descrição e valor (o Delfos tenta adivinhar sozinho).
+4. Revise a lista: o Delfos já tenta acertar a categoria pelo que você categorizou antes, e avisa
+   quando um lançamento parece repetido (algo parecido já lançado perto da mesma data) — essas
+   linhas vêm desmarcadas, mas dá para marcar se for engano. Ajuste o que quiser e confirme.
+
+Importou errado? O aviso no rodapé traz **Desfazer**, que apaga todos de uma vez.
 
 ### Página de cada conta e cartão
 

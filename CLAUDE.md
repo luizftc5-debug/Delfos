@@ -51,6 +51,7 @@ Aplicação estática multi-página em `dashboard/`, sem build. Dependências ex
 | `store.js` | Camada de dados: localStorage + CRUD + backup em JSON |
 | `personalizacao.js` | Traduz perfil/preferências em como o painel se apresenta (abas ligadas, saudação, ocupação) |
 | `arquivos.js` | Anexos (PDF, slides, fotos) no IndexedDB + export/import para o backup |
+| `importar.js` | Lançamentos a partir de extrato bancário (.ofx/.qfx/.csv) — leitura, mapeamento de colunas, revisão e confirmação |
 | `entrar.html` + `entrar.js` | Entrar / criar conta / esqueci a senha: página sem barra lateral, a única que abre sem sessão |
 | `sessao.js` | Conta do usuário: endereço da API, login, cadastro, derivação da senha, porta de entrada das páginas |
 | `nuvem.js` | Sincronização com a conta (`backend/`): envio, conferência, conflito, versões, anexos, sair |
@@ -140,6 +141,43 @@ levar o carro à revisão, um recado qualquer com data. Cada item tem `tipo` (co
 compromisso/recado/outro), `data`, `local` opcional e `concluido`. Entra no `UI.compromissos()`
 unificado com `area: "pessoal"`, então aparece na agenda da home e nos alertas de semana cheia junto
 com os outros três pilares — cor própria (`--s-pessoal`, roxo) para não colidir com as demais.
+
+### Importar extrato (`importar.js`)
+
+Resolve um problema específico — esquecer de lançar, não falta de conexão com o banco. **De
+propósito, não conecta direto a nenhum banco**: exigiria credenciar o Delfos como instituição
+receptora no Open Finance Brasil (registro no Bacen, estrutura de compliance) e guardar token de
+acesso à conta bancária, uma categoria de dado sensível bem maior que qualquer outra do painel. Em
+vez disso, a pessoa exporta o extrato pelo próprio app do banco (sem senha nenhuma saindo do
+aparelho dela) e importa; o arquivo é lido só no navegador.
+
+- **Duas partes deliberadamente separadas**: funções puras de leitura (`parseOFX`, `parseCSV`,
+  `normalizarData/Valor`, `sugerirCategoria`, `provavelDuplicata` — sem tocar DOM/Store, dá para
+  testar isoladas com Node) e o assistente de 3 passos (arquivo+conta → mapear colunas, só CSV →
+  revisão e confirmação), que é quem toca `UI`/`Store`/`Financas`.
+- **OFX**: regex por campo (`<TAG>valor` até a próxima tag) lê tanto SGML (OFX 1.x, sem
+  fechamento de tag de valor) quanto XML (OFX 2.x) do mesmo jeito. Charset: decodifica UTF-8
+  primeiro; se sobrar `\uFFFD` (byte inválido), refaz como ISO-8859-1 — banco brasileiro exporta
+  nos dois.
+- **CSV**: delimitador adivinhado (`;` vs `,`) pela primeira linha; aceita uma coluna "valor" com
+  sinal OU um par "entrada"/"saída"; `sugerirMapeamento` chuta o papel de cada coluna pelo nome do
+  cabeçalho, sempre revisável antes de continuar. Linha sem data/valor reconhecível é contada e
+  pulada, nunca trava a importação inteira.
+- **Categoria aprendida do histórico** (`indiceCategoria`/`sugerirCategoria`): vocabulário de
+  palavras (≥ 4 letras) por categoria já usada, sem lista fixa de estabelecimentos — evita
+  favorecer o comércio de uma região só, e se ajusta ao vocabulário que a própria pessoa já usa nas
+  descrições.
+- **Duplicata provável** (`provavelDuplicata`): mesmo valor e tipo a até 3 dias de um lançamento
+  que já existe → entra desmarcada na revisão, nunca é bloqueada nem some sozinha. Nada é gravado
+  sem a revisão passar por `Store.inserir` linha a linha; "Desfazer" no toast remove tudo de uma
+  vez pelos ids devolvidos.
+- Passa `render` como `aoConcluir` para `Importar.abrirAssistente` (e de novo no `aoAcionar` do
+  Desfazer) — `financeiro.js` não escuta `Store.aoMudar` (só `nuvem.js` escuta, para sincronizar),
+  então sem isso a tabela ficaria com os dados antigos até a pessoa navegar para outra página.
+- Tabela de revisão (`table.tabela-importar`) tem CSS próprio, achando por conflito de especificidade
+  com as regras de `table.sheet` no mobile: ambas as classes ficam na mesma `<table>`, e sem
+  `tbody` explícito no seletor as regras genéricas (pensadas para colunas só de leitura) ganhavam
+  por especificidade e escondiam checkbox/descrição/tipo, que aqui são campos editáveis, não texto.
 
 ### Contas, cartões e saldo
 

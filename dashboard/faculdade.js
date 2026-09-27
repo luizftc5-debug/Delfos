@@ -32,7 +32,7 @@
     const prox = UI.compromissos().filter((i) => i.area === "faculdade" && (UI.diasAte(i.data) ?? -1) >= 0)[0];
     document.getElementById("s-proxima").textContent = prox ? prox.titulo : "Nada agendado";
     document.getElementById("s-proxima-d").innerHTML = prox
-      ? `${fmt.data(prox.data)} · <span class="delta flat">${UI.urgencia(prox.data).rotulo}</span>`
+      ? `${fmt.data(prox.data)}, <span class="delta flat">${UI.urgencia(prox.data).rotulo}</span>`
       : "Cadastre provas e entregas para acompanhar";
 
     renderAvisos();
@@ -51,7 +51,7 @@
         const el = document.createElement("div");
         el.className = c.multiplasAreas ? "notice warning" : "notice info";
         el.innerHTML = `<span class="ic">▲</span><span><strong>Semana de ${fmt.data(c.semana)}:</strong>
-          ${c.itens.map((i) => `${fmt.escape(i.titulo)} <span class="muted">(${fmt.dataCurta(i.data)})</span>`).join(" · ")}</span>`;
+          ${c.itens.map((i) => `${fmt.escape(i.titulo)} <span class="muted">(${fmt.dataCurta(i.data)})</span>`).join(", ")}</span>`;
         box.appendChild(el);
       });
   }
@@ -100,7 +100,7 @@
               nPrazos ? `${nPrazos} ${nPrazos === 1 ? "prazo aberto" : "prazos abertos"}` : null,
               (d.materiais || []).length ? `${d.materiais.length} ${d.materiais.length === 1 ? "material" : "materiais"}` : null,
               (d.resumos || []).length ? `${d.resumos.length} ${d.resumos.length === 1 ? "resumo" : "resumos"}` : null,
-            ].filter(Boolean).join(" · ")}</span>
+            ].filter(Boolean).join(", ")}</span>
           </a>
           ${media ? `<span class="nota-chip">${UI.fmt.decimal(media.media)}</span>` : ""}
           ${u ? `<span class="badge ${u.nivel}">${u.rotulo}</span>` : ""}
@@ -147,7 +147,7 @@
         <span class="grow">
           <span class="title ${p.concluido ? "strike" : ""}">${fmt.escape(p.descricao)}</span>
           <span class="meta">${[fmt.escape(p.tipo || "entrega"), disc && fmt.escape(disc.nome), fmt.data(p.data)]
-            .filter(Boolean).join(" · ")}</span>
+            .filter(Boolean).join(", ")}</span>
         </span>
         <span class="badge ${p.concluido ? "feito" : u.nivel}">${p.concluido ? "concluído" : u.rotulo}</span>
         <span class="row-actions">

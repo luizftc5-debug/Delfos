@@ -63,7 +63,7 @@
         <input type="checkbox" class="check" ${c.concluido ? "checked" : ""} aria-label="Marcar como concluído" />
         <span class="grow">
           <span class="title ${c.concluido ? "strike" : ""}">${fmt.escape(c.descricao)}</span>
-          <span class="meta">${fmt.escape(c.tipo || "compromisso")}${c.local ? ` · ${fmt.escape(c.local)}` : ""} · ${fmt.data(c.data)}</span>
+          <span class="meta">${fmt.escape(c.tipo || "compromisso")}${c.local ? `, ${fmt.escape(c.local)}` : ""}, ${fmt.data(c.data)}</span>
         </span>
         <span class="badge ${c.concluido ? "feito" : u.nivel}">${c.concluido ? "concluído" : u.rotulo}</span>
         <span class="row-actions">

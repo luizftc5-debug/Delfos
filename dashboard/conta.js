@@ -36,8 +36,8 @@
     document.getElementById("titulo").textContent = item.nome;
     document.getElementById("subtitulo").textContent =
       tipo === "cartao"
-        ? `${item.bandeira || "cartão"} · fecha dia ${item.fechamento} · vence dia ${item.vencimento}`
-        : `${item.instituicao || ""}${item.instituicao ? " · " : ""}${item.tipo || "conta"}`;
+        ? `${item.bandeira || "cartão"}, fecha dia ${item.fechamento}, vence dia ${item.vencimento}`
+        : `${item.instituicao || ""}${item.instituicao ? ", " : ""}${item.tipo || "conta"}`;
 
     if (tipo === "cartao") renderStatsCartao(); else renderStatsConta();
     renderCategorias();
@@ -78,7 +78,7 @@
       <div class="card tinted projetos">
         <div class="stat-label">Fatura aberta</div>
         <div class="stat-value num">${fmt.moeda(r.total)}</div>
-        <div class="stat-sub">vence ${fmt.data(r.ciclo.vencimento)} · <span class="badge ${venc.nivel}">${venc.rotulo}</span></div>
+        <div class="stat-sub">vence ${fmt.data(r.ciclo.vencimento)}, <span class="badge ${venc.nivel}">${venc.rotulo}</span></div>
       </div>
       <div class="card tinted projetos">
         <div class="stat-label">Ciclo atual</div>
@@ -102,7 +102,7 @@
       document.getElementById("limite").innerHTML = "";
       document.getElementById("limite").appendChild(
         UI.medidor({
-          rotulo: `Limite usado — ${Math.round(r.usoPercentual)}%`,
+          rotulo: `${Math.round(r.usoPercentual)}% do limite usado`,
           atual: r.total, alvo: item.limite,
           cor: r.usoPercentual >= 80 ? "var(--st-critical)" : "var(--s-projetos)",
         })
@@ -120,7 +120,7 @@
       box.appendChild(UI.vazio({ icone: "◍", titulo: "Sem gastos ainda", texto: `Lance uma despesa "Pago com" ${item.nome} para ver a distribuição aqui.` }));
       return;
     }
-    UI.barras(box, { linhas, cor: tipo === "cartao" ? "var(--s-projetos)" : "var(--s-financeiro)" });
+    UI.barras(box, { linhas, cor: "var(--serie-saida)" });
   }
 
   function renderLancamentos() {

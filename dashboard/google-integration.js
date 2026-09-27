@@ -221,7 +221,7 @@ function buscarEventos() {
         li.innerHTML = `
           <span class="grow">
             <span class="title">${UI.fmt.escape(ev.summary || "(sem título)")}</span>
-            <span class="meta">${UI.fmt.data(dia)} · ${hora}</span>
+            <span class="meta">${UI.fmt.data(dia)}, ${hora}</span>
           </span>
           <span class="badge ${u.nivel}">${u.rotulo}</span>`;
         ul.appendChild(li);

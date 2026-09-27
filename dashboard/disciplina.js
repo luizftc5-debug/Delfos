@@ -71,7 +71,7 @@
     const prox = UI.proximaAvaliacao(disciplina);
     document.getElementById("s-proxima").textContent = prox ? prox.nome || "Avaliação" : "Nada agendado";
     document.getElementById("s-proxima-d").innerHTML = prox
-      ? `${fmt.data(prox.data)} · <span class="badge ${UI.urgencia(prox.data).nivel}">${UI.urgencia(prox.data).rotulo}</span>`
+      ? `${fmt.data(prox.data)}, <span class="badge ${UI.urgencia(prox.data).nivel}">${UI.urgencia(prox.data).rotulo}</span>`
       : "Cadastre a próxima prova ou trabalho";
 
     const abertos = prazosDaDisciplina().filter((p) => !p.concluido);
@@ -84,7 +84,7 @@
     const nMat = (disciplina.materiais || []).length;
     const nRes = (disciplina.resumos || []).length;
     document.getElementById("s-conteudo").textContent = nMat + nRes;
-    document.getElementById("s-conteudo-d").textContent = `${nMat} ${nMat === 1 ? "material" : "materiais"} · ${nRes} ${nRes === 1 ? "resumo" : "resumos"}`;
+    document.getElementById("s-conteudo-d").textContent = `${nMat} ${nMat === 1 ? "material" : "materiais"}, ${nRes} ${nRes === 1 ? "resumo" : "resumos"}`;
 
     renderAvaliacoes();
     renderPrazos();
@@ -125,7 +125,7 @@
           <span class="meta">${[
             a.data ? fmt.data(a.data) : "sem data",
             `peso ${a.peso || 1}`,
-          ].join(" · ")}</span>
+          ].join(", ")}</span>
         </span>
         ${temNota
           ? `<span class="nota-chip">${fmt.escape(Number(a.nota).toLocaleString("pt-BR", { maximumFractionDigits: 2 }))}</span>`
@@ -168,7 +168,7 @@
         <input type="checkbox" class="check" ${p.concluido ? "checked" : ""} aria-label="Marcar como concluído" />
         <span class="grow">
           <span class="title ${p.concluido ? "strike" : ""}">${fmt.escape(p.descricao)}</span>
-          <span class="meta">${fmt.escape(p.tipo || "entrega")} · ${fmt.data(p.data)}</span>
+          <span class="meta">${fmt.escape(p.tipo || "entrega")}, ${fmt.data(p.data)}</span>
         </span>
         <span class="badge ${p.concluido ? "feito" : u.nivel}">${p.concluido ? "concluído" : u.rotulo}</span>
         <span class="row-actions"><button class="btn ghost sm" data-excluir>Excluir</button></span>`;
@@ -220,7 +220,7 @@
       const detalhe = [
         m.url ? fmt.escape(dominio(m.url)) : "",
         anexos.length ? `${anexos.length} ${anexos.length === 1 ? "documento anexado" : "documentos anexados"}` : "",
-      ].filter(Boolean).join(" · ");
+      ].filter(Boolean).join(", ");
 
       li.innerHTML = `
         <span class="badge faculdade" style="margin-top:2px;">${fmt.escape(m.tipo || "link")}</span>

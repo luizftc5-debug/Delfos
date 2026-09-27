@@ -36,14 +36,15 @@
 
     document.title = `${pilar.nome} · ${UI.NOME}`;
 
-    // A cor da aba é um hex do usuário, então entra como variável na página:
-    // .card.tinted e .swatch já leem --tint.
+    // A cor da aba é um hex do usuário, então entra como variável na página
+    // (--tint), para o que precisar dela.
     const raiz = document.getElementById("conteudo");
     raiz.style.setProperty("--tint", pilar.cor);
 
     const etiqueta = document.getElementById("etiqueta");
-    etiqueta.textContent = `${pilar.icone} sua aba`;
-    etiqueta.style.color = pilar.cor;
+    // O ponto do eyebrow leva a cor da aba; o texto fica na tinta normal.
+    etiqueta.textContent = "Aba criada por você";
+    etiqueta.style.setProperty("--marca", pilar.cor);
     document.getElementById("swatch-lista").style.background = pilar.cor;
 
     document.getElementById("titulo").textContent = pilar.nome;
@@ -186,7 +187,7 @@
       .filter(Boolean)
       .map(fmt.escape);
     if (c.data) partes.push(fmt.data(c.data));
-    return partes.join(" · ") || "sem detalhes";
+    return partes.join(", ") || "sem detalhes";
   }
 
   /* -------------------------------- Academia --------------------------------
@@ -315,7 +316,7 @@
           li.innerHTML = `
             <span class="grow">
               <span class="title">${fmt.escape(nomeExercicio(ex.exercicioId))}</span>
-              <span class="meta">${fmt.escape(grupoExercicio(ex.exercicioId))}${partes.length ? " · " + fmt.escape(partes.join(" · ")) : ""}</span>
+              <span class="meta">${fmt.escape(grupoExercicio(ex.exercicioId))}${partes.length ? ", " + fmt.escape(partes.join(", ")) : ""}</span>
             </span>
             <span class="row-actions">
               <button class="btn ghost sm" data-editar-ex>Editar</button>

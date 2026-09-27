@@ -526,7 +526,7 @@ const Nuvem = (() => {
           <div><dt>Código de recuperação</dt><dd data-recuperacao>…</dd></div>
           <div><dt>Anexos na nuvem</dt><dd data-cota>…</dd></div>
         </dl>
-        <button class="btn primary block" data-acao="sincronizar" type="button">↻ Sincronizar agora</button>
+        <button class="btn primary block" data-acao="sincronizar" type="button">${UI.icone("refazer")}Sincronizar agora</button>
         <button class="btn block" data-acao="versoes" type="button">Versões anteriores</button>
         <button class="btn block" data-acao="senha" type="button">Trocar senha</button>
         <button class="btn block" data-acao="codigo" type="button">Gerar novo código de recuperação</button>
@@ -571,8 +571,8 @@ const Nuvem = (() => {
         });
 
         acao("sincronizar", async (ev) => {
-          ev.target.disabled = true;
-          ev.target.textContent = "Sincronizando…";
+          ev.currentTarget.disabled = true;
+          ev.currentTarget.textContent = "Sincronizando…";
           await conferir();
           if (ler().pendente) await enviar();
           fechar(null);

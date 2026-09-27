@@ -175,7 +175,7 @@
         <span class="grow">
           <span class="title">${fmt.escape(o.descricao)}</span>
           <span class="meta">${[o.potencial && `retorno: ${o.potencial}`, o.esforco && `esforço: ${o.esforco}`]
-            .filter(Boolean).map(fmt.escape).join(" · ") || "sem detalhes"}</span>
+            .filter(Boolean).map(fmt.escape).join(", ") || "sem detalhes"}</span>
         </span>
         <span class="row-actions">
           <button class="btn ghost sm" data-virar>Virar projeto</button>

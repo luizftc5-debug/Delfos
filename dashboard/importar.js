@@ -359,7 +359,7 @@ if (typeof document !== "undefined") {
             }
             s.arquivo = file;
             s.tipoArquivo = ext === "csv" ? "csv" : "ofx";
-            modal.querySelector("[data-nome-arquivo]").textContent = `${file.name} · ${Arquivos.tamanhoLegivel(file.size)}`;
+            modal.querySelector("[data-nome-arquivo]").textContent = `${file.name}, ${Arquivos.tamanhoLegivel(file.size)}`;
             s.texto = await Importar.lerTexto(file);
             btnContinuar.disabled = false;
           }

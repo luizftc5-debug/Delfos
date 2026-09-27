@@ -40,7 +40,7 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 | Onde | O que dá para fazer |
 |---|---|
 | **Visão geral** | Saldo, alertas de atraso e de semana cheia, agenda dos próximos 30 dias, leitura automática da situação |
-| **Financeiro** | Lançar receitas e despesas (dizendo de qual conta ou cartão saíram), ver gastos por categoria e por mês, acompanhar metas, **importar o extrato do banco** (.ofx/.csv) para não esquecer de lançar |
+| **Financeiro** | O mês lido em voz alta: quanto entrou, saiu e sobrou, **para onde foi o dinheiro**, o **ritmo do mês** comparado ao anterior, gastos fixos e assinaturas detectados, o que falta pagar, metas com "Guardar", e **perguntas** que deixam a leitura do seu jeito (limite do mês, quanto guardar, dia da renda). Também lançar entradas e saídas e **importar o extrato do banco** (.ofx/.csv) para não esquecer de lançar |
 | **Contas e cartões** | Cadastrar contas com saldo, cadastrar cartões com fechamento e vencimento. Cada uma abre numa **página própria**, com saldo/fatura, gastos por categoria só dela e a lista de lançamentos |
 | **Investimentos** | Renda fixa, ações, fundos, cripto — o que já aplicou e quanto vale hoje, com rentabilidade calculada e distribuição por tipo |
 | **Faculdade** | Disciplinas, prazos e entregas. Cada disciplina abre em **página própria**, com avaliações e notas, prazos, materiais e resumos — em materiais e resumos dá para **anexar documentos** (PDF, slides, fotos) ou **importar do Google Drive** |
@@ -58,6 +58,24 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 - Para um lançamento entrar nesse balanço, escolha em **"Pago com"** de qual conta ou cartão ele saiu.
 
 Excluiu algo sem querer? O aviso que aparece embaixo traz **Desfazer**.
+
+### O Financeiro, mês a mês
+
+A aba abre com uma frase que resume o mês — quanto entrou, quanto saiu, quanto sobrou e o que mais
+pesou. As setas ao lado do mês (‹ setembro de 2026 ›) mudam tudo o que está abaixo para outro mês.
+
+- **Perguntas do Delfos**: duas perguntas curtas por vez (quanto quer gastar por mês, quanto quer
+  guardar, em que dia a renda cai, quais gastos são essenciais, se um gasto repetido é fixo).
+  Responda com um toque; "Agora não" esconde a pergunta por duas semanas. Mudou de ideia? O botão
+  **Limites e preferências**, no alto, mostra e edita todas as respostas — inclusive um limite para
+  cada categoria.
+- **Para onde foi o dinheiro**: toque numa categoria para ver só os lançamentos dela na planilha.
+- **Ritmo do mês**: a linha do gasto somado dia a dia, contra a do mês anterior. Passe o dedo (ou o
+  mouse) para ver o valor de cada dia.
+- **A pagar**: o que está marcado como pendente e as faturas abertas. "Pago" resolve com um toque.
+- **Metas**: **Guardar** soma o que você acabou de separar e diz quanto falta.
+- **Na planilha**, cada lançamento tem **repetir hoje** (a mesma conta de novo, com a data de hoje —
+  bom para gasto que se repete) e um "pendente" que vira pago ao toque.
 
 ### Importar o extrato do banco
 
@@ -104,20 +122,21 @@ Na lista de projetos, o cartão continua mostrando o resumo e a **próxima etapa
 
 ### Seu perfil e os ajustes do painel
 
-Clique no seu nome, no alto da barra lateral, para abrir o cartão de perfil. **É o único lugar de
-configuração** — tema e backup ficam ali dentro, junto com sua ficha.
+Clique na sua foto e nome, **no pé da barra lateral**, para abrir o cartão de perfil. **É o único
+lugar de configuração**, dividido em três abas: **Sobre você** (sua ficha), **Painel** (tema e
+quais abas aparecem) e **Conta e dados** (sincronização, backup, refazer a configuração, sair).
 
 - **Editar perfil** abre um formulário em partes: quem você é (nome, data de nascimento, pronomes,
   telefone, e-mail, cidade), ocupação (o que você faz e o momento — estudo, trabalho, os dois),
   vida acadêmica (só aparece para quem estuda: curso, instituição, semestre, matrícula, início do
   curso) e dois textos livres — sobre você e seus objetivos do momento. Só o que estiver preenchido
   aparece na ficha; a idade é calculada sozinha a partir da data de nascimento.
-- **Enviar foto** troca as iniciais por uma foto sua. A imagem é recortada e reduzida antes de
-  salvar, então ocupa poucos KB.
-- **Abas do painel**: ligue ou desligue Pessoal, Financeiro, Faculdade e Projetos, e renomeie cada
-  uma à vontade — útil se alguma não fizer sentido para você. Desligar não apaga nada, só tira da
-  barra lateral; dá para religar a qualquer momento.
-- **Tema do painel**: claro ou escuro. Muda na hora.
+- **Toque na foto** (ou nas iniciais) para trocar por uma foto sua. A imagem é recortada e reduzida
+  antes de salvar, então ocupa poucos KB.
+- **Abas do painel**: ligue ou desligue Pessoal, Financeiro, Faculdade e Projetos pelo interruptor, e
+  renomeie cada uma à vontade — útil se alguma não fizer sentido para você. Desligar não apaga nada,
+  só tira da barra lateral; dá para religar a qualquer momento.
+- **Tema**: claro ou escuro, escolhido pela amostra. Muda na hora.
 - **Backup e dados**: exportar, importar ou apagar tudo.
 - **Refazer configuração inicial**: reabre o assistente de boas-vindas (veja abaixo), já preenchido
   com o que você tinha salvo.
@@ -226,8 +245,8 @@ com os prazos da faculdade e os deadlines dos projetos.
 No próprio navegador (localStorage) — nada é enviado para lugar nenhum. Consequência prática: os
 dados ficam **naquele navegador, naquele computador**.
 
-Para backup ou para usar em outro aparelho, clique no **seu nome** na barra lateral e depois em
-**Backup e dados**:
+Para backup ou para usar em outro aparelho, clique no **seu nome** (pé da barra lateral), abra
+**Conta e dados** e depois **Backup e dados**:
 
 - **Exportar** gera um arquivo `.json` com tudo, inclusive os documentos anexados
 - **Importar** restaura esse arquivo em qualquer navegador, anexos e todos

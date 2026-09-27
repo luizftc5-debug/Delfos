@@ -4,9 +4,72 @@
    =========================================================================== */
 
 const UI = (() => {
-  /** Nome e versão do painel — aparecem na marca do rodapé da barra lateral. */
+  /** Nome e versão do painel — aparecem na marca do alto da barra lateral. */
   const NOME = "Delfos";
-  const VERSAO = "1.3";
+  const VERSAO = "1.4";
+
+  /* -------------------------------- Ícones -------------------------------- */
+
+  // Desenhados para o Delfos (grade de 24, traço 1,6, pontas redondas) em vez
+  // de glifos digitados — um "◆" ou "☁" muda de cara em cada sistema e lia
+  // como improviso. Cada entrada é só o miolo do <svg>; a cor vem do texto.
+  const ICONES = {
+    // O ônfalo de Delfos, a pedra do "centro do mundo" — a marca do painel.
+    onfalo: '<path d="M4.5 19c0-7.6 3.4-13.5 7.5-13.5S19.5 11.4 19.5 19"/><path d="M3 19h18"/><path d="M6.4 13.6c3.6 1.5 7.6 1.5 11.2 0"/><path d="M8.6 9c2.2.9 4.6.9 6.8 0"/>',
+    home: '<path d="M2.8 12s3.4-6.3 9.2-6.3 9.2 6.3 9.2 6.3-3.4 6.3-9.2 6.3S2.8 12 2.8 12z"/><circle cx="12" cy="12" r="2.7"/>',
+    pessoal: '<circle cx="12" cy="8.2" r="3.5"/><path d="M4.8 19.5c1.1-3.6 3.8-5.4 7.2-5.4s6.1 1.8 7.2 5.4"/>',
+    financeiro: '<rect x="3.5" y="6.5" width="17" height="12.5" rx="2.5"/><path d="M3.5 10h17"/><path d="M7 15h3"/>',
+    faculdade: '<path d="M12 6.8c-2-1.5-5-2-8.5-1.5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5v-13c-3.5-.5-6.5 0-8.5 1.5z"/><path d="M12 6.8v13"/>',
+    projetos: '<path d="M3.5 17 9 11.5l3.8 3.8L20.5 7.5"/><path d="M15 7.5h5.5V13"/>',
+    mais: '<path d="M12 5.5v13M5.5 12h13"/>',
+    importar: '<path d="M12 4v10.5"/><path d="M7.8 10.5 12 14.7l4.2-4.2"/><path d="M4.5 15.5v2.5c0 .8.7 1.5 1.5 1.5h12c.8 0 1.5-.7 1.5-1.5v-2.5"/>',
+    exportar: '<path d="M12 14.5V4"/><path d="M7.8 8.2 12 4l4.2 4.2"/><path d="M4.5 15.5v2.5c0 .8.7 1.5 1.5 1.5h12c.8 0 1.5-.7 1.5-1.5v-2.5"/>',
+    arquivo: '<path d="M13.5 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z"/><path d="M13.5 3.5V9H19"/>',
+    anexar: '<path d="M13.5 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z"/><path d="M13.5 3.5V9H19"/><path d="M12 17.5v-5.5"/><path d="m9.6 14.3 2.4-2.4 2.4 2.4"/>',
+    nuvem: '<path d="M7.2 18.5h9.6a4 4 0 0 0 .7-7.94 5.5 5.5 0 0 0-10.6 1.2A3.4 3.4 0 0 0 7.2 18.5z"/>',
+    sair: '<path d="M9.5 20H6.5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3"/><path d="m15.5 16 4-4-4-4"/><path d="M19.5 12H9.5"/>',
+    refazer: '<path d="M4.6 12.5a7.5 7.5 0 1 0 2.3-6"/><path d="M4.5 4.5V9H9"/>',
+    fechar: '<path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/>',
+    check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+    camera: '<path d="M4 8.5c0-.8.7-1.5 1.5-1.5h2.3l1.4-2h5.6l1.4 2h2.3c.8 0 1.5.7 1.5 1.5v9c0 .8-.7 1.5-1.5 1.5h-13c-.8 0-1.5-.7-1.5-1.5z"/><circle cx="12" cy="12.8" r="3.3"/>',
+    esquerda: '<path d="m14.5 6-6 6 6 6"/>',
+    direita: '<path d="m9.5 6 6 6-6 6"/>',
+    abaixo: '<path d="m7 10 5 5 5-5"/>',
+    acima: '<path d="m7 14 5-5 5 5"/>',
+    busca: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',
+    editar: '<path d="M4.5 19.5h4l10-10a2.8 2.8 0 0 0-4-4l-10 10z"/><path d="m13 7 4 4"/>',
+    lixeira: '<path d="M4.5 7h15"/><path d="M9.5 7V4.8h5V7"/><path d="M6.5 7l.8 11.5c.1 1 .9 1.5 1.7 1.5h6c.8 0 1.6-.5 1.7-1.5L17.5 7"/>',
+    alvo: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="12" r="1.2"/>',
+    calendario: '<rect x="3.8" y="5.5" width="16.4" height="14.5" rx="2.5"/><path d="M3.8 10h16.4M8 3.5v4M16 3.5v4"/>',
+    relogio: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    vazio: '<circle cx="12" cy="12" r="8" stroke-dasharray="2.4 3"/>',
+    banco: '<path d="M3.5 9.5 12 4.5l8.5 5"/><path d="M5.5 10v7M10 10v7M14 10v7M18.5 10v7"/><path d="M3.5 19.5h17"/>',
+    cartao: '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18"/>',
+    investimentos: '<path d="M4 19.5h16"/><path d="M6.5 16v-4M11 16V8.5M15.5 16v-6M20 16V5.5"/>',
+    pergunta: '<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.6a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.6"/><path d="M12 17v.1"/>',
+    lampada: '<path d="M9 17.5h6M10 20.5h4"/><path d="M8.5 14.5A5.5 5.5 0 1 1 15.5 14.5c-.7.6-1 1.4-1 2.2V17.5h-5v-.8c0-.8-.3-1.6-1-2.2z"/>',
+    subiu: '<path d="M4 16.5 9.5 11l3.5 3.5 7-7"/><path d="M15 7.5h5v5"/>',
+    desceu: '<path d="M4 7.5 9.5 13l3.5-3.5 7 7"/><path d="M15 16.5h5v-5"/>',
+    repetir: '<path d="M17 3.5 20 6.5l-3 3"/><path d="M4 11.5v-1a4 4 0 0 1 4-4h12"/><path d="M7 20.5 4 17.5l3-3"/><path d="M20 12.5v1a4 4 0 0 1-4 4H4"/>',
+    cofre: '<path d="M5.5 11.5c0-3.3 2.9-5.5 6.5-5.5 1.3 0 2.5.3 3.5.8l2.5-1.3-.5 3c1 1 1.5 2.1 1.5 3v2.5l-2 1v3.5h-2.5v-2h-5v2H7v-3a5 5 0 0 1-1.5-4z"/><path d="M10 9h3.5"/>',
+    alerta: '<path d="M10.3 4.6 2.9 17.4A2 2 0 0 0 4.6 20.4h14.8a2 2 0 0 0 1.7-3L13.7 4.6a2 2 0 0 0-3.4 0z"/><path d="M12 9.5v4.5M12 16.9v.1"/>',
+    sol: '<circle cx="12" cy="12" r="3.8"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>',
+    lua: '<path d="M19.5 14.5A7.5 7.5 0 0 1 9.5 4.5a7.5 7.5 0 1 0 10 10z"/>',
+    usuario: '<circle cx="12" cy="8.2" r="3.5"/><path d="M4.8 19.5c1.1-3.6 3.8-5.4 7.2-5.4s6.1 1.8 7.2 5.4"/>',
+    painel: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9 4.5v15"/>',
+    chave: '<circle cx="8" cy="15" r="3.8"/><path d="m10.8 12.3 8.2-8.2M16 7l2.5 2.5M13.5 9.5 15.5 11.5"/>',
+    ajustes: '<path d="M4 7.5h9M17 7.5h3M4 16.5h3M11 16.5h9"/><circle cx="15" cy="7.5" r="2"/><circle cx="9" cy="16.5" r="2"/>',
+  };
+
+  // Glifos que as páginas ainda passam para UI.vazio(): viram o ícone certo.
+  const GLIFO_PARA_ICONE = { "＋": "mais", "◎": "alvo", "◷": "relogio", "▤": "faculdade", "▣": "banco", "✎": "editar", "◫": "arquivo" };
+
+  /** SVG de um ícone do Delfos (vazio se o nome não existir). */
+  function icone(nome, classe = "") {
+    const miolo = ICONES[nome];
+    if (!miolo) return "";
+    return `<svg class="ico ${classe}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${miolo}</svg>`;
+  }
 
   /* ------------------------------ Formatos ------------------------------- */
 
@@ -281,12 +344,14 @@ const UI = (() => {
 
   /* -------------------------------- Layout -------------------------------- */
 
+  // `icone` aqui é o nome de um desenho de ICONES; as abas criadas pelo
+  // usuário guardam um glifo (Store.ICONES_PILAR), que é dado dele.
   const PAGINAS = [
-    { id: "home", rotulo: "Visão geral", href: "index.html", cor: "", icone: "◆" },
-    { id: "pessoal", rotulo: "Pessoal", href: "pessoal.html", cor: "pessoal", icone: "●" },
-    { id: "financeiro", rotulo: "Financeiro", href: "financeiro.html", cor: "financeiro", icone: "$" },
-    { id: "faculdade", rotulo: "Faculdade", href: "faculdade.html", cor: "faculdade", icone: "▤" },
-    { id: "projetos", rotulo: "Projetos", href: "projetos.html", cor: "projetos", icone: "◇" },
+    { id: "home", rotulo: "Visão geral", href: "index.html", cor: "", icone: "home" },
+    { id: "pessoal", rotulo: "Pessoal", href: "pessoal.html", cor: "pessoal", icone: "pessoal" },
+    { id: "financeiro", rotulo: "Financeiro", href: "financeiro.html", cor: "financeiro", icone: "financeiro" },
+    { id: "faculdade", rotulo: "Faculdade", href: "faculdade.html", cor: "faculdade", icone: "faculdade" },
+    { id: "projetos", rotulo: "Projetos", href: "projetos.html", cor: "projetos", icone: "projetos" },
   ];
 
   // Páginas de detalhe se acendem no item de nível de cima a que pertencem.
@@ -400,16 +465,14 @@ const UI = (() => {
     const itens = paginas().map((p) => {
       const aberto = p.id === grupoAtivo;
       const subs = aberto ? subItens(p.id, ativo, idAtivo) : [];
-      // As abas criadas guardam um hex próprio, então a cor vai inline; as
-      // fixas usam a classe do pilar, que segue os tokens do tema.
-      const estiloIcone = p.corHex
-        ? aberto
-          ? ` style="background:${p.corHex}; color:#fff;"`
-          : ` style="background:color-mix(in srgb, ${p.corHex} 15%, transparent); color:${p.corHex};"`
-        : "";
+      // As abas criadas guardam um hex próprio, então a cor vai inline (como
+      // variável); as fixas usam a classe do pilar, que segue o tema.
+      const iconeHTML = p.corHex
+        ? `<span class="nav-icon propria" style="--cor-aba:${fmt.escape(p.corHex)}">${fmt.escape(p.icone)}</span>`
+        : `<span class="nav-icon ${p.cor}">${icone(p.icone)}</span>`;
       return `
-        <a class="nav-item ${aberto ? "active" : ""}" href="${p.href}">
-          <span class="nav-icon ${p.cor}"${estiloIcone}>${fmt.escape(p.icone)}</span>
+        <a class="nav-item ${aberto ? "active" : ""}" href="${p.href}"${aberto ? ' aria-current="page"' : ""}>
+          ${iconeHTML}
           <span class="nav-label">${fmt.escape(p.rotulo)}</span>
           ${c[p.id] ? `<span class="nav-count ${p.id === "home" ? "alert" : ""}">${c[p.id]}</span>` : ""}
         </a>
@@ -418,27 +481,30 @@ const UI = (() => {
           .join("")}</div>` : ""}`;
     }).join("");
 
-    const linhaCurso = [perfil.curso, perfil.semestre ? `${fmt.ordinal(perfil.semestre)} sem` : ""]
-      .filter(Boolean)
-      .join(" · ");
+    const linhaCurso = perfil.curso
+      ? `${perfil.curso}${perfil.semestre ? `, ${fmt.ordinal(perfil.semestre)} semestre` : ""}`
+      : Personalizacao.ocupacaoResumo() || "Perfil e ajustes";
 
     el.innerHTML = `
-      <button class="brand" id="btn-perfil" type="button" title="Ver e editar seu perfil">
-        ${avatarHTML(perfil)}
-        <span class="brand-text">
-          <span class="brand-name">${fmt.escape(perfil.nome || "Seu nome")}</span>
-          <span class="brand-sub">${fmt.escape(linhaCurso || "definir curso")}</span>
-        </span>
-        <span class="brand-caret">▾</span>
-      </button>
-      <div class="nav-eyebrow">Painel</div>
-      <nav class="nav">${itens}</nav>
-      <button class="nav-nova" id="btn-nova-aba" type="button">＋ Nova aba</button>
+      <a class="marca-topo" href="index.html" title="Visão geral">
+        ${icone("onfalo")}
+        <span class="marca-nome">${fmt.escape(NOME)}</span>
+        <span class="marca-versao">v${fmt.escape(VERSAO)}</span>
+      </a>
+      <nav class="nav" aria-label="Abas do painel">${itens}</nav>
+      <button class="nav-nova" id="btn-nova-aba" type="button">${icone("mais")}Nova aba</button>
       <div class="sidebar-foot">
-        <div class="marca">${fmt.escape(NOME)} <span>v${fmt.escape(VERSAO)}</span></div>
+        <button class="brand" id="btn-perfil" type="button" title="Perfil, tema, abas e conta">
+          ${avatarHTML(perfil)}
+          <span class="brand-text">
+            <span class="brand-name">${fmt.escape(perfil.nome || "Seu nome")}</span>
+            <span class="brand-sub">${fmt.escape(linhaCurso)}</span>
+          </span>
+          <span class="brand-caret">${icone("acima")}</span>
+        </button>
       </div>`;
 
-    document.getElementById("btn-perfil").addEventListener("click", abrirPerfil);
+    document.getElementById("btn-perfil").addEventListener("click", () => abrirPerfil());
     document.getElementById("btn-nova-aba").addEventListener("click", novaAba);
 
     // No celular a barra vira uma faixa rolável: traz a aba atual para a vista,
@@ -543,7 +609,7 @@ const UI = (() => {
 
     const linhaCampo = (c, i) => {
       const tipoRotulo = Store.TIPOS_CAMPO.find((t) => t.valor === c.tipo)?.rotulo || c.tipo;
-      const meta = [tipoRotulo, c.naLista ? "na lista" : "", c.obrigatorio ? "obrigatório" : ""].filter(Boolean).join(" · ");
+      const meta = [tipoRotulo, c.naLista ? "na lista" : "", c.obrigatorio ? "obrigatório" : ""].filter(Boolean).join(", ");
       return `
         <li data-id="${fmt.escape(c.id)}">
           <span class="grow">
@@ -698,7 +764,8 @@ const UI = (() => {
    * backup. É o único lugar de configuração do painel — por isso concentra o
    * que antes ficava espalhado no rodapé da barra lateral.
    */
-  function abrirPerfil() {
+  function abrirPerfil(aba) {
+    const abaInicial = ["sobre", "painel", "conta"].includes(aba) ? aba : "sobre";
     const e = Store.estado();
     const p = e.perfil || {};
 
@@ -713,12 +780,13 @@ const UI = (() => {
     }).length;
 
     const anos = idade(p.dataNascimento);
-    const linha = [p.instituicao, p.cidade].filter(Boolean).join(" · ");
+    const linha = [p.instituicao, p.cidade].filter(Boolean).join(", ");
     const ocupacao = Personalizacao.ocupacaoResumo();
 
     // Só entram na ficha as informações preenchidas — campo vazio não vira linha.
     const dados = [
-      ["Nascimento", p.dataNascimento ? `${fmt.data(p.dataNascimento)}${anos !== null ? ` · ${anos} anos` : ""}` : ""],
+      ["Nascimento", p.dataNascimento ? `${fmt.dataPorExtenso(p.dataNascimento)}${anos !== null ? `, ${anos} anos` : ""}` : ""],
+      ["Pronomes", p.pronomes],
       ["Telefone", p.telefone],
       ["E-mail", p.email],
       ["Cidade", p.cidade],
@@ -727,24 +795,33 @@ const UI = (() => {
       ["Início do curso", p.ingresso],
     ].filter(([, v]) => v);
 
-    const textos = [["Sobre", p.bio], ["Objetivos", p.objetivos]].filter(([, v]) => v);
+    const textos = [["Sobre", p.bio], ["Objetivos do momento", p.objetivos]].filter(([, v]) => v);
     const atual = tema.atual();
+    const logado = typeof Sessao !== "undefined" && Sessao.ativo() && Sessao.logado();
+    const iconeDaAba = (id) => PAGINAS.find((x) => x.id === id)?.icone || "";
 
     const html = `
       <div class="perfil-topo">
-        ${avatarHTML(p, "avatar")}
+        <button class="avatar-botao" data-acao="foto" type="button" title="${p.foto ? "Trocar foto" : "Enviar foto"}" aria-label="${p.foto ? "Trocar foto" : "Enviar foto"}">
+          ${avatarHTML(p, "avatar")}
+          <span class="avatar-cam">${icone("camera")}</span>
+        </button>
         <div style="min-width:0;">
           <div class="perfil-nome">${fmt.escape(p.nome || "Seu nome")}</div>
           <div class="perfil-linha">${fmt.escape(ocupacao || "Ocupação não informada")}</div>
           ${linha ? `<div class="perfil-linha muted">${fmt.escape(linha)}</div>` : ""}
-          <div class="perfil-foto-acoes">
-            <button class="btn sm" data-acao="foto" type="button">${p.foto ? "Trocar foto" : "Enviar foto"}</button>
-            ${p.foto ? `<button class="btn ghost sm" data-acao="tirar-foto" type="button">Remover</button>` : ""}
-          </div>
-          <input type="file" accept="image/*" class="hidden" data-arquivo-foto />
+          ${p.foto ? `<div class="perfil-foto-acoes"><button class="btn ghost sm" data-acao="tirar-foto" type="button" style="margin-left:-10px;">Remover foto</button></div>` : ""}
         </div>
+        <input type="file" accept="image/*" class="hidden" data-arquivo-foto />
       </div>
-      <div class="modal-body">
+
+      <div class="abas perfil-abas" role="tablist" aria-label="Seções do perfil">
+        <button type="button" role="tab" data-aba-perfil="sobre">Sobre você</button>
+        <button type="button" role="tab" data-aba-perfil="painel">Painel</button>
+        <button type="button" role="tab" data-aba-perfil="conta">Conta e dados</button>
+      </div>
+
+      <div class="perfil-painel" role="tabpanel" data-painel="sobre">
         <div class="perfil-stats">
           <div class="perfil-stat"><b>${disciplinas}</b><span>${disciplinas === 1 ? "disciplina" : "disciplinas"}</span></div>
           <div class="perfil-stat"><b>${registros}</b><span>registros</span></div>
@@ -753,56 +830,91 @@ const UI = (() => {
 
         ${dados.length ? `<dl class="ficha">${dados
           .map(([k, v]) => `<div><dt>${fmt.escape(k)}</dt><dd>${fmt.escape(v)}</dd></div>`)
-          .join("")}</dl>` : `<p class="card-note" style="margin:0;">Nenhum dado pessoal preenchido ainda — use “Editar perfil” para completar sua ficha.</p>`}
+          .join("")}</dl>` : `<p class="card-note" style="margin:0;">Nenhum dado pessoal preenchido ainda. Use “Editar perfil” para completar a sua ficha.</p>`}
 
         ${textos.map(([k, v]) => `
           <div class="perfil-texto">
-            <div class="stat-label">${fmt.escape(k)}</div>
+            <div class="rotulo">${fmt.escape(k)}</div>
             <p>${fmt.escape(v)}</p>
           </div>`).join("")}
+      </div>
 
-        <div class="perfil-ajustes">
-          <div class="field">
-            <label>Tema do painel</label>
-            <div class="seg" data-tema>
-              ${tema.OPCOES.map((o) => `<button type="button" data-valor="${o.valor}" aria-pressed="${String(o.valor === atual)}">${o.rotulo}</button>`).join("")}
-            </div>
+      <div class="perfil-painel" role="tabpanel" data-painel="painel" hidden>
+        <div class="ajuste">
+          <div class="ajuste-titulo">Tema</div>
+          <div class="temas" data-tema>
+            ${tema.OPCOES.map((o) => `
+              <button type="button" class="tema-opcao" data-valor="${o.valor}" aria-pressed="${String(o.valor === atual)}">
+                <span class="tema-amostra ${o.valor === "light" ? "claro" : "escuro"}"><i></i><i></i></span>
+                <span class="tema-nome">${o.rotulo}${icone("check")}</span>
+              </button>`).join("")}
           </div>
+        </div>
 
-          <div class="field">
-            <label>Abas do painel</label>
-            <ul class="list" data-abas>
-              ${Personalizacao.abasFixas().map((a) => `
-                <li>
-                  <input type="checkbox" class="check" data-toggle-aba="${a.id}" ${a.ativo ? "checked" : ""}
-                         aria-label="Incluir aba ${fmt.escape(a.rotuloPadrao)}" />
-                  <span class="grow">
-                    <input type="text" class="assistente-aba-nome" data-nome-aba="${a.id}"
-                           value="${fmt.escape(a.rotulo)}" ${a.ativo ? "" : "disabled"} />
-                  </span>
-                </li>`).join("")}
-            </ul>
-            <span class="hint">Desligar não apaga o que já está cadastrado — só some da barra.</span>
-          </div>
-
-          ${typeof Nuvem !== "undefined" ? `
-          <button class="btn block" data-acao="nuvem" type="button">☁ Conta e sincronização</button>
-          <span class="hint">${fmt.escape(Nuvem.situacao().texto)}</span>
-          ${Sessao.ativo() && Sessao.logado() ? `<button class="btn ghost block" data-acao="sair" type="button">Sair da conta</button>` : ""}` : ""}
-          <button class="btn block" data-acao="backup" type="button">⤓ Backup e dados</button>
-          <span class="hint" data-uso>Calculando o que está guardado…</span>
-          <button class="btn block" data-acao="reconfigurar" type="button">↻ Refazer configuração inicial</button>
+        <div class="ajuste">
+          <div class="ajuste-titulo">Abas do painel</div>
+          <p class="ajuste-texto">Desligar só tira a aba da barra; nada do que está nela é apagado. O nome dá para trocar aqui mesmo.</p>
+          <ul class="abas-lista" data-abas>
+            ${Personalizacao.abasFixas().map((a) => `
+              <li class="${a.ativo ? "" : "desligada"}" style="--marca: var(--s-${a.id})">
+                <span class="nav-icon">${icone(iconeDaAba(a.id))}</span>
+                <input type="text" class="aba-nome" data-nome-aba="${a.id}" value="${fmt.escape(a.rotulo)}"
+                       aria-label="Nome da aba ${fmt.escape(a.rotuloPadrao)}" ${a.ativo ? "" : "disabled"} />
+                <input type="checkbox" class="switch" role="switch" data-toggle-aba="${a.id}" ${a.ativo ? "checked" : ""}
+                       aria-label="Mostrar a aba ${fmt.escape(a.rotuloPadrao)}" />
+              </li>`).join("")}
+          </ul>
         </div>
       </div>
-      <div class="modal-foot">
+
+      <div class="perfil-painel" role="tabpanel" data-painel="conta" hidden>
+        <div class="menu-acoes">
+          ${typeof Nuvem !== "undefined" ? `
+          <button class="menu-acao" data-acao="nuvem" type="button">
+            ${icone("nuvem")}
+            <span class="grow"><span class="t">Conta e sincronização</span><span class="d">${fmt.escape(Nuvem.situacao().texto)}</span></span>
+            ${icone("direita", "seta")}
+          </button>` : ""}
+          <button class="menu-acao" data-acao="backup" type="button">
+            ${icone("exportar")}
+            <span class="grow"><span class="t">Backup e dados</span><span class="d" data-uso>Calculando o que está guardado…</span></span>
+            ${icone("direita", "seta")}
+          </button>
+          <button class="menu-acao" data-acao="reconfigurar" type="button">
+            ${icone("refazer")}
+            <span class="grow"><span class="t">Refazer a configuração inicial</span><span class="d">Volta ao assistente de boas-vindas. Nada é apagado.</span></span>
+            ${icone("direita", "seta")}
+          </button>
+          ${logado ? `
+          <button class="menu-acao perigo" data-acao="sair" type="button">
+            ${icone("sair")}
+            <span class="grow"><span class="t">Sair da conta</span><span class="d">Os dados deste navegador são apagados; continuam na sua conta.</span></span>
+          </button>` : ""}
+        </div>
+      </div>
+
+      <div class="modal-foot" style="padding-top:18px;">
         <button class="btn" data-acao="fechar" type="button">Fechar</button>
-        <button class="btn primary" data-acao="editar" type="button">Editar perfil</button>
+        <button class="btn primary" data-acao="editar" type="button">${icone("editar")}Editar perfil</button>
       </div>`;
 
     abrirModal(html, {
-      classe: "wide",
+      classe: "perfil",
       aoMontar(modal, fechar) {
         const entrada = modal.querySelector("[data-arquivo-foto]");
+        let abaAtual = abaInicial;
+
+        // Abas internas: mostram um painel por vez, sem fechar o cartão.
+        const mostrarAba = (id) => {
+          abaAtual = id;
+          modal.querySelectorAll("[data-aba-perfil]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.abaPerfil === id)));
+          modal.querySelectorAll("[data-painel]").forEach((pn) => { pn.hidden = pn.dataset.painel !== id; });
+        };
+        modal.querySelector(".perfil-abas").addEventListener("click", (ev) => {
+          const b = ev.target.closest("[data-aba-perfil]");
+          if (b) mostrarAba(b.dataset.abaPerfil);
+        });
+        mostrarAba(abaInicial);
 
         modal.querySelector('[data-acao="foto"]').addEventListener("click", () => entrada.click());
 
@@ -815,7 +927,7 @@ const UI = (() => {
             fechar(null);
             montarLayout(paginaAtiva, opcoesAtivas);
             toast("Foto atualizada.");
-            abrirPerfil();
+            abrirPerfil(abaAtual);
           } catch (err) {
             toast(err.message);
           }
@@ -826,15 +938,15 @@ const UI = (() => {
           fechar(null);
           montarLayout(paginaAtiva, opcoesAtivas);
           toast("Foto removida.");
-          abrirPerfil();
+          abrirPerfil(abaAtual);
         });
 
         // Tema: troca na hora, sem fechar o cartão.
         modal.querySelector("[data-tema]").addEventListener("click", (ev) => {
-          const b = ev.target.closest("button");
+          const b = ev.target.closest("[data-valor]");
           if (!b) return;
           tema.definir(b.dataset.valor);
-          modal.querySelectorAll("[data-tema] button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+          modal.querySelectorAll("[data-tema] [data-valor]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
         });
 
         modal.querySelector('[data-acao="backup"]').addEventListener("click", () => {
@@ -864,6 +976,7 @@ const UI = (() => {
           const id = chk.dataset.toggleAba;
           Store.definirPreferencias({ abasFixas: { [id]: { ativo: chk.checked } } });
           modal.querySelector(`[data-nome-aba="${id}"]`).disabled = !chk.checked;
+          chk.closest("li").classList.toggle("desligada", !chk.checked);
           montarLayout(paginaAtiva, opcoesAtivas);
         });
         modal.querySelector("[data-abas]").addEventListener("input", (ev) => {
@@ -884,11 +997,11 @@ const UI = (() => {
             campos: camposPerfil(),
             largo: true,
           });
-          if (!v) return abrirPerfil();
+          if (!v) return abrirPerfil(abaAtual);
           Store.definirPerfil(v);
           montarLayout(paginaAtiva, opcoesAtivas);
           toast("Perfil atualizado.");
-          abrirPerfil();
+          abrirPerfil("sobre");
         });
 
         modal.querySelector('[data-acao="fechar"]').addEventListener("click", () => fechar(null));
@@ -898,11 +1011,11 @@ const UI = (() => {
         if (typeof Arquivos !== "undefined" && Arquivos.disponivel) {
           Arquivos.uso().then((u) => {
             alvo.textContent = u.quantidade
-              ? `${u.quantidade} ${u.quantidade === 1 ? "anexo guardado" : "anexos guardados"} · ${Arquivos.tamanhoLegivel(u.bytes)} neste navegador.`
-              : "Nenhum documento anexado ainda.";
-          }).catch(() => { alvo.textContent = ""; });
+              ? `Exportar ou importar tudo. ${u.quantidade} ${u.quantidade === 1 ? "anexo guardado" : "anexos guardados"}, ${Arquivos.tamanhoLegivel(u.bytes)} neste navegador.`
+              : "Exportar ou importar tudo o que está cadastrado, num arquivo só.";
+          }).catch(() => { alvo.textContent = "Exportar ou importar tudo o que está cadastrado."; });
         } else {
-          alvo.textContent = "";
+          alvo.textContent = "Exportar ou importar tudo o que está cadastrado.";
         }
       },
     });
@@ -1241,9 +1354,11 @@ const UI = (() => {
             <input type="hidden" name="${c.nome}" value="" />
             <input type="file" multiple class="hidden" data-entrada />
             <div class="anexos" data-lista>${lista.map(anexoLinhaHTML).join("")}</div>
-            <div class="dropzone" data-zona tabindex="0" role="button">
+            <div class="dropzone" data-zona tabindex="0" role="button" aria-label="Anexar documento">
+              <span class="dz-icone">${icone("anexar")}</span>
               <strong>Anexar documento</strong>
-              Clique aqui ou arraste os arquivos${typeof Arquivos !== "undefined" ? ` (até ${Arquivos.LIMITE_MB} MB cada)` : ""}
+              <span>Clique para escolher ou arraste os arquivos até aqui</span>
+              ${typeof Arquivos !== "undefined" ? `<span>PDF, slides, fotos, até ${Arquivos.LIMITE_MB} MB cada</span>` : ""}
             </div>
           </div>`;
         break;
@@ -1276,9 +1391,9 @@ const UI = (() => {
     return `<div class="anexo" data-anexo-id="${fmt.escape(a.id || "")}" ${pendente ? 'data-pendente="1"' : ""}>
         <span class="anexo-ic ${cls.classe}">${fmt.escape(cls.rotulo)}</span>
         <span class="anexo-nome">${fmt.escape(a.nome)}
-          <span class="anexo-meta">${fmt.escape(tam)}${pendente ? " · a salvar" : ""}</span>
+          <span class="anexo-meta">${fmt.escape(tam)}${pendente ? ", a salvar" : ""}</span>
         </span>
-        <button class="btn ghost sm" data-remover type="button" aria-label="Remover anexo">✕</button>
+        <button class="btn ghost sm icon" data-remover type="button" aria-label="Remover anexo" title="Remover">${icone("fechar")}</button>
       </div>`;
   }
 
@@ -1394,8 +1509,8 @@ const UI = (() => {
           <div class="perfil-stat"><b data-anexos-n>—</b><span>anexos</span></div>
           <div class="perfil-stat"><b data-anexos-mb>—</b><span>em arquivos</span></div>
         </div>
-        <button class="btn primary block" data-acao="exportar" type="button">⤓ Exportar backup (.json)</button>
-        <button class="btn block" data-acao="importar" type="button">⤒ Importar backup</button>
+        <button class="btn primary block" data-acao="exportar" type="button">${icone("exportar")}Exportar backup (.json)</button>
+        <button class="btn block" data-acao="importar" type="button">${icone("importar")}Importar backup</button>
         <input type="file" accept="application/json" class="hidden" data-arquivo />
         <span class="hint">O backup leva junto os documentos anexados nas disciplinas, então o arquivo pode ficar grande.</span>
         <button class="btn danger block" data-acao="limpar" type="button">Apagar todos os dados</button>
@@ -1430,7 +1545,7 @@ const UI = (() => {
             toast(`Não foi possível exportar: ${err.message}`);
           }
           btnExportar.disabled = false;
-          btnExportar.textContent = "⤓ Exportar backup (.json)";
+          btnExportar.innerHTML = `${icone("exportar")}Exportar backup (.json)`;
         });
 
         modal.querySelector('[data-acao="importar"]').addEventListener("click", () => arquivo.click());
@@ -1478,11 +1593,13 @@ const UI = (() => {
 
   /* ---------------------------- Estado vazio ------------------------------- */
 
-  function vazio({ icone = "＋", titulo, texto, rotuloAcao, aoAcionar }) {
+  function vazio({ icone: nomeIcone = "mais", titulo, texto, rotuloAcao, aoAcionar }) {
     const el = document.createElement("div");
     el.className = "empty";
+    // Aceita o nome de um desenho ou um dos glifos antigos que as páginas passam.
+    const desenho = ICONES[nomeIcone] ? nomeIcone : GLIFO_PARA_ICONE[nomeIcone] || "vazio";
     el.innerHTML = `
-      <div class="empty-icon">${icone}</div>
+      <div class="empty-icon">${icone(desenho)}</div>
       <div class="empty-title">${fmt.escape(titulo)}</div>
       ${texto ? `<div class="empty-text">${fmt.escape(texto)}</div>` : ""}
       ${rotuloAcao ? `<button class="btn primary" type="button">${fmt.escape(rotuloAcao)}</button>` : ""}`;
@@ -1497,7 +1614,7 @@ const UI = (() => {
    * Cada barra leva o valor escrito ao lado (rótulo direto), então a cor nunca
    * é o único canal de leitura.
    */
-  function barras(el, { linhas, cor = "var(--s-financeiro)", formatar = fmt.moeda }) {
+  function barras(el, { linhas, cor = "var(--serie-saida)", formatar = fmt.moeda }) {
     el.innerHTML = "";
     if (!linhas.length) return;
     const max = Math.max(...linhas.map((l) => l.valor), 0) || 1;
@@ -1535,9 +1652,9 @@ const UI = (() => {
       g.className = "col-group";
       g.innerHTML = `
         <div class="col-bars" style="height:${alturaPlot}px;">
-          <div class="col-bar" style="height:${altura(m.receita)}px; background:var(--s-financeiro);"
+          <div class="col-bar" style="height:${altura(m.receita)}px; background:var(--serie-entrada);"
                title="Receitas em ${fmt.mesRotulo(m.chave)}: ${fmt.moeda(m.receita)}"></div>
-          <div class="col-bar" style="height:${altura(m.despesa)}px; background:var(--s-projetos);"
+          <div class="col-bar" style="height:${altura(m.despesa)}px; background:var(--serie-saida);"
                title="Despesas em ${fmt.mesRotulo(m.chave)}: ${fmt.moeda(m.despesa)}"></div>
         </div>
         <div class="col-label">${fmt.mesRotulo(m.chave)}</div>`;
@@ -1548,8 +1665,8 @@ const UI = (() => {
     const leg = document.createElement("div");
     leg.className = "legend";
     leg.innerHTML = `
-      <span class="legend-item"><span class="legend-key" style="background:var(--s-financeiro)"></span>Receitas</span>
-      <span class="legend-item"><span class="legend-key" style="background:var(--s-projetos)"></span>Despesas</span>`;
+      <span class="legend-item"><span class="legend-key" style="background:var(--serie-entrada)"></span>Entradas</span>
+      <span class="legend-item"><span class="legend-key" style="background:var(--serie-saida)"></span>Saídas</span>`;
     el.appendChild(leg);
   }
 
@@ -1560,8 +1677,8 @@ const UI = (() => {
     el.className = "meter";
     el.innerHTML = `
       <div class="meter-head">
-        <span style="font-size:12.5px; font-weight:550;">${fmt.escape(rotulo)}</span>
-        <span class="num" style="font-size:12.5px; color:var(--texto-2);">${formatar(atual)} / ${formatar(alvo)}${sufixo}</span>
+        <span style="font-size:14px; font-weight:550;">${fmt.escape(rotulo)}</span>
+        <span class="num" style="font-size:13.5px; color:var(--texto-2);">${formatar(atual)} de ${formatar(alvo)}${sufixo}</span>
       </div>
       <div class="meter-track"><div class="meter-fill" style="width:${pct}%; background:${cor};"></div></div>`;
     return el;
@@ -1569,8 +1686,28 @@ const UI = (() => {
 
   /* ------------------------------ Inicialização ---------------------------- */
 
+  /**
+   * "+ Prazo", "+ Material": o "+" digitado nos botões das páginas vira o
+   * ícone desenhado, igual ao dos botões do Financeiro. Um observador cobre
+   * também os botões que as páginas criam depois (listas, modais).
+   */
+  function realcarBotoes(raiz) {
+    const trocar = (btn) => {
+      const primeiro = btn.firstChild;
+      if (!primeiro || primeiro.nodeType !== Node.TEXT_NODE || !/^\s*\+\s/.test(primeiro.textContent)) return;
+      primeiro.textContent = primeiro.textContent.replace(/^\s*\+\s+/, "");
+      btn.insertAdjacentHTML("afterbegin", icone("mais"));
+    };
+    if (raiz.matches?.(".btn")) trocar(raiz);
+    raiz.querySelectorAll?.(".btn").forEach(trocar);
+  }
+
   function iniciarPagina(ativo, opcoes) {
     tema.iniciar();
+    realcarBotoes(document);
+    new MutationObserver((mudancas) => mudancas.forEach((m) => {
+      if (m.target.nodeType === Node.ELEMENT_NODE) realcarBotoes(m.target);
+    })).observe(document.body, { childList: true, subtree: true });
     // Sem conta, sessao.js já está levando para entrar.html (com a página
     // escondida): o assistente espera a pessoa entrar, para os dois
     // redirecionamentos não disputarem.
@@ -1616,7 +1753,7 @@ const UI = (() => {
   }
 
   return {
-    NOME, VERSAO,
+    NOME, VERSAO, ICONES, icone,
     fmt, htmlSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
     compromissos, conflitos, contagens, mediaDisciplina, notaNecessaria, proximaAvaliacao, resumoProjeto,
     iniciarPagina, montarLayout, tema, toast, formulario, confirmar, abrirModal,

@@ -161,7 +161,7 @@
       ["Prioridade", projeto.prioridade],
       ["Início", projeto.inicio ? fmt.data(projeto.inicio) : ""],
       ["Prazo", projeto.deadline
-        ? `${fmt.data(projeto.deadline)}${dias !== null && !r.encerrado ? ` · ${dias < 0 ? `${Math.abs(dias)} dias atrás` : `faltam ${dias} dias`}` : ""}`
+        ? `${fmt.data(projeto.deadline)}${dias !== null && !r.encerrado ? `, ${dias < 0 ? `${Math.abs(dias)} dias atrás` : `faltam ${dias} dias`}` : ""}`
         : ""],
       ["Dedicação", projeto.horasSemana ? `${projeto.horasSemana} h por semana` : ""],
       ["Renda estimada", r.metaMensal ? `${fmt.moeda(r.metaMensal)} por mês` : ""],

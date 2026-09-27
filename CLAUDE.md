@@ -9,8 +9,9 @@ Duas coisas **continuam** com o nome antigo, de propósito:
 - **O repositório é `organizador`.** O endereço do GitHub Pages
   (`luizftc5-debug.github.io/organizador/dashboard/`) sai daí; renomear quebraria o link que o Luiz
   usa e os favoritos dele.
-- **Os endereços de armazenamento**: `organizador.estado.v2` e `organizador.tema` no localStorage,
-  `organizador.arquivos` no IndexedDB. Não são texto de marca, são a chave onde os dados moram —
+- **Os endereços de armazenamento**: `organizador.estado.v2`, `organizador.tema`,
+  `organizador.sessao`, `organizador.nuvem` e `organizador.api` no localStorage, `organizador.arquivos`
+  no IndexedDB. Não são texto de marca, são a chave onde os dados moram —
   trocá-las faria o painel abrir vazio, como se tudo tivesse sido apagado. Só renomeie junto com uma
   migração que copie os dados da chave velha para a nova, e nunca sem testar com dados reais.
 
@@ -30,7 +31,7 @@ Você é um assistente de IA especializado em organizar e gerenciar os quatro pi
 
 ## Arquitetura do dashboard
 
-Aplicação estática multi-página em `dashboard/`, sem build. A única dependência externa é a tipografia (Google Fonts).
+Aplicação estática multi-página em `dashboard/`, sem build. Dependências externas: a tipografia (Google Fonts) e, só ao criar ou trocar senha, a consulta k-anônima ao Have I Been Pwned (`sessao.js`).
 
 | Arquivo | Papel |
 |---|---|
@@ -50,12 +51,63 @@ Aplicação estática multi-página em `dashboard/`, sem build. A única depend�
 | `store.js` | Camada de dados: localStorage + CRUD + backup em JSON |
 | `personalizacao.js` | Traduz perfil/preferências em como o painel se apresenta (abas ligadas, saudação, ocupação) |
 | `arquivos.js` | Anexos (PDF, slides, fotos) no IndexedDB + export/import para o backup |
+| `importar.js` | Lançamentos a partir de extrato bancário (.ofx/.qfx/.csv) — leitura, mapeamento de colunas, revisão e confirmação |
+| `entrar.html` + `entrar.js` | Entrar / criar conta / esqueci a senha: página sem barra lateral, a única que abre sem sessão |
+| `sessao.js` | Conta do usuário: endereço da API, login, cadastro, derivação da senha, porta de entrada das páginas |
+| `nuvem.js` | Sincronização com a conta (`backend/`): envio, conferência, conflito, versões, anexos, sair |
 | `financas.js` | Cálculos derivados: saldo por conta, ciclo e fatura de cartão, balanço, investimentos |
 | `ui.js` | Componentes: layout, perfil, modais de formulário, avisos, gráficos, datas/urgência |
 | `theme.css` | Design system (tema claro/escuro) |
 | `config.js` + `google-integration.js` | Integração OAuth com Google Calendar e Drive (inclui busca/exportação de arquivos, usada pela importação em disciplina.js) |
 | `data.js` | Conteúdo inicial (seed), lido só na primeira abertura |
 | `exercicios.js` | Catálogo de exercícios da aba Academia (`const EXERCICIOS`), carregado só por `pilar.html` |
+
+### Contas de usuário e back end
+
+`backend/` é um Cloudflare Worker + banco D1 (guia em `backend/README.md`, publicado pelo workflow
+`.github/workflows/backend.yml`). O painel continua estático no GitHub Pages; o servidor guarda as
+contas e os dados de cada uma. O localStorage continua sendo a cópia de trabalho.
+
+- **A porta.** `sessao.js` roda em toda página antes do script dela: sem sessão, esconde a página e
+  manda para `entrar.html?volta=<página>` (`volta` só aceita páginas do próprio painel).
+  `UI.iniciarPagina` consulta `Sessao.saindo()` para não disputar o redirecionamento com o
+  assistente de boas-vindas. **Enquanto `API_PUBLICA` (no alto de `sessao.js`) estiver vazia, as
+  contas ficam desligadas** e o painel abre sem login, como antes — é o que permite publicar o
+  servidor sem trancar ninguém. Para testar local, `localStorage["organizador.api"]` sobrepõe o
+  endereço só naquele navegador.
+- **Senha.** Nunca é guardada nem enviada: `Sessao.derivarChave` faz PBKDF2-SHA256, 600 mil
+  iterações, sal = `delfos:v1:<email>`, e só a chave de 32 bytes vai ao servidor, que guarda
+  HMAC-SHA256(sal aleatório da conta, chave). As iterações ficam no navegador por causa do limite de
+  CPU do plano gratuito (mesmo desenho do Bitwarden). Senha nova passa por `problemaNaSenha`: mínimo
+  8 caracteres e consulta k-anônima ao Have I Been Pwned (falha aberta, sem rede não bloqueia).
+- **Sessão.** Token aleatório; no banco só o SHA-256 dele. **Sem "Manter conectado"** (o padrão),
+  o token vai para o sessionStorage e vale no máximo 12 h no servidor: reabrir o navegador pede a
+  senha de novo. Uma aba nova pede o token às abas abertas por `BroadcastChannel("delfos-sessao")`,
+  e sair numa aba leva as outras para a entrada. **Com "Manter conectado"**, o token vai para o
+  localStorage e vale 30 dias. `organizador.sessao` no localStorage guarda sempre o id/e-mail da
+  última conta (preenche o e-mail e diz de quem são os dados). Um 401 numa rota com token tira o
+  token e mostra um aviso com "Entrar" — nunca recarrega sozinho no meio do que a pessoa digita.
+- **Esqueci a senha** = código de recuperação (20 caracteres, ~98 bits), gerado no cadastro e
+  mostrado uma única vez (`Nuvem.mostrarCodigoRecuperacao`, que só libera "Continuar" depois de a
+  pessoa marcar que guardou). No banco, só o SHA-256. Usar o código (`/api/recuperar`) troca a senha,
+  gera outro código e derruba todas as sessões; erros contam no mesmo limite das senhas erradas. Dá
+  para gerar um novo pelo painel, confirmando a senha. Não há e-mail de recuperação.
+- **Um navegador nunca mistura contas.** `organizador.nuvem.usuarioId` diz de quem são os dados do
+  navegador; `Nuvem.conectado()` só sincroniza quando bate com a sessão. **Sair apaga os dados
+  locais** (continuam na conta). Entrar com outra conta apaga os dados da anterior antes de baixar.
+  Dados sem dono (de antes das contas) disparam a pergunta "levar para a minha conta?" em
+  `Nuvem.aposEntrar`, chamado por `entrar.js` antes de liberar o painel.
+- **O servidor não interpreta o estado.** Guarda o JSON como texto (pedaços de 400 mil caracteres,
+  pelo limite de linha do D1), com `revisao`, e devolve como veio. `Store.substituir()` passa o que
+  chega por `normalizar` como qualquer carga.
+- **Conflito nunca é silencioso.** `PUT /api/estado?base=N` recusa com 409 se outro aparelho gravou
+  depois; `nuvem.js` pergunta qual versão fica. A que perde vai para `versoes` (60 por conta).
+- **Isolamento.** Toda rota de dados usa o id que sai de `exigirSessao`, nunca um id da requisição;
+  anexos têm chave `(usuario_id, id)`. Cota de anexos por conta em `COTA_ANEXOS_MB`
+  (`wrangler.toml`) — o D1 gratuito tem 500 MB no total.
+- **Cadastro** aberto, ou com convite se o segredo `CODIGO_CONVITE` existir.
+- Migrações só se acrescentam (`0002_contas.sql` renomeou as tabelas da versão de senha única para
+  `legado_*` em vez de apagar). Módulo Worker só exporta `default`. Testes: `cd backend && npm test`.
 
 ### Divisão entre Faculdade e Projetos
 
@@ -90,6 +142,43 @@ compromisso/recado/outro), `data`, `local` opcional e `concluido`. Entra no `UI.
 unificado com `area: "pessoal"`, então aparece na agenda da home e nos alertas de semana cheia junto
 com os outros três pilares — cor própria (`--s-pessoal`, roxo) para não colidir com as demais.
 
+### Importar extrato (`importar.js`)
+
+Resolve um problema específico — esquecer de lançar, não falta de conexão com o banco. **De
+propósito, não conecta direto a nenhum banco**: exigiria credenciar o Delfos como instituição
+receptora no Open Finance Brasil (registro no Bacen, estrutura de compliance) e guardar token de
+acesso à conta bancária, uma categoria de dado sensível bem maior que qualquer outra do painel. Em
+vez disso, a pessoa exporta o extrato pelo próprio app do banco (sem senha nenhuma saindo do
+aparelho dela) e importa; o arquivo é lido só no navegador.
+
+- **Duas partes deliberadamente separadas**: funções puras de leitura (`parseOFX`, `parseCSV`,
+  `normalizarData/Valor`, `sugerirCategoria`, `provavelDuplicata` — sem tocar DOM/Store, dá para
+  testar isoladas com Node) e o assistente de 3 passos (arquivo+conta → mapear colunas, só CSV →
+  revisão e confirmação), que é quem toca `UI`/`Store`/`Financas`.
+- **OFX**: regex por campo (`<TAG>valor` até a próxima tag) lê tanto SGML (OFX 1.x, sem
+  fechamento de tag de valor) quanto XML (OFX 2.x) do mesmo jeito. Charset: decodifica UTF-8
+  primeiro; se sobrar `\uFFFD` (byte inválido), refaz como ISO-8859-1 — banco brasileiro exporta
+  nos dois.
+- **CSV**: delimitador adivinhado (`;` vs `,`) pela primeira linha; aceita uma coluna "valor" com
+  sinal OU um par "entrada"/"saída"; `sugerirMapeamento` chuta o papel de cada coluna pelo nome do
+  cabeçalho, sempre revisável antes de continuar. Linha sem data/valor reconhecível é contada e
+  pulada, nunca trava a importação inteira.
+- **Categoria aprendida do histórico** (`indiceCategoria`/`sugerirCategoria`): vocabulário de
+  palavras (≥ 4 letras) por categoria já usada, sem lista fixa de estabelecimentos — evita
+  favorecer o comércio de uma região só, e se ajusta ao vocabulário que a própria pessoa já usa nas
+  descrições.
+- **Duplicata provável** (`provavelDuplicata`): mesmo valor e tipo a até 3 dias de um lançamento
+  que já existe → entra desmarcada na revisão, nunca é bloqueada nem some sozinha. Nada é gravado
+  sem a revisão passar por `Store.inserir` linha a linha; "Desfazer" no toast remove tudo de uma
+  vez pelos ids devolvidos.
+- Passa `render` como `aoConcluir` para `Importar.abrirAssistente` (e de novo no `aoAcionar` do
+  Desfazer) — `financeiro.js` não escuta `Store.aoMudar` (só `nuvem.js` escuta, para sincronizar),
+  então sem isso a tabela ficaria com os dados antigos até a pessoa navegar para outra página.
+- Tabela de revisão (`table.tabela-importar`) tem CSS próprio, achando por conflito de especificidade
+  com as regras de `table.sheet` no mobile: ambas as classes ficam na mesma `<table>`, e sem
+  `tbody` explícito no seletor as regras genéricas (pensadas para colunas só de leitura) ganhavam
+  por especificidade e escondiam checkbox/descrição/tipo, que aqui são campos editáveis, não texto.
+
 ### Contas, cartões e saldo
 
 - `financeiro.contas` guarda o `saldoInicial` de cada conta; o saldo atual é **calculado**
@@ -114,6 +203,11 @@ balanço de contas/cartões. Cada item guarda `valorAplicado` e `valorAtual`; a 
 Cada disciplina tem `avaliacoes`, `materiais` e `resumos` como listas dentro dela, editadas por
 `Store.subInserir/subAtualizar/subRemover`. A média é ponderada pelo `peso` das avaliações com nota
 lançada (`UI.mediaDisciplina`). Prazos apontam para a disciplina por `disciplinaId`.
+
+`UI.notaNecessaria(d)` responde "quanto preciso tirar": a nota média (ponderada, escala 0–10) que as
+avaliações ainda sem nota precisam ter para a disciplina fechar em `d.mediaMinima` (campo opcional
+do formulário, 7 se vazio). Aparece embaixo da média na página da disciplina, com os casos "já
+garantida" e "não dá mais" ditos com todas as letras.
 
 ### Editor de resumos
 
@@ -326,7 +420,8 @@ telas (botões "+ Lançamento", "+ Prazo", "+ Disciplina", "+ Projeto"), sem toc
 - `dashboard/data.js` é só o seed inicial: é lido **uma única vez**, quando o navegador ainda não tem
   dados salvos. Alterar esse arquivo **não** muda o que Luiz já vê.
 - Para levar dados entre computadores ou fazer backup, use o botão **Backup e dados** na barra
-  lateral (exporta/importa um `.json` com o estado completo e os anexos).
+  lateral (exporta/importa um `.json` com o estado completo e os anexos). Com as contas ligadas, os
+  dados já acompanham a conta em qualquer aparelho; o backup continua como cópia fora do servidor.
 - Ao mudar o formato do estado, trate a migração em `store.js` (`normalizar`, que roda em toda carga
   e precisa ser idempotente). Nunca troque a chave do localStorage: isso apagaria os dados de quem
   já usa. A conversão é gravada assim que a versão salva difere da atual.
@@ -352,6 +447,14 @@ escolha explícita em `[data-theme="light"]`.
 Tipografia: **IBM Plex Sans** em tudo, com peso e tamanho fazendo a hierarquia.
 **IBM Plex Serif** aparece num único lugar — a frase de leitura no alto da visão
 geral (`.leitura`), o momento em que o painel fala. O resto é dado, e dado é sans.
+
+Números decimais saem por `UI.fmt.decimal` (8,2 — nunca `toFixed`, que escreve 8.2) e ordinais
+por `UI.fmt.ordinal` (nunca "6ºº"). `[hidden]` tem `display: none !important` no tema: sem isso,
+`el.hidden = true` não esconde nada que tenha `display` próprio (`.btn`, `.card`).
+
+No celular (≤ 900px), faixas de números `.g3`/`.g4` ficam 2 por linha, a barra lateral vira uma
+faixa rolável que se posiciona na aba atual, e a planilha de lançamentos (`table.sheet`) vira lista
+de cartões — data, categoria e "pago com" viram a linha `.so-celular` debaixo da descrição.
 
 Identidade de pilar é um **filete de 2px** na borda do cartão (`.card.tinted`,
 `.pillar`) — régua, não ornamento. Grupos afins se encostam num campo contíguo

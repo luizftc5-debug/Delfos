@@ -1,0 +1,27 @@
+# Configuração do Worker (servidor) do Delfos na Cloudflare.
+# Guia completo, passo a passo: backend/README.md
+
+name = "delfos-api"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# Limpeza diária às 06:17 UTC (03:17 em Salvador): anexos órfãos, versões
+# antigas e tentativas de senha vencidas. Ver src/limpeza.js.
+[triggers]
+crons = ["17 6 * * *"]
+
+[vars]
+# Endereços de onde o painel pode chamar a API, separados por vírgula.
+# O GitHub Pages usa só o domínio (sem /Delfos/dashboard) como origem.
+ORIGENS = "https://luizftc5-debug.github.io,http://localhost:8000,http://127.0.0.1:8000"
+# Espaço de anexos por conta, em MB. O banco gratuito do D1 tem 500 MB no
+# total, somando todas as contas — suba com cuidado.
+COTA_ANEXOS_MB = "100"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "delfos"
+# Preenchido sozinho pelo GitHub Actions (.github/workflows/backend.yml) na
+# hora de publicar. Só mexa aqui se for publicar à mão (README, "Sem Actions").
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"

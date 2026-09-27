@@ -364,6 +364,7 @@
   /* --------------------------------- Eventos -------------------------------- */
 
   document.getElementById("btn-lancamento").addEventListener("click", novoLancamento);
+  document.getElementById("btn-importar").addEventListener("click", () => Importar.abrirAssistente(render));
   document.getElementById("btn-meta").addEventListener("click", novaMeta);
   document.getElementById("btn-saldo").addEventListener("click", ajustarSaldo);
   document.getElementById("f-limpar").addEventListener("click", limparFiltros);

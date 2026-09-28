@@ -77,6 +77,21 @@ const Store = (() => {
       metaMensal: null, // quanto quer ganhar por mês com projetos, em R$
       horasDisponiveis: null, // horas por semana que sobram para projetos
     },
+    // Como o painel se apresenta e se comporta (v13), editável no perfil.
+    // Acompanha a conta — por isso mora aqui, e não no localStorage como o tema.
+    experiencia: {
+      tamanho: "normal", // compacto | normal | grande
+      densidade: "confortavel", // confortavel | compacta
+      destaque: "osso", // osso | louro | anil | cobre | ameixa (cor do botão principal e do que está escolhido)
+      movimento: "completo", // completo | reduzido
+      voz: "serifa", // serifa | sans (fonte da leitura e dos títulos)
+      contadores: true, // números ao lado das abas na barra
+      paginaInicial: "home", // qual aba abre primeiro em cada visita
+      semanaComeca: 1, // 0 domingo, 1 segunda (calendário)
+      ordemAbas: [], // ids da barra ("financeiro", "pilar:<id>"), na ordem escolhida
+      home: { topo: true, pilares: true, notas: true, agenda: true, insights: true },
+      lembretes: { antecedencia: 2, navegador: false, resumoDoDia: true },
+    },
     // "Agora não" das perguntas de todas as abas menos o Financeiro (que
     // guarda as dele em financeiro.dispensadas): "<escopo>:<pergunta>" → data ou "sempre".
     dispensadas: {},
@@ -309,7 +324,7 @@ const Store = (() => {
 
   function estadoVazio() {
     return {
-      versao: 12,
+      versao: 13,
       atualizadoEm: new Date().toISOString(),
       perfil: { ...PERFIL_PADRAO },
       preferencias: preferenciasPadrao(),
@@ -475,6 +490,15 @@ const Store = (() => {
     // v10 → v11: perguntas das abas Faculdade e Projetos, e as dispensadas de todas.
     out.preferencias.faculdade = { ...out.preferencias.faculdade, ...(e.preferencias?.faculdade || {}) };
     out.preferencias.projetos = { ...out.preferencias.projetos, ...(e.preferencias?.projetos || {}) };
+    // v12 → v13: preferências de experiência (aparência, rotina, avisos).
+    const xp = e.preferencias?.experiencia || {};
+    const xpPadrao = out.preferencias.experiencia;
+    out.preferencias.experiencia = {
+      ...xpPadrao, ...xp,
+      home: { ...xpPadrao.home, ...(xp.home || {}) },
+      lembretes: { ...xpPadrao.lembretes, ...(xp.lembretes || {}) },
+      ordemAbas: Array.isArray(xp.ordemAbas) ? xp.ordemAbas.filter((x) => typeof x === "string") : [],
+    };
     const disp = e.preferencias?.dispensadas;
     out.preferencias.dispensadas = disp && typeof disp === "object" && !Array.isArray(disp) ? { ...disp } : {};
 
@@ -604,7 +628,7 @@ const Store = (() => {
       return pil;
     });
 
-    out.versao = 12;
+    out.versao = 13;
     return out;
   }
 
@@ -743,8 +767,15 @@ const Store = (() => {
     // rótulo que já tinha sido escolhido para ela.
     definirPreferencias(patch) {
       const e = carregar();
-      const { abasFixas, financeiro, faculdade, projetos, ...resto } = patch;
+      const { abasFixas, financeiro, faculdade, projetos, experiencia, ...resto } = patch;
       e.preferencias = { ...e.preferencias, ...resto };
+      if (experiencia) {
+        const atual = e.preferencias.experiencia;
+        const { home, lembretes, ...xs } = experiencia;
+        e.preferencias.experiencia = { ...atual, ...xs };
+        if (home) e.preferencias.experiencia.home = { ...atual.home, ...home };
+        if (lembretes) e.preferencias.experiencia.lembretes = { ...atual.lembretes, ...lembretes };
+      }
       if (financeiro) e.preferencias.financeiro = { ...e.preferencias.financeiro, ...financeiro };
       if (faculdade) e.preferencias.faculdade = { ...e.preferencias.faculdade, ...faculdade };
       if (projetos) e.preferencias.projetos = { ...e.preferencias.projetos, ...projetos };

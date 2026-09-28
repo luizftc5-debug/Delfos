@@ -39,7 +39,7 @@ const Personalizacao = (() => {
   }
 
   function saudacao() {
-    const nome = primeiroNome();
+    const nome = String(perfil().apelido || "").trim() || primeiroNome();
     const hora = new Date().getHours();
     const parte = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
     return nome ? `${parte}, ${nome}` : "Visão geral";

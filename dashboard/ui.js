@@ -420,7 +420,12 @@ const UI = (() => {
       corHex: p.cor,
       icone: p.icone,
     }));
-    return [home, ...fixas, ...criadas];
+    // A ordem escolhida no perfil (Painel → Abas); o que não está nela vem depois, na ordem de sempre.
+    const ordem = experiencia().ordemAbas || [];
+    const resto = [...fixas, ...criadas];
+    const pos = (p, i) => { const k = ordem.indexOf(p.id); return k === -1 ? 1000 + i : k; };
+    const ordenadas = resto.map((p, i) => [p, pos(p, i)]).sort((a, b) => a[1] - b[1]).map(([p]) => p);
+    return [home, ...ordenadas];
   }
 
   function contagens() {
@@ -765,6 +770,7 @@ const UI = (() => {
   const camposPerfil = () => [
     { tipo: "secao", rotulo: "Quem é você" },
     { nome: "nome", rotulo: "Nome completo", tipo: "text", obrigatorio: true },
+    { nome: "apelido", rotulo: "Como quer ser chamado", tipo: "text", placeholder: "Aparece na saudação. Ex.: Lu" },
     { nome: "dataNascimento", rotulo: "Data de nascimento", tipo: "date" },
     { nome: "pronomes", rotulo: "Pronomes", tipo: "text", placeholder: "Ex.: ela/dela, ele/dele" },
     { nome: "telefone", rotulo: "Telefone", tipo: "text", placeholder: "(71) 90000-0000" },
@@ -795,13 +801,51 @@ const UI = (() => {
     { nome: "objetivos", rotulo: "Objetivos do momento", tipo: "textarea", placeholder: "O que quer alcançar nos próximos meses." },
   ];
 
+  const DESTAQUES = [["osso", "Osso"], ["louro", "Louro"], ["anil", "Anil"], ["cobre", "Cobre"], ["ameixa", "Ameixa"]];
+
+  function linhaAjuste(titulo, texto, controle, compacta = false, embaixo = false) {
+    return `<div class="ajuste-linha ${compacta ? "compacta" : ""} ${embaixo ? "embaixo" : ""}">
+        <div class="ajuste-rotulo"><span class="t">${fmt.escape(titulo)}</span>${texto ? `<span class="d">${fmt.escape(texto)}</span>` : ""}</div>
+        <div class="ajuste-controle">${controle}</div>
+      </div>`;
+  }
+  const segPref = (chave, opcoes, atual) => `<div class="seg sm" data-pref="${chave}">
+      <input type="hidden" value="${fmt.escape(atual)}" />
+      ${opcoes.map(([v, r]) => `<button type="button" data-valor="${v}" aria-pressed="${String(String(atual) === String(v))}">${r}</button>`).join("")}
+    </div>`;
+  const switchPref = (chave, ligado) => `<input type="checkbox" class="switch" data-pref-switch="${chave}" ${ligado ? "checked" : ""} aria-label="${chave}" />`;
+
+  /** Linhas de "Abas e ordem": todas as abas da barra (menos a Visão geral), com setas. */
+  function linhasAbas() {
+    const fixas = Object.fromEntries(Personalizacao.abasFixas().map((a) => [a.id, a]));
+    // Inclui as fixas desligadas (paginas() só traz as ligadas), na posição da ordem salva.
+    const ligadas = paginas().slice(1);
+    const desligadas = Object.values(fixas).filter((a) => !a.ativo).map((a) => ({ ...PAGINAS.find((x) => x.id === a.id), rotulo: a.rotulo }));
+    const lista = [...ligadas, ...desligadas];
+    return lista.map((pg, i) => {
+      const fixa = fixas[pg.id];
+      const iconeHTML = pg.corHex ? `<span class="nav-icon propria" style="--cor-aba:${fmt.escape(pg.corHex)}">${iconeAba(pg.icone)}</span>` : `<span class="nav-icon">${icone(pg.icone)}</span>`;
+      return `<li class="${fixa && !fixa.ativo ? "desligada" : ""}" data-aba-id="${fmt.escape(pg.id)}" style="--marca: var(--s-${fmt.escape(pg.cor || "x")})">
+          <span class="ordem-setas">
+            <button type="button" class="btn ghost sm icon" data-mover="-1" aria-label="Subir ${fmt.escape(pg.rotulo)}" ${i === 0 ? "disabled" : ""}>${icone("acima")}</button>
+            <button type="button" class="btn ghost sm icon" data-mover="1" aria-label="Descer ${fmt.escape(pg.rotulo)}" ${i === lista.length - 1 ? "disabled" : ""}>${icone("abaixo")}</button>
+          </span>
+          ${iconeHTML}
+          ${fixa
+            ? `<input type="text" class="aba-nome" data-nome-aba="${fixa.id}" value="${fmt.escape(fixa.rotulo)}" aria-label="Nome da aba ${fmt.escape(fixa.rotuloPadrao)}" ${fixa.ativo ? "" : "disabled"} />
+               <input type="checkbox" class="switch" role="switch" data-toggle-aba="${fixa.id}" ${fixa.ativo ? "checked" : ""} aria-label="Mostrar a aba ${fmt.escape(fixa.rotuloPadrao)}" />`
+            : `<span class="aba-nome fixo">${fmt.escape(pg.rotulo)}</span><a class="btn ghost sm" href="${fmt.escape(pg.href)}">Abrir</a>`}
+        </li>`;
+    }).join("");
+  }
+
   /**
    * Pop-up do perfil: quem é, o que já cadastrou, ajuste de tema e acesso ao
    * backup. É o único lugar de configuração do painel — por isso concentra o
    * que antes ficava espalhado no rodapé da barra lateral.
    */
   function abrirPerfil(aba) {
-    const abaInicial = ["sobre", "painel", "conta"].includes(aba) ? aba : "sobre";
+    const abaInicial = ["sobre", "aparencia", "painel", "rotina", "conta"].includes(aba) ? aba : "sobre";
     const e = Store.estado();
     const p = e.perfil || {};
 
@@ -810,6 +854,11 @@ const UI = (() => {
       e.financeiro.cartoes.length + e.financeiro.investimentos.length + e.faculdade.prazos.length +
       e.projetos.length + e.oportunidades.length + (e.pessoal?.compromissos?.length || 0);
     const disciplinas = e.faculdade.disciplinas.length;
+    const resumos = e.faculdade.disciplinas.reduce((n, d) => n + (d.resumos?.length || 0), 0);
+    const mesAgora = hojeISO().slice(0, 7);
+    const lancMes = e.financeiro.transacoes.filter((t) => (t.data || "").startsWith(mesAgora)).length;
+    const abasProprias = (e.pilares || []).length;
+    const xp = experiencia();
     const urgentes = compromissos().filter((i) => {
       const d = diasAte(i.data);
       return d !== null && d >= 0 && d <= 7;
@@ -822,6 +871,7 @@ const UI = (() => {
     // Só entram na ficha as informações preenchidas — campo vazio não vira linha.
     const dados = [
       ["Nascimento", p.dataNascimento ? `${fmt.dataPorExtenso(p.dataNascimento)}${anos !== null ? `, ${anos} anos` : ""}` : ""],
+      ["Como te chamar", p.apelido],
       ["Pronomes", p.pronomes],
       ["Telefone", p.telefone],
       ["E-mail", p.email],
@@ -853,15 +903,20 @@ const UI = (() => {
 
       <div class="abas perfil-abas" role="tablist" aria-label="Seções do perfil">
         <button type="button" role="tab" data-aba-perfil="sobre">Sobre você</button>
+        <button type="button" role="tab" data-aba-perfil="aparencia">Aparência</button>
         <button type="button" role="tab" data-aba-perfil="painel">Painel</button>
+        <button type="button" role="tab" data-aba-perfil="rotina">Rotina e avisos</button>
         <button type="button" role="tab" data-aba-perfil="conta">Conta e dados</button>
       </div>
 
       <div class="perfil-painel" role="tabpanel" data-painel="sobre">
-        <div class="perfil-stats">
+        <div class="perfil-stats seis">
+          <div class="perfil-stat"><b>${urgentes}</b><span>compromissos nesta semana</span></div>
+          <div class="perfil-stat"><b>${lancMes}</b><span>${lancMes === 1 ? "lançamento" : "lançamentos"} no mês</span></div>
           <div class="perfil-stat"><b>${disciplinas}</b><span>${disciplinas === 1 ? "disciplina" : "disciplinas"}</span></div>
-          <div class="perfil-stat"><b>${registros}</b><span>registros</span></div>
-          <div class="perfil-stat"><b>${urgentes}</b><span>nesta semana</span></div>
+          <div class="perfil-stat"><b>${resumos}</b><span>${resumos === 1 ? "resumo escrito" : "resumos escritos"}</span></div>
+          <div class="perfil-stat"><b>${abasProprias}</b><span>${abasProprias === 1 ? "aba sua" : "abas suas"}</span></div>
+          <div class="perfil-stat"><b>${registros}</b><span>registros ao todo</span></div>
         </div>
 
         ${dados.length ? `<dl class="ficha">${dados
@@ -875,31 +930,68 @@ const UI = (() => {
           </div>`).join("")}
       </div>
 
-      <div class="perfil-painel" role="tabpanel" data-painel="painel" hidden>
+      <div class="perfil-painel" role="tabpanel" data-painel="aparencia" hidden>
         <div class="ajuste">
           <div class="ajuste-titulo">Tema</div>
-          <div class="temas" data-tema>
+          <div class="temas tres" data-tema>
             ${tema.OPCOES.map((o) => `
               <button type="button" class="tema-opcao" data-valor="${o.valor}" aria-pressed="${String(o.valor === atual)}">
-                <span class="tema-amostra ${o.valor === "light" ? "claro" : "escuro"}"><i></i><i></i></span>
+                <span class="tema-amostra ${o.valor === "light" ? "claro" : o.valor === "auto" ? "auto" : "escuro"}"><i></i><i></i></span>
                 <span class="tema-nome">${o.rotulo}${icone("check")}</span>
               </button>`).join("")}
+          </div>
+          <p class="ajuste-texto" style="margin:10px 0 0;">Automático segue o claro e o escuro do sistema, do dia para a noite.</p>
+        </div>
+
+        <div class="ajuste">
+          <div class="ajuste-titulo">Cor de destaque</div>
+          <p class="ajuste-texto">O botão principal, o que está escolhido e os interruptores ligados.</p>
+          <div class="destaques" data-pref="destaque">
+            ${DESTAQUES.map(([v, r]) => `<button type="button" class="destaque-opcao" data-valor="${v}" data-destaque-amostra="${v}" aria-pressed="${String((xp.destaque || "osso") === v)}"><i></i><span>${r}</span></button>`).join("")}
           </div>
         </div>
 
         <div class="ajuste">
-          <div class="ajuste-titulo">Abas do painel</div>
-          <p class="ajuste-texto">Desligar só tira a aba da barra; nada do que está nela é apagado. O nome dá para trocar aqui mesmo.</p>
-          <ul class="abas-lista" data-abas>
-            ${Personalizacao.abasFixas().map((a) => `
-              <li class="${a.ativo ? "" : "desligada"}" style="--marca: var(--s-${a.id})">
-                <span class="nav-icon">${icone(iconeDaAba(a.id))}</span>
-                <input type="text" class="aba-nome" data-nome-aba="${a.id}" value="${fmt.escape(a.rotulo)}"
-                       aria-label="Nome da aba ${fmt.escape(a.rotuloPadrao)}" ${a.ativo ? "" : "disabled"} />
-                <input type="checkbox" class="switch" role="switch" data-toggle-aba="${a.id}" ${a.ativo ? "checked" : ""}
-                       aria-label="Mostrar a aba ${fmt.escape(a.rotuloPadrao)}" />
-              </li>`).join("")}
-          </ul>
+          ${linhaAjuste("Tamanho do texto", "Aumenta ou diminui tudo, textos e espaços.", segPref("tamanho", [["compacto", "Menor"], ["normal", "Normal"], ["grande", "Maior"]], xp.tamanho || "normal"))}
+          ${linhaAjuste("Densidade", "Compacta mostra mais coisa por tela, com menos respiro.", segPref("densidade", [["confortavel", "Confortável"], ["compacta", "Compacta"]], xp.densidade || "confortavel"))}
+          ${linhaAjuste("Fonte da leitura e dos títulos", "Serifada é a voz do Delfos; sem serifa deixa tudo na mesma letra.", segPref("voz", [["serifa", "Serifada"], ["sans", "Sem serifa"]], xp.voz || "serifa"))}
+          ${linhaAjuste("Movimento", "Luz que segue o mouse, destaques que deslizam e a entrada das páginas.", switchPref("movimento", (xp.movimento || "completo") !== "reduzido"))}
+        </div>
+      </div>
+
+      <div class="perfil-painel" role="tabpanel" data-painel="painel" hidden>
+        <div class="ajuste">
+          ${linhaAjuste("Ao abrir o Delfos", "A primeira página de cada visita.", `<select class="input sm" data-pref-select="paginaInicial">${paginas().map((pg) => `<option value="${fmt.escape(pg.id)}" ${pg.id === (xp.paginaInicial || "home") ? "selected" : ""}>${fmt.escape(pg.rotulo)}</option>`).join("")}</select>`)}
+          ${linhaAjuste("Números na barra lateral", "Quantos compromissos da semana e contas a pagar cada aba tem.", switchPref("contadores", xp.contadores !== false))}
+        </div>
+
+        <div class="ajuste">
+          <div class="ajuste-titulo">Abas e ordem</div>
+          <p class="ajuste-texto">Use as setas para mudar a ordem da barra. Desligar só tira a aba da barra; nada do que está nela é apagado. O nome das fixas dá para trocar aqui mesmo.</p>
+          <ul class="abas-lista" data-abas>${linhasAbas()}</ul>
+        </div>
+
+        <div class="ajuste">
+          <div class="ajuste-titulo">A visão geral mostra</div>
+          ${[["topo", "Saldo e próximo compromisso"], ["pilares", "Cartões das abas"], ["notas", "O que o Delfos notou"], ["agenda", "Próximos 30 dias"], ["insights", "Leitura da situação"]]
+            .map(([k, r]) => linhaAjuste(r, "", `<input type="checkbox" class="switch" data-pref-home="${k}" ${xp.home?.[k] !== false ? "checked" : ""} aria-label="${fmt.escape(r)}" />`, true)).join("")}
+        </div>
+
+        <div class="ajuste">
+          ${linhaAjuste("Atalhos de teclado", "N cria, / busca, Alt + número troca de aba.", `<button class="btn sm" type="button" data-acao="atalhos">Ver todos</button>`)}
+        </div>
+      </div>
+
+      <div class="perfil-painel" role="tabpanel" data-painel="rotina" hidden>
+        <div class="ajuste">
+          ${linhaAjuste("A semana começa no", "Vale para o calendário.", segPref("semanaComeca", [["0", "Domingo"], ["1", "Segunda"]], String(xp.semanaComeca ?? 1)))}
+        </div>
+        <div class="ajuste">
+          <div class="ajuste-titulo">Lembretes</div>
+          <p class="ajuste-texto">O Delfos avisa quando uma data importante de qualquer aba se aproxima: prova, entrega, consulta, conta a pagar.</p>
+          ${linhaAjuste("Avisar com antecedência de", "", `<div class="chips opcoes-chips" data-pref-lembrete="antecedencia">${[[0, "No dia"], [1, "1 dia"], [2, "2 dias"], [3, "3 dias"], [7, "1 semana"]].map(([v, r]) => `<button type="button" class="chip mini" data-valor="${v}" aria-pressed="${String(Number(xp.lembretes?.antecedencia ?? 2) === v)}">${r}</button>`).join("")}</div>`, false, true)}
+          ${linhaAjuste("Resumo do dia ao abrir", "Na primeira visita do dia, uma janela com o que vence hoje e o que se aproxima.", `<input type="checkbox" class="switch" data-pref-lembrete-sw="resumoDoDia" ${xp.lembretes?.resumoDoDia !== false ? "checked" : ""} aria-label="Resumo do dia ao abrir" />`)}
+          ${linhaAjuste("Avisos do navegador", typeof Notification === "undefined" ? "Este navegador não mostra avisos." : Notification.permission === "denied" ? "Bloqueados nas configurações do navegador para este site." : "Uma notificação do sistema quando o Delfos estiver aberto e algo vencer.", `<input type="checkbox" class="switch" data-pref-lembrete-sw="navegador" ${xp.lembretes?.navegador ? "checked" : ""} ${typeof Notification === "undefined" || Notification.permission === "denied" ? "disabled" : ""} aria-label="Avisos do navegador" />`)}
         </div>
       </div>
 
@@ -1003,6 +1095,64 @@ const UI = (() => {
         modal.querySelector('[data-acao="reconfigurar"]').addEventListener("click", () => {
           fechar(null);
           location.href = "bemvindo.html";
+        });
+
+        /* ---- Aparência, painel e rotina: tudo vale na hora, sem "Salvar". ---- */
+        const salvarXp = (patch) => { Store.definirPreferencias({ experiencia: patch }); aplicarAparencia(); };
+        modal.querySelectorAll("[data-pref]").forEach((grupo) => {
+          grupo.addEventListener("click", (ev) => {
+            const b = ev.target.closest("[data-valor]");
+            if (!b) return;
+            grupo.querySelectorAll("[data-valor]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+            const oculto = grupo.querySelector("input");
+            if (oculto) oculto.value = b.dataset.valor;
+            const chave = grupo.dataset.pref;
+            salvarXp({ [chave]: chave === "semanaComeca" ? Number(b.dataset.valor) : b.dataset.valor });
+          });
+        });
+        modal.querySelectorAll("[data-pref-switch]").forEach((sw) => sw.addEventListener("change", () => {
+          const chave = sw.dataset.prefSwitch;
+          if (chave === "movimento") salvarXp({ movimento: sw.checked ? "completo" : "reduzido" });
+          else salvarXp({ [chave]: sw.checked });
+        }));
+        modal.querySelector('[data-pref-select="paginaInicial"]')?.addEventListener("change", (ev) => salvarXp({ paginaInicial: ev.target.value }));
+        modal.querySelectorAll("[data-pref-home]").forEach((sw) => sw.addEventListener("change", () => {
+          Store.definirPreferencias({ experiencia: { home: { [sw.dataset.prefHome]: sw.checked } } });
+        }));
+        modal.querySelector('[data-pref-lembrete="antecedencia"]')?.addEventListener("click", (ev) => {
+          const b = ev.target.closest("[data-valor]");
+          if (!b) return;
+          b.parentElement.querySelectorAll("[data-valor]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+          Store.definirPreferencias({ experiencia: { lembretes: { antecedencia: Number(b.dataset.valor) } } });
+        });
+        modal.querySelectorAll("[data-pref-lembrete-sw]").forEach((sw) => sw.addEventListener("change", async () => {
+          const chave = sw.dataset.prefLembreteSw;
+          if (chave === "navegador" && sw.checked && typeof Notification !== "undefined" && Notification.permission !== "granted") {
+            const r = await Notification.requestPermission().catch(() => "denied");
+            if (r !== "granted") {
+              sw.checked = false;
+              toast("O navegador não liberou os avisos. Dá para liberar nas configurações do site.");
+              return;
+            }
+          }
+          Store.definirPreferencias({ experiencia: { lembretes: { [chave]: sw.checked } } });
+        }));
+        modal.querySelector('[data-acao="atalhos"]')?.addEventListener("click", () => { fechar(null); abrirAtalhos(); });
+
+        // Ordem das abas: as setas trocam a aba de lugar com a vizinha.
+        modal.querySelector("[data-abas]").addEventListener("click", (ev) => {
+          const b = ev.target.closest("[data-mover]");
+          if (!b) return;
+          const ul = modal.querySelector("[data-abas]");
+          const ids = [...ul.querySelectorAll("li[data-aba-id]")].map((li) => li.dataset.abaId);
+          const i = ids.indexOf(b.closest("li").dataset.abaId);
+          const j = i + Number(b.dataset.mover);
+          if (i < 0 || j < 0 || j >= ids.length) return;
+          [ids[i], ids[j]] = [ids[j], ids[i]];
+          salvarXp({ ordemAbas: ids });
+          ul.innerHTML = linhasAbas();
+          ul.querySelector(`li[data-aba-id="${CSS.escape(ids[j])}"] [data-mover="${b.dataset.mover}"]`)?.focus();
+          montarLayout(paginaAtiva, opcoesAtivas);
         });
 
         // Abas fixas: liga/desliga e renomeia na hora, sem precisar de "Salvar".
@@ -1149,19 +1299,50 @@ const UI = (() => {
     OPCOES: [
       { valor: "dark", rotulo: "Escuro" },
       { valor: "light", rotulo: "Claro" },
+      { valor: "auto", rotulo: "Automático" },
     ],
     // O padrão é a noite: sem escolha gravada, o painel abre escuro.
     atual() {
       try { return localStorage.getItem(tema.KEY) || "dark"; } catch { return "dark"; }
     },
+    /** O tema de fato na tela: "auto" segue o claro/escuro do sistema. */
+    aplicado() {
+      const v = tema.atual();
+      if (v !== "auto") return v;
+      return typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    },
     definir(v) {
       try { localStorage.setItem(tema.KEY, v); } catch { /* modo anônimo */ }
-      document.documentElement.setAttribute("data-theme", v);
+      document.documentElement.setAttribute("data-theme", tema.aplicado());
     },
     iniciar() {
-      document.documentElement.setAttribute("data-theme", tema.atual());
+      document.documentElement.setAttribute("data-theme", tema.aplicado());
+      if (!tema.ouvindo && typeof matchMedia === "function") {
+        tema.ouvindo = true;
+        matchMedia("(prefers-color-scheme: light)").addEventListener?.("change", () => {
+          if (tema.atual() === "auto") document.documentElement.setAttribute("data-theme", tema.aplicado());
+        });
+      }
     },
   };
+
+  /**
+   * Preferências de aparência (perfil → Aparência) viram atributos no <html>;
+   * o CSS faz o resto (seção "Preferências de aparência" do theme.css).
+   */
+  function experiencia() {
+    try { return Store.estado().preferencias?.experiencia || {}; } catch { return {}; }
+  }
+  function aplicarAparencia() {
+    const xp = experiencia();
+    const h = document.documentElement;
+    h.dataset.tamanho = xp.tamanho || "normal";
+    h.dataset.densidade = xp.densidade || "confortavel";
+    h.dataset.destaque = xp.destaque || "osso";
+    h.dataset.movimento = xp.movimento || "completo";
+    h.dataset.voz = xp.voz || "serifa";
+    h.dataset.contadores = xp.contadores === false ? "nao" : "sim";
+  }
 
   /* -------------------------------- Toast --------------------------------- */
 
@@ -2083,7 +2264,8 @@ const UI = (() => {
    * Tudo é enfeite de ponteiro: sem mouse ou com "reduzir movimento" no
    * sistema, nada disso é criado e o painel continua igual.
    */
-  const semMovimento = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const semMovimento = () => document.documentElement.dataset.movimento === "reduzido"
+    || (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches);
   const temPonteiro = () => typeof matchMedia === "function" && matchMedia("(hover: hover) and (pointer: fine)").matches;
 
   let luzLigada = false;
@@ -2135,12 +2317,14 @@ const UI = (() => {
     container.prepend(realce);
     let visivel = false;
     const posicionar = (el) => {
-      const c = container.getBoundingClientRect();
-      const r = el.getBoundingClientRect();
+      // Offsets (e não getBoundingClientRect): continuam certos com o zoom do "tamanho do texto".
+      let x = 0;
+      let y = 0;
+      for (let n = el; n && n !== container; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; }
       const aplicar = () => {
-        realce.style.transform = `translate(${r.left - c.left + container.scrollLeft}px, ${r.top - c.top + container.scrollTop}px)`;
-        realce.style.width = `${r.width}px`;
-        realce.style.height = `${r.height}px`;
+        realce.style.transform = `translate(${x}px, ${y}px)`;
+        realce.style.width = `${el.offsetWidth}px`;
+        realce.style.height = `${el.offsetHeight}px`;
       };
       if (visivel) aplicar(); else semTransicao(realce, aplicar);
       realce.style.opacity = "1";
@@ -2236,8 +2420,53 @@ const UI = (() => {
     raiz.querySelectorAll?.(".btn").forEach(trocar);
   }
 
+  /** Atalhos de teclado do painel inteiro (lista em abrirAtalhos). */
+  const ATALHOS = [
+    [["N"], "Novo registro da página (o botão principal do alto)"],
+    [["/"], "Ir para a busca da página, onde houver"],
+    [["Alt", "1…9"], "Ir para a aba nessa posição da barra lateral"],
+    [["?"], "Mostrar esta lista"],
+    [["Esc"], "Fechar a janela aberta"],
+    [["Enter"], "Salvar a janela aberta"],
+  ];
+  function abrirAtalhos() {
+    abrirModal(`
+      <div class="modal-head"><h2 class="modal-title">Atalhos de teclado</h2>
+        <p class="modal-desc">Funcionam em qualquer página, fora dos campos de texto.</p></div>
+      <div class="modal-body"><dl class="atalhos">${ATALHOS.map(([teclas, d]) => `<div><dt>${teclas.map((k) => `<kbd>${fmt.escape(k)}</kbd>`).join(" ")}</dt><dd>${fmt.escape(d)}</dd></div>`).join("")}</dl></div>
+      <div class="modal-foot"><button class="btn primary" data-acao="ok" type="button">Entendi</button></div>`, {
+      aoMontar(modal, fechar) { modal.querySelector('[data-acao="ok"]').addEventListener("click", () => fechar(null)); },
+    });
+  }
+  let atalhosLigados = false;
+  function ligarAtalhos() {
+    if (atalhosLigados) return;
+    atalhosLigados = true;
+    document.addEventListener("keydown", (e) => {
+      if (document.querySelector(".backdrop")) return;
+      const digitando = e.target instanceof Element && e.target.closest("input, textarea, select, [contenteditable='true']");
+      if (e.altKey && /^[1-9]$/.test(e.key)) {
+        const p = paginas()[Number(e.key) - 1];
+        if (p) { e.preventDefault(); location.href = p.href; }
+        return;
+      }
+      if (digitando || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === "/") {
+        const b = document.querySelector('.main input[type="search"], .main .busca input, .main input[placeholder^="Buscar"]');
+        if (b) { e.preventDefault(); b.focus(); }
+      } else if (e.key === "n" || e.key === "N") {
+        const b = document.querySelector(".topbar-actions .btn.primary");
+        if (b) { e.preventDefault(); b.click(); }
+      } else if (e.key === "?") {
+        e.preventDefault();
+        abrirAtalhos();
+      }
+    });
+  }
+
   function iniciarPagina(ativo, opcoes) {
     tema.iniciar();
+    aplicarAparencia();
     realcarBotoes(document);
     new MutationObserver((mudancas) => mudancas.forEach((m) => {
       if (m.target.nodeType !== Node.ELEMENT_NODE) return;
@@ -2260,6 +2489,18 @@ const UI = (() => {
       location.href = "bemvindo.html";
       return;
     }
+    // Página inicial escolhida no perfil: só na primeira página de cada visita,
+    // para "Visão geral" continuar abrindo quando a pessoa clica nela.
+    try {
+      const primeira = !sessionStorage.getItem("delfos.visita");
+      sessionStorage.setItem("delfos.visita", "1");
+      const ini = experiencia().paginaInicial;
+      if (primeira && ativo === "home" && ini && ini !== "home") {
+        const destino = paginas().find((x) => x.id === ini);
+        if (destino) { location.replace(destino.href); return; }
+      }
+    } catch { /* sem sessionStorage: abre onde a pessoa pediu */ }
+    ligarAtalhos();
     // Gastos fixos viram o lançamento do mês ao abrir qualquer página (idempotente).
     if (typeof Financas !== "undefined" && Financas.gerarFixos) {
       try { Financas.gerarFixos(); } catch (e) { console.error("gastos fixos", e); }
@@ -2299,7 +2540,7 @@ const UI = (() => {
   }
 
   return {
-    NOME, VERSAO, ICONES, ICONES_ABA, icone, iconeAba, movimento,
+    NOME, VERSAO, ICONES, ICONES_ABA, icone, iconeAba, movimento, aplicarAparencia, experiencia, abrirAtalhos,
     lerDinheiro, avaliarDinheiro, formatarDinheiroCampo, dataPorExtensoCurta, isoMaisDias, marcaDaPagina,
     fmt, htmlSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
     compromissos, conflitos, contagens, mediaDisciplina, notaNecessaria, proximaAvaliacao, resumoProjeto,

@@ -39,6 +39,11 @@
     // A página abre falando com ele pelo primeiro nome, não com "usuário".
     document.getElementById("saudacao").textContent = Personalizacao.saudacao();
 
+    // O que a visão geral mostra é escolha do perfil (Painel → A visão geral mostra).
+    const mostra = UI.experiencia().home || {};
+    [["sec-topo", "topo"], ["pilares", "pilares"], ["sec-notas", "notas"], ["sec-agenda", "agenda"], ["sec-insights", "insights"]]
+      .forEach(([id, k]) => { const el = document.getElementById(id); if (el) el.hidden = mostra[k] === false; });
+
     const naSemana = UI.compromissos().filter((i) => {
       const d = UI.diasAte(i.data);
       return d !== null && d >= 0 && d <= 7;

@@ -387,23 +387,8 @@
 
   /* --------------------------------- Ações --------------------------------- */
 
-  async function novoLancamento() {
-    const e = Store.estado();
-    const v = await UI.formulario({
-      titulo: "Novo lançamento",
-      descricao: "Registre uma entrada ou saída de dinheiro.",
-      campos: [
-        { nome: "tipo", rotulo: "Tipo", tipo: "segmento", opcoes: [{ valor: "despesa", rotulo: "Despesa" }, { valor: "receita", rotulo: "Receita" }] },
-        { nome: "descricao", rotulo: "Descrição", tipo: "text", obrigatorio: true, placeholder: "Ex.: Almoço no RU" },
-        { nome: "valor", rotulo: "Valor (R$)", tipo: "dinheiro", obrigatorio: true, placeholder: "0,00" },
-        { nome: "categoria", rotulo: "Categoria", tipo: "select", opcoes: e.financeiro.categorias },
-        { nome: "data", rotulo: "Data", tipo: "date", valorPadrao: UI.hojeISO() },
-      ],
-    });
-    if (!v) return;
-    Store.inserir("financeiro.transacoes", { ...v, forma: "", status: "pago" });
-    UI.toast("Lançamento salvo.");
-    render();
+  function novoLancamento() {
+    Lancamento.abrir({ aoSalvar: render });
   }
 
   async function novoPrazo() {

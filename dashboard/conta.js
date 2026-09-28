@@ -160,35 +160,12 @@
 
   /* --------------------------------- Ações ---------------------------------- */
 
-  function camposLancamento() {
-    return [
-      { nome: "tipo", rotulo: "Tipo", tipo: "segmento", opcoes: [{ valor: "despesa", rotulo: "Despesa" }, { valor: "receita", rotulo: "Receita" }] },
-      { nome: "descricao", rotulo: "Descrição", tipo: "text", obrigatorio: true, placeholder: "Ex.: Mercado" },
-      { nome: "valor", rotulo: "Valor (R$)", tipo: "dinheiro", obrigatorio: true, placeholder: "0,00" },
-      { nome: "categoria", rotulo: "Categoria", tipo: "select", opcoes: Store.estado().financeiro.categorias },
-      { nome: "data", rotulo: "Data", tipo: "date", obrigatorio: true, valorPadrao: UI.hojeISO() },
-      { nome: "status", rotulo: "Situação", tipo: "segmento", opcoes: [{ valor: "pago", rotulo: "Pago" }, { valor: "pendente", rotulo: "Pendente" }] },
-    ];
+  function novoLancamento() {
+    Lancamento.abrir({ origemFixa: ORIGEM, aoSalvar: render });
   }
 
-  async function novoLancamento() {
-    const v = await UI.formulario({
-      titulo: "Novo lançamento",
-      descricao: `Registrado com "Pago com": ${item.nome}.`,
-      campos: camposLancamento(),
-    });
-    if (!v) return;
-    Store.inserir("financeiro.transacoes", { ...v, origem: ORIGEM, forma: "" });
-    UI.toast("Lançamento salvo.");
-    render();
-  }
-
-  async function editarLancamento(t) {
-    const v = await UI.formulario({ titulo: "Editar lançamento", campos: camposLancamento(), valores: t });
-    if (!v) return;
-    Store.atualizar("financeiro.transacoes", t.id, v);
-    UI.toast("Lançamento atualizado.");
-    render();
+  function editarLancamento(t) {
+    Lancamento.abrir({ item: t, origemFixa: t.origem || ORIGEM, aoSalvar: render });
   }
 
   function excluirLancamento(t) {

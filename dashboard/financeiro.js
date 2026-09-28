@@ -1033,43 +1033,18 @@
 
   /* --------------------------------- Ações ---------------------------------- */
 
-  function camposLancamento() {
-    return [
-      { nome: "tipo", rotulo: "Tipo", tipo: "segmento", opcoes: [{ valor: "despesa", rotulo: "Saída" }, { valor: "receita", rotulo: "Entrada" }] },
-      { nome: "descricao", rotulo: "Descrição", tipo: "text", obrigatorio: true, placeholder: "Ex.: Livro de farmacologia" },
-      { nome: "valor", rotulo: "Valor (R$)", tipo: "dinheiro", obrigatorio: true, placeholder: "0,00" },
-      { nome: "categoria", rotulo: "Categoria", tipo: "select", opcoes: Store.estado().financeiro.categorias },
-      { nome: "data", rotulo: "Data", tipo: "date", obrigatorio: true, valorPadrao: hoje },
-      {
-        nome: "origem", rotulo: "Pago com", tipo: "select", opcoes: Financas.opcoesOrigem(),
-        dica: Financas.opcoesOrigem().length > 1
-          ? "De qual conta ou cartão o valor sai (ou em qual entra)."
-          : "Cadastre contas e cartões para acompanhar o saldo de cada um.",
+  function novoLancamento() {
+    Lancamento.abrir({
+      aoSalvar: () => {
+        const ultimo = Store.lista("financeiro.transacoes").at(-1);
+        if (ultimo && !filtros.todosMeses && ultimo.data && !ultimo.data.startsWith(estado.mes)) estado.mes = ultimo.data.slice(0, 7);
+        render();
       },
-      { nome: "forma", rotulo: "Observação", tipo: "text", placeholder: "Pix, débito, parcelado…" },
-      { nome: "status", rotulo: "Situação", tipo: "segmento", opcoes: [{ valor: "pago", rotulo: "Pago" }, { valor: "pendente", rotulo: "A pagar" }] },
-    ];
-  }
-
-  async function novoLancamento() {
-    const v = await UI.formulario({
-      titulo: "Novo lançamento",
-      descricao: "Uma entrada ou saída de dinheiro.",
-      campos: camposLancamento(),
     });
-    if (!v) return;
-    Store.inserir("financeiro.transacoes", v);
-    if (!filtros.todosMeses && !v.data.startsWith(estado.mes)) estado.mes = v.data.slice(0, 7);
-    UI.toast("Lançamento salvo.");
-    render();
   }
 
-  async function editarLancamento(item) {
-    const v = await UI.formulario({ titulo: "Editar lançamento", campos: camposLancamento(), valores: item });
-    if (!v) return;
-    Store.atualizar("financeiro.transacoes", item.id, v);
-    UI.toast("Lançamento atualizado.");
-    render();
+  function editarLancamento(item) {
+    Lancamento.abrir({ item, aoSalvar: render });
   }
 
   function repetirHoje(item) {

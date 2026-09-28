@@ -719,6 +719,18 @@ const Store = (() => {
       persistir();
     },
 
+    /** Acrescenta uma categoria de lançamento (sem repetir, ignorando maiúsculas). */
+    adicionarCategoria(nome) {
+      const limpo = String(nome || "").trim().slice(0, 40);
+      if (!limpo) return null;
+      const lista = carregar().financeiro.categorias;
+      const ja = lista.find((c) => c.toLowerCase() === limpo.toLowerCase());
+      if (ja) return ja;
+      lista.push(limpo);
+      persistir();
+      return limpo;
+    },
+
     definirPerfil(patch) {
       const e = carregar();
       e.perfil = { ...e.perfil, ...patch };

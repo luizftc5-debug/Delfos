@@ -1211,42 +1211,178 @@ const UI = (() => {
     return fechar;
   }
 
+  /* ------------------------------ Formulários ------------------------------ */
+
+  /** "1.234,56", "45.9", "R$ 12", "1.200" → número (ou null). */
+  function lerDinheiro(bruto) {
+    let s = String(bruto ?? "").replace(/r\$|\s/gi, "");
+    if (!s) return null;
+    let negativo = false;
+    if (s.startsWith("-")) { negativo = true; s = s.slice(1); }
+    if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+    else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
+    const n = Number(s);
+    if (!Number.isFinite(n)) return null;
+    return negativo ? -n : n;
+  }
+
+  /**
+   * Valor digitado num campo de dinheiro: aceita uma conta curta ("45+12,90",
+   * "120-15") para quem soma a nota de cabeça. Só + e −, nada de eval.
+   */
+  function avaliarDinheiro(bruto) {
+    const s = String(bruto ?? "").trim();
+    if (!s) return null;
+    if (!/[+]|\d\s*-\s*\d/.test(s)) return lerDinheiro(s);
+    const partes = s.replace(/\s/g, "").match(/[+-]?[^+-]+/g) || [];
+    let total = 0;
+    for (const p of partes) {
+      const n = lerDinheiro(p.replace(/^\+/, ""));
+      if (n === null) return null;
+      total += n;
+    }
+    return Math.round(total * 100) / 100;
+  }
+
+  const formatarDinheiroCampo = (v) => (v === null || v === "" || v === undefined || Number.isNaN(Number(v)) ? "" : fmt.decimal(Number(v), 2));
+
+  /** Ícone e cor do cabeçalho de um formulário: os da aba em que a pessoa está. */
+  function marcaDaPagina() {
+    const grupo = paginaAtiva === "pilar" ? `pilar:${opcoesAtivas?.idAtivo || ""}` : GRUPO_DE[paginaAtiva] || paginaAtiva;
+    const p = paginas().find((x) => x.id === grupo);
+    if (!p) return null;
+    return { icone: p.corHex ? iconeAba(p.icone) : icone(p.icone), cor: p.corHex || (p.cor ? `var(--s-${p.cor})` : "var(--texto-2)") };
+  }
+
+  // Tipos que cabem em meia linha; os demais ocupam a linha toda.
+  const CURTOS = new Set(["date", "number", "dinheiro", "select"]);
+
+  /** Decide quais campos ficam lado a lado: só pares vizinhos curtos; um curto sozinho ocupa a linha. */
+  function larguras(campos) {
+    const quer = campos.map((c) => (c.inteira ? false : c.meia || (CURTOS.has(c.tipo) && !c.destaque && !chipsDoSelect(c))));
+    const saida = campos.map(() => "inteira");
+    for (let i = 0; i < campos.length; i++) {
+      if (quer[i] && quer[i + 1]) { saida[i] = "meia"; saida[i + 1] = "meia"; i++; }
+    }
+    return saida;
+  }
+
+  /** Um select com poucas opções curtas vira pílulas: dá para ver tudo e escolher com um toque. */
+  function chipsDoSelect(c) {
+    if (c.tipo !== "select" || c.lista || !Array.isArray(c.opcoes)) return false;
+    if (c.chips) return true;
+    const rots = c.opcoes.map((o) => (typeof o === "string" ? o : o.rotulo));
+    return rots.length >= 2 && rots.length <= 5 && rots.every((r) => String(r).length <= 18);
+  }
+
+  function dataPorExtensoCurta(iso) {
+    if (!iso) return "";
+    const d = new Date(`${iso}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return "";
+    const dias = diasAte(iso);
+    const quando = dias === 0 ? "hoje" : dias === 1 ? "amanhã" : dias === -1 ? "ontem"
+      : dias > 1 && dias < 7 ? `em ${dias} dias` : dias < -1 && dias > -7 ? `há ${-dias} dias` : "";
+    const txt = d.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+    return quando ? `${txt}, ${quando}` : txt;
+  }
+
+  function isoMaisDias(n) {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
   /**
    * Formulário em modal.
-   * campos: [{ nome, rotulo, tipo, opcoes, obrigatorio, dica, valorPadrao }]
+   * campos: [{ nome, rotulo, tipo, opcoes, obrigatorio, dica, valorPadrao, placeholder,
+   *            meia, inteira, destaque (dinheiro grande), chips/lista (select), atalhos (date) }]
    * tipos: text | textarea | number | dinheiro | date | select | segmento |
-   *        anexos | secao (só um título divisor, não guarda valor)
+   *        buscaSelect | simNao | anexos | secao (só um título divisor, não guarda valor)
+   * O cabeçalho leva o ícone da aba em que a pessoa está (ou `icone`/`cor`).
+   * Campos curtos vizinhos ficam lado a lado; selects com poucas opções
+   * viram pílulas; datas ganham atalhos (ontem, hoje, amanhã…) e o dia por
+   * extenso; dinheiro aceita "45+12,90".
    * Resolve com um objeto de valores, ou null se cancelado.
    */
-  function formulario({ titulo, descricao, campos, valores = {}, rotuloConfirmar = "Salvar", largo = false, rotuloExcluir = "", aoExcluir = null }) {
+  function formulario({ titulo, descricao, campos, valores = {}, rotuloConfirmar = "Salvar", largo = false, rotuloExcluir = "", aoExcluir = null, icone: iconeHTML = null, cor = null }) {
     return new Promise((resolve) => {
+      const marca = iconeHTML ? { icone: iconeHTML, cor: cor || "var(--texto-2)" } : marcaDaPagina();
+      const larg = larguras(campos);
       const html = `
-        <div class="modal-head">
-          <h2 class="modal-title">${fmt.escape(titulo)}</h2>
-          ${descricao ? `<p class="modal-desc">${fmt.escape(descricao)}</p>` : ""}
+        <div class="modal-head com-marca">
+          ${marca ? `<span class="modal-ic" style="--ic-cor:${fmt.escape(marca.cor)}">${marca.icone}</span>` : ""}
+          <div class="modal-head-texto">
+            <h2 class="modal-title">${fmt.escape(titulo)}</h2>
+            ${descricao ? `<p class="modal-desc">${fmt.escape(descricao)}</p>` : ""}
+          </div>
         </div>
-        <form class="modal-body" novalidate>
-          ${campos.map((c) => campoHTML(c, valores[c.nome] ?? c.valorPadrao ?? "")).join("")}
+        <form class="modal-body form-grade" novalidate>
+          ${campos.map((c, i) => campoHTML(c, valores[c.nome] ?? c.valorPadrao ?? "", larg[i])).join("")}
         </form>
         <div class="modal-foot">
-          ${aoExcluir ? `<button class="btn danger" data-acao="excluir" type="button" style="margin-right:auto;">${fmt.escape(rotuloExcluir || "Excluir")}</button>` : ""}
+          ${aoExcluir ? `<button class="btn danger" data-acao="excluir" type="button">${fmt.escape(rotuloExcluir || "Excluir")}</button>` : `<span class="modal-atalho">Enter salva, Esc fecha</span>`}
+          <span class="modal-foot-espaco"></span>
           <button class="btn" data-acao="cancelar" type="button">Cancelar</button>
           <button class="btn primary" data-acao="confirmar" type="button">${fmt.escape(rotuloConfirmar)}</button>
         </div>`;
 
       abrirModal(html, {
-        classe: largo ? "wide" : "",
+        classe: `formulario ${largo ? "wide" : ""}`,
         aoMontar(modal, fechar) {
           const form = modal.querySelector("form");
 
-          // Botões de segmento (escolha única em linha)
-          modal.querySelectorAll(".seg").forEach((seg) => {
-            seg.addEventListener("click", (e) => {
-              const b = e.target.closest("button");
+          // Botões de segmento e pílulas de opção (escolha única em linha)
+          modal.querySelectorAll(".seg, .opcoes-chips").forEach((grupo) => {
+            grupo.addEventListener("click", (e) => {
+              const b = e.target.closest("button[data-valor]");
               if (!b) return;
-              seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-              seg.querySelector("input").value = b.dataset.valor;
+              grupo.querySelectorAll("button[data-valor]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+              const oculto = grupo.querySelector("input");
+              oculto.value = b.dataset.valor;
+              oculto.dispatchEvent(new Event("change", { bubbles: true }));
             });
+          });
+
+          // Dinheiro: formata ao sair do campo e mostra o resultado de uma conta.
+          modal.querySelectorAll("[data-dinheiro]").forEach((inp) => {
+            const conta = inp.closest(".field").querySelector("[data-conta]");
+            const atualizar = () => {
+              const temConta = /[+]|\d\s*-\s*\d/.test(inp.value);
+              const v = avaliarDinheiro(inp.value);
+              if (conta) conta.textContent = temConta && v !== null ? `= ${fmt.moeda(v)}` : "";
+            };
+            inp.addEventListener("input", () => { inp.value = inp.value.replace(/[^\d.,+\-\s]/g, ""); atualizar(); });
+            inp.addEventListener("blur", () => {
+              const v = avaliarDinheiro(inp.value);
+              if (v !== null) inp.value = formatarDinheiroCampo(v);
+              atualizar();
+            });
+          });
+
+          // Datas: atalhos e o dia por extenso ao lado do rótulo.
+          modal.querySelectorAll("[data-campo-data]").forEach((campo) => {
+            const inp = campo.querySelector('input[type="date"]');
+            const ext = campo.closest(".field").querySelector("[data-extenso]");
+            const sinc = () => {
+              ext.textContent = dataPorExtensoCurta(inp.value);
+              campo.querySelectorAll("[data-dias]").forEach((b) => b.setAttribute("aria-pressed", String(inp.value === isoMaisDias(Number(b.dataset.dias)))));
+            };
+            campo.addEventListener("click", (e) => {
+              const b = e.target.closest("[data-dias]");
+              if (!b) return;
+              inp.value = isoMaisDias(Number(b.dataset.dias));
+              inp.dispatchEvent(new Event("change", { bubbles: true }));
+            });
+            inp.addEventListener("change", sinc);
+            inp.addEventListener("input", sinc);
+            sinc();
+          });
+
+          // Texto longo cresce com o que se escreve.
+          modal.querySelectorAll("textarea[data-cresce]").forEach((ta) => {
+            const ajustar = () => { ta.style.height = "auto"; ta.style.height = `${Math.min(ta.scrollHeight + 2, 360)}px`; };
+            ta.addEventListener("input", ajustar);
+            requestAnimationFrame(ajustar);
           });
 
           // Campos de anexo: cada um devolve a função que grava seus arquivos.
@@ -1275,9 +1411,9 @@ const UI = (() => {
             });
           });
 
-          const primeiro = form.querySelector("input:not([type=hidden]):not([type=file]), select, textarea");
+          const primeiro = form.querySelector("input:not([type=hidden]):not([type=file]):not([type=checkbox]), select, textarea");
           primeiro?.focus();
-          if (primeiro?.select) setTimeout(() => primeiro.select(), 0);
+          if (primeiro?.select && !primeiro.value) setTimeout(() => primeiro.select(), 0);
 
           const btnOk = modal.querySelector('[data-acao="confirmar"]');
           // Excluir fecha sem salvar e deixa a exclusão (com o desfazer dela) para quem chamou.
@@ -1285,8 +1421,9 @@ const UI = (() => {
 
           const confirmar = async () => {
             const saida = {};
-            let erro = false;
+            let primeiroErro = null;
             modal.querySelectorAll(".field .err").forEach((n) => n.remove());
+            modal.querySelectorAll(".field.tem-erro").forEach((n) => n.classList.remove("tem-erro"));
 
             campos.forEach((c) => {
               if (c.tipo === "secao") return; // divisor visual, não guarda valor
@@ -1294,25 +1431,30 @@ const UI = (() => {
               const input = form.querySelector(`[name="${c.nome}"]`);
               if (c.tipo === "simNao") { saida[c.nome] = input.checked; return; }
               let v = input.value;
-              if (c.tipo === "number" || c.tipo === "dinheiro") {
+              let invalido = false;
+              if (c.tipo === "dinheiro") {
+                v = avaliarDinheiro(v);
+                invalido = String(input.value).trim() !== "" && v === null;
+              } else if (c.tipo === "number") {
                 v = v === "" ? null : Number(String(v).replace(",", "."));
                 if (v !== null && Number.isNaN(v)) v = null;
               } else {
                 v = String(v).trim();
               }
               const vazio = v === "" || v === null;
-              if (c.obrigatorio && vazio) {
-                erro = true;
+              if ((c.obrigatorio && vazio) || invalido) {
                 const campo = input.closest(".field");
                 const span = document.createElement("span");
                 span.className = "err";
-                span.textContent = "Preencha este campo.";
+                span.textContent = invalido ? "Valor não reconhecido. Use, por exemplo, 45,90." : "Preencha este campo.";
                 campo.appendChild(span);
+                campo.classList.add("tem-erro");
+                primeiroErro ||= campo.querySelector("input:not([type=hidden]), select, textarea, button");
               }
               saida[c.nome] = v;
             });
 
-            if (erro) return;
+            if (primeiroErro) { primeiroErro.focus?.(); return; }
 
             const nomes = Object.keys(gravarAnexos);
             if (nomes.length) {
@@ -1335,7 +1477,7 @@ const UI = (() => {
           btnOk.addEventListener("click", confirmar);
           modal.querySelector('[data-acao="cancelar"]').addEventListener("click", () => fechar(null));
           form.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") { e.preventDefault(); confirmar(); }
+            if (e.key === "Enter" && e.target.tagName !== "TEXTAREA" && e.target.tagName !== "BUTTON") { e.preventDefault(); confirmar(); }
           });
         },
         aoFechar: resolve,
@@ -1343,26 +1485,35 @@ const UI = (() => {
     });
   }
 
-  function campoHTML(c, valor) {
+  function campoHTML(c, valor, largura = "inteira") {
     // Divisor com título: só organiza formulários longos, não guarda valor.
     if (c.tipo === "secao") return `<div class="form-secao">${fmt.escape(c.rotulo)}</div>`;
 
     const v = fmt.escape(valor);
+    const id = `f-${c.nome}`;
     let controle;
+    let extraRotulo = "";
+    let classe = "";
 
     switch (c.tipo) {
       case "textarea":
-        controle = `<textarea name="${c.nome}" placeholder="${fmt.escape(c.placeholder || "")}">${v}</textarea>`;
+        controle = `<textarea id="${id}" name="${c.nome}" data-cresce placeholder="${fmt.escape(c.placeholder || "")}">${v}</textarea>`;
         break;
-      case "select":
-        controle = `<select name="${c.nome}">${c.opcoes
-          .map((o) => {
-            const val = typeof o === "string" ? o : o.valor;
-            const rot = typeof o === "string" ? o : o.rotulo;
-            return `<option value="${fmt.escape(val)}" ${String(val) === String(valor) ? "selected" : ""}>${fmt.escape(rot)}</option>`;
-          })
-          .join("")}</select>`;
+      case "select": {
+        const opcoes = (c.opcoes || []).map((o) => (typeof o === "string" ? { valor: o, rotulo: o } : o));
+        if (chipsDoSelect(c)) {
+          const atual = valor !== "" && valor !== null && valor !== undefined ? valor : opcoes[0]?.valor ?? "";
+          controle = `<div class="chips opcoes-chips" role="group" aria-label="${fmt.escape(c.rotulo)}">
+              <input type="hidden" name="${c.nome}" value="${fmt.escape(atual)}" />
+              ${opcoes.map((o) => `<button type="button" class="chip" data-valor="${fmt.escape(o.valor)}" aria-pressed="${String(o.valor) === String(atual)}">${fmt.escape(o.rotulo || "Nenhum")}</button>`).join("")}
+            </div>`;
+        } else {
+          controle = `<select id="${id}" name="${c.nome}">${opcoes
+            .map((o) => `<option value="${fmt.escape(o.valor)}" ${String(o.valor) === String(valor) ? "selected" : ""}>${fmt.escape(o.rotulo)}</option>`)
+            .join("")}</select>`;
+        }
         break;
+      }
       // Como "select", mas com um catálogo grande demais pra rolar numa lista
       // só — digitar filtra as opções (<datalist>, sem biblioteca nenhuma). O
       // texto visível e o valor guardado são coisas diferentes: um campo
@@ -1373,7 +1524,7 @@ const UI = (() => {
         const rotuloAtual = opcoes.find((o) => String(o.valor) === String(valor))?.rotulo || "";
         const listId = `dl-${c.nome}-${Math.random().toString(36).slice(2, 8)}`;
         controle = `
-          <input type="text" list="${listId}" name="${c.nome}__busca" value="${fmt.escape(rotuloAtual)}"
+          <input type="text" id="${id}" list="${listId}" name="${c.nome}__busca" value="${fmt.escape(rotuloAtual)}"
                  placeholder="${fmt.escape(c.placeholder || "Digite para buscar…")}" autocomplete="off" />
           <datalist id="${listId}">${opcoes.map((o) => `<option value="${fmt.escape(o.rotulo)}"></option>`).join("")}</datalist>
           <input type="hidden" name="${c.nome}" value="${fmt.escape(valor)}" />`;
@@ -1404,22 +1555,37 @@ const UI = (() => {
           </div>`;
         break;
       }
-      case "date":
-        controle = `<input type="date" name="${c.nome}" value="${v}" />`;
+      case "date": {
+        const atalhos = c.atalhos === false ? [] : c.atalhos || [[-1, "Ontem"], [0, "Hoje"], [1, "Amanhã"], [7, "Em 1 semana"]];
+        classe = "campo-data";
+        extraRotulo = `<span class="data-extenso" data-extenso></span>`;
+        controle = `<div class="data-linha" data-campo-data>
+            <input type="date" id="${id}" name="${c.nome}" value="${v}" />
+            ${atalhos.length ? `<div class="datas-rapidas">${atalhos.map(([n, r]) => `<button type="button" class="chip mini" data-dias="${n}">${fmt.escape(r)}</button>`).join("")}</div>` : ""}
+          </div>`;
         break;
+      }
       case "simNao":
         controle = `<label class="campo-simnao"><input type="checkbox" class="check" name="${c.nome}" ${valor ? "checked" : ""} /> ${fmt.escape(c.rotuloMarcado || "Sim")}</label>`;
         break;
-      case "number":
       case "dinheiro":
-        controle = `<input type="number" step="${c.tipo === "dinheiro" ? "0.01" : c.step || "1"}" name="${c.nome}" value="${v}" placeholder="${fmt.escape(c.placeholder || "")}" />`;
+        classe = c.destaque ? "campo-dinheiro-destaque" : "";
+        controle = `<div class="campo-dinheiro ${c.destaque ? "destaque" : ""}">
+            <span class="prefixo">R$</span>
+            <input type="text" inputmode="decimal" autocomplete="off" id="${id}" name="${c.nome}" data-dinheiro
+                   value="${fmt.escape(formatarDinheiroCampo(valor))}" placeholder="${fmt.escape(c.placeholder || "0,00")}" />
+            <span class="conta-resultado" data-conta aria-live="polite"></span>
+          </div>`;
+        break;
+      case "number":
+        controle = `<input type="number" id="${id}" step="${c.step || "1"}" ${c.min !== undefined ? `min="${c.min}"` : ""} ${c.max !== undefined ? `max="${c.max}"` : ""} name="${c.nome}" value="${v}" placeholder="${fmt.escape(c.placeholder || "")}" />`;
         break;
       default:
-        controle = `<input type="text" name="${c.nome}" value="${v}" placeholder="${fmt.escape(c.placeholder || "")}" />`;
+        controle = `<input type="text" id="${id}" name="${c.nome}" value="${v}" placeholder="${fmt.escape(c.placeholder || "")}" autocomplete="off" />`;
     }
 
-    return `<div class="field">
-        <label for="${c.nome}">${fmt.escape(c.rotulo)}${c.obrigatorio ? "" : ' <span class="muted">(opcional)</span>'}</label>
+    return `<div class="field ${largura} ${classe}">
+        <label for="${id}">${fmt.escape(c.rotulo)}${extraRotulo}</label>
         ${controle}
         ${c.dica ? `<span class="hint">${fmt.escape(c.dica)}</span>` : ""}
       </div>`;
@@ -2134,6 +2300,7 @@ const UI = (() => {
 
   return {
     NOME, VERSAO, ICONES, ICONES_ABA, icone, iconeAba, movimento,
+    lerDinheiro, avaliarDinheiro, formatarDinheiroCampo, dataPorExtensoCurta, isoMaisDias, marcaDaPagina,
     fmt, htmlSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
     compromissos, conflitos, contagens, mediaDisciplina, notaNecessaria, proximaAvaliacao, resumoProjeto,
     iniciarPagina, montarLayout, tema, toast, formulario, confirmar, abrirModal,

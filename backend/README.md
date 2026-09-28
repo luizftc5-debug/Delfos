@@ -121,7 +121,7 @@ backend/
   test/              testes (node --test, com um D1 falso sobre node:sqlite)
 ```
 
-- **Testes:** `npm test` (Node 22+, sem instalar nada).
+- **Testes:** `npm install` uma vez e depois `npm test` (Node 22+).
 - **Rodar local:** `npm install` e `npm run dev` (servidor em `http://localhost:8787`). Sirva o
   painel em `http://localhost:8000` e, no console do navegador,
   `localStorage.setItem("organizador.api", "http://localhost:8787")` — liga as contas só naquele

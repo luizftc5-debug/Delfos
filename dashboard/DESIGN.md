@@ -135,6 +135,26 @@ normal, com um ponto colorido do lado.
 └────────────┴─────────────────────────────────────────────────────┘
 ```
 
+## Movimento
+
+O hover responde ao gesto em vez de "ligar" um estado. Três curvas em `theme.css`
+(`--ease-saida`, que chega rápido e assenta devagar; `--ease-mola`, que passa um
+fio do ponto e volta; `--ease-troca`) e três tempos (160/280/460 ms) para tudo.
+
+- **Luz que segue o ponteiro** nos cartões: um halo de osso a 6% (3,5% no claro)
+  e um fio de luz na borda perto do ponteiro — nenhuma cor nova, nenhum brilho.
+- **Destaque que desliza**: um único fundo percorre os itens do menu lateral; o
+  sublinhado das abas corre até a aba sob o ponteiro e volta à ativa; o fundo da
+  escolha única (Despesa/Receita) desliza até a opção marcada.
+- O que leva a algum lugar (cartão de pilar, anexo) sobe 2px com sombra; o resto
+  só acende. Botão cede ao clique e volta com mola; o "+" gira 90°; o sublinhado
+  dos links se desenha da esquerda para a direita; linhas de lista ganham um véu
+  e as ações chegam deslizando.
+- As seções da página chegam em cascata curta (40 ms entre elas), só na primeira
+  pintura — re-render não anima de novo.
+- Tudo de ponteiro fica em `(hover: hover) and (pointer: fine)`; com "reduzir
+  movimento" no sistema, `UI.movimento` não cria nada e o CSS zera as durações.
+
 ## Gráficos
 
 - Barra com 4px de ponta arredondada, até 20–24px de espessura, 2px de vão

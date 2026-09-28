@@ -110,7 +110,7 @@ const UI = (() => {
   function icone(nome, classe = "") {
     const miolo = ICONES[nome];
     if (!miolo) return "";
-    return `<svg class="ico ${classe}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${miolo}</svg>`;
+    return `<svg class="ico ${classe}" data-ico="${nome}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${miolo}</svg>`;
   }
 
   /* ------------------------------ Formatos ------------------------------- */
@@ -1906,6 +1906,152 @@ const UI = (() => {
     el.appendChild(lista);
   }
 
+  /* -------------------------------- Movimento ------------------------------ */
+
+  /**
+   * A parte do hover que o CSS sozinho não faz (ver "Movimento" em theme.css):
+   * - a luz que acompanha o ponteiro dentro de cartões (--mx/--my);
+   * - um destaque único que desliza entre os itens do menu lateral;
+   * - o sublinhado das abas, que desliza até a aba sob o ponteiro e volta;
+   * - o fundo da escolha única (.seg), que desliza até a opção marcada.
+   * Tudo é enfeite de ponteiro: sem mouse ou com "reduzir movimento" no
+   * sistema, nada disso é criado e o painel continua igual.
+   */
+  const semMovimento = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const temPonteiro = () => typeof matchMedia === "function" && matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+  let luzLigada = false;
+  function ligarLuz() {
+    if (luzLigada) return;
+    luzLigada = true;
+    let alvos = [];
+    let x = 0;
+    let y = 0;
+    let agendado = false;
+    const pintar = () => {
+      agendado = false;
+      alvos.forEach((el) => {
+        const r = el.getBoundingClientRect();
+        el.style.setProperty("--mx", `${Math.round(x - r.left)}px`);
+        el.style.setProperty("--my", `${Math.round(y - r.top)}px`);
+      });
+    };
+    document.addEventListener("pointermove", (e) => {
+      if (e.pointerType !== "mouse") return;
+      x = e.clientX;
+      y = e.clientY;
+      // O cartão sob o ponteiro e os que o contêm (uma faixa dentro de outra).
+      alvos = [];
+      let el = e.target instanceof Element ? e.target.closest(".card, .pillar") : null;
+      while (el && alvos.length < 3) {
+        alvos.push(el);
+        el = el.parentElement?.closest(".card, .pillar") || null;
+      }
+      if (alvos.length && !agendado) { agendado = true; requestAnimationFrame(pintar); }
+    }, { passive: true });
+  }
+
+  /** Coloca um elemento sobre outro sem animar (primeira aparição). */
+  function semTransicao(el, fn) {
+    el.style.transition = "none";
+    fn();
+    void el.offsetWidth;
+    el.style.transition = "";
+  }
+
+  function realceDeslizante(container) {
+    if (!container || container.dataset.realce) return;
+    container.dataset.realce = "1";
+    container.classList.add("com-realce");
+    const realce = document.createElement("span");
+    realce.className = "realce-nav";
+    realce.setAttribute("aria-hidden", "true");
+    container.prepend(realce);
+    let visivel = false;
+    const posicionar = (el) => {
+      const c = container.getBoundingClientRect();
+      const r = el.getBoundingClientRect();
+      const aplicar = () => {
+        realce.style.transform = `translate(${r.left - c.left + container.scrollLeft}px, ${r.top - c.top + container.scrollTop}px)`;
+        realce.style.width = `${r.width}px`;
+        realce.style.height = `${r.height}px`;
+      };
+      if (visivel) aplicar(); else semTransicao(realce, aplicar);
+      realce.style.opacity = "1";
+      visivel = true;
+    };
+    container.addEventListener("pointerover", (e) => {
+      const el = e.target instanceof Element ? e.target.closest(".nav-item, .nav-subitem") : null;
+      if (el && container.contains(el)) posicionar(el);
+    });
+    container.addEventListener("pointerleave", () => { realce.style.opacity = "0"; visivel = false; });
+  }
+
+  function indicadorAbas(abas) {
+    if (abas.dataset.indicador) return;
+    abas.dataset.indicador = "1";
+    abas.classList.add("com-indicador");
+    const ind = document.createElement("span");
+    ind.className = "indicador-abas";
+    ind.setAttribute("aria-hidden", "true");
+    abas.appendChild(ind);
+    const itens = () => [...abas.children].filter((x) => x !== ind && /^(A|BUTTON)$/.test(x.tagName));
+    const ativa = () => itens().find((x) => x.getAttribute("aria-current") === "page" || x.getAttribute("aria-selected") === "true");
+    const ir = (el, provando = false, animar = true) => {
+      if (!el || !el.offsetWidth) { ind.style.opacity = "0"; return; }
+      const aplicar = () => {
+        ind.style.width = `${el.offsetWidth}px`;
+        ind.style.transform = `translateX(${el.offsetLeft}px)`;
+      };
+      if (animar) aplicar(); else semTransicao(ind, aplicar);
+      ind.style.opacity = "1";
+      abas.classList.toggle("provando", provando);
+    };
+    ir(ativa(), false, false);
+    abas.addEventListener("pointerover", (e) => {
+      const el = e.target instanceof Element ? e.target.closest("a, button") : null;
+      if (el && el.parentElement === abas) ir(el, el !== ativa());
+    });
+    abas.addEventListener("pointerleave", () => ir(ativa()));
+    new MutationObserver(() => ir(ativa())).observe(abas, { attributes: true, subtree: true, attributeFilter: ["aria-selected", "aria-current"] });
+    if (typeof ResizeObserver === "function") new ResizeObserver(() => ir(ativa(), false, false)).observe(abas);
+  }
+
+  function trilhoSeg(seg) {
+    if (seg.dataset.trilho) return;
+    seg.dataset.trilho = "1";
+    seg.classList.add("com-trilho");
+    const trilho = document.createElement("span");
+    trilho.className = "trilho-seg";
+    trilho.setAttribute("aria-hidden", "true");
+    seg.prepend(trilho);
+    const ir = (animar = true) => {
+      const b = seg.querySelector('button[aria-pressed="true"]');
+      if (!b || !b.offsetWidth) { trilho.style.opacity = "0"; return; }
+      const aplicar = () => {
+        trilho.style.width = `${b.offsetWidth}px`;
+        trilho.style.height = `${b.offsetHeight}px`;
+        trilho.style.transform = `translate(${b.offsetLeft}px, ${b.offsetTop}px)`;
+      };
+      if (animar && trilho.style.opacity === "1") aplicar(); else semTransicao(trilho, aplicar);
+      trilho.style.opacity = "1";
+    };
+    ir(false);
+    new MutationObserver(() => ir()).observe(seg, { attributes: true, subtree: true, attributeFilter: ["aria-pressed"] });
+    if (typeof ResizeObserver === "function") new ResizeObserver(() => ir(false)).observe(seg);
+  }
+
+  /** Liga o movimento em tudo que houver dentro de `raiz` (a página ou o que acabou de ser desenhado). */
+  function movimento(raiz = document) {
+    if (semMovimento() || !raiz.querySelectorAll) return;
+    const achar = (sel) => [...(raiz.matches?.(sel) ? [raiz] : []), ...raiz.querySelectorAll(sel)];
+    achar(".seg").forEach(trilhoSeg);
+    achar(".abas").forEach(indicadorAbas);
+    if (!temPonteiro()) return;
+    ligarLuz();
+    achar(".sidebar .nav").forEach(realceDeslizante);
+  }
+
   /* ------------------------------ Inicialização ---------------------------- */
 
   /**
@@ -1928,8 +2074,15 @@ const UI = (() => {
     tema.iniciar();
     realcarBotoes(document);
     new MutationObserver((mudancas) => mudancas.forEach((m) => {
-      if (m.target.nodeType === Node.ELEMENT_NODE) realcarBotoes(m.target);
+      if (m.target.nodeType !== Node.ELEMENT_NODE) return;
+      realcarBotoes(m.target);
+      m.addedNodes.forEach((n) => { if (n.nodeType === Node.ELEMENT_NODE) movimento(n); });
     })).observe(document.body, { childList: true, subtree: true });
+    // As seções chegam em cascata curta só na primeira pintura (theme.css, body.entrando).
+    if (!semMovimento()) {
+      document.body.classList.add("entrando");
+      setTimeout(() => document.body.classList.remove("entrando"), 900);
+    }
     // Sem conta, sessao.js já está levando para entrar.html (com a página
     // escondida): o assistente espera a pessoa entrar, para os dois
     // redirecionamentos não disputarem.
@@ -1947,6 +2100,7 @@ const UI = (() => {
     }
     montarLayout(ativo, opcoes);
     avisarSeAbaDesligada(ativo);
+    movimento(document);
   }
 
   /**
@@ -1979,7 +2133,7 @@ const UI = (() => {
   }
 
   return {
-    NOME, VERSAO, ICONES, ICONES_ABA, icone, iconeAba,
+    NOME, VERSAO, ICONES, ICONES_ABA, icone, iconeAba, movimento,
     fmt, htmlSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
     compromissos, conflitos, contagens, mediaDisciplina, notaNecessaria, proximaAvaliacao, resumoProjeto,
     iniciarPagina, montarLayout, tema, toast, formulario, confirmar, abrirModal,

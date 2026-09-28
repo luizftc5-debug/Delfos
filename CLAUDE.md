@@ -587,6 +587,11 @@ falso, `→` no fim de link), "azulejo baiano" (ornamento temático) e a própri
 - **Raio por hierarquia** (janela 18, superfície 14, controle 8, selo em pílula), **abas
   sublinhadas** (`.abas`) para seções irmãs, **pílulas** (`.chip`) para filtro, **interruptor**
   (`.switch`) para ligar/desligar.
+- **Movimento** (seção "Movimento" do `theme.css` + `UI.movimento` em `ui.js`, chamado por
+  `iniciarPagina` e pelo mesmo `MutationObserver` do `realcarBotoes`): curvas `--ease-*`, luz que
+  segue o ponteiro nos cartões (`--mx/--my`), destaque deslizante no menu (`.realce-nav`), nas
+  abas (`.indicador-abas`) e na escolha única (`.trilho-seg`). Só com mouse; nada com "reduzir
+  movimento". `UI.icone` marca cada SVG com `data-ico="<nome>"` (é o que gira o "+").
 - Metadados em frase ou com vírgula — nunca colados com " · " (só o título da aba do navegador
   ainda usa).
 

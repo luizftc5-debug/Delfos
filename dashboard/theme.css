@@ -1800,6 +1800,263 @@ a.semana-item:hover .t { text-decoration: underline; text-underline-offset: 3px;
 .meta-linha { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .meta-linha select.input { width: auto; }
 
+/* ------------------------------- Movimento --------------------------------
+   Hover que responde ao gesto, não um estado que "liga": curvas que
+   desaceleram como algo físico (nada de ease linear), a luz que acompanha o
+   ponteiro dentro das caixas, um destaque que desliza entre os itens do
+   menu e das abas em vez de piscar em cada um, e mola curta nos controles.
+   Continua sóbrio: nenhuma cor nova, nenhum brilho colorido — a luz é o
+   próprio osso do texto a poucos por cento. Tudo que é de ponteiro fica
+   em (hover: hover); quem pede menos movimento no sistema não vê nada disso.
+   A parte que precisa de JS (luz, destaque deslizante) mora em ui.js
+   (UI.movimento), ligada por iniciarPagina. */
+
+:root {
+  --ease-saida: cubic-bezier(0.22, 1, 0.36, 1);   /* chega rápido, assenta devagar */
+  --ease-mola: cubic-bezier(0.34, 1.45, 0.64, 1); /* passa um fio do ponto e volta */
+  --ease-troca: cubic-bezier(0.65, 0, 0.35, 1);   /* entra e sai com o mesmo peso */
+  --t-rapido: 160ms;
+  --t-medio: 280ms;
+  --t-lento: 460ms;
+  --luz: color-mix(in srgb, var(--texto) 6%, transparent);
+  --luz-borda: color-mix(in srgb, var(--texto) 26%, transparent);
+  --lavado: color-mix(in srgb, var(--superficie-2) 60%, var(--superficie));
+}
+:root[data-theme="light"] {
+  --luz: color-mix(in srgb, var(--texto) 3.5%, transparent);
+  --luz-borda: color-mix(in srgb, var(--texto) 20%, transparent);
+}
+
+/* Todas as trocas de cor passam a usar as mesmas curvas. */
+.btn, .chip, .seg button, .nav-item, .nav-subitem, .nav-nova, .brand, .pillar, .abas > a, .abas > button,
+.menu-acao, .editor-btn, .tema-opcao, .icone-opcao, a.anexo, button.anexo, .dropzone, .badge,
+.input, .field input, .field select, .field textarea {
+  transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+  transition-duration: var(--t-medio);
+  transition-timing-function: var(--ease-saida);
+}
+
+/* Aperto: todo botão cede um pouco ao clique e volta com mola. */
+.btn, .chip, .seg button, .nav-nova, .brand, .editor-btn, .icone-opcao, .tema-opcao {
+  transition-property: background-color, border-color, color, box-shadow, transform;
+}
+.btn:active:not(:disabled), .chip:active, .seg button:active, .nav-nova:active, .editor-btn:active, .icone-opcao:active, .tema-opcao:active {
+  transform: scale(0.965);
+  transition-duration: 90ms;
+  transition-timing-function: var(--ease-troca);
+}
+.brand:active { transform: scale(0.985); transition-duration: 90ms; }
+
+/* Ícones dentro de botões respondem ao hover do botão. */
+.btn .ico, .nav-nova .ico, .pillar-ic, .nav-icon, .dz-icone, .brand-caret .ico, .empty-icon {
+  transition: transform var(--t-medio) var(--ease-mola), color var(--t-medio) var(--ease-saida), background-color var(--t-medio) var(--ease-saida);
+}
+
+/* Campos: a borda acende ao passar, e o anel de foco se abre em vez de aparecer. */
+.input, .field input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]), .field select, .field textarea {
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--texto) 0%, transparent);
+}
+
+/* Interruptor com mola: a bolinha passa um fio do lugar e assenta. */
+.switch { transition: background-color var(--t-medio) var(--ease-saida), border-color var(--t-medio) var(--ease-saida); }
+.switch::after { transition: transform var(--t-lento) var(--ease-mola), background-color var(--t-medio) var(--ease-saida), width var(--t-rapido) var(--ease-saida); }
+.switch:active::after { width: 19px; }
+.switch:checked:active::after { transform: translateX(13px); }
+
+/* Caixa de marcar: o visto nasce com um pulinho. */
+input[type="checkbox"].check { transition: transform var(--t-medio) var(--ease-mola); }
+input[type="checkbox"].check:active { transform: scale(0.86); }
+
+/* Sublinhado que se desenha da esquerda para a direita, em vez de piscar. */
+.titulo-link, .linha-link .title, a.semana-item .t, .cat-linha[data-cat] .cat-nome span {
+  text-decoration: none !important;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1px;
+  transition: background-size var(--t-lento) var(--ease-saida), color var(--t-medio) var(--ease-saida);
+  padding-bottom: 1px;
+}
+
+/* Destaque que desliza (menu lateral e abas sublinhadas) — elementos criados por UI.movimento. */
+.realce-nav {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-radius: var(--r-sm);
+  background: var(--superficie);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--linha-forte) 55%, transparent);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 0;
+  transition:
+    transform var(--t-medio) var(--ease-saida),
+    width var(--t-medio) var(--ease-saida),
+    height var(--t-medio) var(--ease-saida),
+    opacity var(--t-medio) var(--ease-saida);
+}
+.com-realce { position: relative; }
+.com-realce > .nav-item, .com-realce > .nav-sub, .com-realce > .nav-nova { position: relative; z-index: 1; }
+.com-realce .nav-subitem { position: relative; z-index: 1; }
+
+.indicador-abas {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 0;
+  border-radius: 2px;
+  background: var(--texto);
+  pointer-events: none;
+  transition: transform var(--t-lento) var(--ease-saida), width var(--t-lento) var(--ease-saida), opacity var(--t-medio) var(--ease-saida), background-color var(--t-medio);
+}
+.abas.com-indicador { position: relative; }
+.abas.com-indicador > a, .abas.com-indicador > button { border-bottom-color: transparent !important; }
+.abas.com-indicador.provando .indicador-abas { background: var(--texto-3); }
+
+/* Escolha única (Despesa/Receita, Pago/A pagar): o fundo escolhido desliza até a opção. */
+.seg.com-trilho { position: relative; isolation: isolate; }
+.seg.com-trilho > button { position: relative; z-index: 1; }
+.seg.com-trilho > button[aria-pressed="true"] { background: transparent; box-shadow: none; }
+.trilho-seg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 7px;
+  background: var(--superficie-3);
+  box-shadow: inset 0 0 0 1px var(--linha-forte);
+  pointer-events: none;
+  z-index: 0;
+  transition: transform var(--t-medio) var(--ease-mola), width var(--t-medio) var(--ease-saida), height var(--t-medio) var(--ease-saida);
+}
+
+/* Linhas de lista: um véu que acende por baixo e as ações que chegam deslizando. */
+.list li::before {
+  content: "";
+  position: absolute;
+  inset: 1px -10px;
+  border-radius: var(--r-sm);
+  background: var(--lavado);
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity var(--t-medio) var(--ease-saida);
+}
+.list li > * { position: relative; z-index: 1; }
+.list li > .row-actions { z-index: 2; }
+table.sheet tbody tr { transition: background-color var(--t-medio) var(--ease-saida); }
+.linhas-valor li { position: relative; }
+.linhas-valor li::before {
+  content: "";
+  position: absolute;
+  inset: 1px -10px;
+  border-radius: var(--r-sm);
+  background: var(--lavado);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-medio) var(--ease-saida);
+}
+.linhas-valor li > * { position: relative; }
+
+/* Luz nas caixas: um halo que acompanha o ponteiro (posição em --mx/--my,
+   escrita por UI.movimento) e um fio de luz na borda perto dele. */
+.card, .pillar, .notice, a.anexo, button.anexo, .semana, .meta-cartao, .pergunta, .tema-opcao, .perfil-stat {
+  --mx: 50%;
+  --my: 50%;
+}
+.card::after, .pillar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(420px circle at var(--mx) var(--my), var(--luz), transparent 62%);
+  transition: opacity var(--t-lento) var(--ease-saida);
+}
+.card::before, .pillar::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(240px circle at var(--mx) var(--my), var(--luz-borda), transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  transition: opacity var(--t-lento) var(--ease-saida);
+}
+/* Nas faixas contíguas de números a borda é o vão de 1px: só o halo. */
+.grid.g3:has(> .card > .stat-value) > .card::before,
+.grid.g4:has(> .card > .stat-value) > .card::before { display: none; }
+.pillar { position: relative; }
+
+/* Entrada da página: as seções chegam em cascata curta, só na primeira pintura. */
+@keyframes chegar { from { opacity: 0; transform: translateY(6px); } }
+body.entrando .main .wrap > * { animation: chegar var(--t-lento) var(--ease-saida) both; }
+body.entrando .main .wrap > *:nth-child(2) { animation-delay: 40ms; }
+body.entrando .main .wrap > *:nth-child(3) { animation-delay: 80ms; }
+body.entrando .main .wrap > *:nth-child(4) { animation-delay: 120ms; }
+body.entrando .main .wrap > *:nth-child(5) { animation-delay: 160ms; }
+body.entrando .main .wrap > *:nth-child(n+6) { animation-delay: 200ms; }
+
+/* Janelas: sobem com a mesma curva do resto. */
+.modal { animation-timing-function: var(--ease-saida) !important; animation-duration: var(--t-medio) !important; }
+
+@media (hover: hover) and (pointer: fine) {
+  /* As ações da linha chegam deslizando (só com mouse: no toque elas ficam sempre à vista, paradas). */
+  .list .row-actions:not(.fixas) {
+    background: linear-gradient(90deg, transparent, var(--lavado) 26px);
+    transform: translate(8px, -50%);
+    transition: opacity var(--t-medio) var(--ease-saida), transform var(--t-medio) var(--ease-saida);
+  }
+  table.sheet .row-actions { transform: translateX(6px); transition: opacity var(--t-medio) var(--ease-saida), transform var(--t-medio) var(--ease-saida); }
+
+  .card:hover::after, .pillar:hover::after { opacity: 1; }
+  .card:hover::before, .pillar:hover::before { opacity: 1; }
+
+  /* O que leva a algum lugar sobe um fio e ganha sombra; o resto só acende. */
+  .pillar:hover, a.anexo:hover, button.anexo:hover, a.card:hover, .tema-opcao:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lift);
+  }
+  .pillar:hover { background: var(--superficie); }
+  .pillar:hover .pillar-ic { transform: translateY(-2px) scale(1.08); }
+  .pillar .arrow { transition: color var(--t-medio) var(--ease-saida), transform var(--t-medio) var(--ease-mola); display: inline-block; }
+  .pillar:hover .arrow { transform: translateX(4px); }
+
+  .btn:hover:not(:disabled) .ico { transform: scale(1.1); }
+  .btn:hover:not(:disabled) .ico[data-ico="mais"], .nav-nova:hover .ico { transform: rotate(90deg) scale(1.06); }
+  .btn.primary:hover:not(:disabled) { box-shadow: 0 6px 18px -10px color-mix(in srgb, var(--texto) 55%, transparent); }
+  .chip:hover:not([aria-pressed="true"]) { background: var(--superficie-2); }
+  .brand:hover .brand-caret .ico { transform: translateY(-2px); }
+  .brand:hover .brand-mark { transform: scale(1.04); }
+  .brand-mark { transition: transform var(--t-medio) var(--ease-mola); }
+
+  .input:hover:not(:focus), .field input:hover:not(:focus):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  .field select:hover:not(:focus), .field textarea:hover:not(:focus) { border-color: var(--texto-3); }
+
+  .titulo-link:hover, .linha-link:hover .title, a.semana-item:hover .t, .cat-linha[data-cat]:hover .cat-nome span { background-size: 100% 1px; }
+
+  .list li:hover::before { opacity: 1; }
+  .list li:hover .row-actions:not(.fixas), .list li:focus-within .row-actions:not(.fixas) { transform: translate(0, -50%); }
+  table.sheet tbody tr:hover .row-actions, table.sheet tbody tr:focus-within .row-actions { transform: none; }
+  .linhas-valor li:hover::before { opacity: 1; }
+
+  .dropzone:hover .dz-icone { transform: translateY(-3px); }
+  .empty:hover .empty-icon { transform: translateY(-2px) rotate(-4deg); }
+  .icone-opcao:hover { transform: translateY(-1px); }
+
+  /* Com o destaque deslizante ligado, o item em si não acende mais — quem acende é ele. */
+  .com-realce .nav-item:hover, .com-realce .nav-subitem:hover, .com-realce ~ .nav-nova:hover { background: transparent; }
+  .nav-item:hover .nav-icon { transform: scale(1.1); }
+}
+
+
 /* ------------------------------ Responsivo ------------------------------- */
 
 @media (max-width: 1100px) {

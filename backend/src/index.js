@@ -12,7 +12,7 @@
 
    Rotas (todas sob /api; só saude, cadastro e entrar dispensam sessão):
 
-     GET  /api/saude                  no ar? o cadastro pede convite?
+     GET  /api/saude                  no ar? o cadastro pede convite? a IA está ligada?
      POST /api/cadastro               { email, chave, convite?, manter? } → { token, usuario, codigoRecuperacao }
      POST /api/entrar                 { email, chave, manter? } → { token, usuario }
      POST /api/recuperar              { email, codigo, chaveNova } — esqueceu a senha
@@ -30,6 +30,7 @@
      GET  /api/arquivos               anexos guardados
      PUT  /api/arquivos/:id           envia um anexo
      GET  /api/arquivos/:id           baixa um anexo
+     POST /api/ia/aba                 { nome, contexto?, existentes? } → { sugestao } (Claude; ver ia.js)
    =========================================================================== */
 
 import { baixarArquivo, enviarArquivo, listarArquivos } from "./arquivos.js";
@@ -38,6 +39,7 @@ import {
   sairDosOutros, trocarSenha,
 } from "./contas.js";
 import { gravarEstado, guardarCopia, listarVersoes, obterEstado, obterVersao } from "./estado.js";
+import { iaLigada, sugerirAba } from "./ia.js";
 import { limpar } from "./limpeza.js";
 import { ErroHttp, json } from "./respostas.js";
 
@@ -76,7 +78,7 @@ async function rotear(request, env) {
     return json({ servico: "Delfos API", versao: VERSAO_API, documentacao: "backend/README.md no repositório" });
   }
   if (caminho === "/api/saude" && metodo === "GET") {
-    return json({ ok: true, versao: VERSAO_API, cadastro: env.CODIGO_CONVITE ? "convite" : "aberto" });
+    return json({ ok: true, versao: VERSAO_API, cadastro: env.CODIGO_CONVITE ? "convite" : "aberto", ia: iaLigada(env) });
   }
   if (caminho === "/api/cadastro" && metodo === "POST") return cadastrar(request, env);
   if (caminho === "/api/entrar" && metodo === "POST") return entrar(request, env);
@@ -92,6 +94,7 @@ async function rotear(request, env) {
     if (caminho === "/api/conta/sair-dos-outros") return sairDosOutros(env, usuario);
     if (caminho === "/api/conta/excluir") return excluirConta(request, env, usuario);
     if (caminho === "/api/conta/codigo-recuperacao") return novoCodigoRecuperacao(request, env, usuario);
+    if (caminho === "/api/ia/aba") return sugerirAba(request, env, usuario);
   }
   if (caminho === "/api/conta" && metodo === "GET") return obterConta(env, usuario);
 

@@ -236,6 +236,7 @@ a { color: inherit; }
   color: var(--cor-aba);
 }
 .nav-item.active .nav-icon.propria { background: var(--cor-aba); color: #fff; }
+.nav-icon.propria .ico { width: 14px; height: 14px; }
 
 .nav-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 
@@ -591,6 +592,8 @@ a { color: inherit; }
 }
 .list li:hover .row-actions,
 .list li:focus-within .row-actions { opacity: 1; pointer-events: auto; }
+/* Onde a linha já tem um botão à direita (marcar hoje), as ações ficam sempre à vista, sem cobri-lo. */
+.list .row-actions.fixas { position: static; transform: none; opacity: 1; pointer-events: auto; padding-left: 0; background: none; }
 
 @media (hover: none) {
   .list .row-actions { position: static; transform: none; opacity: 1; pointer-events: auto; padding-left: 0; background: none; }
@@ -1686,6 +1689,9 @@ table.sheet .meta { font-size: 13px; color: var(--texto-3); margin-top: 3px; }
 .notas .sinal.alerta { background: var(--st-critical-wash); color: var(--critical-text); }
 .notas b { font-weight: 600; }
 .notas .acao { margin-top: 6px; }
+.nota-area { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--texto-3); margin-right: 8px; }
+.nota-area::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--marca); }
+.notas .acao { display: inline-flex; }
 
 /* Lista curta com valor à direita (a pagar, fixos, maiores gastos). */
 .linhas-valor { list-style: none; margin: 0; padding: 0; }
@@ -1716,6 +1722,74 @@ table.sheet .meta { font-size: 13px; color: var(--texto-3); margin-top: 3px; }
 .fin-filtros .busca .ico { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--texto-3); pointer-events: none; }
 .fin-filtros .busca .input { padding-left: 34px; width: 100%; }
 .fin-filtros select.input { width: auto; min-width: 170px; }
+
+/* =================== Semanas, linha do tempo, check-in ===================== */
+
+.semanas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--linha); border: 1px solid var(--linha); border-radius: var(--r-lg); overflow: hidden; }
+.semana { background: var(--superficie); padding: 16px; min-height: 150px; display: flex; flex-direction: column; gap: 10px; }
+.semana.agora { background: color-mix(in srgb, var(--superficie-2) 60%, var(--superficie)); }
+.semana-titulo { font-size: 13.5px; font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
+.semana-titulo span { font-weight: 450; color: var(--texto-3); font-variant-numeric: tabular-nums; }
+.semana-item { display: block; text-decoration: none; color: inherit; padding-left: 10px; border-left: 2px solid var(--marca, var(--linha-forte)); }
+.semana-item.prova { --marca: var(--s-faculdade); }
+.semana-item .t { display: block; font-size: 14px; font-weight: 550; line-height: 1.35; }
+.semana-item .m { display: block; font-size: 12.5px; color: var(--texto-3); margin-top: 2px; }
+a.semana-item:hover .t { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.semana-vazia { font-size: 13.5px; color: var(--texto-3); }
+
+/* Linha do tempo agrupada (Pessoal, abas próprias com agenda) */
+.grupo-tempo + .grupo-tempo { margin-top: 22px; }
+.grupo-tempo-titulo { font-size: 13.5px; font-weight: 600; color: var(--texto-2); margin: 0 0 4px; display: flex; gap: 8px; align-items: baseline; }
+.grupo-tempo-titulo span { font-weight: 450; color: var(--texto-3); }
+.grupo-tempo-titulo.alerta { color: var(--critical-text); }
+
+/* Check-in: os últimos sete dias de um hábito */
+.dias7 { display: flex; gap: 4px; }
+.dias7 i { width: 20px; height: 20px; border-radius: 6px; background: var(--track); display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 600; color: var(--texto-3); }
+.dias7 i.feito { background: var(--tint, var(--s-financeiro)); color: #fff; }
+.dias7 i.hoje { box-shadow: inset 0 0 0 1.5px var(--texto-3); }
+.seq { font-size: 12.5px; color: var(--texto-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.btn.marcado { background: color-mix(in srgb, var(--tint, var(--st-good)) 22%, transparent); color: var(--texto); }
+
+/* ============================ Criador de aba ============================= */
+
+.modal-body.criador { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+.criador-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.field input#cr-nome.criador-nome {
+  font-family: var(--font-voz);
+  font-size: 26px;
+  font-weight: 420;
+  padding: 10px 14px;
+  line-height: 1.2;
+}
+.criador-estado { font-size: 13.5px; color: var(--texto-3); min-height: 22px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.criador-estado .ico { width: 16px; height: 16px; }
+.criador-estado.ia { color: var(--texto-2); }
+.criador-estado.pensando { color: var(--texto-2); }
+.pontinhos { display: inline-block; width: 22px; height: 8px; background: radial-gradient(circle, currentColor 2.2px, transparent 2.6px) 0 50% / 7px 8px repeat-x; animation: pontinhos 1s linear infinite; opacity: .8; }
+@keyframes pontinhos { 50% { opacity: .3; } }
+
+.icones-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 4px; max-height: 128px; overflow-y: auto; padding: 2px; }
+.icone-opcao { width: 36px; height: 36px; border-radius: 9px; border: 1px solid transparent; background: var(--fundo); color: var(--texto-2); display: grid; place-items: center; cursor: pointer; font-size: 14px; }
+.icone-opcao .ico { width: 18px; height: 18px; }
+.icone-opcao:hover { border-color: var(--linha-forte); color: var(--texto); }
+.icone-opcao[aria-pressed="true"] { background: var(--texto); color: var(--sobre-claro); }
+.cores { display: flex; gap: 8px; flex-wrap: wrap; }
+.cor-opcao { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--c); cursor: pointer; box-shadow: 0 0 0 2px var(--superficie); }
+.cor-opcao[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--superficie), 0 0 0 4px var(--texto); }
+.linha-switch { display: flex; align-items: center; justify-content: space-between; gap: 14px; cursor: pointer; }
+.linha-switch b { display: block; font-size: 14.5px; font-weight: 550; }
+.linha-switch .muted { display: block; font-size: 13px; margin-top: 1px; }
+
+.previa { background: var(--fundo); border: 1px solid var(--linha); border-radius: var(--r-lg); padding: 18px; }
+.previa-topo { display: flex; gap: 14px; align-items: center; }
+.previa-icone { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--c); color: #fff; font-size: 18px; flex-shrink: 0; }
+.previa-icone .ico { width: 22px; height: 22px; }
+.previa-nome { display: block; font-family: var(--font-voz); font-size: 24px; line-height: 1.15; }
+.previa-desc { display: block; font-size: 13.5px; color: var(--texto-3); margin-top: 2px; }
+.campos-sugeridos li { padding: 9px 12px; }
+.meta-linha { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.meta-linha select.input { width: auto; }
 
 /* ------------------------------ Responsivo ------------------------------- */
 
@@ -1858,6 +1932,9 @@ table.sheet .meta { font-size: 13px; color: var(--texto-3); margin-top: 3px; }
   .mes-nav { margin-top: -4px; }
   .mes-nav .mes-rotulo { min-width: 0; flex: 1; text-align: left; padding-left: 6px; }
   .fin-duas.iguais { grid-template-columns: minmax(0, 1fr); }
+  .semanas { grid-template-columns: minmax(0, 1fr); }
+  .modal-body.criador { grid-template-columns: minmax(0, 1fr); }
+  .semana { min-height: 0; }
   .perguntas { grid-template-columns: minmax(0, 1fr); }
   .fin-filtros .busca { max-width: none; flex-basis: 100%; }
   .fin-filtros select.input { flex: 1; }

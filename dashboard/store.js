@@ -67,6 +67,19 @@ const Store = (() => {
       fixos: {}, // gasto repetido confirmado (true) ou recusado (false), por chave de descrição
       dispensadas: {}, // pergunta → data do "agora não" (volta depois de 14 dias) ou "sempre"
     },
+    // Respostas às perguntas das outras abas (v11). Mesma regra: null = a
+    // pergunta ainda aparece.
+    faculdade: {
+      mediaMinima: null, // média para passar na faculdade (vale para toda disciplina sem mínima própria)
+      horasEstudo: null, // horas por semana de estudo fora da aula que a pessoa quer cumprir
+    },
+    projetos: {
+      metaMensal: null, // quanto quer ganhar por mês com projetos, em R$
+      horasDisponiveis: null, // horas por semana que sobram para projetos
+    },
+    // "Agora não" das perguntas de todas as abas menos o Financeiro (que
+    // guarda as dele em financeiro.dispensadas): "<escopo>:<pergunta>" → data ou "sempre".
+    dispensadas: {},
   };
 
   function preferenciasPadrao() {
@@ -259,6 +272,9 @@ const Store = (() => {
     { valor: "#5a4fd4", rotulo: "Índigo" },
     { valor: "#6e8f22", rotulo: "Oliva" },
     { valor: "#5b6b7d", rotulo: "Ardósia" },
+    { valor: "#8e5bd0", rotulo: "Violeta" },
+    { valor: "#178f6c", rotulo: "Esmeralda" },
+    { valor: "#1f7a8c", rotulo: "Petróleo" },
   ];
 
   const ICONES_PILAR = [
@@ -293,7 +309,7 @@ const Store = (() => {
 
   function estadoVazio() {
     return {
-      versao: 10,
+      versao: 11,
       atualizadoEm: new Date().toISOString(),
       perfil: { ...PERFIL_PADRAO },
       preferencias: preferenciasPadrao(),
@@ -455,6 +471,11 @@ const Store = (() => {
     });
     if (pf.essenciais !== null && !Array.isArray(pf.essenciais)) pf.essenciais = null;
     out.preferencias.financeiro = pf;
+    // v10 → v11: perguntas das abas Faculdade e Projetos, e as dispensadas de todas.
+    out.preferencias.faculdade = { ...out.preferencias.faculdade, ...(e.preferencias?.faculdade || {}) };
+    out.preferencias.projetos = { ...out.preferencias.projetos, ...(e.preferencias?.projetos || {}) };
+    const disp = e.preferencias?.dispensadas;
+    out.preferencias.dispensadas = disp && typeof disp === "object" && !Array.isArray(disp) ? { ...disp } : {};
 
     out.financeiro = { ...base.financeiro, ...(e.financeiro || {}) };
     out.faculdade = { ...base.faculdade, ...(e.faculdade || {}) };
@@ -579,7 +600,7 @@ const Store = (() => {
       return pil;
     });
 
-    out.versao = 10;
+    out.versao = 11;
     return out;
   }
 
@@ -706,9 +727,11 @@ const Store = (() => {
     // rótulo que já tinha sido escolhido para ela.
     definirPreferencias(patch) {
       const e = carregar();
-      const { abasFixas, financeiro, ...resto } = patch;
+      const { abasFixas, financeiro, faculdade, projetos, ...resto } = patch;
       e.preferencias = { ...e.preferencias, ...resto };
       if (financeiro) e.preferencias.financeiro = { ...e.preferencias.financeiro, ...financeiro };
+      if (faculdade) e.preferencias.faculdade = { ...e.preferencias.faculdade, ...faculdade };
+      if (projetos) e.preferencias.projetos = { ...e.preferencias.projetos, ...projetos };
       if (abasFixas) {
         Object.entries(abasFixas).forEach(([k, v]) => {
           e.preferencias.abasFixas[k] = { ...e.preferencias.abasFixas[k], ...v };

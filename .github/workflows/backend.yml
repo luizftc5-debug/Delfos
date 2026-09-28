@@ -6,8 +6,8 @@
 # Precisa de dois segredos do repositório (Settings → Secrets and variables →
 # Actions) — passo a passo em backend/README.md:
 #   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
-# E aceita um terceiro, opcional: CODIGO_CONVITE (criar conta passa a exigir
-# esse código).
+# E aceita dois opcionais: CODIGO_CONVITE (criar conta passa a exigir esse
+# código) e ANTHROPIC_API_KEY (liga a IA que monta as abas novas).
 
 name: Back end
 
@@ -93,6 +93,18 @@ jobs:
             printf '%s' "$CODIGO_CONVITE" | npx wrangler secret put CODIGO_CONVITE
           else
             npx wrangler secret delete CODIGO_CONVITE < /dev/null 2>/dev/null || true
+          fi
+
+      # Com ANTHROPIC_API_KEY, a IA sugere como montar cada aba nova pelo nome
+      # digitado. Sem ela, o painel usa só a sugestão local (dashboard/abas.js).
+      - name: Chave da IA
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            printf '%s' "$ANTHROPIC_API_KEY" | npx wrangler secret put ANTHROPIC_API_KEY
+          else
+            npx wrangler secret delete ANTHROPIC_API_KEY < /dev/null 2>/dev/null || true
           fi
 
       - name: Endereço publicado

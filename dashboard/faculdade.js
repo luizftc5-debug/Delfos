@@ -35,25 +35,113 @@
       ? `${fmt.data(prox.data)}, <span class="delta flat">${UI.urgencia(prox.data).rotulo}</span>`
       : "Cadastre provas e entregas para acompanhar";
 
-    renderAvisos();
+    const L = Leituras.faculdade();
+    document.getElementById("leitura").innerHTML = L.frase;
+    const perfil = Store.estado().perfil || {};
+    document.getElementById("sub-faculdade").textContent = perfil.curso
+      ? `${perfil.curso}${perfil.instituicao ? `, ${perfil.instituicao}` : ""}: disciplinas, provas, entregas e TCC.`
+      : "Disciplinas, provas, entregas e TCC.";
+    renderSemanas(L);
+    renderMedias(L);
+    UI.renderNotas(document.getElementById("notas"), L.notas, L.ativas.length
+      ? "Nada fora do comum. Com avaliações e notas cadastradas, o Delfos avisa onde a média aperta."
+      : "Quando houver disciplinas e avaliações, o Delfos aponta aqui o que merece atenção.");
+    UI.renderPerguntas(document.getElementById("sec-perguntas"), document.getElementById("perguntas"), "faculdade", perguntas(L), render);
+
     renderDisciplinas();
     renderPrazos();
     UI.montarLayout("faculdade");
   }
 
-  function renderAvisos() {
-    const box = document.getElementById("avisos");
-    box.innerHTML = "";
-    UI.conflitos()
-      .filter((c) => c.itens.some((i) => i.area === "faculdade") && c.itens.length > 1)
-      .slice(0, 2)
-      .forEach((c) => {
-        const el = document.createElement("div");
-        el.className = c.multiplasAreas ? "notice warning" : "notice info";
-        el.innerHTML = `<span class="ic">▲</span><span><strong>Semana de ${fmt.data(c.semana)}:</strong>
-          ${c.itens.map((i) => `${fmt.escape(i.titulo)} <span class="muted">(${fmt.dataCurta(i.data)})</span>`).join(", ")}</span>`;
-        box.appendChild(el);
+  function renderSemanas(L) {
+    const box = document.getElementById("semanas");
+    const rotulos = ["Esta semana", "A seguinte", "Em 2 semanas", "Em 3 semanas"];
+    box.innerHTML = L.semanas.map((s, i) => {
+      const fim = new Date(s.chave + "T00:00:00");
+      fim.setDate(fim.getDate() + 6);
+      const fimIso = `${fim.getFullYear()}-${String(fim.getMonth() + 1).padStart(2, "0")}-${String(fim.getDate()).padStart(2, "0")}`;
+      return `
+        <div class="semana ${i === 0 ? "agora" : ""}">
+          <div class="semana-titulo">${rotulos[i]} <span>${fmt.dataCurta(s.chave)} a ${fmt.dataCurta(fimIso)}</span></div>
+          ${s.itens.length ? s.itens.map((it) => `
+            <${it.href ? `a href="${fmt.escape(it.href)}"` : "div"} class="semana-item ${it.tipo === "prova" ? "prova" : ""}">
+              <span class="t">${fmt.escape(it.titulo)}</span>
+              <span class="m">${fmt.escape(it.sub)}, ${fmt.escape(UI.urgencia(it.data).rotulo)}</span>
+            </${it.href ? "a" : "div"}>`).join("") : `<span class="semana-vazia">Livre</span>`}
+        </div>`;
+    }).join("");
+  }
+
+  function renderMedias(L) {
+    const box = document.getElementById("medias");
+    const comDados = L.porDisciplina.filter((x) => x.media || x.nec);
+    const minima = Number(Store.estado().preferencias.faculdade?.mediaMinima) || 7;
+    document.getElementById("medias-nota").textContent = comDados.length ? `marca na média mínima` : "";
+    if (!comDados.length) {
+      box.innerHTML = `<p class="card-note" style="margin:0;">Lance as notas das avaliações dentro de cada disciplina e as médias aparecem aqui, com a mínima marcada.</p>`;
+      return;
+    }
+    UI.barrasComMeta(box, comDados.map((x) => {
+      const min = x.nec?.minima || minima;
+      const partes = [];
+      if (x.media) partes.push(`<span>${x.media.quantidade} ${x.media.quantidade === 1 ? "nota lançada" : "notas lançadas"}</span>`);
+      else partes.push("<span>sem nota ainda</span>");
+      if (x.nec?.situacao === "possivel") partes.push(`<span>precisa de ${fmt.decimal(x.nec.precisa)} nas que faltam</span>`);
+      if (x.nec?.situacao === "impossivel") partes.push(`<span class="down">não fecha em ${fmt.decimal(min)}</span>`);
+      if (x.nec?.situacao === "garantida") partes.push(`<span class="up">garantida</span>`);
+      return {
+        nome: x.d.nome, href: `disciplina.html?id=${encodeURIComponent(x.d.id)}`,
+        valor: x.media ? x.media.media : 0, meta: min, acima: x.media && x.media.media < min,
+        sub: partes.join(""),
+      };
+    }), { cor: "var(--s-faculdade)", formatar: (v) => (v ? fmt.decimal(v) : "—"), rotuloMeta: "média mínima", escala: 10 });
+  }
+
+  /* ------------------------------ Perguntas ------------------------------- */
+
+  function perguntas(L) {
+    const prefs = Store.estado().preferencias.faculdade || {};
+    const q = [];
+    const feito = (msg) => { UI.toast(msg); render(); };
+    if (!L.ativas.length) return q;
+
+    if (prefs.mediaMinima === null || prefs.mediaMinima === undefined) {
+      q.push({
+        id: "mediaMinima",
+        texto: "Qual é a média para passar na sua faculdade?",
+        apoio: "O Delfos usa esse número para dizer quanto você precisa tirar em cada disciplina (a menos que a disciplina tenha a própria mínima).",
+        controle: () => UI.resposta.botoes([5, 6, 7].map((n) => [`${n},0`, () => { Store.definirPreferencias({ faculdade: { mediaMinima: n } }); feito(`Média mínima ${n},0.`); }, n === 7])),
       });
+    }
+    L.semData.slice(0, 1).forEach((a) => {
+      q.push({
+        id: `semData:${a.id}`,
+        texto: `Quando é ${a.nome || "a avaliação"} de ${a.disciplina.nome}?`,
+        apoio: "Com data, ela entra na agenda, nas semanas acima e no cálculo de quanto estudar.",
+        controle: () => UI.resposta.valor({ data: true, rotulo: "Marcar data", aoSalvar: (v) => {
+          Store.subAtualizar("faculdade.disciplinas", a.disciplina.id, "avaliacoes", a.id, { data: v });
+          feito("Data marcada.");
+        } }),
+      });
+    });
+    if (prefs.horasEstudo === null || prefs.horasEstudo === undefined) {
+      q.push({
+        id: "horasEstudo",
+        texto: "Quantas horas por semana você quer estudar fora da aula?",
+        apoio: "Com esse número, o Delfos divide o tempo entre as provas que estão chegando.",
+        controle: () => UI.resposta.valor({ sugestao: 10, rotulo: "Salvar", passo: "1", min: 1, max: 80, sufixo: "h", aoSalvar: (v) => { Store.definirPreferencias({ faculdade: { horasEstudo: Math.round(v) } }); feito(`${Math.round(v)} h por semana.`); } }),
+      });
+    }
+    const semAval = L.ativas.filter((d) => !(d.avaliacoes || []).length)[0];
+    if (semAval) {
+      q.push({
+        id: `semAvaliacoes:${semAval.id}`,
+        texto: `Como vai ser a avaliação de ${semAval.nome}?`,
+        apoio: "Cadastre provas e trabalhos com peso; quando a nota sair, a média e o quanto falta se calculam sozinhos.",
+        controle: () => UI.resposta.botoes([["Cadastrar avaliações", () => { location.href = `disciplina.html?id=${encodeURIComponent(semAval.id)}`; }, true]]),
+      });
+    }
+    return q;
   }
 
   function renderDisciplinas() {

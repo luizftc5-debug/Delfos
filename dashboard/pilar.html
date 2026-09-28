@@ -22,28 +22,14 @@
             <p class="sub" id="subtitulo"></p>
           </div>
           <div class="topbar-actions">
-            <button class="btn" id="btn-editar-aba">Editar aba</button>
-            <button class="btn primary" id="btn-item">+ Item</button>
+            <button class="btn ghost" id="btn-editar-aba" type="button"></button>
+            <button class="btn primary" id="btn-item" type="button"></button>
           </div>
         </header>
 
-        <div class="grid g3" id="bloco-stats" style="margin-bottom:14px;">
-          <div class="card tinted">
-            <div class="stat-label">Em aberto</div>
-            <div class="stat-value num" id="s-abertos">—</div>
-            <div class="stat-sub" id="s-abertos-d"></div>
-          </div>
-          <div class="card tinted">
-            <div class="stat-label" id="lbl-semana">Nesta semana</div>
-            <div class="stat-value num" id="s-semana">—</div>
-            <div class="stat-sub" id="s-semana-d"></div>
-          </div>
-          <div class="card tinted">
-            <div class="stat-label" id="lbl-atrasados">Atrasados</div>
-            <div class="stat-value num" id="s-atrasados">—</div>
-            <div class="stat-sub" id="s-atrasados-d"></div>
-          </div>
-        </div>
+        <p class="leitura" id="leitura"></p>
+
+        <div class="grid g4" id="bloco-stats" style="margin-bottom:14px;"></div>
 
         <section class="section hidden" id="secao-academia">
           <div class="section-head">
@@ -53,12 +39,32 @@
           <div id="academia-conteudo"></div>
         </section>
 
-        <section class="section" id="secao-itens" style="margin-top:28px;">
-          <div class="section-head">
-            <h2 class="section-title"><span class="swatch" id="swatch-lista"></span>Itens</h2>
-            <label class="filters" style="margin:0;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
+        <div class="fin-duas section" id="secao-itens" style="margin-top:28px;">
+          <section class="card">
+            <div class="card-head">
+              <h2 class="card-title" id="titulo-lista"><span class="swatch" id="swatch-lista"></span>Itens</h2>
+              <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
+            </div>
+            <div class="fin-filtros" style="margin-bottom:16px;">
+              <div class="chips" id="f-grupo"></div>
+              <label class="busca"><span class="hidden">Buscar</span><input class="input" type="search" id="f-busca" placeholder="Buscar" /></label>
+            </div>
+            <div id="lista"></div>
+          </section>
+          <div class="fin-coluna" id="coluna-lado">
+            <section class="card">
+              <div class="card-head"><h2 class="card-title">O que o Delfos notou</h2></div>
+              <ul class="notas" id="notas"></ul>
+            </section>
+            <div id="resumos-campos" class="fin-coluna"></div>
           </div>
-          <div class="card"><div id="lista"></div></div>
+        </div>
+
+        <section class="section" id="sec-perguntas" hidden>
+          <div class="section-head">
+            <h2 class="section-title">Perguntas do Delfos</h2>
+          </div>
+          <div class="perguntas" id="perguntas"></div>
         </section>
 
         <section class="section">
@@ -68,7 +74,7 @@
           <div class="card">
             <p class="card-note" id="nota-ajustes" style="margin:0 0 12px;"></p>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button class="btn" id="btn-editar-aba-2">Editar aba</button>
+              <button class="btn" id="btn-editar-aba-2">Personalizar aba</button>
               <button class="btn" id="btn-campos">Campos desta aba</button>
               <button class="btn" id="btn-refazer-questionario" hidden>Refazer o questionário inicial</button>
               <button class="btn danger" id="btn-excluir-aba">Excluir esta aba</button>
@@ -88,6 +94,8 @@
   <script src="sessao.js"></script>
   <script src="nuvem.js"></script>
   <script src="financas.js"></script>
+  <script src="leituras.js"></script>
+  <script src="abas.js"></script>
   <script src="pilar.js"></script>
 </body>
 </html>

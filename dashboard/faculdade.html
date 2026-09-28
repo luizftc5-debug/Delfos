@@ -19,7 +19,7 @@
         <header class="topbar">
           <div>
             <h1>Faculdade</h1>
-            <p class="sub">Medicina · disciplinas, provas, entregas e TCC.</p>
+            <p class="sub" id="sub-faculdade">Disciplinas, provas, entregas e TCC.</p>
           </div>
           <div class="topbar-actions">
             <button class="btn" id="btn-disciplina">+ Disciplina</button>
@@ -27,7 +27,7 @@
           </div>
         </header>
 
-        <div id="avisos"></div>
+        <p class="leitura" id="leitura"></p>
 
         <div class="grid g3" style="margin-bottom:14px;">
           <div class="card tinted faculdade">
@@ -47,7 +47,39 @@
           </div>
         </div>
 
-        <div class="grid g2">
+        <section class="section" style="margin-top:28px;">
+          <div class="section-head">
+            <h2 class="section-title">Próximas quatro semanas</h2>
+            <span class="card-note">provas e entregas, de segunda a domingo</span>
+          </div>
+          <div class="semanas" id="semanas"></div>
+        </section>
+
+        <div class="fin-duas section">
+          <section class="card">
+            <div class="card-head">
+              <h2 class="card-title">O que o Delfos notou</h2>
+            </div>
+            <ul class="notas" id="notas"></ul>
+          </section>
+          <section class="card">
+            <div class="card-head">
+              <h2 class="card-title">Médias por disciplina</h2>
+              <span class="card-note" id="medias-nota"></span>
+            </div>
+            <div id="medias"></div>
+          </section>
+        </div>
+
+        <section class="section" id="sec-perguntas" hidden>
+          <div class="section-head">
+            <h2 class="section-title">Perguntas do Delfos</h2>
+            <span class="card-note">Cada resposta deixa a leitura mais sua.</span>
+          </div>
+          <div class="perguntas" id="perguntas"></div>
+        </section>
+
+        <div class="grid g2 section">
           <section class="card">
             <div class="card-head">
               <h2 class="card-title"><span class="swatch faculdade"></span>Disciplinas</h2>
@@ -89,6 +121,9 @@
   <script src="ui.js"></script>
   <script src="sessao.js"></script>
   <script src="nuvem.js"></script>
+  <script src="financas.js"></script>
+  <script src="leituras.js"></script>
+  <script src="abas.js"></script>
   <script src="https://apis.google.com/js/api.js" onload="onGapiLoad()"></script>
   <script src="https://accounts.google.com/gsi/client" onload="onGisLoad()"></script>
   <script src="google-integration.js"></script>

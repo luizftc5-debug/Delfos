@@ -39,14 +39,14 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 
 | Onde | O que dá para fazer |
 |---|---|
-| **Visão geral** | Saldo, alertas de atraso e de semana cheia, agenda dos próximos 30 dias, leitura automática da situação |
+| **Visão geral** | Saldo, alertas de atraso e de semana cheia, agenda dos próximos 30 dias, leitura automática da situação e **o que o Delfos notou** em todas as abas |
 | **Financeiro** | O mês lido em voz alta: quanto entrou, saiu e sobrou, **para onde foi o dinheiro**, o **ritmo do mês** comparado ao anterior, gastos fixos e assinaturas detectados, o que falta pagar, metas com "Guardar", e **perguntas** que deixam a leitura do seu jeito (limite do mês, quanto guardar, dia da renda). Também lançar entradas e saídas e **importar o extrato do banco** (.ofx/.csv) para não esquecer de lançar |
 | **Contas e cartões** | Cadastrar contas com saldo, cadastrar cartões com fechamento e vencimento. Cada uma abre numa **página própria**, com saldo/fatura, gastos por categoria só dela e a lista de lançamentos |
 | **Investimentos** | Renda fixa, ações, fundos, cripto — o que já aplicou e quanto vale hoje, com rentabilidade calculada e distribuição por tipo |
-| **Faculdade** | Disciplinas, prazos e entregas. Cada disciplina abre em **página própria**, com avaliações e notas, prazos, materiais e resumos — em materiais e resumos dá para **anexar documentos** (PDF, slides, fotos) ou **importar do Google Drive** |
-| **Projetos** | Só iniciativas pessoais que geram renda. Cada projeto abre em **página própria**, com ficha completa, etapas, recebimentos, custos, documentos e anotações |
-| **Pessoal** | Consultas, tarefas e recados que não são financeiro, faculdade nem projeto — ex.: consulta médica, levar o carro à revisão |
-| **Suas abas** | Abas que você mesmo cria, com nome, ícone, cor e um modelo de partida (Compromissos, Tarefas, Hábitos, Coleção, Registros com valor, Do zero) — ex.: Academia, Leituras, Igreja. Depois, em "Ajustes da aba", dá pra adicionar seus próprios campos |
+| **Faculdade** | Leitura do semestre, **próximas quatro semanas** lado a lado, médias por disciplina com a média mínima marcada, avisos (prova sem resumo, semana cheia) e perguntas (média para passar, horas de estudo). Disciplinas, prazos e entregas. Cada disciplina abre em **página própria**, com avaliações e notas, prazos, materiais e resumos — em materiais e resumos dá para **anexar documentos** (PDF, slides, fotos) ou **importar do Google Drive** |
+| **Projetos** | Leitura do mês, **recebido × estimado** por projeto, **quanto cada um paga por hora**, últimos seis meses, meta mensal. Só iniciativas pessoais que geram renda. Cada projeto abre em **página própria**, com ficha completa, etapas, recebimentos, custos, documentos e anotações |
+| **Pessoal** | Consultas, tarefas e recados que não são financeiro, faculdade nem projeto — ex.: consulta médica, levar o carro à revisão. Linha do tempo (atrasados, hoje, esta semana…), filtro por tipo e aviso quando cai no mesmo dia de uma prova |
+| **Suas abas** | Abas que você mesmo cria: digite o nome e o Delfos (com IA, quando ligada) monta ícone, cor, campos, meta e agrupamento para aquele assunto — ex.: Plantões, Leituras, Corrida, Oração. Cada uma ganha leitura, números, resumo dos campos, meta do período e, para hábitos, marcação diária com sequência |
 
 > Trabalhos da faculdade e o TCC ficam em **Faculdade**, não em Projetos.
 
@@ -168,23 +168,33 @@ há algo não salvo. `Ctrl + S` (ou `Cmd + S`) salva na hora.
 
 ### Criar suas próprias abas
 
-O botão **＋ Nova aba**, embaixo da lista da barra lateral, cria uma aba sua: escolha nome, um dos
-vários **ícones** disponíveis, cor e um **modelo** de partida — Compromissos (o formato de sempre:
-data, tipo, local), Tarefas, Hábitos/rotina, Coleção (livros, filmes, cursos), Registros com valor,
-Academia (treino) ou Do zero. O modelo só decide os campos com que a aba começa; dá para ajustar
-depois.
+O botão **＋ Nova aba**, embaixo da lista da barra lateral, abre o criador. **Só digite o nome** —
+"Plantões", "Leituras", "Corrida", "Remédios", "Viagem a Lisboa" — e o Delfos monta a aba para
+esse assunto enquanto você digita: ícone, cor, o que cada registro é ("plantão", "livro"), os campos
+que valem a pena (setor e preceptor num plantão; autor e situação num livro), uma meta, como agrupar
+a lista e alguns exemplos para começar. À direita aparece a prévia de como a aba vai ficar. Tudo dá
+para mudar antes de criar: desligue um campo, troque a cor, marque só os exemplos que quiser.
 
-Abas dos modelos Compromissos, Tarefas e Registros com valor **entram na agenda dos próximos 30
-dias e nos alertas de semana cheia** da visão geral, junto com os prazos da faculdade, os deadlines
-dos projetos e os compromissos pessoais. Hábitos e Coleção ficam de fora — não fazem sentido como
-prazo.
+- **Com IA**: se as contas estiverem ligadas e o servidor tiver a chave da IA (ver
+  [backend/README.md](backend/README.md), "Como ligo a IA"), um segundo depois de você parar de
+  digitar o Claude refaz a sugestão sob medida para aquele nome, levando em conta seu curso e sua
+  cidade. Se você já tinha mexido em algo, ele não passa por cima: aparece o botão **Usar sugestão
+  da IA**. Só o nome da aba, sua ocupação e sua cidade vão para a IA — nada do que está cadastrado.
+- **Sem IA**: a sugestão rápida funciona no próprio aparelho, sem internet, para uns 30 assuntos
+  comuns; para um nome desconhecido, monta uma lista de tarefas com prioridade.
 
-Na página da aba, em **Ajustes da aba**, dá para:
+Abas **com data** entram na agenda dos próximos 30 dias e nos alertas de semana cheia da visão
+geral. Abas de **hábito** (oração, idioma, remédio diário) ganham um botão **Hoje** por item, os
+últimos sete dias e a sequência. Abas de coleção (livros, filmes) ficam fora da agenda.
 
-- **Editar aba**: renomear, trocar ícone e cor. Não mexe no que já está cadastrado.
-- **Campos desta aba**: adicionar, editar, excluir e reordenar os campos próprios dos itens — texto,
-  texto longo, data, número, valor em R$, lista de opções ou sim/não. Marque "mostrar na listagem"
-  para um campo aparecer direto na lista, sem precisar abrir o item.
+Na página da aba:
+
+- A **leitura** no alto diz como está a aba; os números, a **meta do período** e o resumo de cada
+  campo (quantos em cada situação, soma de km, média de nota) vêm logo abaixo.
+- **Perguntas do Delfos** oferecem o que falta: definir uma meta, agrupar a lista por um campo.
+- **Personalizar**: muda nome, ícone, cor, descrição, meta e agrupamento, e sugere campos novos (com
+  IA, se ligada) — só acrescenta, nunca apaga o que já existe.
+- **Campos desta aba**: adicionar, editar, excluir e reordenar os campos um a um.
 - **Excluir esta aba**: some da barra e apaga os itens junto.
 
 ### Academia
@@ -284,6 +294,8 @@ dashboard/
   projeto.html         projeto.js        página de um projeto
   pessoal.html         pessoal.js        compromissos pessoais
   pilar.html           pilar.js          página de uma aba criada por você
+  abas.js                                criador/editor de abas (sugestão local e IA)
+  leituras.js                            leitura e notas de Faculdade, Projetos, Pessoal e abas próprias
   resumo.html          resumo.js         editor de texto dos resumos
   store.js                               dados: localStorage, CRUD e backup
   arquivos.js                            anexos: IndexedDB (PDF, slides, fotos)

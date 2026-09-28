@@ -1,4 +1,4 @@
-# Delfos — direção visual: oráculo sóbrio, segunda leitura (v1.4)
+# Delfos — direção visual: oráculo sóbrio, segunda leitura (v1.4, estendida na 1.5)
 
 Delfos é o nome de um oráculo, e o painel faz o que um oráculo faz: **lê a
 situação e diz o que ela é**. A estética sai daí — cada página abre falando, em
@@ -92,8 +92,9 @@ normal, com um ponto colorido do lado.
   está usando (foto, nome, curso), que abre o perfil. No celular vira faixa
   rolável com a foto primeiro.
 - **Ícones**: `UI.icone(nome)`, desenhados numa grade de 24 com traço 1,6 e
-  pontas redondas. Glifo digitado (`◆`, `☁`) só onde é dado do usuário — o
-  ícone de uma aba que ele criou.
+  pontas redondas. Uma aba criada pelo usuário usa, de preferência, um desses
+  ícones desenhados (`"svg:<nome>"`, lista em `UI.ICONES_ABA`, lido por
+  `UI.iconeAba`); glifo digitado (`◆`) só sobrevive nas abas antigas.
 - **Sem filete colorido na borda**. A página já diz de que pilar é; onde
   pilares se misturam (visão geral), quem identifica é o ícone do pilar.
 - **Faixa de números contígua**: toda `.g3`/`.g4` de `.stat-value` vira uma
@@ -106,6 +107,18 @@ normal, com um ponto colorido do lado.
 - **Interruptor** (`.switch`) para o que é de fato ligar e desligar; caixa de
   marcar para concluir item.
 - Alinhamento à esquerda; números tabulares à direita.
+- **Toda aba abre do mesmo jeito (1.5)**: leitura na voz, faixa de números,
+  "O que o Delfos notou" e "Perguntas do Delfos". Leitura e notas vêm de
+  `leituras.js`; nenhuma página inventa componente próprio para isso.
+- **Criador de aba**: janela larga em duas colunas — à esquerda o que a pessoa
+  decide (nome grande na voz, ícones, cores, interruptores), à direita a
+  prévia viva de como a aba vai ficar (campos com interruptor, meta,
+  agrupamento, exemplos em pílula). O estado da IA é uma linha discreta
+  embaixo do nome, com o ícone `ia` — nunca um cartão chamativo, nunca brilho
+  ou gradiente "mágico".
+- **Hábitos** (aba com `checkin`): sete quadradinhos dos últimos dias e a
+  sequência escrita; o botão "Hoje" fica sempre visível, fora do menu que
+  aparece ao passar o ponteiro.
 
 ```
 ┌────────────┬─────────────────────────────────────────────────────┐

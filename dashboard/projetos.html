@@ -26,6 +26,8 @@
           </div>
         </header>
 
+        <p class="leitura" id="leitura"></p>
+
         <div class="grid g4" style="margin-bottom:14px;">
           <div class="card tinted projetos">
             <div class="stat-label">Projetos ativos</div>
@@ -49,7 +51,47 @@
           </div>
         </div>
 
-        <div id="projetos"></div>
+        <div class="fin-duas">
+          <div class="fin-coluna">
+            <section class="card">
+              <div class="card-head">
+                <h2 class="card-title">O que o Delfos notou</h2>
+              </div>
+              <ul class="notas" id="notas"></ul>
+            </section>
+          </div>
+          <div class="fin-coluna">
+            <section class="card">
+              <div class="card-head">
+                <h2 class="card-title" id="titulo-renda">Recebido por projeto</h2>
+                <span class="card-note">marca na renda estimada</span>
+              </div>
+              <div id="renda-projetos"></div>
+            </section>
+            <section class="card">
+              <div class="card-head">
+                <h2 class="card-title">Últimos seis meses</h2>
+                <span class="card-note" id="meses-nota"></span>
+              </div>
+              <div id="renda-meses"></div>
+            </section>
+          </div>
+        </div>
+
+        <section class="section" id="sec-perguntas" hidden>
+          <div class="section-head">
+            <h2 class="section-title">Perguntas do Delfos</h2>
+            <span class="card-note">Cada resposta deixa a leitura mais sua.</span>
+          </div>
+          <div class="perguntas" id="perguntas"></div>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <h2 class="section-title">Seus projetos</h2>
+          </div>
+          <div id="projetos"></div>
+        </section>
 
         <section class="section">
           <div class="section-head">
@@ -70,6 +112,8 @@
   <script src="sessao.js"></script>
   <script src="nuvem.js"></script>
   <script src="financas.js"></script>
+  <script src="leituras.js"></script>
+  <script src="abas.js"></script>
   <script src="projetos.js"></script>
 </body>
 </html>

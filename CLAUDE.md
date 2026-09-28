@@ -1,6 +1,6 @@
 # Delfos — agente de organização pessoal do Luiz
 
-O painel se chama **Delfos** (versão atual: **1.4**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
+O painel se chama **Delfos** (versão atual: **1.5**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
 em `ui.js`) aparecem como marca no alto da barra lateral, ao lado do ônfalo, nos títulos das abas do
 navegador e no nome do arquivo de backup exportado.
 
@@ -55,6 +55,8 @@ Aplicação estática multi-página em `dashboard/`, sem build. Dependências ex
 | `entrar.html` + `entrar.js` | Entrar / criar conta / esqueci a senha: página sem barra lateral, a única que abre sem sessão |
 | `sessao.js` | Conta do usuário: endereço da API, login, cadastro, derivação da senha, porta de entrada das páginas |
 | `nuvem.js` | Sincronização com a conta (`backend/`): envio, conferência, conflito, versões, anexos, sair |
+| `leituras.js` | Leitura das outras abas, no molde do Financeiro: `Leituras.faculdade()`, `projetos()`, `pessoal()`, `pilar(p)` devolvem números, a frase da leitura e as notas; `todasNotas()` alimenta a visão geral |
+| `abas.js` | Criador/editor de abas próprias (`Abas.abrir`): sugestão local por assunto (`sugerirLocal`, catálogo de ~30 domínios) e a do Claude pelo servidor (`pedirIA`), sempre passada por `sanear` |
 | `financas.js` | Cálculos derivados: saldo por conta, ciclo e fatura de cartão, balanço, investimentos, e a análise do mês (`analisarMes`, `recorrentes`, `acumuladoDiario`) |
 | `ui.js` | Componentes: layout, ícones (`UI.icone`), perfil, modais de formulário, avisos, gráficos, datas/urgência |
 | `theme.css` | Design system (tema claro/escuro) |
@@ -106,6 +108,12 @@ contas e os dados de cada uma. O localStorage continua sendo a cópia de trabalh
   anexos têm chave `(usuario_id, id)`. Cota de anexos por conta em `COTA_ANEXOS_MB`
   (`wrangler.toml`) — o D1 gratuito tem 500 MB no total.
 - **Cadastro** aberto, ou com convite se o segredo `CODIGO_CONVITE` existir.
+- **IA** (`backend/src/ia.js`, `POST /api/ia/aba`): recebe só o nome da aba, uma linha de contexto
+  (ocupação, cidade) e, na edição, o nome dos campos existentes — nada do estado. Usa o SDK oficial
+  (`@anthropic-ai/sdk`) com saída em JSON por esquema e esforço baixo; exige sessão e limita 40
+  pedidos por conta por hora (tabela `tentativas`, chave `ia:<id>`). **A chave `ANTHROPIC_API_KEY`
+  é segredo do Worker (workflow a publica a partir do segredo do GitHub) e nunca vai ao navegador.**
+  Sem chave: `/api/saude` devolve `ia: false`, a rota dá 503 e o painel usa só a sugestão local.
 - Migrações só se acrescentam (`0002_contas.sql` renomeou as tabelas da versão de senha única para
   `legado_*` em vez de apagar). Módulo Worker só exporta `default`. Testes: `cd backend && npm test`.
 
@@ -211,7 +219,9 @@ toca DOM; `financeiro.js` só decide o que dizer e como mostrar.
 - **Planilha**: pílulas Tudo/Saídas/Entradas/Pendentes ("Pendentes" ignora o mês), busca, categoria,
   "Todos os meses"; por linha, editar, **repetir hoje** e excluir, e "pendente" vira botão de pagar.
 
-`preferencias.financeiro` (migração **v9 → v10** em `normalizar`): `orcamentoMensal`, `orcamentos`
+`preferencias.financeiro` (migração **v9 → v10** em `normalizar`; a **v11** acrescentou
+`preferencias.faculdade` = `{ mediaMinima, horasEstudo }`, `preferencias.projetos` = `{ metaMensal,
+horasDisponiveis }` e `preferencias.dispensadas`, com chave `"<escopo>:<pergunta>"`): `orcamentoMensal`, `orcamentos`
 (limite por categoria), `metaPoupanca` (%), `diaRenda`, `essenciais` (lista), `fixos` (chave de
 descrição → true/false) e `dispensadas` (pergunta → data do "agora não", ou "sempre"). `null` quer
 dizer "ainda não respondido" — é o que faz a pergunta aparecer. `Store.definirPreferencias({
@@ -293,6 +303,25 @@ importadas só por `resumo.html`/`disciplina.html` (Merriweather, Lora, Inter, S
 mais variedade para ler, escrever fórmula ou anotar à mão. É conteúdo do usuário, não design system:
 não confunda com a tipografia do painel (`dashboard/DESIGN.md`), que é Funnel Sans + Newsreader.
 
+### As outras abas no molde do Financeiro (v1.5)
+
+Faculdade, Projetos, Pessoal e cada aba própria abrem do mesmo jeito que o Financeiro: **leitura**
+na voz (Newsreader), faixa de números, **O que o Delfos notou** e **Perguntas do Delfos**. O
+cálculo mora em `leituras.js` (sem DOM); os componentes são comuns em `ui.js`:
+`UI.renderPerguntas(secao, box, escopo, perguntas, aoMudar)`, `UI.resposta.valor/botoes/multipla`,
+`UI.renderNotas(ul, notas, textoVazio)` (nota com `area` e `acao` opcionais), `UI.ordenarNotas` e
+`UI.barrasComMeta`. "Agora não" esconde a pergunta por 14 dias (`UI.dispensarPergunta`).
+
+- **Faculdade**: próximas quatro semanas lado a lado, médias por disciplina com a marca da média
+  mínima (`preferencias.faculdade.mediaMinima`, que `UI.notaNecessaria` usa quando a disciplina não
+  tem a dela), avaliação sem data, horas de estudo por semana.
+- **Projetos**: recebido no mês × estimado por projeto, valor por hora (recebido ÷ horas do mês),
+  últimos seis meses, meta mensal e horas disponíveis.
+- **Pessoal**: linha do tempo agrupada (atrasados, hoje, semana, próximas…), filtro por tipo e aviso
+  quando um compromisso cai no mesmo dia de prova ou prazo de outra área.
+- **Visão geral**: "O que o Delfos notou" junta só alertas e atenções de todas as abas
+  (`Leituras.todasNotas`), com a área de cada uma.
+
 ### Abas criadas pelo usuário
 
 `estado.pilares` guarda abas que o próprio Luiz cria pelo botão "＋ Nova aba" da barra lateral. Cada
@@ -325,6 +354,25 @@ Cada item guarda `descricao`, `data` e `concluido` como campos de sistema — s�
 `campo.id`. `UI.camposItemPilar(pilar)` traduz `pilar.campos` para o formato que `UI.formulario`
 entende; `pilar.js` junta esses campos com `descricao`/`data` e depois separa o resultado em
 `extras` (`paraExtras`/`deExtras`). Só os campos marcados `naLista` aparecem na linha da listagem.
+
+**Criador com IA (v1.5).** "Nova aba" abre `Abas.abrir()`: a pessoa digita o nome e, a cada letra,
+a sugestão local (`Abas.sugerirLocal`, catálogo por assunto — corrida, leitura, plantões, remédios,
+viagem…) monta ícone, cor, descrição, `rotuloItem`, campos, meta, agrupamento e exemplos. Parando de
+digitar (900 ms), se as contas estiverem ligadas e o servidor tiver a chave, o Claude refaz tudo para
+aquele assunto específico. Resposta atrasada (nome mudou) é descartada; se a pessoa já mexeu em
+algo, a sugestão da IA vira um botão "Usar sugestão da IA" em vez de sobrescrever. Tudo o que vem
+da IA passa por `Abas.sanear` (só ícones, cores, tipos e ids válidos; texto escapado na tela). Os
+exemplos só viram registros se marcados. "Personalizar" na página da aba reabre o mesmo modal em
+modo edição: muda nome/ícone/cor/descrição/meta/agrupamento e só **acrescenta** campos sugeridos,
+nunca remove os existentes.
+
+Campos novos da aba (todos opcionais, abas antigas continuam funcionando): `rotuloItem` (o nome de
+cada registro: "livro", "plantão" — vira o botão "+ Livro"), `checkin` (hábito marcado por dia),
+`agruparPor` (id de um campo select: separa a lista e vira pílulas de filtro), `meta = { tipo:
+concluidos|soma|checkins, campoId, alvo, periodo: semana|mes|ano }` e `sugeridoPor` (`"ia"` ou
+`"local"`). Itens ganharam `criadoEm`, `concluidoEm` e, com `checkin`, `feitos` (lista de datas
+ISO; a sequência e os últimos 7 dias saem daí, nunca são guardados). `Leituras.pilar(p)` resume os
+campos (distribuição dos selects, soma/média dos números e valores, sim/não) e a meta do período.
 
 Uma aba com `naAgenda: false` (Hábitos, Coleção) não entra na agenda dos 30 dias nem nos alertas de
 semana cheia, e os dois cartões de estatística que seriam "Nesta semana"/"Atrasados" viram

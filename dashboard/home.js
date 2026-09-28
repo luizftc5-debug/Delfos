@@ -69,6 +69,7 @@
     renderAvisos();
     renderProximo();
     renderPilares(atual);
+    UI.renderNotas(document.getElementById("notas"), Leituras.todasNotas(6), "Nada pedindo ação agora. Cada aba tem a própria leitura, com o que vai bem e o que mudou.");
     renderAgenda();
     renderInsights(atual, anterior, mes);
     UI.montarLayout("home");
@@ -237,7 +238,7 @@
     grid.innerHTML = cartoes
       .map((c) => `
         <a class="card pillar ${c.cor}" href="${c.href}"${c.corHex ? ` style="--tint:${fmt.escape(c.corHex)}"` : ""}>
-          <span class="pillar-ic">${c.corHex ? fmt.escape(c.glifo || "") : UI.icone(c.id)}</span>
+          <span class="pillar-ic">${c.corHex ? UI.iconeAba(c.glifo) : UI.icone(c.id)}</span>
           <div class="stat-label">${fmt.escape(c.titulo)}</div>
           <div class="stat-value num">${c.valor}</div>
           <div class="stat-sub">${c.sub}</div>

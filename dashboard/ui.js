@@ -6,7 +6,7 @@
 const UI = (() => {
   /** Nome e versão do painel — aparecem na marca do alto da barra lateral. */
   const NOME = "Delfos";
-  const VERSAO = "1.4";
+  const VERSAO = "1.5";
 
   /* -------------------------------- Ícones -------------------------------- */
 
@@ -59,10 +59,52 @@ const UI = (() => {
     painel: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9 4.5v15"/>',
     chave: '<circle cx="8" cy="15" r="3.8"/><path d="m10.8 12.3 8.2-8.2M16 7l2.5 2.5M13.5 9.5 15.5 11.5"/>',
     ajustes: '<path d="M4 7.5h9M17 7.5h3M4 16.5h3M11 16.5h9"/><circle cx="15" cy="7.5" r="2"/><circle cx="9" cy="16.5" r="2"/>',
+    ia: '<path d="M12 3.5 13.6 8a3 3 0 0 0 1.9 1.9L20 11.5l-4.5 1.6a3 3 0 0 0-1.9 1.9L12 19.5l-1.6-4.5a3 3 0 0 0-1.9-1.9L4 11.5l4.5-1.6A3 3 0 0 0 10.4 8z"/><path d="M19 3.5v3M17.5 5h3"/>',
+    // Ícones para as abas criadas pelo usuário (valor "svg:<nome>" em pilar.icone).
+    haltere: '<path d="M3.5 12h17"/><rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/><path d="M3 10v4M21 10v4"/>',
+    livro: '<path d="M5 4.5h11a2 2 0 0 1 2 2V19.5H7a2 2 0 0 1-2-2z"/><path d="M5 17.5a2 2 0 0 1 2-2h11"/><path d="M9 8.5h5"/>',
+    musica: '<path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/>',
+    coracao: '<path d="M12 19.5s-7.5-4.4-7.5-10A4.2 4.2 0 0 1 12 7a4.2 4.2 0 0 1 7.5 2.5c0 5.6-7.5 10-7.5 10z"/>',
+    cruz: '<path d="M12 3.5v17M7 8.5h10"/>',
+    folha: '<path d="M5 19c0-8 5-13.5 14.5-14.5C19 14 13.5 19 5.5 19z"/><path d="M5 19 13 11"/>',
+    pata: '<circle cx="7" cy="10" r="1.8"/><circle cx="10.5" cy="6.5" r="1.8"/><circle cx="14.5" cy="6.5" r="1.8"/><circle cx="18" cy="10" r="1.8"/><path d="M12.5 11.5c-2.8 0-5 3.2-5 5.3 0 1.6 1.3 2.7 2.8 2.7 1 0 1.5-.5 2.2-.5s1.2.5 2.2.5c1.5 0 2.8-1.1 2.8-2.7 0-2.1-2.2-5.3-5-5.3z"/>',
+    carro: '<path d="M4.5 16.5v-4l2-5h11l2 5v4"/><path d="M3.5 16.5h17"/><circle cx="8" cy="17.5" r="1.8"/><circle cx="16" cy="17.5" r="1.8"/><path d="M5.5 12h13"/>',
+    aviao: '<path d="M10.5 20 12 14.5 5 13.5v-2l7-2.5V5a1.5 1.5 0 0 1 3 0v4l6 2.5v2l-6-1v2.5l2 2V19l-3.5-1z" transform="rotate(-45 12 12)"/>',
+    prato: '<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="4"/>',
+    gota: '<path d="M12 3.5s-6 6.5-6 10.5a6 6 0 0 0 12 0c0-4-6-10.5-6-10.5z"/>',
+    estrela: '<path d="m12 4 2.4 5 5.4.7-4 3.8 1 5.4L12 16.3 7.2 18.9l1-5.4-4-3.8 5.4-.7z"/>',
+    bandeira: '<path d="M5.5 20.5V4.5"/><path d="M5.5 5h11l-2 3.5 2 3.5h-11"/>',
+    casa: '<path d="M4 11 12 4.5 20 11"/><path d="M6 9.5V19.5h12V9.5"/><path d="M10 19.5v-5h4v5"/>',
+    carrinho: '<path d="M3.5 4.5h2.2l2 10.5h10.5l2-7.5H7"/><circle cx="9.5" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>',
+    pincel: '<path d="M14.5 4.5l5 5L11 18a3 3 0 0 1-4.2 0l-.8-.8a3 3 0 0 1 0-4.2z"/><path d="M6 17c-1 1-1 2.5-2.5 3 2 .5 4-.5 4.5-1.5"/>',
+    controle: '<path d="M7.5 7.5h9a4 4 0 0 1 3.9 4.7l-.8 4.3a2 2 0 0 1-3.5.9L14 15h-4l-2.1 2.4a2 2 0 0 1-3.5-.9l-.8-4.3a4 4 0 0 1 3.9-4.7z"/><path d="M8.5 10.5v3M7 12h3"/><circle cx="15.5" cy="11" r=".6" fill="currentColor"/><circle cx="17" cy="12.8" r=".6" fill="currentColor"/>',
+    bola: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5l3.5 2.5-1.3 4h-4.4l-1.3-4z"/><path d="M12 3.5v4M15.5 10l4-1M14.2 14l2.3 3.5M9.8 14l-2.3 3.5M8.5 10l-4-1"/>',
+    tenis: '<path d="M3.5 16.5c0-3 1.5-9 3-9 1 0 1 2 3 2.5 1.5.3 2.5-1 3.5-.5.8.4 1 2.5 3 3.5 2 1 4.5 1 4.5 3.5H3.5z"/><path d="M3.5 18.5h17"/>',
+    estetoscopio: '<path d="M6 3.5v5a4 4 0 0 0 8 0v-5"/><path d="M10 12.5v2a5 5 0 0 0 10 0V13"/><circle cx="20" cy="11" r="2"/>',
+    pilula: '<rect x="3.5" y="8.5" width="17" height="7" rx="3.5" transform="rotate(-35 12 12)"/><path d="m10 9.5 4 5"/>',
+    grupo: '<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.7-3 2.8-4.7 5.5-4.7s4.8 1.7 5.5 4.7"/><circle cx="16.5" cy="9" r="2.5"/><path d="M16 14.3c2.2 0 3.9 1.5 4.5 4.2"/>',
+    maleta: '<rect x="3.5" y="7.5" width="17" height="12" rx="2"/><path d="M9 7.5V5.5h6v2M3.5 12.5h17"/>',
+    presente: '<rect x="4" y="9" width="16" height="11" rx="1.5"/><path d="M3.5 9h17v3.5h-17zM12 9v11"/><path d="M12 9c-1.5-3-5-3.5-5-1.2C7 9 12 9 12 9zm0 0c1.5-3 5-3.5 5-1.2C17 9 12 9 12 9z"/>',
+    cafe: '<path d="M5 9.5h11v5a5 5 0 0 1-5 5 5 5 0 0 1-5-5z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8.5 3.5v2.5M12 3.5v2.5"/>',
+    globo: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.5 3.5 5.5 3.5 8.5s-1 6-3.5 8.5c-2.5-2.5-3.5-5.5-3.5-8.5s1-6 3.5-8.5z"/>',
+    microscopio: '<path d="M9 4.5l4 2-3 6-4-2z"/><path d="M11 8.5 16 11a5 5 0 0 1-3 8.5"/><path d="M5 19.5h14M9 17h6"/>',
+    lapis: '<path d="M5 19l1-4L15.5 5.5a2 2 0 0 1 3 3L9 18z"/><path d="M13.5 7.5l3 3"/>',
   };
 
   // Glifos que as páginas ainda passam para UI.vazio(): viram o ícone certo.
   const GLIFO_PARA_ICONE = { "＋": "mais", "◎": "alvo", "◷": "relogio", "▤": "faculdade", "▣": "banco", "✎": "editar", "◫": "arquivo" };
+
+  /** Ícones desenhados oferecidos às abas criadas pelo usuário. */
+  const ICONES_ABA = ["haltere", "livro", "estetoscopio", "pilula", "coracao", "cruz", "folha", "pata", "carro", "aviao",
+    "prato", "gota", "cafe", "estrela", "bandeira", "casa", "carrinho", "pincel", "musica", "controle", "bola", "tenis",
+    "grupo", "maleta", "presente", "globo", "microscopio", "lapis", "calendario", "alvo", "cofre", "lampada", "relogio", "sol", "lua", "camera"];
+
+  /** Ícone de uma aba do usuário: "svg:<nome>" é desenho; qualquer outra coisa é o glifo que ele escolheu. */
+  function iconeAba(valor) {
+    const v = String(valor || "");
+    if (v.startsWith("svg:") && ICONES[v.slice(4)]) return icone(v.slice(4));
+    return fmt.escape(v || "◆");
+  }
 
   /** SVG de um ícone do Delfos (vazio se o nome não existir). */
   function icone(nome, classe = "") {
@@ -468,7 +510,7 @@ const UI = (() => {
       // As abas criadas guardam um hex próprio, então a cor vai inline (como
       // variável); as fixas usam a classe do pilar, que segue o tema.
       const iconeHTML = p.corHex
-        ? `<span class="nav-icon propria" style="--cor-aba:${fmt.escape(p.corHex)}">${fmt.escape(p.icone)}</span>`
+        ? `<span class="nav-icon propria" style="--cor-aba:${fmt.escape(p.corHex)}">${iconeAba(p.icone)}</span>`
         : `<span class="nav-icon ${p.cor}">${icone(p.icone)}</span>`;
       return `
         <a class="nav-item ${aberto ? "active" : ""}" href="${p.href}"${aberto ? ' aria-current="page"' : ""}>
@@ -532,26 +574,20 @@ const UI = (() => {
     }] : []),
   ];
 
-  /** Cria uma aba nova, já com os campos do modelo escolhido, e abre a página dela. */
+  /**
+   * Abre o criador de aba (abas.js): nome, sugestão local instantânea e, com
+   * as contas ligadas, a personalização pela IA. Sem abas.js carregado (não
+   * deve acontecer em página com barra), cai no formulário simples de antes.
+   */
   async function novaAba() {
-    const v = await formulario({
-      titulo: "Nova aba",
-      descricao: "Uma aba sua na barra lateral, com página própria. O que você cadastrar nela entra na agenda da visão geral junto com os outros pilares.",
-      campos: camposPilar({ comModelo: true }),
-      rotuloConfirmar: "Criar aba",
-    });
+    if (typeof Abas !== "undefined") return Abas.abrir();
+    const v = await formulario({ titulo: "Nova aba", campos: camposPilar({ comModelo: true }), rotuloConfirmar: "Criar aba" });
     if (!v) return;
     const modelo = Store.MODELOS_PILAR.find((m) => m.id === v.modelo) || Store.MODELOS_PILAR[0];
     const { modelo: _idModelo, ...dadosAba } = v;
     const novo = Store.inserir("pilares", {
-      ...dadosAba,
-      modelo: modelo.id,
-      campos: modelo.campos.map((c) => ({ ...c })),
-      naAgenda: modelo.naAgenda,
-      itens: [],
-      ...(modelo.especial === "academia"
-        ? { academia: { configuradoEm: "", objetivo: "", experiencia: "", frequenciaSemanal: 0, divisao: "" }, dias: [] }
-        : {}),
+      ...dadosAba, modelo: modelo.id, campos: modelo.campos.map((c) => ({ ...c })), naAgenda: modelo.naAgenda, itens: [],
+      ...(modelo.especial === "academia" ? { academia: { configuradoEm: "", objetivo: "", experiencia: "", frequenciaSemanal: 0, divisao: "" }, dias: [] } : {}),
     });
     location.href = `pilar.html?id=${encodeURIComponent(novo.id)}`;
   }
@@ -1041,7 +1077,9 @@ const UI = (() => {
    * Devolve null quando não há o que calcular (nenhuma avaliação cadastrada).
    */
   function notaNecessaria(d) {
-    const minima = Number(d.mediaMinima) > 0 ? Number(d.mediaMinima) : 7;
+    // Mínima da disciplina; senão a da faculdade (pergunta da aba); senão 7.
+    const daFaculdade = Number(Store.estado().preferencias?.faculdade?.mediaMinima);
+    const minima = Number(d.mediaMinima) > 0 ? Number(d.mediaMinima) : daFaculdade > 0 ? daFaculdade : 7;
     const avs = (d.avaliacoes || []).filter((a) => !(Number(a.peso) < 0));
     if (!avs.length) return null;
     const temNota = (a) => a.nota !== null && a.nota !== undefined && a.nota !== "" && !Number.isNaN(Number(a.nota));
@@ -1684,6 +1722,187 @@ const UI = (() => {
     return el;
   }
 
+  /* ---------------------- Perguntas e notas do Delfos ---------------------- */
+  // O mesmo gesto em toda aba: o painel pergunta o que falta saber para ler
+  // melhor (perguntas) e diz o que merece atenção (notas). Cada aba monta a
+  // sua lista; o desenho e o "Agora não" são daqui.
+
+  /**
+   * "Agora não" esconde a pergunta por 14 dias; "sempre", para sempre.
+   * O Financeiro guarda as dele em preferencias.financeiro.dispensadas; as
+   * outras abas usam preferencias.dispensadas com a chave "<escopo>:<id>".
+   */
+  function perguntaDispensada(escopo, id) {
+    const prefs = Store.estado().preferencias;
+    const d = escopo === "financeiro" ? prefs.financeiro.dispensadas[id] : (prefs.dispensadas || {})[`${escopo}:${id}`];
+    if (!d) return false;
+    if (d === "sempre") return true;
+    return (diasAte(d) ?? -99) > -14;
+  }
+
+  function dispensarPergunta(escopo, id, sempre = false) {
+    const valor = sempre ? "sempre" : hojeISO();
+    const prefs = Store.estado().preferencias;
+    if (escopo === "financeiro") {
+      Store.definirPreferencias({ financeiro: { dispensadas: { ...prefs.financeiro.dispensadas, [id]: valor } } });
+    } else {
+      Store.definirPreferencias({ dispensadas: { ...(prefs.dispensadas || {}), [`${escopo}:${id}`]: valor } });
+    }
+  }
+
+  // Controles de resposta, montados em DOM (nada de texto do usuário em innerHTML).
+  const resposta = {
+    /** Campo numérico (ou texto, com `texto: true`) + botão. */
+    valor({ sugestao = "", rotulo, sufixo = "", min, max, passo = "0.01", texto = false, data = false, placeholder = "", aoSalvar }) {
+      const box = document.createElement("div");
+      box.className = "pergunta-resposta";
+      const inp = document.createElement("input");
+      inp.className = "input";
+      if (data) texto = true;
+      inp.type = data ? "date" : texto ? "text" : "number";
+      if (data) inp.style.width = "170px";
+      else if (!texto) {
+        inp.step = passo;
+        if (min !== undefined) inp.min = min;
+        if (max !== undefined) inp.max = max;
+      } else inp.style.width = "220px";
+      if (data) inp.style.width = "170px";
+      inp.placeholder = placeholder || (sugestao !== "" ? String(sugestao).replace(".", ",") : "");
+      if (sugestao !== "" && sugestao !== null) inp.value = sugestao;
+      inp.setAttribute("aria-label", rotulo);
+      const btn = document.createElement("button");
+      btn.className = "btn primary sm";
+      btn.type = "button";
+      btn.textContent = rotulo;
+      const ok = () => {
+        if (texto) {
+          if (!inp.value.trim()) return inp.focus();
+          return aoSalvar(inp.value.trim());
+        }
+        const v = Number(String(inp.value).replace(",", "."));
+        if (!inp.value || Number.isNaN(v) || v <= 0 || (max !== undefined && v > max)) return inp.focus();
+        aoSalvar(v);
+      };
+      btn.addEventListener("click", ok);
+      inp.addEventListener("keydown", (ev) => { if (ev.key === "Enter") ok(); });
+      box.append(inp);
+      if (sufixo) { const s = document.createElement("span"); s.className = "muted"; s.textContent = sufixo; box.append(s); }
+      box.append(btn);
+      return box;
+    },
+    /** Uma fileira de botões: [[rótulo, ação, primário?], …]. */
+    botoes(lista) {
+      const box = document.createElement("div");
+      box.className = "pergunta-resposta";
+      lista.forEach(([rotulo, fn, primario]) => {
+        const b = document.createElement("button");
+        b.className = `btn sm ${primario ? "primary" : ""}`;
+        b.type = "button";
+        b.textContent = rotulo;
+        b.addEventListener("click", fn);
+        box.append(b);
+      });
+      return box;
+    },
+    /** Pílulas de escolha múltipla + salvar. */
+    multipla(opcoes, marcadas, rotuloSalvar, aoSalvar) {
+      const box = document.createElement("div");
+      box.style.cssText = "display:flex; flex-direction:column; gap:12px;";
+      const chips = document.createElement("div");
+      chips.className = "chips";
+      opcoes.forEach((o) => {
+        const c = document.createElement("button");
+        c.type = "button";
+        c.className = "chip";
+        c.textContent = o;
+        c.setAttribute("aria-pressed", String(marcadas.includes(o)));
+        c.addEventListener("click", () => c.setAttribute("aria-pressed", String(c.getAttribute("aria-pressed") !== "true")));
+        chips.append(c);
+      });
+      box.append(chips, resposta.botoes([[rotuloSalvar, () => aoSalvar([...chips.querySelectorAll('[aria-pressed="true"]')].map((c) => c.textContent)), true]]));
+      return box;
+    },
+  };
+
+  /**
+   * Desenha as perguntas (duas por vez) numa seção; esconde a seção quando
+   * não há nenhuma. `perguntas`: [{ id, texto, apoio, controle: () => Element }].
+   * `aoMudar` roda depois de um "Agora não".
+   */
+  function renderPerguntas(secao, box, escopo, perguntas, aoMudar) {
+    const lista = perguntas.filter((q) => !perguntaDispensada(escopo, q.id));
+    secao.hidden = !lista.length;
+    box.innerHTML = "";
+    lista.slice(0, 2).forEach((q, i) => {
+      const el = document.createElement("article");
+      el.className = "pergunta";
+      const texto = document.createElement("div");
+      texto.className = "pergunta-texto";
+      texto.textContent = q.texto;
+      const apoio = document.createElement("div");
+      apoio.className = "pergunta-apoio";
+      apoio.textContent = q.apoio;
+      const rodape = document.createElement("div");
+      rodape.className = "pergunta-rodape";
+      rodape.innerHTML = `<span class="contador">${i + 1} de ${lista.length}</span>`;
+      const depois = document.createElement("button");
+      depois.className = "btn ghost sm";
+      depois.type = "button";
+      depois.textContent = "Agora não";
+      depois.addEventListener("click", () => { dispensarPergunta(escopo, q.id); aoMudar?.(); });
+      rodape.append(depois);
+      el.append(texto, apoio, q.controle(), rodape);
+      box.appendChild(el);
+    });
+  }
+
+  /**
+   * Notas: [{ tipo: alerta|atencao|bom|info, ic, html, acao?: { rotulo, fn }, area?: { rotulo, cor } }].
+   * `html` é montado por quem chama, sempre com o texto do usuário escapado.
+   */
+  function renderNotas(ul, notas, textoVazio) {
+    ul.innerHTML = "";
+    if (!notas.length) {
+      ul.innerHTML = `<li><span class="sinal">${icone("check")}</span><span>${fmt.escape(textoVazio)}</span></li>`;
+      return;
+    }
+    notas.forEach((x) => {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="sinal ${x.tipo}">${icone(x.ic)}</span><div><div>${x.area ? `<span class="nota-area" style="--marca:${fmt.escape(x.area.cor)}">${fmt.escape(x.area.rotulo)}</span>` : ""}${x.html}</div></div>`;
+      if (x.acao) {
+        const b = document.createElement(x.acao.href ? "a" : "button");
+        b.className = "btn sm acao";
+        if (x.acao.href) b.href = x.acao.href; else { b.type = "button"; b.addEventListener("click", x.acao.fn); }
+        b.textContent = x.acao.rotulo;
+        li.querySelector("div").appendChild(b);
+      }
+      ul.appendChild(li);
+    });
+  }
+
+  const ORDEM_NOTAS = { alerta: 0, atencao: 1, bom: 2, info: 3 };
+  const ordenarNotas = (lista, max = 6) => [...lista].sort((a, b) => ORDEM_NOTAS[a.tipo] - ORDEM_NOTAS[b.tipo]).slice(0, max);
+
+  /**
+   * Barras com valor escrito e, se houver, uma marca de meta/limite em cada
+   * linha (a mesma leitura de "Para onde foi o dinheiro"). Uma série só.
+   * linhas: [{ nome, valor, meta?, meta2?, sub?, acima? , href? }]
+   */
+  function barrasComMeta(el, linhas, { cor = "var(--serie-saida)", formatar = fmt.moeda, rotuloMeta = "meta", escala: fixa } = {}) {
+    el.innerHTML = "";
+    const escala = fixa || Math.max(...linhas.map((l) => Math.max(l.valor || 0, l.meta || 0)), 0) || 1;
+    const lista = document.createElement("div");
+    lista.className = "cat-lista";
+    lista.innerHTML = linhas.map((l) => `
+      <div class="cat-linha">
+        <span class="cat-nome"><span>${l.href ? `<a class="titulo-link" href="${fmt.escape(l.href)}">${fmt.escape(l.nome)}</a>` : fmt.escape(l.nome)}</span></span>
+        <span class="cat-valor">${formatar(l.valor || 0)}</span>
+        <span class="cat-barra"><i class="${l.acima ? "acima" : ""}" style="width:${((l.valor || 0) / escala) * 100}%; background:${l.acima ? "" : cor}"></i>${l.meta ? `<b style="left:calc(${(l.meta / escala) * 100}% - 1px)" title="${fmt.escape(rotuloMeta)}: ${fmt.escape(formatar(l.meta))}"></b>` : ""}</span>
+        ${l.sub ? `<span class="cat-meta">${l.sub}</span>` : ""}
+      </div>`).join("");
+    el.appendChild(lista);
+  }
+
   /* ------------------------------ Inicialização ---------------------------- */
 
   /**
@@ -1753,12 +1972,13 @@ const UI = (() => {
   }
 
   return {
-    NOME, VERSAO, ICONES, icone,
+    NOME, VERSAO, ICONES, ICONES_ABA, icone, iconeAba,
     fmt, htmlSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
     compromissos, conflitos, contagens, mediaDisciplina, notaNecessaria, proximaAvaliacao, resumoProjeto,
     iniciarPagina, montarLayout, tema, toast, formulario, confirmar, abrirModal,
     abrirBackup, abrirPerfil, avatarHTML, iniciais, vazio, barras, colunasMensais, medidor,
     novaAba, camposPilar, redimensionarFoto, camposItemPilar, editorCampos,
+    perguntaDispensada, dispensarPergunta, resposta, renderPerguntas, renderNotas, ordenarNotas, barrasComMeta,
   };
 })();
 

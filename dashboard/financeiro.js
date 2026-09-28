@@ -363,80 +363,10 @@
 
   /* -------------------------- Perguntas do Delfos -------------------------- */
 
-  function dispensada(id) {
-    const d = prefs().dispensadas[id];
-    if (!d) return false;
-    if (d === "sempre") return true;
-    return (UI.diasAte(d) ?? -99) > -14;
-  }
-
-  function dispensar(id, sempre = false) {
-    salvarPrefs({ dispensadas: { ...prefs().dispensadas, [id]: sempre ? "sempre" : hoje } });
-    render();
-  }
-
-  // Controles de resposta, montados em DOM (nada de texto de usuário em innerHTML).
-  function campoValor({ sugestao, rotulo, sufixo = "", min, max, passo = "0.01", aoSalvar }) {
-    const box = document.createElement("div");
-    box.className = "pergunta-resposta";
-    const inp = document.createElement("input");
-    inp.className = "input";
-    inp.type = "number";
-    inp.step = passo;
-    if (min !== undefined) inp.min = min;
-    if (max !== undefined) inp.max = max;
-    inp.placeholder = sugestao ? String(sugestao).replace(".", ",") : "";
-    if (sugestao) inp.value = sugestao;
-    inp.setAttribute("aria-label", rotulo);
-    const btn = document.createElement("button");
-    btn.className = "btn primary sm";
-    btn.type = "button";
-    btn.textContent = rotulo;
-    const ok = () => {
-      const v = Number(String(inp.value).replace(",", "."));
-      if (!inp.value || Number.isNaN(v) || v <= 0 || (max !== undefined && v > max)) { inp.focus(); return; }
-      aoSalvar(v);
-    };
-    btn.addEventListener("click", ok);
-    inp.addEventListener("keydown", (ev) => { if (ev.key === "Enter") ok(); });
-    box.append(inp);
-    if (sufixo) { const s = document.createElement("span"); s.className = "muted"; s.textContent = sufixo; box.append(s); }
-    box.append(btn);
-    return box;
-  }
-
-  function botoes(lista) {
-    const box = document.createElement("div");
-    box.className = "pergunta-resposta";
-    lista.forEach(([rotulo, fn, primario]) => {
-      const b = document.createElement("button");
-      b.className = `btn sm ${primario ? "primary" : ""}`;
-      b.type = "button";
-      b.textContent = rotulo;
-      b.addEventListener("click", fn);
-      box.append(b);
-    });
-    return box;
-  }
-
-  function escolhaMultipla(opcoes, marcadas, rotuloSalvar, aoSalvar) {
-    const box = document.createElement("div");
-    box.style.cssText = "display:flex; flex-direction:column; gap:12px;";
-    const chips = document.createElement("div");
-    chips.className = "chips";
-    opcoes.forEach((o) => {
-      const c = document.createElement("button");
-      c.type = "button";
-      c.className = "chip";
-      c.textContent = o;
-      c.setAttribute("aria-pressed", String(marcadas.includes(o)));
-      c.addEventListener("click", () => c.setAttribute("aria-pressed", String(c.getAttribute("aria-pressed") !== "true")));
-      chips.append(c);
-    });
-    const salvar = botoes([[rotuloSalvar, () => aoSalvar([...chips.querySelectorAll('[aria-pressed="true"]')].map((c) => c.textContent)), true]]);
-    box.append(chips, salvar);
-    return box;
-  }
+  const dispensar = (id, sempre = false) => { UI.dispensarPergunta("financeiro", id, sempre); render(); };
+  const campoValor = (o) => UI.resposta.valor(o);
+  const botoes = (l) => UI.resposta.botoes(l);
+  const escolhaMultipla = (...a) => UI.resposta.multipla(...a);
 
   const feito = (msg) => { UI.toast(msg); render(); };
 
@@ -536,36 +466,11 @@
       });
     }
 
-    return q.filter((x) => !dispensada(x.id));
+    return q;
   }
 
   function renderPerguntas(a) {
-    const lista = perguntas(a);
-    const sec = $("sec-perguntas");
-    const box = $("perguntas");
-    sec.hidden = !lista.length;
-    box.innerHTML = "";
-    lista.slice(0, 2).forEach((q, i) => {
-      const el = document.createElement("article");
-      el.className = "pergunta";
-      const texto = document.createElement("div");
-      texto.className = "pergunta-texto";
-      texto.textContent = q.texto;
-      const apoio = document.createElement("div");
-      apoio.className = "pergunta-apoio";
-      apoio.textContent = q.apoio;
-      const rodape = document.createElement("div");
-      rodape.className = "pergunta-rodape";
-      rodape.innerHTML = `<span class="contador">${i + 1} de ${lista.length}</span>`;
-      const depois = document.createElement("button");
-      depois.className = "btn ghost sm";
-      depois.type = "button";
-      depois.textContent = "Agora não";
-      depois.addEventListener("click", () => dispensar(q.id));
-      rodape.append(depois);
-      el.append(texto, apoio, q.controle(), rodape);
-      box.appendChild(el);
-    });
+    UI.renderPerguntas($("sec-perguntas"), $("perguntas"), "financeiro", perguntas(a), render);
   }
 
   /* -------------------------- O que o Delfos notou -------------------------- */
@@ -654,33 +559,13 @@
       }
     }
 
-    const ordem = { alerta: 0, atencao: 1, bom: 2, info: 3 };
-    return n.sort((x, y) => ordem[x.tipo] - ordem[y.tipo]).slice(0, 6);
+    return UI.ordenarNotas(n);
   }
 
   function renderNotas(a) {
-    const ul = $("notas");
-    const lista = notas(a);
-    ul.innerHTML = "";
-    if (!lista.length) {
-      ul.innerHTML = `<li><span class="sinal">${icone("check")}</span><span>${a.lancamentos
-        ? "Nada fora do comum neste mês. Com mais meses lançados, as comparações ficam mais ricas."
-        : "Quando houver lançamentos, o Delfos aponta aqui o que mudou, o que se repete e o que merece atenção."}</span></li>`;
-      return;
-    }
-    lista.forEach((x) => {
-      const li = document.createElement("li");
-      li.innerHTML = `<span class="sinal ${x.tipo}">${icone(x.ic)}</span><div><div>${x.html}</div></div>`;
-      if (x.acao) {
-        const b = document.createElement("button");
-        b.className = "btn sm acao";
-        b.type = "button";
-        b.textContent = x.acao.rotulo;
-        b.addEventListener("click", x.acao.fn);
-        li.querySelector("div").appendChild(b);
-      }
-      ul.appendChild(li);
-    });
+    UI.renderNotas($("notas"), notas(a), a.lancamentos
+      ? "Nada fora do comum neste mês. Com mais meses lançados, as comparações ficam mais ricas."
+      : "Quando houver lançamentos, o Delfos aponta aqui o que mudou, o que se repete e o que merece atenção.");
   }
 
   /* -------------------------- A pagar e fixos ------------------------------- */

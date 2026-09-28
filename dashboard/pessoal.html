@@ -25,6 +25,8 @@
           </div>
         </header>
 
+        <p class="leitura" id="leitura"></p>
+
         <div class="grid g3" style="margin-bottom:14px;">
           <div class="card tinted pessoal">
             <div class="stat-label">Em aberto</div>
@@ -43,12 +45,37 @@
           </div>
         </div>
 
-        <section class="section" style="margin-top:28px;">
-          <div class="section-head">
-            <h2 class="section-title"><span class="swatch pessoal"></span>Compromissos</h2>
-            <label class="filters" style="margin:0;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
+        <div class="fin-duas section">
+          <section class="card">
+            <div class="card-head">
+              <h2 class="card-title"><span class="swatch pessoal"></span>Compromissos</h2>
+              <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
+            </div>
+            <div class="chips" id="f-tipo" style="margin-bottom:18px;"></div>
+            <div id="lista"></div>
+          </section>
+          <div class="fin-coluna">
+            <section class="card">
+              <div class="card-head">
+                <h2 class="card-title">O que o Delfos notou</h2>
+              </div>
+              <ul class="notas" id="notas"></ul>
+            </section>
+            <section class="card">
+              <div class="card-head">
+                <h2 class="card-title">Por tipo</h2>
+                <span class="card-note">em aberto</span>
+              </div>
+              <div id="por-tipo"></div>
+            </section>
           </div>
-          <div class="card"><div id="lista"></div></div>
+        </div>
+
+        <section class="section" id="sec-perguntas" hidden>
+          <div class="section-head">
+            <h2 class="section-title">Perguntas do Delfos</h2>
+          </div>
+          <div class="perguntas" id="perguntas"></div>
         </section>
       </div>
     </main>
@@ -62,6 +89,8 @@
   <script src="sessao.js"></script>
   <script src="nuvem.js"></script>
   <script src="financas.js"></script>
+  <script src="leituras.js"></script>
+  <script src="abas.js"></script>
   <script src="pessoal.js"></script>
 </body>
 </html>

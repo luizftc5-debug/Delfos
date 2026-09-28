@@ -302,6 +302,59 @@ function driveExportarTexto(fileId) {
     .then((resp) => resp.body || "");
 }
 
+/* ------------------ Calendário: importação na aba Pessoal ------------------
+   Usado por calendario.js. Nada é gravado aqui: estas funções só trazem o
+   texto do arquivo ou a lista de eventos; quem decide o que entra é a
+   revisão do assistente de importação. --------------------------------- */
+
+/** Conecta (se preciso) e roda `fn` com a sessão pronta. */
+function googleComConexao(fn) {
+  if (driveConectado()) return fn();
+  aoConectar(fn);
+  conectarGoogle();
+}
+
+/** Arquivos de calendário (.ics) no Drive, os mais recentes primeiro. */
+function driveListarCalendarios(termo = "") {
+  if (!driveConectado()) return Promise.reject(new Error("Conecte-se ao Google primeiro."));
+  const escapado = String(termo || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  return gapi.client.drive.files
+    .list({
+      pageSize: 25,
+      orderBy: "modifiedTime desc",
+      fields: "files(id, name, mimeType, modifiedTime, size)",
+      q: `trashed = false and (mimeType = 'text/calendar' or name contains '.ics')${escapado ? ` and name contains '${escapado}'` : ""}`,
+    })
+    .then((resp) => resp.result.files || []);
+}
+
+/** Conteúdo bruto (texto) de um arquivo do Drive. */
+function driveBaixarTexto(fileId) {
+  return gapi.client.drive.files.get({ fileId, alt: "media" }).then((resp) => resp.body || "");
+}
+
+/** Eventos da agenda principal do Google entre duas datas ISO (até 1.000). */
+async function agendaListarEventos(inicioISO, fimISO) {
+  if (!driveConectado()) throw new Error("Conecte-se ao Google primeiro.");
+  const eventos = [];
+  let pageToken;
+  do {
+    const resp = await gapi.client.calendar.events.list({
+      calendarId: "primary",
+      timeMin: new Date(`${inicioISO}T00:00:00`).toISOString(),
+      timeMax: new Date(`${fimISO}T23:59:59`).toISOString(),
+      showDeleted: false,
+      singleEvents: true,
+      orderBy: "startTime",
+      maxResults: 250,
+      pageToken,
+    });
+    eventos.push(...(resp.result.items || []));
+    pageToken = resp.result.nextPageToken;
+  } while (pageToken && eventos.length < 1000);
+  return eventos;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   atualizarEstado(false);
   document.getElementById("google-connect-btn")?.addEventListener("click", conectarGoogle);

@@ -21,6 +21,7 @@
             <p class="sub">Consultas, tarefas e recados que não são nem financeiro, nem faculdade, nem projeto.</p>
           </div>
           <div class="topbar-actions">
+            <button class="btn" id="btn-importar-cal">Importar calendário</button>
             <button class="btn primary" id="btn-compromisso">+ Compromisso</button>
           </div>
         </header>
@@ -45,8 +46,23 @@
           </div>
         </div>
 
+        <nav class="abas" role="tablist" aria-label="Como ver os compromissos">
+          <button type="button" role="tab" data-vista="calendario">Calendário</button>
+          <button type="button" role="tab" data-vista="lista">Lista</button>
+        </nav>
+
+        <section class="card calendario" id="calendario" data-na-vista="calendario"></section>
+
         <div class="fin-duas section">
-          <section class="card">
+          <section class="card" data-na-vista="calendario">
+            <div class="card-head">
+              <h2 class="card-title"><span class="swatch pessoal"></span>O que se aproxima</h2>
+              <span class="card-note">próximas duas semanas, de todas as abas</span>
+            </div>
+            <div id="proximos"></div>
+            <div class="lembrete-rodape" id="lembrete-config"></div>
+          </section>
+          <section class="card" data-na-vista="lista">
             <div class="card-head">
               <h2 class="card-title"><span class="swatch pessoal"></span>Compromissos</h2>
               <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
@@ -91,6 +107,11 @@
   <script src="financas.js"></script>
   <script src="leituras.js"></script>
   <script src="abas.js"></script>
+  <script src="config.js"></script>
+  <script src="google-integration.js"></script>
+  <script src="https://apis.google.com/js/api.js" onload="onGapiLoad()"></script>
+  <script src="https://accounts.google.com/gsi/client" onload="onGisLoad()"></script>
+  <script src="calendario.js"></script>
   <script src="pessoal.js"></script>
 </body>
 </html>

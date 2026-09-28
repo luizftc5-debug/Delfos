@@ -1500,7 +1500,7 @@ const UI = (() => {
   }
 
   // Tipos que cabem em meia linha; os demais ocupam a linha toda.
-  const CURTOS = new Set(["date", "number", "dinheiro", "select"]);
+  const CURTOS = new Set(["date", "number", "dinheiro", "select", "time"]);
 
   /** Decide quais campos ficam lado a lado: só pares vizinhos curtos; um curto sozinho ocupa a linha. */
   function larguras(campos) {
@@ -1810,6 +1810,9 @@ const UI = (() => {
           </div>`;
         break;
       }
+      case "time":
+        controle = `<input type="time" id="${id}" name="${c.nome}" value="${v}" />`;
+        break;
       case "simNao":
         controle = `<label class="campo-simnao"><input type="checkbox" class="check" name="${c.nome}" ${valor ? "checked" : ""} /> ${fmt.escape(c.rotuloMarcado || "Sim")}</label>`;
         break;
@@ -2466,6 +2469,165 @@ const UI = (() => {
     achar(".sidebar .nav").forEach(realceDeslizante);
   }
 
+  /* ------------------------ Repetição e lembretes -------------------------- */
+
+  const REPETICOES = [["", "Não repete"], ["semanal", "Toda semana"], ["mensal", "Todo mês"], ["anual", "Todo ano"]];
+
+  function somarPeriodo(iso, repete, n = 1) {
+    const [a, m, d] = iso.split("-").map(Number);
+    let alvo;
+    if (repete === "semanal") alvo = new Date(a, m - 1, d + 7 * n);
+    else if (repete === "mensal") {
+      const base = new Date(a, m - 1 + n, 1);
+      alvo = new Date(base.getFullYear(), base.getMonth(), Math.min(d, new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate()));
+    } else if (repete === "anual") {
+      const ultimo = new Date(a + n, m, 0).getDate();
+      alvo = new Date(a + n, m - 1, Math.min(d, ultimo));
+    } else return iso;
+    return `${alvo.getFullYear()}-${String(alvo.getMonth() + 1).padStart(2, "0")}-${String(alvo.getDate()).padStart(2, "0")}`;
+  }
+
+  /** Datas em que um item que se repete acontece entre `ini` e `fim` (ISO, inclusivos). */
+  function ocorrenciasEntre(item, ini, fim) {
+    if (!item.data) return [];
+    if (!item.repete) return item.data >= ini && item.data <= fim ? [item.data] : [];
+    // `repeteDesde` guarda a primeira data da série: é dela que se conta, para
+    // "todo dia 31" voltar a ser 31 depois de passar por fevereiro.
+    const base = item.repeteDesde || item.data;
+    const datas = [];
+    let d = base;
+    for (let n = 0; n < 2000 && d <= fim; n++) {
+      if (d >= ini && d >= item.data && (!item.repeteAte || d <= item.repeteAte)) datas.push(d);
+      d = somarPeriodo(base, item.repete, n + 1);
+    }
+    return datas;
+  }
+
+  /**
+   * Compromisso pessoal que se repete (aniversário, academia toda terça…):
+   * quando a data passa, ele anda para a próxima ocorrência — assim a
+   * agenda, os alertas e os lembretes enxergam sempre a próxima vez, e não
+   * um "atrasado" que já aconteceu.
+   */
+  function rolarRecorrentes() {
+    const hoje = hojeISO();
+    (Store.estado().pessoal?.compromissos || []).forEach((c) => {
+      if (!c.repete || !c.data || c.data >= hoje) return;
+      const base = c.repeteDesde || c.data;
+      let prox = base;
+      for (let n = 1; prox < hoje && n < 5000; n++) prox = somarPeriodo(base, c.repete, n);
+      if (c.repeteAte && prox > c.repeteAte) return; // a série acabou: fica como o último
+      Store.atualizar("pessoal.compromissos", c.id, { data: prox, repeteDesde: base, concluido: false });
+    });
+  }
+
+  /**
+   * O que merece lembrete agora: tudo com data das abas (UI.compromissos) e
+   * as contas a pagar, dentro da antecedência escolhida no perfil (ou a do
+   * próprio compromisso). O que foi marcado "importante" avisa também uma
+   * semana antes.
+   */
+  function lembretesAgora() {
+    const xp = experiencia();
+    const padrao = Number(xp.lembretes?.antecedencia ?? 2);
+    const pessoais = Object.fromEntries((Store.estado().pessoal?.compromissos || []).map((c) => [c.id, c]));
+    const itens = compromissos().map((i) => {
+      const p = i.area === "pessoal" ? pessoais[i.id] : null;
+      return { ...i, hora: p?.hora || "", importante: !!p?.importante, lembrete: p?.lembrete ?? "" };
+    });
+    if (typeof Financas !== "undefined" && Financas.pendentes) {
+      Financas.pendentes().forEach((t) => itens.push({
+        id: t.id, titulo: `Pagar: ${t.descricao || "conta"}`, data: t.data, area: "financeiro", areaRotulo: "Financeiro",
+        cor: "var(--s-financeiro)", tipo: "conta", valor: t.valor, hora: "", importante: false, lembrete: "",
+      }));
+    }
+    return itens
+      .map((i) => {
+        const dias = diasAte(i.data);
+        const ant = i.lembrete === "nenhum" ? -1 : i.lembrete !== "" && i.lembrete !== undefined ? Number(i.lembrete) : padrao;
+        const avisa = dias !== null && dias >= 0 && (dias <= ant || (i.importante && dias <= 7));
+        return { ...i, dias, avisa };
+      })
+      .filter((i) => i.avisa)
+      .sort((a, b) => a.dias - b.dias || (a.hora || "99").localeCompare(b.hora || "99"));
+  }
+
+  function textoQuando(dias, hora) {
+    const d = dias === 0 ? "hoje" : dias === 1 ? "amanhã" : `em ${dias} dias`;
+    return hora ? `${d}, às ${hora}` : d;
+  }
+
+  /** Resumo do dia (uma vez por dia, na primeira página aberta) e avisos do navegador. */
+  function verificarLembretes() {
+    const xp = experiencia();
+    const hoje = hojeISO();
+    const itens = lembretesAgora();
+    if (!itens.length) return;
+
+    // Avisos do navegador: cada item uma vez por dia; os com hora hoje, de novo 1 h antes.
+    if (xp.lembretes?.navegador && typeof Notification !== "undefined" && Notification.permission === "granted") {
+      let avisados = {};
+      try { avisados = JSON.parse(localStorage.getItem("delfos.avisados") || "{}"); } catch { /* nada */ }
+      if (avisados.dia !== hoje) avisados = { dia: hoje, ids: [] };
+      itens.forEach((i) => {
+        if (avisados.ids.includes(i.id)) return;
+        avisados.ids.push(i.id);
+        try { new Notification(i.titulo, { body: `${i.areaRotulo || ""}, ${textoQuando(i.dias, i.hora)}`, tag: `delfos-${i.id}` }); } catch { /* sem aviso */ }
+      });
+      try { localStorage.setItem("delfos.avisados", JSON.stringify(avisados)); } catch { /* nada */ }
+      itens.filter((i) => i.dias === 0 && i.hora).forEach((i) => {
+        const [h, m] = i.hora.split(":").map(Number);
+        const quando = new Date();
+        quando.setHours(h, m - 60, 0, 0);
+        const falta = quando - Date.now();
+        if (falta > 0 && falta < 12 * 3600e3) setTimeout(() => {
+          try { new Notification(`Daqui a 1 hora: ${i.titulo}`, { body: `Às ${i.hora}`, tag: `delfos-hora-${i.id}` }); } catch { /* nada */ }
+        }, falta);
+      });
+    }
+
+    if (xp.lembretes?.resumoDoDia === false) return;
+    try {
+      if (localStorage.getItem("delfos.resumoDoDia") === hoje) return;
+      localStorage.setItem("delfos.resumoDoDia", hoje);
+    } catch { return; }
+    abrirResumoDoDia(itens);
+  }
+
+  function abrirResumoDoDia(itens = lembretesAgora()) {
+    const hojeItens = itens.filter((i) => i.dias === 0);
+    const depois = itens.filter((i) => i.dias > 0);
+    const nome = typeof Personalizacao !== "undefined" ? (Store.estado().perfil?.apelido || Personalizacao.primeiroNome?.() || "") : "";
+    const hora = new Date().getHours();
+    const saud = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+    const linha = (i) => `<li>
+        <span class="lembrete-selo" style="--c:${fmt.escape(i.cor || "var(--texto-3)")}"></span>
+        <span class="grow"><span class="t">${fmt.escape(i.titulo)}${i.importante ? ` <span class="badge urgente">importante</span>` : ""}</span>
+        <span class="m">${fmt.escape([fmt.capitalizar(i.areaRotulo || ""), textoQuando(i.dias, i.hora)].filter(Boolean).join(", "))}${i.valor ? `, ${fmt.moeda(i.valor)}` : ""}</span></span>
+      </li>`;
+    abrirModal(`
+      <div class="modal-head com-marca">
+        <span class="modal-ic" style="--ic-cor:var(--s-pessoal)">${icone("calendario")}</span>
+        <div class="modal-head-texto">
+          <h2 class="modal-title">${saud}${nome ? `, ${fmt.escape(nome)}` : ""}</h2>
+          <p class="modal-desc">${hojeItens.length ? `Hoje ${hojeItens.length === 1 ? "tem uma coisa" : `tem ${hojeItens.length} coisas`} marcada${hojeItens.length === 1 ? "" : "s"}` : "Nada vence hoje"}${depois.length ? `, e ${depois.length} ${depois.length === 1 ? "se aproxima" : "se aproximam"}.` : "."}</p>
+        </div>
+      </div>
+      <div class="modal-body">
+        ${hojeItens.length ? `<div class="lembrete-grupo">Hoje</div><ul class="lembretes">${hojeItens.map(linha).join("")}</ul>` : ""}
+        ${depois.length ? `<div class="lembrete-grupo">Chegando</div><ul class="lembretes">${depois.map(linha).join("")}</ul>` : ""}
+      </div>
+      <div class="modal-foot">
+        <span class="modal-atalho">Dá para mudar a antecedência em Perfil, Rotina e avisos.</span>
+        <span class="modal-foot-espaco"></span>
+        <a class="btn" href="pessoal.html#calendario">Ver calendário</a>
+        <button class="btn primary" type="button" data-acao="ok">Entendi</button>
+      </div>`, {
+      classe: "formulario resumo-dia",
+      aoMontar(modal, fechar) { modal.querySelector('[data-acao="ok"]').addEventListener("click", () => fechar(null)); },
+    });
+  }
+
   /* ------------------------------ Inicialização ---------------------------- */
 
   /**
@@ -2569,9 +2731,11 @@ const UI = (() => {
     if (typeof Financas !== "undefined" && Financas.gerarFixos) {
       try { Financas.gerarFixos(); } catch (e) { console.error("gastos fixos", e); }
     }
+    try { rolarRecorrentes(); } catch (e) { console.error("repetições", e); }
     montarLayout(ativo, opcoes);
     avisarSeAbaDesligada(ativo);
     movimento(document);
+    setTimeout(() => { try { verificarLembretes(); } catch (e) { console.error("lembretes", e); } }, 600);
   }
 
   /**
@@ -2605,6 +2769,7 @@ const UI = (() => {
 
   return {
     NOME, VERSAO, ICONES, ICONES_ABA, icone, iconeAba, movimento, aplicarAparencia, experiencia, abrirAtalhos,
+    REPETICOES, somarPeriodo, ocorrenciasEntre, lembretesAgora, abrirResumoDoDia, textoQuando,
     lerDinheiro, avaliarDinheiro, formatarDinheiroCampo, dataPorExtensoCurta, isoMaisDias, marcaDaPagina,
     fmt, htmlSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
     compromissos, conflitos, contagens, mediaDisciplina, notaNecessaria, proximaAvaliacao, resumoProjeto,

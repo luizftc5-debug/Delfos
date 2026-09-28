@@ -43,11 +43,13 @@
           <section class="card">
             <div class="card-head">
               <h2 class="card-title" id="titulo-lista"><span class="swatch" id="swatch-lista"></span>Itens</h2>
-              <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
+              <div class="seg sm vistas" id="f-vista" role="group" aria-label="Como ver"></div>
             </div>
             <div class="fin-filtros" style="margin-bottom:16px;">
               <div class="chips" id="f-grupo"></div>
               <label class="busca"><span class="hidden">Buscar</span><input class="input" type="search" id="f-busca" placeholder="Buscar" /></label>
+              <select class="input" id="f-ordem" aria-label="Ordenar"></select>
+              <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
             </div>
             <div id="lista"></div>
           </section>
@@ -76,6 +78,7 @@
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button class="btn" id="btn-editar-aba-2">Personalizar aba</button>
               <button class="btn" id="btn-campos">Campos desta aba</button>
+              <button class="btn" id="btn-layout">Layout e exibição</button>
               <button class="btn" id="btn-refazer-questionario" hidden>Refazer o questionário inicial</button>
               <button class="btn danger" id="btn-excluir-aba">Excluir esta aba</button>
             </div>
@@ -96,6 +99,7 @@
   <script src="financas.js"></script>
   <script src="leituras.js"></script>
   <script src="abas.js"></script>
+  <script src="calendario.js"></script>
   <script src="pilar.js"></script>
 </body>
 </html>

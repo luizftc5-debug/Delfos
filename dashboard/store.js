@@ -113,6 +113,9 @@ const Store = (() => {
     { valor: "dinheiro", rotulo: "Valor em R$" },
     { valor: "select", rotulo: "Lista de opções" },
     { valor: "simNao", rotulo: "Sim/Não" },
+    { valor: "estrelas", rotulo: "Nota (1 a 5 estrelas)" },
+    { valor: "link", rotulo: "Link" },
+    { valor: "time", rotulo: "Hora" },
   ];
 
   /**

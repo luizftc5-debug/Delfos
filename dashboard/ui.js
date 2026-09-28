@@ -40,6 +40,10 @@ const UI = (() => {
     editar: '<path d="M4.5 19.5h4l10-10a2.8 2.8 0 0 0-4-4l-10 10z"/><path d="m13 7 4 4"/>',
     lixeira: '<path d="M4.5 7h15"/><path d="M9.5 7V4.8h5V7"/><path d="M6.5 7l.8 11.5c.1 1 .9 1.5 1.7 1.5h6c.8 0 1.6-.5 1.7-1.5L17.5 7"/>',
     alvo: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="12" r="1.2"/>',
+    lista: '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r=".9"/><circle cx="4.8" cy="12" r=".9"/><circle cx="4.8" cy="17.5" r=".9"/>',
+    grade: '<rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/>',
+    quadro: '<rect x="3.8" y="4" width="4.6" height="16" rx="1.4"/><rect x="9.7" y="4" width="4.6" height="10" rx="1.4"/><rect x="15.6" y="4" width="4.6" height="13" rx="1.4"/>',
+    tabela: '<rect x="3.8" y="4.5" width="16.4" height="15" rx="2"/><path d="M3.8 9.5h16.4M3.8 14.5h16.4M10 9.5v10"/>',
     calendario: '<rect x="3.8" y="5.5" width="16.4" height="14.5" rx="2.5"/><path d="M3.8 10h16.4M8 3.5v4M16 3.5v4"/>',
     relogio: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
     vazio: '<circle cx="12" cy="12" r="8" stroke-dasharray="2.4 3"/>',
@@ -1500,7 +1504,7 @@ const UI = (() => {
   }
 
   // Tipos que cabem em meia linha; os demais ocupam a linha toda.
-  const CURTOS = new Set(["date", "number", "dinheiro", "select", "time"]);
+  const CURTOS = new Set(["date", "number", "dinheiro", "select", "time", "estrelas"]);
 
   /** Decide quais campos ficam lado a lado: só pares vizinhos curtos; um curto sozinho ocupa a linha. */
   function larguras(campos) {
@@ -1683,6 +1687,12 @@ const UI = (() => {
               } else if (c.tipo === "number") {
                 v = v === "" ? null : Number(String(v).replace(",", "."));
                 if (v !== null && Number.isNaN(v)) v = null;
+              } else if (c.tipo === "estrelas") {
+                v = v === "" ? null : Math.min(5, Math.max(1, Number(v) || 0)) || null;
+              } else if (c.tipo === "link") {
+                v = String(v).trim();
+                if (v && !/^[a-z][a-z0-9+.-]*:/i.test(v)) v = `https://${v}`;
+                invalido = !!v && !linkSeguro(v);
               } else {
                 v = String(v).trim();
               }
@@ -1691,7 +1701,7 @@ const UI = (() => {
                 const campo = input.closest(".field");
                 const span = document.createElement("span");
                 span.className = "err";
-                span.textContent = invalido ? "Valor não reconhecido. Use, por exemplo, 45,90." : "Preencha este campo.";
+                span.textContent = invalido ? (c.tipo === "link" ? "Endereço não reconhecido. Use um link que comece com https://." : "Valor não reconhecido. Use, por exemplo, 45,90.") : "Preencha este campo.";
                 campo.appendChild(span);
                 campo.classList.add("tem-erro");
                 primeiroErro ||= campo.querySelector("input:not([type=hidden]), select, textarea, button");
@@ -1812,6 +1822,20 @@ const UI = (() => {
       }
       case "time":
         controle = `<input type="time" id="${id}" name="${c.nome}" value="${v}" />`;
+        break;
+      // Nota de 1 a 5. As estrelas vêm de trás para a frente no HTML e a
+      // linha é invertida no CSS: assim "a marcada e as seguintes" (~) são
+      // exatamente as estrelas à esquerda dela, sem script para acender.
+      case "estrelas": {
+        const atual = Number(valor) || 0;
+        controle = `<div class="opcoes-chips estrelas" role="group" aria-label="${fmt.escape(c.rotulo)}">
+            <input type="hidden" name="${c.nome}" value="${atual || ""}" />
+            ${[5, 4, 3, 2, 1].map((n) => `<button type="button" class="estrela" data-valor="${n}" aria-pressed="${n === atual}" aria-label="${n} de 5">${icone("estrela")}</button>`).join("")}
+          </div>`;
+        break;
+      }
+      case "link":
+        controle = `<input type="url" inputmode="url" id="${id}" name="${c.nome}" value="${v}" placeholder="${fmt.escape(c.placeholder || "https://")}" />`;
         break;
       case "simNao":
         controle = `<label class="campo-simnao"><input type="checkbox" class="check" name="${c.nome}" ${valor ? "checked" : ""} /> ${fmt.escape(c.rotuloMarcado || "Sim")}</label>`;

@@ -1218,7 +1218,7 @@ const UI = (() => {
    *        anexos | secao (só um título divisor, não guarda valor)
    * Resolve com um objeto de valores, ou null se cancelado.
    */
-  function formulario({ titulo, descricao, campos, valores = {}, rotuloConfirmar = "Salvar", largo = false }) {
+  function formulario({ titulo, descricao, campos, valores = {}, rotuloConfirmar = "Salvar", largo = false, rotuloExcluir = "", aoExcluir = null }) {
     return new Promise((resolve) => {
       const html = `
         <div class="modal-head">
@@ -1229,6 +1229,7 @@ const UI = (() => {
           ${campos.map((c) => campoHTML(c, valores[c.nome] ?? c.valorPadrao ?? "")).join("")}
         </form>
         <div class="modal-foot">
+          ${aoExcluir ? `<button class="btn danger" data-acao="excluir" type="button" style="margin-right:auto;">${fmt.escape(rotuloExcluir || "Excluir")}</button>` : ""}
           <button class="btn" data-acao="cancelar" type="button">Cancelar</button>
           <button class="btn primary" data-acao="confirmar" type="button">${fmt.escape(rotuloConfirmar)}</button>
         </div>`;
@@ -1279,6 +1280,8 @@ const UI = (() => {
           if (primeiro?.select) setTimeout(() => primeiro.select(), 0);
 
           const btnOk = modal.querySelector('[data-acao="confirmar"]');
+          // Excluir fecha sem salvar e deixa a exclusão (com o desfazer dela) para quem chamou.
+          modal.querySelector('[data-acao="excluir"]')?.addEventListener("click", () => { fechar(null); aoExcluir(); });
 
           const confirmar = async () => {
             const saida = {};
@@ -1937,6 +1940,10 @@ const UI = (() => {
     if (!indoEntrar && typeof Personalizacao !== "undefined" && Personalizacao.precisaConfigurar()) {
       location.href = "bemvindo.html";
       return;
+    }
+    // Gastos fixos viram o lançamento do mês ao abrir qualquer página (idempotente).
+    if (typeof Financas !== "undefined" && Financas.gerarFixos) {
+      try { Financas.gerarFixos(); } catch (e) { console.error("gastos fixos", e); }
     }
     montarLayout(ativo, opcoes);
     avisarSeAbaDesligada(ativo);

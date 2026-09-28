@@ -77,6 +77,21 @@ pesou. As setas ao lado do mês (‹ setembro de 2026 ›) mudam tudo o que est�
 - **Na planilha**, cada lançamento tem **repetir hoje** (a mesma conta de novo, com a data de hoje —
   bom para gasto que se repete) e um "pendente" que vira pago ao toque.
 
+### Gastos fixos
+
+Em **Financeiro → Fixos e assinaturas → + Gasto fixo**, cadastre o que se repete todo mês: aluguel,
+mensalidade, plano de celular, Spotify. Diga o valor, o dia do vencimento e de qual conta ou cartão
+sai. A partir daí o Delfos lança sozinho, todo mês, e o gasto aparece em **A pagar** até ser pago
+(botão **Pago**). Enquanto está a pagar, ele conta na leitura do mês, mas não mexe no saldo da conta.
+O Delfos também lista os gastos que ele viu se repetir, com o botão **Cadastrar**.
+
+**Ao importar o extrato, o gasto fixo não é contado duas vezes.** Se o extrato traz a cobrança do
+aluguel, ela aparece na revisão com o selo **fixo: Aluguel** e, ao importar, só confirma o pagamento
+(com o valor e a data que o banco mostrou) em vez de criar outro gasto. Conta que muda de valor e
+vem com outro nome no banco (a luz como "COELBA ENERGIA") pode não ser reconhecida da primeira
+vez: escolha **É gasto fixo? → Conta de luz** naquela linha, e o Delfos aprende o nome para os
+próximos meses. Se o selo errar, toque nele para **lançar como novo**.
+
 ### Importar o extrato do banco
 
 Esquece de lançar? Em **Financeiro → Importar extrato**, baixe o extrato ou a fatura pelo app do

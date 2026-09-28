@@ -48,9 +48,16 @@ const Financas = (() => {
    * lançadas nela. Despesas no cartão não entram aqui: elas entram quando a
    * fatura é lançada como despesa da conta.
    */
+  /**
+   * O lançamento que um gasto fixo gera antes de ser pago é compromisso, não
+   * dinheiro que saiu: entra na leitura do mês e em "A pagar", mas não mexe
+   * no saldo da conta nem na fatura até ser pago (à mão ou pela importação).
+   */
+  const movimentou = (t) => !(t.fixoId && t.status === "pendente");
+
   function saldoConta(conta) {
     const chave = `conta:${conta.id}`;
-    return lancamentosDe(chave).reduce(
+    return lancamentosDe(chave).filter(movimentou).reduce(
       (soma, t) => soma + (t.tipo === "receita" ? 1 : -1) * (Number(t.valor) || 0),
       Number(conta.saldoInicial) || 0
     );
@@ -113,7 +120,7 @@ const Financas = (() => {
   function faturaCartao(cartao, hoje = new Date()) {
     const ciclo = cicloAtual(cartao, hoje);
     const itens = lancamentosDe(`cartao:${cartao.id}`).filter(
-      (t) => t.tipo === "despesa" && t.data >= ciclo.inicio && t.data <= ciclo.fim
+      (t) => t.tipo === "despesa" && movimentou(t) && t.data >= ciclo.inicio && t.data <= ciclo.fim
     );
     const total = itens.reduce((s, t) => s + (Number(t.valor) || 0), 0);
     const limite = Number(cartao.limite) || 0;
@@ -130,7 +137,7 @@ const Financas = (() => {
   /** Total já gasto no cartão em qualquer período (para o balanço geral). */
   function gastoTotalCartao(cartao) {
     return lancamentosDe(`cartao:${cartao.id}`)
-      .filter((t) => t.tipo === "despesa")
+      .filter((t) => t.tipo === "despesa" && movimentou(t))
       .reduce((s, t) => s + (Number(t.valor) || 0), 0);
   }
 
@@ -298,10 +305,14 @@ const Financas = (() => {
   function recorrentes(ate, fixos = {}) {
     const meses = [0, 1, 2, 3].map((n) => deslocarMes(ate, -n));
     const grupos = {};
+    // Os lançamentos de um fixo cadastrado já estão na lista dos fixos; e uma
+    // descrição que já virou fixo cadastrado não é "descoberta" de novo.
+    const jaCadastrados = new Set(Store.lista("financeiro.fixos").map((f) => chaveDescricao(f.descricao)));
     transacoes()
-      .filter((t) => t.tipo === "despesa" && meses.some((m) => (t.data || "").startsWith(m)))
+      .filter((t) => t.tipo === "despesa" && !t.fixoId && meses.some((m) => (t.data || "").startsWith(m)))
       .forEach((t) => {
         const k = chaveDescricao(t.descricao);
+        if (jaCadastrados.has(k)) return;
         if (!k) return;
         (grupos[k] = grupos[k] || []).push(t);
       });
@@ -324,6 +335,63 @@ const Financas = (() => {
       })
       .filter((r) => fixos[r.chave] !== false && (r.meses >= 2 || fixos[r.chave] === true))
       .sort((a, b) => b.valor - a.valor);
+  }
+
+  /* ------------------------------ Gastos fixos ------------------------------ */
+
+  /** "2026-09" + dia 31 → "2026-09-30" (o dia cabe no mês). */
+  function dataNoMes(chave, dia) {
+    const d = Math.min(Math.max(Number(dia) || 1, 1), diasNoMes(chave));
+    return `${chave}-${String(d).padStart(2, "0")}`;
+  }
+
+  /**
+   * Cada gasto fixo ativo vira um lançamento por mês, a partir do mês em que
+   * começou, até o mês de hoje. `geradoAte` guarda o último mês já gerado:
+   * assim um lançamento que a pessoa apagou de propósito não volta, e abrir o
+   * painel duas vezes nunca duplica. Nasce "a pagar" e passa a "pago" com o
+   * botão Pago ou quando o extrato importado traz a cobrança (importar.js).
+   */
+  function gerarFixos(hoje = new Date()) {
+    const mesAtual = hojeISO(hoje).slice(0, 7);
+    const lista = Store.lista("financeiro.fixos");
+    let criados = 0;
+    lista.forEach((f) => {
+      if (f.ativo === false || !f.inicio) return;
+      let mes = f.geradoAte ? deslocarMes(f.geradoAte, 1) : f.inicio;
+      if (mes < f.inicio) mes = f.inicio;
+      let ultimo = f.geradoAte || "";
+      for (let n = 0; mes <= mesAtual && n < 36; n++, mes = deslocarMes(mes, 1)) {
+        if (f.fim && mes > f.fim) break;
+        const ja = transacoes().some((t) => t.fixoId === f.id && t.competencia === mes);
+        if (!ja) {
+          Store.inserir("financeiro.transacoes", {
+            tipo: "despesa",
+            descricao: f.descricao,
+            valor: Number(f.valor) || 0,
+            categoria: f.categoria || "Outros",
+            data: dataNoMes(mes, f.dia),
+            origem: f.origem || "",
+            forma: "Gasto fixo",
+            status: "pendente",
+            fixoId: f.id,
+            competencia: mes,
+          });
+          criados++;
+        }
+        ultimo = mes;
+      }
+      if (ultimo && ultimo !== f.geradoAte) Store.atualizar("financeiro.fixos", f.id, { geradoAte: ultimo });
+    });
+    return criados;
+  }
+
+  /** Situação de cada fixo no mês: o lançamento dele, pago ou não. */
+  function fixosDoMes(chave) {
+    return Store.lista("financeiro.fixos").map((f) => {
+      const t = transacoes().find((x) => x.fixoId === f.id && x.competencia === chave) || null;
+      return { fixo: f, lancamento: t, pago: !!t && t.status !== "pendente", valor: t ? valorDe(t) : Number(f.valor) || 0 };
+    });
   }
 
   /** Gasto acumulado dia a dia de um mês (posição 0 = dia 1). */
@@ -434,7 +502,7 @@ const Financas = (() => {
   return {
     TIPOS_CONTA, BANDEIRAS, TIPOS_INVESTIMENTO,
     deslocarMes, diasNoMes, doMes, totais, chaveDescricao, recorrentes, acumuladoDiario,
-    analisarMes, pendentes, diaTipicoDeRenda, ultimoLancamento,
+    analisarMes, pendentes, diaTipicoDeRenda, ultimoLancamento, gerarFixos, fixosDoMes, dataNoMes,
     partesOrigem, nomeOrigem, opcoesOrigem, lancamentosDe,
     saldoConta, saldoTotal, temContas,
     cicloAtual, faturaCartao, gastoTotalCartao,

@@ -255,6 +255,31 @@ do mês / Contas e cartões / Investimentos), no lugar do link "← Financeiro".
   centralizados em `Financas.resumoConta`/`resumoCartao` — não duplique a lógica de saldo/fatura ali,
   só formate o que essas funções já devolvem.
 
+### Gastos fixos (estado v12)
+
+`financeiro.fixos` guarda o que se repete todo mês (aluguel, mensalidade, assinatura): `{ descricao,
+valor, dia, categoria, origem, inicio: "AAAA-MM", fim, ativo, geradoAte, nomesExtrato }`. Cadastro
+pelo "+ Gasto fixo" do cartão **Fixos e assinaturas** (`financeiro.js`: `novoFixo`, `editarFixo`,
+`excluirFixo`), que também lista os repetidos que `Financas.recorrentes` descobriu, com "Cadastrar".
+
+- **Um lançamento por mês.** `Financas.gerarFixos()` (chamado por `UI.iniciarPagina`, idempotente)
+  cria, para cada fixo ativo, o lançamento do mês — `fixoId`, `competencia`, `status: "pendente"`,
+  no dia do vencimento — do `inicio` até o mês de hoje. `geradoAte` impede recriar o que a pessoa
+  apagou de propósito. Pausar remove o pendente do mês; religar não cobra os meses parados.
+- **Pendente de fixo não é dinheiro que saiu**: entra na leitura do mês e em "A pagar", mas
+  `saldoConta`/`faturaCartao`/`gastoTotalCartao` ignoram (`movimentou`) até virar pago.
+- **Nunca contar duas vezes na importação** (`importar.js`, `casarFixos`, função pura): cada linha
+  de despesa do extrato é comparada com os lançamentos de fixo ainda não conferidos (`conciliadoEm`
+  vazio) do mesmo mês (ou até 10 dias). Casa se o valor bate (≤ 2% ou R$ 1) ou se há palavra em
+  comum com a descrição do fixo ou com `nomesExtrato` e o valor está a até 35%. A linha casada
+  **não cria lançamento**: atualiza o do fixo com data e valor reais, `status: "pago"`,
+  `conciliadoEm`, `descricaoExtrato`. Sem casamento automático, a revisão oferece "É gasto fixo?"
+  para a pessoa escolher, e o nome que o banco usou vai para `nomesExtrato` (até 5) — no mês
+  seguinte casa sozinho. O selo "fixo: X" é botão: tocar vira "lançar como novo". A checagem de
+  repetido ignora o fixo sendo confirmado; um fixo já conferido volta a ser "repetido?" se o mesmo
+  extrato for importado de novo. Desfazer devolve os fixos ao estado anterior.
+- `Financas.recorrentes` ignora lançamentos com `fixoId` e descrições já cadastradas como fixo.
+
 ### Investimentos
 
 `financeiro.investimentos` é separado dos lançamentos do dia a dia — não usa `origem`, não entra no
@@ -529,7 +554,7 @@ telas (botões "+ Lançamento", "+ Prazo", "+ Disciplina", "+ Projeto"), sem toc
   dados já acompanham a conta em qualquer aparelho; o backup continua como cópia fora do servidor.
 - Ao mudar o formato do estado, trate a migração em `store.js` (`normalizar`, que roda em toda carga
   e precisa ser idempotente). Nunca troque a chave do localStorage: isso apagaria os dados de quem
-  já usa. A conversão é gravada assim que a versão salva difere da atual.
+  já usa. A conversão é gravada assim que a versão salva difere da atual (versão atual do estado: **12**).
 
 ### Direção visual
 

@@ -309,7 +309,7 @@ const Store = (() => {
 
   function estadoVazio() {
     return {
-      versao: 11,
+      versao: 12,
       atualizadoEm: new Date().toISOString(),
       perfil: { ...PERFIL_PADRAO },
       preferencias: preferenciasPadrao(),
@@ -322,6 +322,7 @@ const Store = (() => {
         contas: [],
         cartoes: [],
         investimentos: [],
+        fixos: [],
       },
       faculdade: { disciplinas: [], prazos: [] },
       projetos: [],
@@ -485,6 +486,9 @@ const Store = (() => {
     out.financeiro.cartoes = e.financeiro?.cartoes || [];
     // v4 → v5: investimentos passam a ter aba própria (renda fixa, ações, etc.).
     out.financeiro.investimentos = e.financeiro?.investimentos || [];
+    // v11 → v12: gastos fixos cadastrados (aluguel, mensalidade, assinatura).
+    // Cada um gera um lançamento por mês (ver Financas.gerarFixos).
+    out.financeiro.fixos = Array.isArray(e.financeiro?.fixos) ? e.financeiro.fixos : [];
     out.financeiro.categorias = e.financeiro?.categorias?.length ? e.financeiro.categorias : [...CATEGORIAS_PADRAO];
 
     // v2 → v3: lançamento passa a saber de qual conta ou cartão saiu.
@@ -600,7 +604,7 @@ const Store = (() => {
       return pil;
     });
 
-    out.versao = 11;
+    out.versao = 12;
     return out;
   }
 

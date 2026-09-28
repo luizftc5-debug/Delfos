@@ -528,7 +528,8 @@
     }
 
     const fixos = Financas.recorrentes(a.chave, p.fixos);
-    const totalFixo = fixos.reduce((s, r) => s + r.valor, 0);
+    const totalFixo = fixos.reduce((s, r) => s + r.valor, 0)
+      + Financas.fixosDoMes(a.chave).filter((x) => x.fixo.ativo !== false).reduce((s, x) => s + x.valor, 0);
     const referencia = a.mediaDespesa || a.despesa;
     if (totalFixo > 0 && referencia > 0) {
       add("info", "repetir", `Gastos que se repetem todo mês somam cerca de <b>${moeda(totalFixo)}</b>, ${pct(totalFixo / referencia)} do que você costuma gastar.`);
@@ -631,22 +632,57 @@
 
   function renderFixos() {
     const box = $("fixos");
-    const lista = Financas.recorrentes(mesHoje, prefs().fixos);
-    const total = lista.reduce((s, r) => s + r.valor, 0);
-    $("fixos-total").textContent = lista.length ? `${moeda(total)} por mês` : "";
-    if (!lista.length) {
-      box.innerHTML = `<p class="card-note" style="margin:0;">Nenhum gasto repetido ainda. Quando a mesma despesa aparecer em dois meses, ela entra aqui sozinha.</p>`;
+    const cadastrados = Financas.fixosDoMes(mesHoje);
+    const ativos = cadastrados.filter((x) => x.fixo.ativo !== false);
+    const detectados = Financas.recorrentes(mesHoje, prefs().fixos);
+    const total = ativos.reduce((s, x) => s + x.valor, 0);
+    $("fixos-total").textContent = ativos.length ? `${moeda(total)} por mês` : "";
+
+    if (!cadastrados.length && !detectados.length) {
+      box.innerHTML = `<p class="card-note" style="margin:0;">Cadastre aluguel, mensalidade, plano de celular, assinaturas: o Delfos lança cada um todo mês, mostra em "A pagar" e, ao importar o extrato, reconhece a cobrança para não contar duas vezes.</p>`;
       return;
     }
+
+    const situacao = (x) => {
+      const f = x.fixo;
+      if (f.ativo === false) return "pausado";
+      const t = x.lancamento;
+      if (!t) return f.inicio > mesHoje ? `começa em ${nomeMes(f.inicio)}` : "sem lançamento este mês";
+      if (x.pago) return t.conciliadoEm ? `pago em ${fmt.dataCurta(t.data)}, conferido no extrato` : `pago em ${fmt.dataCurta(t.data)}`;
+      const u = UI.urgencia(t.data);
+      if (u.dias < 0) return `a pagar, venceu há ${-u.dias} ${u.dias === -1 ? "dia" : "dias"}`;
+      if (u.dias === 0) return "a pagar, vence hoje";
+      return `a pagar, vence dia ${Number(t.data.slice(8, 10))}`;
+    };
+
     const ul = document.createElement("ul");
     ul.className = "linhas-valor";
-    lista.forEach((r) => {
+    cadastrados.forEach((x) => {
+      const f = x.fixo;
+      const li = document.createElement("li");
+      const onde = f.origem ? Financas.nomeOrigem(f.origem) : "";
+      li.innerHTML = `
+        <span class="grow"><span class="t">${esc(f.descricao)}</span>
+        <span class="m">${esc([`todo dia ${f.dia}`, f.categoria, onde].filter(Boolean).join(", "))}. ${esc(fmt.capitalizar(situacao(x)))}</span></span>
+        <span class="v">${moeda(x.valor)}</span>
+        <button class="btn ghost sm icon" type="button" data-editar title="Editar gasto fixo" aria-label="Editar ${esc(f.descricao)}">${icone("editar")}</button>`;
+      if (f.ativo === false) li.style.opacity = ".6";
+      li.querySelector("[data-editar]").addEventListener("click", () => editarFixo(f));
+      ul.appendChild(li);
+    });
+
+    detectados.forEach((r) => {
       const li = document.createElement("li");
       li.innerHTML = `
         <span class="grow"><span class="t">${esc(r.descricao)}</span>
-        <span class="m">${esc(r.confirmado ? `${r.categoria}, confirmado por você` : `${r.categoria}, em ${r.meses} dos últimos 4 meses`)}</span></span>
+        <span class="m">${esc(r.confirmado ? `${r.categoria}, você disse que é fixo` : `${r.categoria}, apareceu em ${r.meses} dos últimos 4 meses`)}. Ainda não cadastrado.</span></span>
         <span class="v">${moeda(r.valor)}</span>
+        <button class="btn sm" type="button" data-cadastrar>Cadastrar</button>
         <button class="btn ghost sm icon" type="button" data-nao title="Não é gasto fixo" aria-label="${esc(r.descricao)} não é gasto fixo">${icone("fechar")}</button>`;
+      li.querySelector("[data-cadastrar]").addEventListener("click", () => novoFixo({
+        descricao: r.descricao, valor: r.valor, categoria: r.categoria, dia: Number(r.ultimaData.slice(8, 10)) || 1,
+        origem: transacoes().find((t) => t.data === r.ultimaData && Financas.chaveDescricao(t.descricao) === r.chave)?.origem || "",
+      }, r));
       li.querySelector("[data-nao]").addEventListener("click", () => {
         const antes = prefs().fixos[r.chave];
         salvarPrefs({ fixos: { ...prefs().fixos, [r.chave]: false } });
@@ -665,6 +701,105 @@
     });
     box.innerHTML = "";
     box.appendChild(ul);
+  }
+
+  /* ------------------------------ Gastos fixos ------------------------------ */
+
+  function camposFixo(editando) {
+    return [
+      { nome: "descricao", rotulo: "O que é", tipo: "text", obrigatorio: true, placeholder: "Ex.: Aluguel, Spotify, mensalidade do cursinho" },
+      { nome: "valor", rotulo: "Valor por mês (R$)", tipo: "dinheiro", obrigatorio: true,
+        dica: "Se variar um pouco (luz, água), use o valor típico: na importação do extrato vale o valor que o banco cobrou." },
+      { nome: "dia", rotulo: "Dia do vencimento", tipo: "number", obrigatorio: true, min: 1, max: 31, valorPadrao: Number(hoje.slice(8, 10)) },
+      { nome: "categoria", rotulo: "Categoria", tipo: "select", opcoes: Store.estado().financeiro.categorias, valorPadrao: "Moradia" },
+      {
+        nome: "origem", rotulo: "Pago com", tipo: "select", opcoes: Financas.opcoesOrigem(),
+        dica: "A conta ou o cartão onde a cobrança cai.",
+      },
+      editando
+        ? { nome: "ativo", rotulo: "Situação", tipo: "segmento", opcoes: [{ valor: "sim", rotulo: "Ativo" }, { valor: "nao", rotulo: "Pausado" }],
+            dica: "Pausado para de lançar nos próximos meses; o que já foi lançado fica." }
+        : { nome: "pagoEsteMes", rotulo: `O de ${nomeMes(mesHoje)} já foi pago?`, tipo: "segmento",
+            opcoes: [{ valor: "nao", rotulo: "Ainda não" }, { valor: "sim", rotulo: "Já paguei" }, { valor: "depois", rotulo: "Só do mês que vem" }],
+            valorPadrao: "nao",
+            dica: "Se o lançamento deste mês já está na planilha, escolha “Só do mês que vem” para não duplicar." },
+    ];
+  }
+
+  const diaValido = (d) => Math.min(31, Math.max(1, Math.round(Number(d) || 1)));
+
+  async function novoFixo(valores = {}, detectado = null) {
+    const v = await UI.formulario({
+      titulo: "Novo gasto fixo",
+      descricao: "Uma despesa que se repete todo mês. O Delfos lança sozinho a cada mês e reconhece a cobrança quando você importa o extrato, sem contar duas vezes.",
+      campos: camposFixo(false),
+      valores: { pagoEsteMes: detectado ? "depois" : "nao", ...valores },
+      rotuloConfirmar: "Cadastrar",
+    });
+    if (!v) return;
+    const inicio = v.pagoEsteMes === "depois" ? Financas.deslocarMes(mesHoje, 1) : mesHoje;
+    const fixo = Store.inserir("financeiro.fixos", {
+      descricao: v.descricao.trim(), valor: Number(v.valor) || 0, dia: diaValido(v.dia),
+      categoria: v.categoria, origem: v.origem || "", inicio, fim: "", ativo: true, geradoAte: "",
+    });
+    if (detectado) salvarPrefs({ fixos: { ...prefs().fixos, [detectado.chave]: true } });
+    Financas.gerarFixos();
+    const doMes = transacoes().find((t) => t.fixoId === fixo.id && t.competencia === mesHoje);
+    if (doMes && v.pagoEsteMes === "sim") Store.atualizar("financeiro.transacoes", doMes.id, { status: "pago" });
+    render();
+    UI.toast(`“${fixo.descricao}” cadastrado como gasto fixo.`, {
+      acaoRotulo: "Desfazer",
+      aoAcionar: () => {
+        transacoes().filter((t) => t.fixoId === fixo.id).forEach((t) => Store.remover("financeiro.transacoes", t.id));
+        Store.remover("financeiro.fixos", fixo.id);
+        render();
+      },
+    });
+  }
+
+  async function editarFixo(f) {
+    const v = await UI.formulario({
+      titulo: "Editar gasto fixo",
+      descricao: "Muda os próximos meses e o lançamento deste mês, se ainda não foi pago. O que já foi pago não muda.",
+      campos: camposFixo(true),
+      valores: { ...f, ativo: f.ativo === false ? "nao" : "sim" },
+      rotuloExcluir: "Excluir",
+      aoExcluir: () => excluirFixo(f),
+    });
+    if (!v) return;
+    const patch = { descricao: v.descricao.trim(), valor: Number(v.valor) || 0, dia: diaValido(v.dia), categoria: v.categoria, origem: v.origem || "", ativo: v.ativo !== "nao" };
+    // Religar depois de uma pausa não cobra os meses parados.
+    if (f.ativo === false && patch.ativo) patch.geradoAte = Financas.deslocarMes(mesHoje, -1);
+    Store.atualizar("financeiro.fixos", f.id, patch);
+    transacoes()
+      .filter((t) => t.fixoId === f.id && t.status === "pendente" && t.competencia >= mesHoje)
+      .forEach((t) => {
+        if (!patch.ativo) { Store.remover("financeiro.transacoes", t.id); return; }
+        Store.atualizar("financeiro.transacoes", t.id, {
+          descricao: patch.descricao, valor: patch.valor, categoria: patch.categoria, origem: patch.origem,
+          data: Financas.dataNoMes(t.competencia, patch.dia),
+        });
+      });
+    Financas.gerarFixos();
+    render();
+    UI.toast("Gasto fixo atualizado.");
+  }
+
+  function excluirFixo(f) {
+    // Sai o cadastro e o que ainda estava a pagar; o histórico pago continua na planilha.
+    const indice = Store.indiceDe("financeiro.fixos", f.id);
+    const pendentes = transacoes().filter((t) => t.fixoId === f.id && t.status === "pendente");
+    Store.remover("financeiro.fixos", f.id);
+    pendentes.forEach((t) => Store.remover("financeiro.transacoes", t.id));
+    render();
+    UI.toast(`“${f.descricao}” não é mais gasto fixo. O que já foi pago continua na planilha.`, {
+      acaoRotulo: "Desfazer",
+      aoAcionar: () => {
+        Store.restaurar("financeiro.fixos", f, indice);
+        pendentes.forEach((t) => Store.restaurar("financeiro.transacoes", t, 0));
+        render();
+      },
+    });
   }
 
   /* ---------------------- Seis meses e maiores gastos ----------------------- */
@@ -1116,6 +1251,7 @@
 
   $("btn-lancamento").addEventListener("click", novoLancamento);
   $("btn-importar").addEventListener("click", () => Importar.abrirAssistente(render));
+  $("btn-fixo").addEventListener("click", () => novoFixo());
   $("btn-meta").addEventListener("click", () => novaMeta());
   $("btn-preferencias").addEventListener("click", abrirPreferencias);
 

@@ -460,6 +460,53 @@ const Importar = (() => {
   }
 
   /**
+   * Gastos fixos: o Delfos já lança cada um todo mês (Financas.gerarFixos).
+   * Quando o extrato traz a cobrança de verdade, ela não pode virar um
+   * segundo lançamento — vira a confirmação do que já existe (valor e data
+   * reais, pago). Esta função decide qual linha do extrato é qual fixo.
+   *
+   * Candidatos: lançamentos de fixo ainda não conferidos com um extrato.
+   * Uma linha de despesa casa com um candidato quando é do mesmo mês de
+   * competência (ou até 10 dias da data prevista) e:
+   *   - o valor bate (até 2% ou R$ 1 de diferença), ou
+   *   - a descrição tem uma palavra em comum e o valor está a até 35% —
+   *     conta de luz e de água mudam de um mês para o outro.
+   * Cada candidato casa com uma linha só, a de maior pontuação.
+   * Devolve um array paralelo a `linhas`: o id do candidato ou null.
+   */
+  function casarFixos(linhas, candidatos) {
+    const palavras = (s) => new Set(semAcento(s).toLowerCase().match(/[a-z]{4,}/g) || []);
+    const pares = [];
+    linhas.forEach((l, i) => {
+      if (l.tipo !== "despesa") return;
+      const pl = palavras(l.descricao);
+      candidatos.forEach((c) => {
+        const cv = Number(c.valor) || 0;
+        if (cv <= 0) return;
+        const dias = Math.abs(Date.parse(l.data) - Date.parse(c.data)) / 86400000;
+        const mesmoMes = (l.data || "").slice(0, 7) === c.competencia;
+        if (!mesmoMes && dias > 10) return;
+        const dif = Math.abs(l.valor - cv);
+        const rel = dif / cv;
+        // Nomes que o banco já usou para este fixo (aprendidos em importações anteriores) também valem.
+        const nome = [c.descricao, ...(c.nomesExtrato || [])].some((n) => [...palavras(n)].some((p) => pl.has(p)));
+        const valorBate = dif <= 1 || rel <= 0.02;
+        if (!valorBate && !(nome && rel <= 0.35)) return;
+        pares.push({ i, id: c.id, pontos: (nome ? 2 : 0) + (valorBate ? 1 : 0) + (1 - rel) - dias / 100 });
+      });
+    });
+    pares.sort((a, b) => b.pontos - a.pontos);
+    const resultado = linhas.map(() => null);
+    const usados = new Set();
+    pares.forEach((p) => {
+      if (resultado[p.i] !== null || usados.has(p.id)) return;
+      resultado[p.i] = p.id;
+      usados.add(p.id);
+    });
+    return resultado;
+  }
+
+  /**
    * Mesmo valor (na mesma direção) a até 3 dias de distância de um
    * lançamento que já existe → provavelmente já foi lançado à mão antes de a
    * pessoa lembrar de importar o extrato. Só um alerta: a pessoa decide,
@@ -477,7 +524,7 @@ const Importar = (() => {
   return {
     extensao, lerTexto, parseOFX, parseCSV, sugerirMapeamento, aplicarMapeamento,
     normalizarData, normalizarValor, indiceCategoria, sugerirCategoria, provavelDuplicata,
-    parseTextoExtrato, lerValoresPDF,
+    parseTextoExtrato, lerValoresPDF, casarFixos,
   };
 })();
 
@@ -763,19 +810,40 @@ if (typeof document !== "undefined") {
       const categorias = Store.estado().financeiro.categorias;
       const indice = Importar.indiceCategoria(existentes);
 
-      const preparadas = s.linhas
-        .slice()
-        .sort((a, b) => b.data.localeCompare(a.data))
-        .map((l, i) => ({
+      // Lançamentos de gasto fixo ainda não conferidos com um extrato: se a
+      // cobrança estiver aqui, ela confirma o fixo em vez de virar outro gasto.
+      const fixosCadastrados = Store.lista("financeiro.fixos");
+      const candidatosFixo = existentes
+        .filter((t) => t.fixoId && !t.conciliadoEm && t.tipo === "despesa")
+        .map((t) => ({ ...t, nomesExtrato: fixosCadastrados.find((f) => f.id === t.fixoId)?.nomesExtrato || [] }));
+      const ordenadas = s.linhas.slice().sort((a, b) => b.data.localeCompare(a.data));
+      const casados = Importar.casarFixos(ordenadas, candidatosFixo);
+      // A checagem de repetido não pode ver o próprio fixo que está sendo confirmado.
+      const semCandidatos = existentes.filter((t) => !casados.includes(t.id));
+      const preparadas = ordenadas.map((l, i) => {
+        const fixo = casados[i] ? candidatosFixo.find((t) => t.id === casados[i]) : null;
+        return {
           ...l,
           id: `pre-${i}`,
-          categoria: Importar.sugerirCategoria(l.descricao, indice, categorias, l.tipo),
-          duplicata: Importar.provavelDuplicata(l, existentes),
-        }));
+          categoria: fixo ? fixo.categoria : Importar.sugerirCategoria(l.descricao, indice, categorias, l.tipo),
+          fixo,
+          duplicata: !fixo && Importar.provavelDuplicata(l, semCandidatos),
+        };
+      });
+      const nFixos = preparadas.filter((p) => p.fixo).length;
 
       // No PDF o Delfos deduz o valor e a data do desenho da página: ficam editáveis.
       const editavel = s.tipoArquivo === "pdf";
-      const selo = (p) => p.duplicata ? `<span class="badge urgente" title="Já existe um lançamento parecido perto dessa data">repetido?</span>`
+      const seloFixo = (p) => `<button type="button" class="badge fixo" data-fixo title="Esta cobrança é o gasto fixo “${fmt.escape(p.fixo.descricao)}”, que já está lançado. Importar só confirma o pagamento com o valor e a data do extrato, sem lançar de novo. Toque se for outro gasto.">fixo: ${fmt.escape(p.fixo.descricao)}</button>`;
+      // Sem casamento automático (a conta de luz mudou de valor e o banco usa outro
+      // nome): a pessoa pode dizer qual fixo é. O Delfos guarda o nome do banco
+      // e reconhece sozinho nos próximos meses.
+      const livres = candidatosFixo.filter((c) => !casados.includes(c.id));
+      const escolherFixo = (p) => p.tipo === "despesa" && livres.length
+        ? `<select class="input sm" data-escolher-fixo title="Se esta cobrança for de um gasto fixo, escolha qual — ele é confirmado em vez de lançado de novo."><option value="">É gasto fixo?</option>${livres.map((c) => `<option value="${fmt.escape(c.id)}">${fmt.escape(c.descricao)}, ${fmt.moeda(c.valor)} (${fmt.dataCurta(c.data)})</option>`).join("")}</select>`
+        : "";
+      const selo = (p) => p.fixo ? seloFixo(p) : p.duplicata ? `<span class="badge urgente" title="Já existe um lançamento parecido perto dessa data">repetido?</span>` : p.duvidosa || p.incerto ? seloOutro(p) : escolherFixo(p);
+      const seloOutro = (p) => p.duplicata ? `<span class="badge urgente" title="Já existe um lançamento parecido perto dessa data">repetido?</span>`
         : p.duvidosa ? `<span class="badge" title="Pagamento da fatura anterior: o dinheiro já saiu da conta, lançar de novo contaria duas vezes">pagamento?</span>`
         : p.incerto ? `<span class="badge" title="O extrato não diz se é entrada ou saída; confira o tipo">confira</span>` : "";
       const linha = (p) => `
@@ -810,14 +878,14 @@ if (typeof document !== "undefined") {
           <h2 class="modal-title">Revisar antes de importar</h2>
           <p class="modal-desc">${editavel
             ? `O Delfos leu o PDF${s.fatura ? " como fatura de cartão" : ""} e separou ${preparadas.length} ${preparadas.length === 1 ? "lançamento" : "lançamentos"}. PDF não tem colunas de verdade, então confira data, valor e tipo: tudo é editável. Linhas com "confira" não diziam se eram entrada ou saída.`
-            : "Confira descrição, tipo e categoria — o Delfos já tenta adivinhar a categoria pelo que você categorizou antes."} Linhas marcadas "repetido?" já têm algo parecido lançado perto dessa data e vêm desmarcadas.</p>
+            : "Confira descrição, tipo e categoria — o Delfos já tenta adivinhar a categoria pelo que você categorizou antes."} Linhas marcadas "repetido?" já têm algo parecido lançado perto dessa data e vêm desmarcadas.${nFixos ? ` <b>${nFixos} ${nFixos === 1 ? "cobrança é de um gasto fixo" : "cobranças são de gastos fixos"}</b> que o Delfos já tinha lançado: ${nFixos === 1 ? "ela confirma" : "elas confirmam"} o pagamento, sem contar duas vezes.` : ""}</p>
         </div>
         <div class="modal-body">
           <div class="table-wrap" style="max-height:46vh; overflow-y:auto;">
             <table class="sheet tabela-importar${editavel ? " editavel" : ""}">
               <colgroup>
                 <col style="width:26px" /><col style="width:${editavel ? 132 : 54}px" /><col />
-                <col style="width:${editavel ? 150 : 172}px" /><col style="width:${editavel ? 128 : 140}px" /><col style="width:100px" /><col style="width:${preparadas.some(selo) ? 92 : 10}px" />
+                <col style="width:${editavel ? 150 : 172}px" /><col style="width:${editavel ? 128 : 140}px" /><col style="width:100px" /><col style="width:${nFixos || livres.length ? 160 : preparadas.some(selo) ? 92 : 10}px" />
               </colgroup>
               <thead><tr><th></th><th>Data</th><th>Descrição</th><th>Tipo</th><th>Categoria</th><th class="right">Valor</th><th></th></tr></thead>
               <tbody data-corpo>${preparadas.map(linha).join("")}</tbody>
@@ -836,13 +904,39 @@ if (typeof document !== "undefined") {
           const btnImportar = modal.querySelector('[data-acao="importar"]');
 
           function atualizarResumo() {
-            const marcadas = [...corpo.querySelectorAll("[data-marcar]:checked")].length;
+            const marcadas = [...corpo.querySelectorAll("tr[data-linha]")].filter((tr) => tr.querySelector("[data-marcar]").checked);
+            const ehFixo = (tr) => { const p = preparadas.find((x) => x.id === tr.dataset.linha); return !!((p.fixo && !p.fixoIgnorado) || p.fixoEscolhido); };
+            const fixos = marcadas.filter(ehFixo).length;
+            const novos = marcadas.length - fixos;
             modal.querySelector("[data-resumo]").textContent =
-              `${marcadas} de ${preparadas.length} ${preparadas.length === 1 ? "lançamento selecionado" : "lançamentos selecionados"}.`;
-            btnImportar.disabled = marcadas === 0;
-            btnImportar.textContent = marcadas ? `Importar ${marcadas} ${marcadas === 1 ? "lançamento" : "lançamentos"}` : "Importar selecionados";
+              `${marcadas.length} de ${preparadas.length} ${preparadas.length === 1 ? "lançamento selecionado" : "lançamentos selecionados"}${fixos ? `: ${novos} ${novos === 1 ? "novo" : "novos"} e ${fixos} ${fixos === 1 ? "gasto fixo" : "gastos fixos"} a confirmar` : ""}.`;
+            btnImportar.disabled = marcadas.length === 0;
+            btnImportar.textContent = !marcadas.length ? "Importar selecionados"
+              : !fixos ? `Importar ${novos} ${novos === 1 ? "lançamento" : "lançamentos"}`
+              : !novos ? `Confirmar ${fixos} ${fixos === 1 ? "gasto fixo" : "gastos fixos"}`
+              : `Importar ${novos} e confirmar ${fixos} ${fixos === 1 ? "fixo" : "fixos"}`;
           }
           corpo.addEventListener("change", (ev) => { if (ev.target.matches("[data-marcar]")) atualizarResumo(); });
+          // O selo "fixo: X" alterna: tocar diz "é outro gasto" (entra como lançamento novo).
+          corpo.addEventListener("change", (ev) => {
+            const sel = ev.target.closest("[data-escolher-fixo]");
+            if (!sel) return;
+            const p = preparadas.find((x) => x.id === sel.closest("tr").dataset.linha);
+            p.fixoEscolhido = sel.value ? candidatosFixo.find((c) => c.id === sel.value) : null;
+            const tr = sel.closest("tr");
+            tr.querySelector("[data-marcar]").checked = true;
+            if (p.fixoEscolhido) tr.querySelector("[data-categoria]").value = p.fixoEscolhido.categoria;
+            atualizarResumo();
+          });
+          corpo.addEventListener("click", (ev) => {
+            const b = ev.target.closest("[data-fixo]");
+            if (!b) return;
+            const p = preparadas.find((x) => x.id === b.closest("tr").dataset.linha);
+            p.fixoIgnorado = !p.fixoIgnorado;
+            b.classList.toggle("desligado", p.fixoIgnorado);
+            b.textContent = p.fixoIgnorado ? "lançar como novo" : `fixo: ${p.fixo.descricao}`;
+            atualizarResumo();
+          });
           atualizarResumo();
 
           corpo.querySelectorAll("[data-tipo]").forEach((seg) => {
@@ -858,6 +952,7 @@ if (typeof document !== "undefined") {
 
           btnImportar.addEventListener("click", () => {
             const inseridos = [];
+            const confirmados = []; // [{ id, antes }] — fixos que o extrato confirmou
             corpo.querySelectorAll("tr[data-linha]").forEach((tr) => {
               if (!tr.querySelector("[data-marcar]").checked) return;
               const id = tr.dataset.linha;
@@ -865,6 +960,27 @@ if (typeof document !== "undefined") {
               const dataEditada = tr.querySelector("[data-data]")?.value;
               const valorEditado = tr.querySelector("[data-quantia]") ? Math.abs(Importar.normalizarValor(tr.querySelector("[data-quantia]").value) || 0) : null;
               if (valorEditado === 0) return;
+              const alvoFixo = original.fixo && !original.fixoIgnorado ? original.fixo : original.fixoEscolhido;
+              if (alvoFixo && !confirmados.some((c) => c.id === alvoFixo.id)) {
+                const t = alvoFixo;
+                // Aprende o nome que o banco usa, para casar sozinho no mês que vem.
+                const f = Store.lista("financeiro.fixos").find((x) => x.id === t.fixoId);
+                const nomeBanco = tr.querySelector("[data-descricao]").value.trim();
+                if (f && nomeBanco && !(f.nomesExtrato || []).includes(nomeBanco)) {
+                  confirmados.push({ fixo: f.id, nomesAntes: f.nomesExtrato || [] });
+                  Store.atualizar("financeiro.fixos", f.id, { nomesExtrato: [nomeBanco, ...(f.nomesExtrato || [])].slice(0, 5) });
+                }
+                confirmados.push({ id: t.id, antes: { data: t.data, valor: t.valor, status: t.status, origem: t.origem, conciliadoEm: t.conciliadoEm || "", descricaoExtrato: t.descricaoExtrato || "" } });
+                Store.atualizar("financeiro.transacoes", t.id, {
+                  data: dataEditada || original.data,
+                  valor: valorEditado ?? original.valor,
+                  status: "pago",
+                  origem: s.origem || t.origem,
+                  conciliadoEm: new Date().toISOString(),
+                  descricaoExtrato: tr.querySelector("[data-descricao]").value.trim(),
+                });
+                return;
+              }
               const item = Store.inserir("financeiro.transacoes", {
                 data: dataEditada || original.data,
                 descricao: tr.querySelector("[data-descricao]").value.trim() || "Lançamento importado",
@@ -878,11 +994,22 @@ if (typeof document !== "undefined") {
               inseridos.push(item.id);
             });
             fechar(null);
-            if (!inseridos.length) return;
+            if (!inseridos.length && !confirmados.some((c) => c.id)) return;
             s.aoConcluir?.();
-            UI.toast(`${inseridos.length} ${inseridos.length === 1 ? "lançamento importado" : "lançamentos importados"}.`, {
+            const partes = [];
+            if (inseridos.length) partes.push(`${inseridos.length} ${inseridos.length === 1 ? "lançamento importado" : "lançamentos importados"}`);
+            const nConf = confirmados.filter((c) => c.id).length;
+            if (nConf) partes.push(`${nConf} ${nConf === 1 ? "gasto fixo confirmado, sem duplicar" : "gastos fixos confirmados, sem duplicar"}`);
+            UI.toast(`${partes.join("; ")}.`, {
               acaoRotulo: "Desfazer",
-              aoAcionar: () => { inseridos.forEach((id) => Store.remover("financeiro.transacoes", id)); s.aoConcluir?.(); UI.toast("Importação desfeita."); },
+              aoAcionar: () => {
+                inseridos.forEach((id) => Store.remover("financeiro.transacoes", id));
+                confirmados.forEach((c) => c.fixo
+                  ? Store.atualizar("financeiro.fixos", c.fixo, { nomesExtrato: c.nomesAntes })
+                  : Store.atualizar("financeiro.transacoes", c.id, c.antes));
+                s.aoConcluir?.();
+                UI.toast("Importação desfeita.");
+              },
               duracao: 6000,
             });
           });

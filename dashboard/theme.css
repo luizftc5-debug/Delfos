@@ -616,6 +616,13 @@ a { color: inherit; }
   line-height: 18px;
 }
 
+/* Selo "fixo: Aluguel" na revisão da importação: é botão (alterna para
+   "lançar como novo"), então precisa parecer tocável sem virar cor de status. */
+button.badge.fixo { border: 1px solid var(--linha-forte); cursor: pointer; font: inherit; font-size: 12.5px; font-weight: 500; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+button.badge.fixo:hover { border-color: var(--texto-3); }
+button.badge.fixo.desligado { background: transparent; color: var(--texto-3); }
+table.tabela-importar [data-escolher-fixo] { width: 100%; }
+
 /* Selo de pilar: um ponto da cor dele e o nome em tinta normal — texto
    pintado na cor da série fica ilegível no fundo. */
 .badge.faculdade, .badge.projetos, .badge.financeiro, .badge.pessoal { background: var(--superficie-2); color: var(--texto-2); }

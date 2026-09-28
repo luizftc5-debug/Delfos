@@ -52,6 +52,7 @@ No repositório, **Settings → Secrets and variables → Actions → New reposi
 | `CLOUDFLARE_API_TOKEN` | o token do passo 2 | obrigatório |
 | `CLOUDFLARE_ACCOUNT_ID` | o Account ID do passo 1 | obrigatório |
 | `CODIGO_CONVITE` | um código qualquer (ex.: `delfos-turma-2026`) | **recomendado** — ver abaixo |
+| `ANTHROPIC_API_KEY` | uma chave da API do Claude (<https://console.anthropic.com> → API Keys) | opcional — liga a IA das abas |
 
 **Por que o convite é recomendado:** sem ele, qualquer pessoa que achar o endereço do site cria
 conta. O banco gratuito da Cloudflare tem **500 MB no total**, somando todas as contas; alguém mal
@@ -95,6 +96,14 @@ versão de agora também vira cópia, então dá para desfazer.
 **Quanto custa?** Nada, no uso de uma pessoa ou de poucas. O plano gratuito aceita 100 mil
 requisições por dia; o banco tem 500 MB.
 
+**Como ligo a IA que monta as abas?** Crie a chave em <https://console.anthropic.com> (API Keys;
+a API é paga por uso, separada da assinatura do Claude), guarde como segredo `ANTHROPIC_API_KEY` no
+GitHub (passo 3) e rode o **Back end** de novo. A chave fica só no servidor, nunca no navegador. Com
+ela, ao digitar o nome de uma aba nova, o Claude sugere ícone, cor, campos, meta e exemplos para
+aquele assunto; sem ela (ou sem conta ligada), o painel usa a sugestão rápida local, que não
+depende de rede. Cada conta pode pedir até 40 sugestões por hora, para o custo não fugir do
+controle — cada sugestão custa frações de centavo de dólar.
+
 **O backup em arquivo ainda serve?** Sim — é uma cópia sua, fora de qualquer servidor.
 
 ## Para quem for mexer no código
@@ -107,11 +116,12 @@ backend/
   src/arquivos.js    anexos por conta, em partes de 1 MB, com cota
   src/textos.js      texto grande em pedaços de 400 mil caracteres
   src/limpeza.js     rotina diária (cron)
+  src/ia.js          sugestão de aba pelo Claude (POST /api/ia/aba)
   migrations/        esquema do banco (SQL) — só acrescente, nunca reescreva uma publicada
   test/              testes (node --test, com um D1 falso sobre node:sqlite)
 ```
 
-- **Testes:** `npm test` (Node 22+, sem instalar nada).
+- **Testes:** `npm install` uma vez e depois `npm test` (Node 22+).
 - **Rodar local:** `npm install` e `npm run dev` (servidor em `http://localhost:8787`). Sirva o
   painel em `http://localhost:8000` e, no console do navegador,
   `localStorage.setItem("organizador.api", "http://localhost:8787")` — liga as contas só naquele
@@ -136,7 +146,7 @@ Todas as rotas exigem `Authorization: Bearer <token>`, menos `saude`, `cadastro`
 
 | Rota | O quê |
 |---|---|
-| `GET /api/saude` | `{ ok, versao, cadastro: "aberto" \| "convite" }` |
+| `GET /api/saude` | `{ ok, versao, cadastro: "aberto" \| "convite", ia }` (`ia`: há chave da IA) |
 | `POST /api/cadastro` | `{ email, chave, convite?, manter? }` → `{ token, expiraEm, usuario, codigoRecuperacao }` |
 | `POST /api/entrar` | `{ email, chave, manter? }` → `{ token, expiraEm, usuario }` |
 | `POST /api/recuperar` | `{ email, codigo, chaveNova, manter? }` → `{ token, usuario, codigoRecuperacao }` |
@@ -149,4 +159,5 @@ Todas as rotas exigem `Authorization: Bearer <token>`, menos `saude`, `cadastro`
 | `GET /api/estado[?desde=N]` | `{ revisao, atualizadoEm, dispositivo, estado }`; com `desde` igual à revisão, só `{ inalterado: true }` |
 | `PUT /api/estado?base=N[&forcar=1][&motivo=][&dispositivo=]` | corpo = JSON do estado → `{ revisao }` ou **409** |
 | `GET /api/versoes` · `GET /api/versoes/:id` · `POST /api/versoes` | cópias do estado |
+| `POST /api/ia/aba` | `{ nome, contexto?, existentes? }` → `{ sugestao, modelo }`; 503 sem chave, 429 depois de 40 por hora |
 | `GET /api/arquivos` · `PUT /api/arquivos/:id` · `GET /api/arquivos/:id` | anexos (até 25 MB cada) |

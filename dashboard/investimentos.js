@@ -80,7 +80,7 @@
           <div class="card-head" style="align-items:flex-start; margin-bottom:8px;">
             <div style="min-width:0;">
               <h3 class="card-title" style="font-size:14px;"><span class="swatch financeiro"></span>${fmt.escape(inv.nome)}</h3>
-              <div class="card-note" style="margin-top:3px;">${fmt.escape(inv.tipo || "Outro")}${inv.instituicao ? ` · ${fmt.escape(inv.instituicao)}` : ""}</div>
+              <div class="card-note" style="margin-top:3px;">${fmt.escape(inv.tipo || "Outro")}${inv.instituicao ? `, ${fmt.escape(inv.instituicao)}` : ""}</div>
             </div>
             <span class="row-actions">
               <button class="btn ghost sm" data-editar>Editar</button>

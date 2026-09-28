@@ -4,9 +4,114 @@
    =========================================================================== */
 
 const UI = (() => {
-  /** Nome e versão do painel — aparecem na marca do rodapé da barra lateral. */
+  /** Nome e versão do painel — aparecem na marca do alto da barra lateral. */
   const NOME = "Delfos";
-  const VERSAO = "1.3";
+  const VERSAO = "1.5";
+
+  /* -------------------------------- Ícones -------------------------------- */
+
+  // Desenhados para o Delfos (grade de 24, traço 1,6, pontas redondas) em vez
+  // de glifos digitados — um "◆" ou "☁" muda de cara em cada sistema e lia
+  // como improviso. Cada entrada é só o miolo do <svg>; a cor vem do texto.
+  const ICONES = {
+    // O ônfalo de Delfos, a pedra do "centro do mundo" — a marca do painel.
+    onfalo: '<path d="M4.5 19c0-7.6 3.4-13.5 7.5-13.5S19.5 11.4 19.5 19"/><path d="M3 19h18"/><path d="M6.4 13.6c3.6 1.5 7.6 1.5 11.2 0"/><path d="M8.6 9c2.2.9 4.6.9 6.8 0"/>',
+    home: '<path d="M2.8 12s3.4-6.3 9.2-6.3 9.2 6.3 9.2 6.3-3.4 6.3-9.2 6.3S2.8 12 2.8 12z"/><circle cx="12" cy="12" r="2.7"/>',
+    pessoal: '<circle cx="12" cy="8.2" r="3.5"/><path d="M4.8 19.5c1.1-3.6 3.8-5.4 7.2-5.4s6.1 1.8 7.2 5.4"/>',
+    financeiro: '<rect x="3.5" y="6.5" width="17" height="12.5" rx="2.5"/><path d="M3.5 10h17"/><path d="M7 15h3"/>',
+    faculdade: '<path d="M12 6.8c-2-1.5-5-2-8.5-1.5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5v-13c-3.5-.5-6.5 0-8.5 1.5z"/><path d="M12 6.8v13"/>',
+    projetos: '<path d="M3.5 17 9 11.5l3.8 3.8L20.5 7.5"/><path d="M15 7.5h5.5V13"/>',
+    mais: '<path d="M12 5.5v13M5.5 12h13"/>',
+    importar: '<path d="M12 4v10.5"/><path d="M7.8 10.5 12 14.7l4.2-4.2"/><path d="M4.5 15.5v2.5c0 .8.7 1.5 1.5 1.5h12c.8 0 1.5-.7 1.5-1.5v-2.5"/>',
+    exportar: '<path d="M12 14.5V4"/><path d="M7.8 8.2 12 4l4.2 4.2"/><path d="M4.5 15.5v2.5c0 .8.7 1.5 1.5 1.5h12c.8 0 1.5-.7 1.5-1.5v-2.5"/>',
+    arquivo: '<path d="M13.5 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z"/><path d="M13.5 3.5V9H19"/>',
+    anexar: '<path d="M13.5 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z"/><path d="M13.5 3.5V9H19"/><path d="M12 17.5v-5.5"/><path d="m9.6 14.3 2.4-2.4 2.4 2.4"/>',
+    nuvem: '<path d="M7.2 18.5h9.6a4 4 0 0 0 .7-7.94 5.5 5.5 0 0 0-10.6 1.2A3.4 3.4 0 0 0 7.2 18.5z"/>',
+    sair: '<path d="M9.5 20H6.5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3"/><path d="m15.5 16 4-4-4-4"/><path d="M19.5 12H9.5"/>',
+    refazer: '<path d="M4.6 12.5a7.5 7.5 0 1 0 2.3-6"/><path d="M4.5 4.5V9H9"/>',
+    fechar: '<path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/>',
+    check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+    camera: '<path d="M4 8.5c0-.8.7-1.5 1.5-1.5h2.3l1.4-2h5.6l1.4 2h2.3c.8 0 1.5.7 1.5 1.5v9c0 .8-.7 1.5-1.5 1.5h-13c-.8 0-1.5-.7-1.5-1.5z"/><circle cx="12" cy="12.8" r="3.3"/>',
+    esquerda: '<path d="m14.5 6-6 6 6 6"/>',
+    direita: '<path d="m9.5 6 6 6-6 6"/>',
+    abaixo: '<path d="m7 10 5 5 5-5"/>',
+    acima: '<path d="m7 14 5-5 5 5"/>',
+    busca: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',
+    editar: '<path d="M4.5 19.5h4l10-10a2.8 2.8 0 0 0-4-4l-10 10z"/><path d="m13 7 4 4"/>',
+    lixeira: '<path d="M4.5 7h15"/><path d="M9.5 7V4.8h5V7"/><path d="M6.5 7l.8 11.5c.1 1 .9 1.5 1.7 1.5h6c.8 0 1.6-.5 1.7-1.5L17.5 7"/>',
+    alvo: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="12" r="1.2"/>',
+    calendario: '<rect x="3.8" y="5.5" width="16.4" height="14.5" rx="2.5"/><path d="M3.8 10h16.4M8 3.5v4M16 3.5v4"/>',
+    relogio: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    vazio: '<circle cx="12" cy="12" r="8" stroke-dasharray="2.4 3"/>',
+    banco: '<path d="M3.5 9.5 12 4.5l8.5 5"/><path d="M5.5 10v7M10 10v7M14 10v7M18.5 10v7"/><path d="M3.5 19.5h17"/>',
+    cartao: '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18"/>',
+    investimentos: '<path d="M4 19.5h16"/><path d="M6.5 16v-4M11 16V8.5M15.5 16v-6M20 16V5.5"/>',
+    pergunta: '<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.6a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.6"/><path d="M12 17v.1"/>',
+    lampada: '<path d="M9 17.5h6M10 20.5h4"/><path d="M8.5 14.5A5.5 5.5 0 1 1 15.5 14.5c-.7.6-1 1.4-1 2.2V17.5h-5v-.8c0-.8-.3-1.6-1-2.2z"/>',
+    subiu: '<path d="M4 16.5 9.5 11l3.5 3.5 7-7"/><path d="M15 7.5h5v5"/>',
+    desceu: '<path d="M4 7.5 9.5 13l3.5-3.5 7 7"/><path d="M15 16.5h5v-5"/>',
+    repetir: '<path d="M17 3.5 20 6.5l-3 3"/><path d="M4 11.5v-1a4 4 0 0 1 4-4h12"/><path d="M7 20.5 4 17.5l3-3"/><path d="M20 12.5v1a4 4 0 0 1-4 4H4"/>',
+    cofre: '<path d="M5.5 11.5c0-3.3 2.9-5.5 6.5-5.5 1.3 0 2.5.3 3.5.8l2.5-1.3-.5 3c1 1 1.5 2.1 1.5 3v2.5l-2 1v3.5h-2.5v-2h-5v2H7v-3a5 5 0 0 1-1.5-4z"/><path d="M10 9h3.5"/>',
+    alerta: '<path d="M10.3 4.6 2.9 17.4A2 2 0 0 0 4.6 20.4h14.8a2 2 0 0 0 1.7-3L13.7 4.6a2 2 0 0 0-3.4 0z"/><path d="M12 9.5v4.5M12 16.9v.1"/>',
+    sol: '<circle cx="12" cy="12" r="3.8"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>',
+    lua: '<path d="M19.5 14.5A7.5 7.5 0 0 1 9.5 4.5a7.5 7.5 0 1 0 10 10z"/>',
+    usuario: '<circle cx="12" cy="8.2" r="3.5"/><path d="M4.8 19.5c1.1-3.6 3.8-5.4 7.2-5.4s6.1 1.8 7.2 5.4"/>',
+    painel: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9 4.5v15"/>',
+    chave: '<circle cx="8" cy="15" r="3.8"/><path d="m10.8 12.3 8.2-8.2M16 7l2.5 2.5M13.5 9.5 15.5 11.5"/>',
+    ajustes: '<path d="M4 7.5h9M17 7.5h3M4 16.5h3M11 16.5h9"/><circle cx="15" cy="7.5" r="2"/><circle cx="9" cy="16.5" r="2"/>',
+    ia: '<path d="M12 3.5 13.6 8a3 3 0 0 0 1.9 1.9L20 11.5l-4.5 1.6a3 3 0 0 0-1.9 1.9L12 19.5l-1.6-4.5a3 3 0 0 0-1.9-1.9L4 11.5l4.5-1.6A3 3 0 0 0 10.4 8z"/><path d="M19 3.5v3M17.5 5h3"/>',
+    // Ícones para as abas criadas pelo usuário (valor "svg:<nome>" em pilar.icone).
+    haltere: '<path d="M3.5 12h17"/><rect x="5" y="8" width="3" height="8" rx="1"/><rect x="16" y="8" width="3" height="8" rx="1"/><path d="M3 10v4M21 10v4"/>',
+    livro: '<path d="M5 4.5h11a2 2 0 0 1 2 2V19.5H7a2 2 0 0 1-2-2z"/><path d="M5 17.5a2 2 0 0 1 2-2h11"/><path d="M9 8.5h5"/>',
+    musica: '<path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/>',
+    coracao: '<path d="M12 19.5s-7.5-4.4-7.5-10A4.2 4.2 0 0 1 12 7a4.2 4.2 0 0 1 7.5 2.5c0 5.6-7.5 10-7.5 10z"/>',
+    cruz: '<path d="M12 3.5v17M7 8.5h10"/>',
+    folha: '<path d="M5 19c0-8 5-13.5 14.5-14.5C19 14 13.5 19 5.5 19z"/><path d="M5 19 13 11"/>',
+    pata: '<circle cx="7" cy="10" r="1.8"/><circle cx="10.5" cy="6.5" r="1.8"/><circle cx="14.5" cy="6.5" r="1.8"/><circle cx="18" cy="10" r="1.8"/><path d="M12.5 11.5c-2.8 0-5 3.2-5 5.3 0 1.6 1.3 2.7 2.8 2.7 1 0 1.5-.5 2.2-.5s1.2.5 2.2.5c1.5 0 2.8-1.1 2.8-2.7 0-2.1-2.2-5.3-5-5.3z"/>',
+    carro: '<path d="M4.5 16.5v-4l2-5h11l2 5v4"/><path d="M3.5 16.5h17"/><circle cx="8" cy="17.5" r="1.8"/><circle cx="16" cy="17.5" r="1.8"/><path d="M5.5 12h13"/>',
+    aviao: '<path d="M10.5 20 12 14.5 5 13.5v-2l7-2.5V5a1.5 1.5 0 0 1 3 0v4l6 2.5v2l-6-1v2.5l2 2V19l-3.5-1z" transform="rotate(-45 12 12)"/>',
+    prato: '<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="4"/>',
+    gota: '<path d="M12 3.5s-6 6.5-6 10.5a6 6 0 0 0 12 0c0-4-6-10.5-6-10.5z"/>',
+    estrela: '<path d="m12 4 2.4 5 5.4.7-4 3.8 1 5.4L12 16.3 7.2 18.9l1-5.4-4-3.8 5.4-.7z"/>',
+    bandeira: '<path d="M5.5 20.5V4.5"/><path d="M5.5 5h11l-2 3.5 2 3.5h-11"/>',
+    casa: '<path d="M4 11 12 4.5 20 11"/><path d="M6 9.5V19.5h12V9.5"/><path d="M10 19.5v-5h4v5"/>',
+    carrinho: '<path d="M3.5 4.5h2.2l2 10.5h10.5l2-7.5H7"/><circle cx="9.5" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>',
+    pincel: '<path d="M14.5 4.5l5 5L11 18a3 3 0 0 1-4.2 0l-.8-.8a3 3 0 0 1 0-4.2z"/><path d="M6 17c-1 1-1 2.5-2.5 3 2 .5 4-.5 4.5-1.5"/>',
+    controle: '<path d="M7.5 7.5h9a4 4 0 0 1 3.9 4.7l-.8 4.3a2 2 0 0 1-3.5.9L14 15h-4l-2.1 2.4a2 2 0 0 1-3.5-.9l-.8-4.3a4 4 0 0 1 3.9-4.7z"/><path d="M8.5 10.5v3M7 12h3"/><circle cx="15.5" cy="11" r=".6" fill="currentColor"/><circle cx="17" cy="12.8" r=".6" fill="currentColor"/>',
+    bola: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5l3.5 2.5-1.3 4h-4.4l-1.3-4z"/><path d="M12 3.5v4M15.5 10l4-1M14.2 14l2.3 3.5M9.8 14l-2.3 3.5M8.5 10l-4-1"/>',
+    tenis: '<path d="M3.5 16.5c0-3 1.5-9 3-9 1 0 1 2 3 2.5 1.5.3 2.5-1 3.5-.5.8.4 1 2.5 3 3.5 2 1 4.5 1 4.5 3.5H3.5z"/><path d="M3.5 18.5h17"/>',
+    estetoscopio: '<path d="M6 3.5v5a4 4 0 0 0 8 0v-5"/><path d="M10 12.5v2a5 5 0 0 0 10 0V13"/><circle cx="20" cy="11" r="2"/>',
+    pilula: '<rect x="3.5" y="8.5" width="17" height="7" rx="3.5" transform="rotate(-35 12 12)"/><path d="m10 9.5 4 5"/>',
+    grupo: '<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.7-3 2.8-4.7 5.5-4.7s4.8 1.7 5.5 4.7"/><circle cx="16.5" cy="9" r="2.5"/><path d="M16 14.3c2.2 0 3.9 1.5 4.5 4.2"/>',
+    maleta: '<rect x="3.5" y="7.5" width="17" height="12" rx="2"/><path d="M9 7.5V5.5h6v2M3.5 12.5h17"/>',
+    presente: '<rect x="4" y="9" width="16" height="11" rx="1.5"/><path d="M3.5 9h17v3.5h-17zM12 9v11"/><path d="M12 9c-1.5-3-5-3.5-5-1.2C7 9 12 9 12 9zm0 0c1.5-3 5-3.5 5-1.2C17 9 12 9 12 9z"/>',
+    cafe: '<path d="M5 9.5h11v5a5 5 0 0 1-5 5 5 5 0 0 1-5-5z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8.5 3.5v2.5M12 3.5v2.5"/>',
+    globo: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.5 3.5 5.5 3.5 8.5s-1 6-3.5 8.5c-2.5-2.5-3.5-5.5-3.5-8.5s1-6 3.5-8.5z"/>',
+    microscopio: '<path d="M9 4.5l4 2-3 6-4-2z"/><path d="M11 8.5 16 11a5 5 0 0 1-3 8.5"/><path d="M5 19.5h14M9 17h6"/>',
+    lapis: '<path d="M5 19l1-4L15.5 5.5a2 2 0 0 1 3 3L9 18z"/><path d="M13.5 7.5l3 3"/>',
+  };
+
+  // Glifos que as páginas ainda passam para UI.vazio(): viram o ícone certo.
+  const GLIFO_PARA_ICONE = { "＋": "mais", "◎": "alvo", "◷": "relogio", "▤": "faculdade", "▣": "banco", "✎": "editar", "◫": "arquivo" };
+
+  /** Ícones desenhados oferecidos às abas criadas pelo usuário. */
+  const ICONES_ABA = ["haltere", "livro", "estetoscopio", "pilula", "coracao", "cruz", "folha", "pata", "carro", "aviao",
+    "prato", "gota", "cafe", "estrela", "bandeira", "casa", "carrinho", "pincel", "musica", "controle", "bola", "tenis",
+    "grupo", "maleta", "presente", "globo", "microscopio", "lapis", "calendario", "alvo", "cofre", "lampada", "relogio", "sol", "lua", "camera"];
+
+  /** Ícone de uma aba do usuário: "svg:<nome>" é desenho; qualquer outra coisa é o glifo que ele escolheu. */
+  function iconeAba(valor) {
+    const v = String(valor || "");
+    if (v.startsWith("svg:") && ICONES[v.slice(4)]) return icone(v.slice(4));
+    return fmt.escape(v || "◆");
+  }
+
+  /** SVG de um ícone do Delfos (vazio se o nome não existir). */
+  function icone(nome, classe = "") {
+    const miolo = ICONES[nome];
+    if (!miolo) return "";
+    return `<svg class="ico ${classe}" data-ico="${nome}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${miolo}</svg>`;
+  }
 
   /* ------------------------------ Formatos ------------------------------- */
 
@@ -281,12 +386,14 @@ const UI = (() => {
 
   /* -------------------------------- Layout -------------------------------- */
 
+  // `icone` aqui é o nome de um desenho de ICONES; as abas criadas pelo
+  // usuário guardam um glifo (Store.ICONES_PILAR), que é dado dele.
   const PAGINAS = [
-    { id: "home", rotulo: "Visão geral", href: "index.html", cor: "", icone: "◆" },
-    { id: "pessoal", rotulo: "Pessoal", href: "pessoal.html", cor: "pessoal", icone: "●" },
-    { id: "financeiro", rotulo: "Financeiro", href: "financeiro.html", cor: "financeiro", icone: "$" },
-    { id: "faculdade", rotulo: "Faculdade", href: "faculdade.html", cor: "faculdade", icone: "▤" },
-    { id: "projetos", rotulo: "Projetos", href: "projetos.html", cor: "projetos", icone: "◇" },
+    { id: "home", rotulo: "Visão geral", href: "index.html", cor: "", icone: "home" },
+    { id: "pessoal", rotulo: "Pessoal", href: "pessoal.html", cor: "pessoal", icone: "pessoal" },
+    { id: "financeiro", rotulo: "Financeiro", href: "financeiro.html", cor: "financeiro", icone: "financeiro" },
+    { id: "faculdade", rotulo: "Faculdade", href: "faculdade.html", cor: "faculdade", icone: "faculdade" },
+    { id: "projetos", rotulo: "Projetos", href: "projetos.html", cor: "projetos", icone: "projetos" },
   ];
 
   // Páginas de detalhe se acendem no item de nível de cima a que pertencem.
@@ -400,16 +507,14 @@ const UI = (() => {
     const itens = paginas().map((p) => {
       const aberto = p.id === grupoAtivo;
       const subs = aberto ? subItens(p.id, ativo, idAtivo) : [];
-      // As abas criadas guardam um hex próprio, então a cor vai inline; as
-      // fixas usam a classe do pilar, que segue os tokens do tema.
-      const estiloIcone = p.corHex
-        ? aberto
-          ? ` style="background:${p.corHex}; color:#fff;"`
-          : ` style="background:color-mix(in srgb, ${p.corHex} 15%, transparent); color:${p.corHex};"`
-        : "";
+      // As abas criadas guardam um hex próprio, então a cor vai inline (como
+      // variável); as fixas usam a classe do pilar, que segue o tema.
+      const iconeHTML = p.corHex
+        ? `<span class="nav-icon propria" style="--cor-aba:${fmt.escape(p.corHex)}">${iconeAba(p.icone)}</span>`
+        : `<span class="nav-icon ${p.cor}">${icone(p.icone)}</span>`;
       return `
-        <a class="nav-item ${aberto ? "active" : ""}" href="${p.href}">
-          <span class="nav-icon ${p.cor}"${estiloIcone}>${fmt.escape(p.icone)}</span>
+        <a class="nav-item ${aberto ? "active" : ""}" href="${p.href}"${aberto ? ' aria-current="page"' : ""}>
+          ${iconeHTML}
           <span class="nav-label">${fmt.escape(p.rotulo)}</span>
           ${c[p.id] ? `<span class="nav-count ${p.id === "home" ? "alert" : ""}">${c[p.id]}</span>` : ""}
         </a>
@@ -418,27 +523,30 @@ const UI = (() => {
           .join("")}</div>` : ""}`;
     }).join("");
 
-    const linhaCurso = [perfil.curso, perfil.semestre ? `${fmt.ordinal(perfil.semestre)} sem` : ""]
-      .filter(Boolean)
-      .join(" · ");
+    const linhaCurso = perfil.curso
+      ? `${perfil.curso}${perfil.semestre ? `, ${fmt.ordinal(perfil.semestre)} semestre` : ""}`
+      : Personalizacao.ocupacaoResumo() || "Perfil e ajustes";
 
     el.innerHTML = `
-      <button class="brand" id="btn-perfil" type="button" title="Ver e editar seu perfil">
-        ${avatarHTML(perfil)}
-        <span class="brand-text">
-          <span class="brand-name">${fmt.escape(perfil.nome || "Seu nome")}</span>
-          <span class="brand-sub">${fmt.escape(linhaCurso || "definir curso")}</span>
-        </span>
-        <span class="brand-caret">▾</span>
-      </button>
-      <div class="nav-eyebrow">Painel</div>
-      <nav class="nav">${itens}</nav>
-      <button class="nav-nova" id="btn-nova-aba" type="button">＋ Nova aba</button>
+      <a class="marca-topo" href="index.html" title="Visão geral">
+        ${icone("onfalo")}
+        <span class="marca-nome">${fmt.escape(NOME)}</span>
+        <span class="marca-versao">v${fmt.escape(VERSAO)}</span>
+      </a>
+      <nav class="nav" aria-label="Abas do painel">${itens}</nav>
+      <button class="nav-nova" id="btn-nova-aba" type="button">${icone("mais")}Nova aba</button>
       <div class="sidebar-foot">
-        <div class="marca">${fmt.escape(NOME)} <span>v${fmt.escape(VERSAO)}</span></div>
+        <button class="brand" id="btn-perfil" type="button" title="Perfil, tema, abas e conta">
+          ${avatarHTML(perfil)}
+          <span class="brand-text">
+            <span class="brand-name">${fmt.escape(perfil.nome || "Seu nome")}</span>
+            <span class="brand-sub">${fmt.escape(linhaCurso)}</span>
+          </span>
+          <span class="brand-caret">${icone("acima")}</span>
+        </button>
       </div>`;
 
-    document.getElementById("btn-perfil").addEventListener("click", abrirPerfil);
+    document.getElementById("btn-perfil").addEventListener("click", () => abrirPerfil());
     document.getElementById("btn-nova-aba").addEventListener("click", novaAba);
 
     // No celular a barra vira uma faixa rolável: traz a aba atual para a vista,
@@ -466,26 +574,20 @@ const UI = (() => {
     }] : []),
   ];
 
-  /** Cria uma aba nova, já com os campos do modelo escolhido, e abre a página dela. */
+  /**
+   * Abre o criador de aba (abas.js): nome, sugestão local instantânea e, com
+   * as contas ligadas, a personalização pela IA. Sem abas.js carregado (não
+   * deve acontecer em página com barra), cai no formulário simples de antes.
+   */
   async function novaAba() {
-    const v = await formulario({
-      titulo: "Nova aba",
-      descricao: "Uma aba sua na barra lateral, com página própria. O que você cadastrar nela entra na agenda da visão geral junto com os outros pilares.",
-      campos: camposPilar({ comModelo: true }),
-      rotuloConfirmar: "Criar aba",
-    });
+    if (typeof Abas !== "undefined") return Abas.abrir();
+    const v = await formulario({ titulo: "Nova aba", campos: camposPilar({ comModelo: true }), rotuloConfirmar: "Criar aba" });
     if (!v) return;
     const modelo = Store.MODELOS_PILAR.find((m) => m.id === v.modelo) || Store.MODELOS_PILAR[0];
     const { modelo: _idModelo, ...dadosAba } = v;
     const novo = Store.inserir("pilares", {
-      ...dadosAba,
-      modelo: modelo.id,
-      campos: modelo.campos.map((c) => ({ ...c })),
-      naAgenda: modelo.naAgenda,
-      itens: [],
-      ...(modelo.especial === "academia"
-        ? { academia: { configuradoEm: "", objetivo: "", experiencia: "", frequenciaSemanal: 0, divisao: "" }, dias: [] }
-        : {}),
+      ...dadosAba, modelo: modelo.id, campos: modelo.campos.map((c) => ({ ...c })), naAgenda: modelo.naAgenda, itens: [],
+      ...(modelo.especial === "academia" ? { academia: { configuradoEm: "", objetivo: "", experiencia: "", frequenciaSemanal: 0, divisao: "" }, dias: [] } : {}),
     });
     location.href = `pilar.html?id=${encodeURIComponent(novo.id)}`;
   }
@@ -543,7 +645,7 @@ const UI = (() => {
 
     const linhaCampo = (c, i) => {
       const tipoRotulo = Store.TIPOS_CAMPO.find((t) => t.valor === c.tipo)?.rotulo || c.tipo;
-      const meta = [tipoRotulo, c.naLista ? "na lista" : "", c.obrigatorio ? "obrigatório" : ""].filter(Boolean).join(" · ");
+      const meta = [tipoRotulo, c.naLista ? "na lista" : "", c.obrigatorio ? "obrigatório" : ""].filter(Boolean).join(", ");
       return `
         <li data-id="${fmt.escape(c.id)}">
           <span class="grow">
@@ -698,7 +800,8 @@ const UI = (() => {
    * backup. É o único lugar de configuração do painel — por isso concentra o
    * que antes ficava espalhado no rodapé da barra lateral.
    */
-  function abrirPerfil() {
+  function abrirPerfil(aba) {
+    const abaInicial = ["sobre", "painel", "conta"].includes(aba) ? aba : "sobre";
     const e = Store.estado();
     const p = e.perfil || {};
 
@@ -713,12 +816,13 @@ const UI = (() => {
     }).length;
 
     const anos = idade(p.dataNascimento);
-    const linha = [p.instituicao, p.cidade].filter(Boolean).join(" · ");
+    const linha = [p.instituicao, p.cidade].filter(Boolean).join(", ");
     const ocupacao = Personalizacao.ocupacaoResumo();
 
     // Só entram na ficha as informações preenchidas — campo vazio não vira linha.
     const dados = [
-      ["Nascimento", p.dataNascimento ? `${fmt.data(p.dataNascimento)}${anos !== null ? ` · ${anos} anos` : ""}` : ""],
+      ["Nascimento", p.dataNascimento ? `${fmt.dataPorExtenso(p.dataNascimento)}${anos !== null ? `, ${anos} anos` : ""}` : ""],
+      ["Pronomes", p.pronomes],
       ["Telefone", p.telefone],
       ["E-mail", p.email],
       ["Cidade", p.cidade],
@@ -727,24 +831,33 @@ const UI = (() => {
       ["Início do curso", p.ingresso],
     ].filter(([, v]) => v);
 
-    const textos = [["Sobre", p.bio], ["Objetivos", p.objetivos]].filter(([, v]) => v);
+    const textos = [["Sobre", p.bio], ["Objetivos do momento", p.objetivos]].filter(([, v]) => v);
     const atual = tema.atual();
+    const logado = typeof Sessao !== "undefined" && Sessao.ativo() && Sessao.logado();
+    const iconeDaAba = (id) => PAGINAS.find((x) => x.id === id)?.icone || "";
 
     const html = `
       <div class="perfil-topo">
-        ${avatarHTML(p, "avatar")}
+        <button class="avatar-botao" data-acao="foto" type="button" title="${p.foto ? "Trocar foto" : "Enviar foto"}" aria-label="${p.foto ? "Trocar foto" : "Enviar foto"}">
+          ${avatarHTML(p, "avatar")}
+          <span class="avatar-cam">${icone("camera")}</span>
+        </button>
         <div style="min-width:0;">
           <div class="perfil-nome">${fmt.escape(p.nome || "Seu nome")}</div>
           <div class="perfil-linha">${fmt.escape(ocupacao || "Ocupação não informada")}</div>
           ${linha ? `<div class="perfil-linha muted">${fmt.escape(linha)}</div>` : ""}
-          <div class="perfil-foto-acoes">
-            <button class="btn sm" data-acao="foto" type="button">${p.foto ? "Trocar foto" : "Enviar foto"}</button>
-            ${p.foto ? `<button class="btn ghost sm" data-acao="tirar-foto" type="button">Remover</button>` : ""}
-          </div>
-          <input type="file" accept="image/*" class="hidden" data-arquivo-foto />
+          ${p.foto ? `<div class="perfil-foto-acoes"><button class="btn ghost sm" data-acao="tirar-foto" type="button" style="margin-left:-10px;">Remover foto</button></div>` : ""}
         </div>
+        <input type="file" accept="image/*" class="hidden" data-arquivo-foto />
       </div>
-      <div class="modal-body">
+
+      <div class="abas perfil-abas" role="tablist" aria-label="Seções do perfil">
+        <button type="button" role="tab" data-aba-perfil="sobre">Sobre você</button>
+        <button type="button" role="tab" data-aba-perfil="painel">Painel</button>
+        <button type="button" role="tab" data-aba-perfil="conta">Conta e dados</button>
+      </div>
+
+      <div class="perfil-painel" role="tabpanel" data-painel="sobre">
         <div class="perfil-stats">
           <div class="perfil-stat"><b>${disciplinas}</b><span>${disciplinas === 1 ? "disciplina" : "disciplinas"}</span></div>
           <div class="perfil-stat"><b>${registros}</b><span>registros</span></div>
@@ -753,56 +866,91 @@ const UI = (() => {
 
         ${dados.length ? `<dl class="ficha">${dados
           .map(([k, v]) => `<div><dt>${fmt.escape(k)}</dt><dd>${fmt.escape(v)}</dd></div>`)
-          .join("")}</dl>` : `<p class="card-note" style="margin:0;">Nenhum dado pessoal preenchido ainda — use “Editar perfil” para completar sua ficha.</p>`}
+          .join("")}</dl>` : `<p class="card-note" style="margin:0;">Nenhum dado pessoal preenchido ainda. Use “Editar perfil” para completar a sua ficha.</p>`}
 
         ${textos.map(([k, v]) => `
           <div class="perfil-texto">
-            <div class="stat-label">${fmt.escape(k)}</div>
+            <div class="rotulo">${fmt.escape(k)}</div>
             <p>${fmt.escape(v)}</p>
           </div>`).join("")}
+      </div>
 
-        <div class="perfil-ajustes">
-          <div class="field">
-            <label>Tema do painel</label>
-            <div class="seg" data-tema>
-              ${tema.OPCOES.map((o) => `<button type="button" data-valor="${o.valor}" aria-pressed="${String(o.valor === atual)}">${o.rotulo}</button>`).join("")}
-            </div>
+      <div class="perfil-painel" role="tabpanel" data-painel="painel" hidden>
+        <div class="ajuste">
+          <div class="ajuste-titulo">Tema</div>
+          <div class="temas" data-tema>
+            ${tema.OPCOES.map((o) => `
+              <button type="button" class="tema-opcao" data-valor="${o.valor}" aria-pressed="${String(o.valor === atual)}">
+                <span class="tema-amostra ${o.valor === "light" ? "claro" : "escuro"}"><i></i><i></i></span>
+                <span class="tema-nome">${o.rotulo}${icone("check")}</span>
+              </button>`).join("")}
           </div>
+        </div>
 
-          <div class="field">
-            <label>Abas do painel</label>
-            <ul class="list" data-abas>
-              ${Personalizacao.abasFixas().map((a) => `
-                <li>
-                  <input type="checkbox" class="check" data-toggle-aba="${a.id}" ${a.ativo ? "checked" : ""}
-                         aria-label="Incluir aba ${fmt.escape(a.rotuloPadrao)}" />
-                  <span class="grow">
-                    <input type="text" class="assistente-aba-nome" data-nome-aba="${a.id}"
-                           value="${fmt.escape(a.rotulo)}" ${a.ativo ? "" : "disabled"} />
-                  </span>
-                </li>`).join("")}
-            </ul>
-            <span class="hint">Desligar não apaga o que já está cadastrado — só some da barra.</span>
-          </div>
-
-          ${typeof Nuvem !== "undefined" ? `
-          <button class="btn block" data-acao="nuvem" type="button">☁ Conta e sincronização</button>
-          <span class="hint">${fmt.escape(Nuvem.situacao().texto)}</span>
-          ${Sessao.ativo() && Sessao.logado() ? `<button class="btn ghost block" data-acao="sair" type="button">Sair da conta</button>` : ""}` : ""}
-          <button class="btn block" data-acao="backup" type="button">⤓ Backup e dados</button>
-          <span class="hint" data-uso>Calculando o que está guardado…</span>
-          <button class="btn block" data-acao="reconfigurar" type="button">↻ Refazer configuração inicial</button>
+        <div class="ajuste">
+          <div class="ajuste-titulo">Abas do painel</div>
+          <p class="ajuste-texto">Desligar só tira a aba da barra; nada do que está nela é apagado. O nome dá para trocar aqui mesmo.</p>
+          <ul class="abas-lista" data-abas>
+            ${Personalizacao.abasFixas().map((a) => `
+              <li class="${a.ativo ? "" : "desligada"}" style="--marca: var(--s-${a.id})">
+                <span class="nav-icon">${icone(iconeDaAba(a.id))}</span>
+                <input type="text" class="aba-nome" data-nome-aba="${a.id}" value="${fmt.escape(a.rotulo)}"
+                       aria-label="Nome da aba ${fmt.escape(a.rotuloPadrao)}" ${a.ativo ? "" : "disabled"} />
+                <input type="checkbox" class="switch" role="switch" data-toggle-aba="${a.id}" ${a.ativo ? "checked" : ""}
+                       aria-label="Mostrar a aba ${fmt.escape(a.rotuloPadrao)}" />
+              </li>`).join("")}
+          </ul>
         </div>
       </div>
-      <div class="modal-foot">
+
+      <div class="perfil-painel" role="tabpanel" data-painel="conta" hidden>
+        <div class="menu-acoes">
+          ${typeof Nuvem !== "undefined" ? `
+          <button class="menu-acao" data-acao="nuvem" type="button">
+            ${icone("nuvem")}
+            <span class="grow"><span class="t">Conta e sincronização</span><span class="d">${fmt.escape(Nuvem.situacao().texto)}</span></span>
+            ${icone("direita", "seta")}
+          </button>` : ""}
+          <button class="menu-acao" data-acao="backup" type="button">
+            ${icone("exportar")}
+            <span class="grow"><span class="t">Backup e dados</span><span class="d" data-uso>Calculando o que está guardado…</span></span>
+            ${icone("direita", "seta")}
+          </button>
+          <button class="menu-acao" data-acao="reconfigurar" type="button">
+            ${icone("refazer")}
+            <span class="grow"><span class="t">Refazer a configuração inicial</span><span class="d">Volta ao assistente de boas-vindas. Nada é apagado.</span></span>
+            ${icone("direita", "seta")}
+          </button>
+          ${logado ? `
+          <button class="menu-acao perigo" data-acao="sair" type="button">
+            ${icone("sair")}
+            <span class="grow"><span class="t">Sair da conta</span><span class="d">Os dados deste navegador são apagados; continuam na sua conta.</span></span>
+          </button>` : ""}
+        </div>
+      </div>
+
+      <div class="modal-foot" style="padding-top:18px;">
         <button class="btn" data-acao="fechar" type="button">Fechar</button>
-        <button class="btn primary" data-acao="editar" type="button">Editar perfil</button>
+        <button class="btn primary" data-acao="editar" type="button">${icone("editar")}Editar perfil</button>
       </div>`;
 
     abrirModal(html, {
-      classe: "wide",
+      classe: "perfil",
       aoMontar(modal, fechar) {
         const entrada = modal.querySelector("[data-arquivo-foto]");
+        let abaAtual = abaInicial;
+
+        // Abas internas: mostram um painel por vez, sem fechar o cartão.
+        const mostrarAba = (id) => {
+          abaAtual = id;
+          modal.querySelectorAll("[data-aba-perfil]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.abaPerfil === id)));
+          modal.querySelectorAll("[data-painel]").forEach((pn) => { pn.hidden = pn.dataset.painel !== id; });
+        };
+        modal.querySelector(".perfil-abas").addEventListener("click", (ev) => {
+          const b = ev.target.closest("[data-aba-perfil]");
+          if (b) mostrarAba(b.dataset.abaPerfil);
+        });
+        mostrarAba(abaInicial);
 
         modal.querySelector('[data-acao="foto"]').addEventListener("click", () => entrada.click());
 
@@ -815,7 +963,7 @@ const UI = (() => {
             fechar(null);
             montarLayout(paginaAtiva, opcoesAtivas);
             toast("Foto atualizada.");
-            abrirPerfil();
+            abrirPerfil(abaAtual);
           } catch (err) {
             toast(err.message);
           }
@@ -826,15 +974,15 @@ const UI = (() => {
           fechar(null);
           montarLayout(paginaAtiva, opcoesAtivas);
           toast("Foto removida.");
-          abrirPerfil();
+          abrirPerfil(abaAtual);
         });
 
         // Tema: troca na hora, sem fechar o cartão.
         modal.querySelector("[data-tema]").addEventListener("click", (ev) => {
-          const b = ev.target.closest("button");
+          const b = ev.target.closest("[data-valor]");
           if (!b) return;
           tema.definir(b.dataset.valor);
-          modal.querySelectorAll("[data-tema] button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+          modal.querySelectorAll("[data-tema] [data-valor]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
         });
 
         modal.querySelector('[data-acao="backup"]').addEventListener("click", () => {
@@ -864,6 +1012,7 @@ const UI = (() => {
           const id = chk.dataset.toggleAba;
           Store.definirPreferencias({ abasFixas: { [id]: { ativo: chk.checked } } });
           modal.querySelector(`[data-nome-aba="${id}"]`).disabled = !chk.checked;
+          chk.closest("li").classList.toggle("desligada", !chk.checked);
           montarLayout(paginaAtiva, opcoesAtivas);
         });
         modal.querySelector("[data-abas]").addEventListener("input", (ev) => {
@@ -884,11 +1033,11 @@ const UI = (() => {
             campos: camposPerfil(),
             largo: true,
           });
-          if (!v) return abrirPerfil();
+          if (!v) return abrirPerfil(abaAtual);
           Store.definirPerfil(v);
           montarLayout(paginaAtiva, opcoesAtivas);
           toast("Perfil atualizado.");
-          abrirPerfil();
+          abrirPerfil("sobre");
         });
 
         modal.querySelector('[data-acao="fechar"]').addEventListener("click", () => fechar(null));
@@ -898,11 +1047,11 @@ const UI = (() => {
         if (typeof Arquivos !== "undefined" && Arquivos.disponivel) {
           Arquivos.uso().then((u) => {
             alvo.textContent = u.quantidade
-              ? `${u.quantidade} ${u.quantidade === 1 ? "anexo guardado" : "anexos guardados"} · ${Arquivos.tamanhoLegivel(u.bytes)} neste navegador.`
-              : "Nenhum documento anexado ainda.";
-          }).catch(() => { alvo.textContent = ""; });
+              ? `Exportar ou importar tudo. ${u.quantidade} ${u.quantidade === 1 ? "anexo guardado" : "anexos guardados"}, ${Arquivos.tamanhoLegivel(u.bytes)} neste navegador.`
+              : "Exportar ou importar tudo o que está cadastrado, num arquivo só.";
+          }).catch(() => { alvo.textContent = "Exportar ou importar tudo o que está cadastrado."; });
         } else {
-          alvo.textContent = "";
+          alvo.textContent = "Exportar ou importar tudo o que está cadastrado.";
         }
       },
     });
@@ -928,7 +1077,9 @@ const UI = (() => {
    * Devolve null quando não há o que calcular (nenhuma avaliação cadastrada).
    */
   function notaNecessaria(d) {
-    const minima = Number(d.mediaMinima) > 0 ? Number(d.mediaMinima) : 7;
+    // Mínima da disciplina; senão a da faculdade (pergunta da aba); senão 7.
+    const daFaculdade = Number(Store.estado().preferencias?.faculdade?.mediaMinima);
+    const minima = Number(d.mediaMinima) > 0 ? Number(d.mediaMinima) : daFaculdade > 0 ? daFaculdade : 7;
     const avs = (d.avaliacoes || []).filter((a) => !(Number(a.peso) < 0));
     if (!avs.length) return null;
     const temNota = (a) => a.nota !== null && a.nota !== undefined && a.nota !== "" && !Number.isNaN(Number(a.nota));
@@ -1067,7 +1218,7 @@ const UI = (() => {
    *        anexos | secao (só um título divisor, não guarda valor)
    * Resolve com um objeto de valores, ou null se cancelado.
    */
-  function formulario({ titulo, descricao, campos, valores = {}, rotuloConfirmar = "Salvar", largo = false }) {
+  function formulario({ titulo, descricao, campos, valores = {}, rotuloConfirmar = "Salvar", largo = false, rotuloExcluir = "", aoExcluir = null }) {
     return new Promise((resolve) => {
       const html = `
         <div class="modal-head">
@@ -1078,6 +1229,7 @@ const UI = (() => {
           ${campos.map((c) => campoHTML(c, valores[c.nome] ?? c.valorPadrao ?? "")).join("")}
         </form>
         <div class="modal-foot">
+          ${aoExcluir ? `<button class="btn danger" data-acao="excluir" type="button" style="margin-right:auto;">${fmt.escape(rotuloExcluir || "Excluir")}</button>` : ""}
           <button class="btn" data-acao="cancelar" type="button">Cancelar</button>
           <button class="btn primary" data-acao="confirmar" type="button">${fmt.escape(rotuloConfirmar)}</button>
         </div>`;
@@ -1128,6 +1280,8 @@ const UI = (() => {
           if (primeiro?.select) setTimeout(() => primeiro.select(), 0);
 
           const btnOk = modal.querySelector('[data-acao="confirmar"]');
+          // Excluir fecha sem salvar e deixa a exclusão (com o desfazer dela) para quem chamou.
+          modal.querySelector('[data-acao="excluir"]')?.addEventListener("click", () => { fechar(null); aoExcluir(); });
 
           const confirmar = async () => {
             const saida = {};
@@ -1241,9 +1395,11 @@ const UI = (() => {
             <input type="hidden" name="${c.nome}" value="" />
             <input type="file" multiple class="hidden" data-entrada />
             <div class="anexos" data-lista>${lista.map(anexoLinhaHTML).join("")}</div>
-            <div class="dropzone" data-zona tabindex="0" role="button">
+            <div class="dropzone" data-zona tabindex="0" role="button" aria-label="Anexar documento">
+              <span class="dz-icone">${icone("anexar")}</span>
               <strong>Anexar documento</strong>
-              Clique aqui ou arraste os arquivos${typeof Arquivos !== "undefined" ? ` (até ${Arquivos.LIMITE_MB} MB cada)` : ""}
+              <span>Clique para escolher ou arraste os arquivos até aqui</span>
+              ${typeof Arquivos !== "undefined" ? `<span>PDF, slides, fotos, até ${Arquivos.LIMITE_MB} MB cada</span>` : ""}
             </div>
           </div>`;
         break;
@@ -1276,9 +1432,9 @@ const UI = (() => {
     return `<div class="anexo" data-anexo-id="${fmt.escape(a.id || "")}" ${pendente ? 'data-pendente="1"' : ""}>
         <span class="anexo-ic ${cls.classe}">${fmt.escape(cls.rotulo)}</span>
         <span class="anexo-nome">${fmt.escape(a.nome)}
-          <span class="anexo-meta">${fmt.escape(tam)}${pendente ? " · a salvar" : ""}</span>
+          <span class="anexo-meta">${fmt.escape(tam)}${pendente ? ", a salvar" : ""}</span>
         </span>
-        <button class="btn ghost sm" data-remover type="button" aria-label="Remover anexo">✕</button>
+        <button class="btn ghost sm icon" data-remover type="button" aria-label="Remover anexo" title="Remover">${icone("fechar")}</button>
       </div>`;
   }
 
@@ -1394,8 +1550,8 @@ const UI = (() => {
           <div class="perfil-stat"><b data-anexos-n>—</b><span>anexos</span></div>
           <div class="perfil-stat"><b data-anexos-mb>—</b><span>em arquivos</span></div>
         </div>
-        <button class="btn primary block" data-acao="exportar" type="button">⤓ Exportar backup (.json)</button>
-        <button class="btn block" data-acao="importar" type="button">⤒ Importar backup</button>
+        <button class="btn primary block" data-acao="exportar" type="button">${icone("exportar")}Exportar backup (.json)</button>
+        <button class="btn block" data-acao="importar" type="button">${icone("importar")}Importar backup</button>
         <input type="file" accept="application/json" class="hidden" data-arquivo />
         <span class="hint">O backup leva junto os documentos anexados nas disciplinas, então o arquivo pode ficar grande.</span>
         <button class="btn danger block" data-acao="limpar" type="button">Apagar todos os dados</button>
@@ -1430,7 +1586,7 @@ const UI = (() => {
             toast(`Não foi possível exportar: ${err.message}`);
           }
           btnExportar.disabled = false;
-          btnExportar.textContent = "⤓ Exportar backup (.json)";
+          btnExportar.innerHTML = `${icone("exportar")}Exportar backup (.json)`;
         });
 
         modal.querySelector('[data-acao="importar"]').addEventListener("click", () => arquivo.click());
@@ -1478,11 +1634,13 @@ const UI = (() => {
 
   /* ---------------------------- Estado vazio ------------------------------- */
 
-  function vazio({ icone = "＋", titulo, texto, rotuloAcao, aoAcionar }) {
+  function vazio({ icone: nomeIcone = "mais", titulo, texto, rotuloAcao, aoAcionar }) {
     const el = document.createElement("div");
     el.className = "empty";
+    // Aceita o nome de um desenho ou um dos glifos antigos que as páginas passam.
+    const desenho = ICONES[nomeIcone] ? nomeIcone : GLIFO_PARA_ICONE[nomeIcone] || "vazio";
     el.innerHTML = `
-      <div class="empty-icon">${icone}</div>
+      <div class="empty-icon">${icone(desenho)}</div>
       <div class="empty-title">${fmt.escape(titulo)}</div>
       ${texto ? `<div class="empty-text">${fmt.escape(texto)}</div>` : ""}
       ${rotuloAcao ? `<button class="btn primary" type="button">${fmt.escape(rotuloAcao)}</button>` : ""}`;
@@ -1497,7 +1655,7 @@ const UI = (() => {
    * Cada barra leva o valor escrito ao lado (rótulo direto), então a cor nunca
    * é o único canal de leitura.
    */
-  function barras(el, { linhas, cor = "var(--s-financeiro)", formatar = fmt.moeda }) {
+  function barras(el, { linhas, cor = "var(--serie-saida)", formatar = fmt.moeda }) {
     el.innerHTML = "";
     if (!linhas.length) return;
     const max = Math.max(...linhas.map((l) => l.valor), 0) || 1;
@@ -1535,9 +1693,9 @@ const UI = (() => {
       g.className = "col-group";
       g.innerHTML = `
         <div class="col-bars" style="height:${alturaPlot}px;">
-          <div class="col-bar" style="height:${altura(m.receita)}px; background:var(--s-financeiro);"
+          <div class="col-bar" style="height:${altura(m.receita)}px; background:var(--serie-entrada);"
                title="Receitas em ${fmt.mesRotulo(m.chave)}: ${fmt.moeda(m.receita)}"></div>
-          <div class="col-bar" style="height:${altura(m.despesa)}px; background:var(--s-projetos);"
+          <div class="col-bar" style="height:${altura(m.despesa)}px; background:var(--serie-saida);"
                title="Despesas em ${fmt.mesRotulo(m.chave)}: ${fmt.moeda(m.despesa)}"></div>
         </div>
         <div class="col-label">${fmt.mesRotulo(m.chave)}</div>`;
@@ -1548,8 +1706,8 @@ const UI = (() => {
     const leg = document.createElement("div");
     leg.className = "legend";
     leg.innerHTML = `
-      <span class="legend-item"><span class="legend-key" style="background:var(--s-financeiro)"></span>Receitas</span>
-      <span class="legend-item"><span class="legend-key" style="background:var(--s-projetos)"></span>Despesas</span>`;
+      <span class="legend-item"><span class="legend-key" style="background:var(--serie-entrada)"></span>Entradas</span>
+      <span class="legend-item"><span class="legend-key" style="background:var(--serie-saida)"></span>Saídas</span>`;
     el.appendChild(leg);
   }
 
@@ -1560,17 +1718,371 @@ const UI = (() => {
     el.className = "meter";
     el.innerHTML = `
       <div class="meter-head">
-        <span style="font-size:12.5px; font-weight:550;">${fmt.escape(rotulo)}</span>
-        <span class="num" style="font-size:12.5px; color:var(--texto-2);">${formatar(atual)} / ${formatar(alvo)}${sufixo}</span>
+        <span style="font-size:14px; font-weight:550;">${fmt.escape(rotulo)}</span>
+        <span class="num" style="font-size:13.5px; color:var(--texto-2);">${formatar(atual)} de ${formatar(alvo)}${sufixo}</span>
       </div>
       <div class="meter-track"><div class="meter-fill" style="width:${pct}%; background:${cor};"></div></div>`;
     return el;
   }
 
+  /* ---------------------- Perguntas e notas do Delfos ---------------------- */
+  // O mesmo gesto em toda aba: o painel pergunta o que falta saber para ler
+  // melhor (perguntas) e diz o que merece atenção (notas). Cada aba monta a
+  // sua lista; o desenho e o "Agora não" são daqui.
+
+  /**
+   * "Agora não" esconde a pergunta por 14 dias; "sempre", para sempre.
+   * O Financeiro guarda as dele em preferencias.financeiro.dispensadas; as
+   * outras abas usam preferencias.dispensadas com a chave "<escopo>:<id>".
+   */
+  function perguntaDispensada(escopo, id) {
+    const prefs = Store.estado().preferencias;
+    const d = escopo === "financeiro" ? prefs.financeiro.dispensadas[id] : (prefs.dispensadas || {})[`${escopo}:${id}`];
+    if (!d) return false;
+    if (d === "sempre") return true;
+    return (diasAte(d) ?? -99) > -14;
+  }
+
+  function dispensarPergunta(escopo, id, sempre = false) {
+    const valor = sempre ? "sempre" : hojeISO();
+    const prefs = Store.estado().preferencias;
+    if (escopo === "financeiro") {
+      Store.definirPreferencias({ financeiro: { dispensadas: { ...prefs.financeiro.dispensadas, [id]: valor } } });
+    } else {
+      Store.definirPreferencias({ dispensadas: { ...(prefs.dispensadas || {}), [`${escopo}:${id}`]: valor } });
+    }
+  }
+
+  // Controles de resposta, montados em DOM (nada de texto do usuário em innerHTML).
+  const resposta = {
+    /** Campo numérico (ou texto, com `texto: true`) + botão. */
+    valor({ sugestao = "", rotulo, sufixo = "", min, max, passo = "0.01", texto = false, data = false, placeholder = "", aoSalvar }) {
+      const box = document.createElement("div");
+      box.className = "pergunta-resposta";
+      const inp = document.createElement("input");
+      inp.className = "input";
+      if (data) texto = true;
+      inp.type = data ? "date" : texto ? "text" : "number";
+      if (data) inp.style.width = "170px";
+      else if (!texto) {
+        inp.step = passo;
+        if (min !== undefined) inp.min = min;
+        if (max !== undefined) inp.max = max;
+      } else inp.style.width = "220px";
+      if (data) inp.style.width = "170px";
+      inp.placeholder = placeholder || (sugestao !== "" ? String(sugestao).replace(".", ",") : "");
+      if (sugestao !== "" && sugestao !== null) inp.value = sugestao;
+      inp.setAttribute("aria-label", rotulo);
+      const btn = document.createElement("button");
+      btn.className = "btn primary sm";
+      btn.type = "button";
+      btn.textContent = rotulo;
+      const ok = () => {
+        if (texto) {
+          if (!inp.value.trim()) return inp.focus();
+          return aoSalvar(inp.value.trim());
+        }
+        const v = Number(String(inp.value).replace(",", "."));
+        if (!inp.value || Number.isNaN(v) || v <= 0 || (max !== undefined && v > max)) return inp.focus();
+        aoSalvar(v);
+      };
+      btn.addEventListener("click", ok);
+      inp.addEventListener("keydown", (ev) => { if (ev.key === "Enter") ok(); });
+      box.append(inp);
+      if (sufixo) { const s = document.createElement("span"); s.className = "muted"; s.textContent = sufixo; box.append(s); }
+      box.append(btn);
+      return box;
+    },
+    /** Uma fileira de botões: [[rótulo, ação, primário?], …]. */
+    botoes(lista) {
+      const box = document.createElement("div");
+      box.className = "pergunta-resposta";
+      lista.forEach(([rotulo, fn, primario]) => {
+        const b = document.createElement("button");
+        b.className = `btn sm ${primario ? "primary" : ""}`;
+        b.type = "button";
+        b.textContent = rotulo;
+        b.addEventListener("click", fn);
+        box.append(b);
+      });
+      return box;
+    },
+    /** Pílulas de escolha múltipla + salvar. */
+    multipla(opcoes, marcadas, rotuloSalvar, aoSalvar) {
+      const box = document.createElement("div");
+      box.style.cssText = "display:flex; flex-direction:column; gap:12px;";
+      const chips = document.createElement("div");
+      chips.className = "chips";
+      opcoes.forEach((o) => {
+        const c = document.createElement("button");
+        c.type = "button";
+        c.className = "chip";
+        c.textContent = o;
+        c.setAttribute("aria-pressed", String(marcadas.includes(o)));
+        c.addEventListener("click", () => c.setAttribute("aria-pressed", String(c.getAttribute("aria-pressed") !== "true")));
+        chips.append(c);
+      });
+      box.append(chips, resposta.botoes([[rotuloSalvar, () => aoSalvar([...chips.querySelectorAll('[aria-pressed="true"]')].map((c) => c.textContent)), true]]));
+      return box;
+    },
+  };
+
+  /**
+   * Desenha as perguntas (duas por vez) numa seção; esconde a seção quando
+   * não há nenhuma. `perguntas`: [{ id, texto, apoio, controle: () => Element }].
+   * `aoMudar` roda depois de um "Agora não".
+   */
+  function renderPerguntas(secao, box, escopo, perguntas, aoMudar) {
+    const lista = perguntas.filter((q) => !perguntaDispensada(escopo, q.id));
+    secao.hidden = !lista.length;
+    box.innerHTML = "";
+    lista.slice(0, 2).forEach((q, i) => {
+      const el = document.createElement("article");
+      el.className = "pergunta";
+      const texto = document.createElement("div");
+      texto.className = "pergunta-texto";
+      texto.textContent = q.texto;
+      const apoio = document.createElement("div");
+      apoio.className = "pergunta-apoio";
+      apoio.textContent = q.apoio;
+      const rodape = document.createElement("div");
+      rodape.className = "pergunta-rodape";
+      rodape.innerHTML = `<span class="contador">${i + 1} de ${lista.length}</span>`;
+      const depois = document.createElement("button");
+      depois.className = "btn ghost sm";
+      depois.type = "button";
+      depois.textContent = "Agora não";
+      depois.addEventListener("click", () => { dispensarPergunta(escopo, q.id); aoMudar?.(); });
+      rodape.append(depois);
+      el.append(texto, apoio, q.controle(), rodape);
+      box.appendChild(el);
+    });
+  }
+
+  /**
+   * Notas: [{ tipo: alerta|atencao|bom|info, ic, html, acao?: { rotulo, fn }, area?: { rotulo, cor } }].
+   * `html` é montado por quem chama, sempre com o texto do usuário escapado.
+   */
+  function renderNotas(ul, notas, textoVazio) {
+    ul.innerHTML = "";
+    if (!notas.length) {
+      ul.innerHTML = `<li><span class="sinal">${icone("check")}</span><span>${fmt.escape(textoVazio)}</span></li>`;
+      return;
+    }
+    notas.forEach((x) => {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="sinal ${x.tipo}">${icone(x.ic)}</span><div><div>${x.area ? `<span class="nota-area" style="--marca:${fmt.escape(x.area.cor)}">${fmt.escape(x.area.rotulo)}</span>` : ""}${x.html}</div></div>`;
+      if (x.acao) {
+        const b = document.createElement(x.acao.href ? "a" : "button");
+        b.className = "btn sm acao";
+        if (x.acao.href) b.href = x.acao.href; else { b.type = "button"; b.addEventListener("click", x.acao.fn); }
+        b.textContent = x.acao.rotulo;
+        li.querySelector("div").appendChild(b);
+      }
+      ul.appendChild(li);
+    });
+  }
+
+  const ORDEM_NOTAS = { alerta: 0, atencao: 1, bom: 2, info: 3 };
+  const ordenarNotas = (lista, max = 6) => [...lista].sort((a, b) => ORDEM_NOTAS[a.tipo] - ORDEM_NOTAS[b.tipo]).slice(0, max);
+
+  /**
+   * Barras com valor escrito e, se houver, uma marca de meta/limite em cada
+   * linha (a mesma leitura de "Para onde foi o dinheiro"). Uma série só.
+   * linhas: [{ nome, valor, meta?, meta2?, sub?, acima? , href? }]
+   */
+  function barrasComMeta(el, linhas, { cor = "var(--serie-saida)", formatar = fmt.moeda, rotuloMeta = "meta", escala: fixa } = {}) {
+    el.innerHTML = "";
+    const escala = fixa || Math.max(...linhas.map((l) => Math.max(l.valor || 0, l.meta || 0)), 0) || 1;
+    const lista = document.createElement("div");
+    lista.className = "cat-lista";
+    lista.innerHTML = linhas.map((l) => `
+      <div class="cat-linha">
+        <span class="cat-nome"><span>${l.href ? `<a class="titulo-link" href="${fmt.escape(l.href)}">${fmt.escape(l.nome)}</a>` : fmt.escape(l.nome)}</span></span>
+        <span class="cat-valor">${formatar(l.valor || 0)}</span>
+        <span class="cat-barra"><i class="${l.acima ? "acima" : ""}" style="width:${((l.valor || 0) / escala) * 100}%; background:${l.acima ? "" : cor}"></i>${l.meta ? `<b style="left:calc(${(l.meta / escala) * 100}% - 1px)" title="${fmt.escape(rotuloMeta)}: ${fmt.escape(formatar(l.meta))}"></b>` : ""}</span>
+        ${l.sub ? `<span class="cat-meta">${l.sub}</span>` : ""}
+      </div>`).join("");
+    el.appendChild(lista);
+  }
+
+  /* -------------------------------- Movimento ------------------------------ */
+
+  /**
+   * A parte do hover que o CSS sozinho não faz (ver "Movimento" em theme.css):
+   * - a luz que acompanha o ponteiro dentro de cartões (--mx/--my);
+   * - um destaque único que desliza entre os itens do menu lateral;
+   * - o sublinhado das abas, que desliza até a aba sob o ponteiro e volta;
+   * - o fundo da escolha única (.seg), que desliza até a opção marcada.
+   * Tudo é enfeite de ponteiro: sem mouse ou com "reduzir movimento" no
+   * sistema, nada disso é criado e o painel continua igual.
+   */
+  const semMovimento = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const temPonteiro = () => typeof matchMedia === "function" && matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+  let luzLigada = false;
+  function ligarLuz() {
+    if (luzLigada) return;
+    luzLigada = true;
+    let alvos = [];
+    let x = 0;
+    let y = 0;
+    let agendado = false;
+    const pintar = () => {
+      agendado = false;
+      alvos.forEach((el) => {
+        const r = el.getBoundingClientRect();
+        el.style.setProperty("--mx", `${Math.round(x - r.left)}px`);
+        el.style.setProperty("--my", `${Math.round(y - r.top)}px`);
+      });
+    };
+    document.addEventListener("pointermove", (e) => {
+      if (e.pointerType !== "mouse") return;
+      x = e.clientX;
+      y = e.clientY;
+      // O cartão sob o ponteiro e os que o contêm (uma faixa dentro de outra).
+      alvos = [];
+      let el = e.target instanceof Element ? e.target.closest(".card, .pillar") : null;
+      while (el && alvos.length < 3) {
+        alvos.push(el);
+        el = el.parentElement?.closest(".card, .pillar") || null;
+      }
+      if (alvos.length && !agendado) { agendado = true; requestAnimationFrame(pintar); }
+    }, { passive: true });
+  }
+
+  /** Coloca um elemento sobre outro sem animar (primeira aparição). */
+  function semTransicao(el, fn) {
+    el.style.transition = "none";
+    fn();
+    void el.offsetWidth;
+    el.style.transition = "";
+  }
+
+  function realceDeslizante(container) {
+    if (!container || container.dataset.realce) return;
+    container.dataset.realce = "1";
+    container.classList.add("com-realce");
+    const realce = document.createElement("span");
+    realce.className = "realce-nav";
+    realce.setAttribute("aria-hidden", "true");
+    container.prepend(realce);
+    let visivel = false;
+    const posicionar = (el) => {
+      const c = container.getBoundingClientRect();
+      const r = el.getBoundingClientRect();
+      const aplicar = () => {
+        realce.style.transform = `translate(${r.left - c.left + container.scrollLeft}px, ${r.top - c.top + container.scrollTop}px)`;
+        realce.style.width = `${r.width}px`;
+        realce.style.height = `${r.height}px`;
+      };
+      if (visivel) aplicar(); else semTransicao(realce, aplicar);
+      realce.style.opacity = "1";
+      visivel = true;
+    };
+    container.addEventListener("pointerover", (e) => {
+      const el = e.target instanceof Element ? e.target.closest(".nav-item, .nav-subitem") : null;
+      if (el && container.contains(el)) posicionar(el);
+    });
+    container.addEventListener("pointerleave", () => { realce.style.opacity = "0"; visivel = false; });
+  }
+
+  function indicadorAbas(abas) {
+    if (abas.dataset.indicador) return;
+    abas.dataset.indicador = "1";
+    abas.classList.add("com-indicador");
+    const ind = document.createElement("span");
+    ind.className = "indicador-abas";
+    ind.setAttribute("aria-hidden", "true");
+    abas.appendChild(ind);
+    const itens = () => [...abas.children].filter((x) => x !== ind && /^(A|BUTTON)$/.test(x.tagName));
+    const ativa = () => itens().find((x) => x.getAttribute("aria-current") === "page" || x.getAttribute("aria-selected") === "true");
+    const ir = (el, provando = false, animar = true) => {
+      if (!el || !el.offsetWidth) { ind.style.opacity = "0"; return; }
+      const aplicar = () => {
+        ind.style.width = `${el.offsetWidth}px`;
+        ind.style.transform = `translateX(${el.offsetLeft}px)`;
+      };
+      if (animar) aplicar(); else semTransicao(ind, aplicar);
+      ind.style.opacity = "1";
+      abas.classList.toggle("provando", provando);
+    };
+    ir(ativa(), false, false);
+    abas.addEventListener("pointerover", (e) => {
+      const el = e.target instanceof Element ? e.target.closest("a, button") : null;
+      if (el && el.parentElement === abas) ir(el, el !== ativa());
+    });
+    abas.addEventListener("pointerleave", () => ir(ativa()));
+    new MutationObserver(() => ir(ativa())).observe(abas, { attributes: true, subtree: true, attributeFilter: ["aria-selected", "aria-current"] });
+    if (typeof ResizeObserver === "function") new ResizeObserver(() => ir(ativa(), false, false)).observe(abas);
+  }
+
+  function trilhoSeg(seg) {
+    if (seg.dataset.trilho) return;
+    seg.dataset.trilho = "1";
+    seg.classList.add("com-trilho");
+    const trilho = document.createElement("span");
+    trilho.className = "trilho-seg";
+    trilho.setAttribute("aria-hidden", "true");
+    seg.prepend(trilho);
+    const ir = (animar = true) => {
+      const b = seg.querySelector('button[aria-pressed="true"]');
+      if (!b || !b.offsetWidth) { trilho.style.opacity = "0"; return; }
+      const aplicar = () => {
+        trilho.style.width = `${b.offsetWidth}px`;
+        trilho.style.height = `${b.offsetHeight}px`;
+        trilho.style.transform = `translate(${b.offsetLeft}px, ${b.offsetTop}px)`;
+      };
+      if (animar && trilho.style.opacity === "1") aplicar(); else semTransicao(trilho, aplicar);
+      trilho.style.opacity = "1";
+    };
+    ir(false);
+    new MutationObserver(() => ir()).observe(seg, { attributes: true, subtree: true, attributeFilter: ["aria-pressed"] });
+    if (typeof ResizeObserver === "function") new ResizeObserver(() => ir(false)).observe(seg);
+  }
+
+  /** Liga o movimento em tudo que houver dentro de `raiz` (a página ou o que acabou de ser desenhado). */
+  function movimento(raiz = document) {
+    if (semMovimento() || !raiz.querySelectorAll) return;
+    const achar = (sel) => [...(raiz.matches?.(sel) ? [raiz] : []), ...raiz.querySelectorAll(sel)];
+    achar(".seg").forEach(trilhoSeg);
+    achar(".abas").forEach(indicadorAbas);
+    if (!temPonteiro()) return;
+    ligarLuz();
+    achar(".sidebar .nav").forEach(realceDeslizante);
+  }
+
   /* ------------------------------ Inicialização ---------------------------- */
+
+  /**
+   * "+ Prazo", "+ Material": o "+" digitado nos botões das páginas vira o
+   * ícone desenhado, igual ao dos botões do Financeiro. Um observador cobre
+   * também os botões que as páginas criam depois (listas, modais).
+   */
+  function realcarBotoes(raiz) {
+    const trocar = (btn) => {
+      const primeiro = btn.firstChild;
+      if (!primeiro || primeiro.nodeType !== Node.TEXT_NODE || !/^\s*\+\s/.test(primeiro.textContent)) return;
+      primeiro.textContent = primeiro.textContent.replace(/^\s*\+\s+/, "");
+      btn.insertAdjacentHTML("afterbegin", icone("mais"));
+    };
+    if (raiz.matches?.(".btn")) trocar(raiz);
+    raiz.querySelectorAll?.(".btn").forEach(trocar);
+  }
 
   function iniciarPagina(ativo, opcoes) {
     tema.iniciar();
+    realcarBotoes(document);
+    new MutationObserver((mudancas) => mudancas.forEach((m) => {
+      if (m.target.nodeType !== Node.ELEMENT_NODE) return;
+      realcarBotoes(m.target);
+      m.addedNodes.forEach((n) => { if (n.nodeType === Node.ELEMENT_NODE) movimento(n); });
+    })).observe(document.body, { childList: true, subtree: true });
+    // As seções chegam em cascata curta só na primeira pintura (theme.css, body.entrando).
+    if (!semMovimento()) {
+      document.body.classList.add("entrando");
+      setTimeout(() => document.body.classList.remove("entrando"), 900);
+    }
     // Sem conta, sessao.js já está levando para entrar.html (com a página
     // escondida): o assistente espera a pessoa entrar, para os dois
     // redirecionamentos não disputarem.
@@ -1582,8 +2094,13 @@ const UI = (() => {
       location.href = "bemvindo.html";
       return;
     }
+    // Gastos fixos viram o lançamento do mês ao abrir qualquer página (idempotente).
+    if (typeof Financas !== "undefined" && Financas.gerarFixos) {
+      try { Financas.gerarFixos(); } catch (e) { console.error("gastos fixos", e); }
+    }
     montarLayout(ativo, opcoes);
     avisarSeAbaDesligada(ativo);
+    movimento(document);
   }
 
   /**
@@ -1616,12 +2133,13 @@ const UI = (() => {
   }
 
   return {
-    NOME, VERSAO,
+    NOME, VERSAO, ICONES, ICONES_ABA, icone, iconeAba, movimento,
     fmt, htmlSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
     compromissos, conflitos, contagens, mediaDisciplina, notaNecessaria, proximaAvaliacao, resumoProjeto,
     iniciarPagina, montarLayout, tema, toast, formulario, confirmar, abrirModal,
     abrirBackup, abrirPerfil, avatarHTML, iniciais, vazio, barras, colunasMensais, medidor,
     novaAba, camposPilar, redimensionarFoto, camposItemPilar, editorCampos,
+    perguntaDispensada, dispensarPergunta, resposta, renderPerguntas, renderNotas, ordenarNotas, barrasComMeta,
   };
 })();
 

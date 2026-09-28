@@ -7,7 +7,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;450;500;550;600&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&display=swap" />
   <link rel="stylesheet" href="theme.css" />
 </head>
 <body>
@@ -15,8 +15,6 @@
     <nav class="sidebar" id="sidebar"></nav>
     <main class="main">
       <div class="wrap">
-        <a class="voltar" href="financeiro.html">← Financeiro</a>
-
         <header class="topbar">
           <div>
             <h1>Investimentos</h1>
@@ -26,6 +24,12 @@
             <button class="btn primary" id="btn-investimento">+ Investimento</button>
           </div>
         </header>
+
+        <nav class="abas" aria-label="Seções do financeiro">
+          <a href="financeiro.html">Resumo do mês</a>
+          <a href="contas.html">Contas e cartões</a>
+          <a href="investimentos.html" aria-current="page">Investimentos</a>
+        </nav>
 
         <div class="grid g4" style="margin-bottom:14px;">
           <div class="card tinted financeiro">
@@ -76,6 +80,8 @@
   <script src="sessao.js"></script>
   <script src="nuvem.js"></script>
   <script src="financas.js"></script>
+  <script src="leituras.js"></script>
+  <script src="abas.js"></script>
   <script src="investimentos.js"></script>
 </body>
 </html>

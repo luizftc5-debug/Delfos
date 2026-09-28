@@ -47,8 +47,8 @@
     // pessoa disse ser, em vez de presumir um perfil fixo.
     const ocupacao = Personalizacao.ocupacaoResumo();
     document.getElementById("sub-resumo").textContent =
-      (ocupacao ? `${ocupacao} · ` : "") +
-      `${naSemana ? `${naSemana} ${naSemana === 1 ? "compromisso" : "compromissos"}` : "Nenhum compromisso"} nos próximos 7 dias. ` +
+      (ocupacao ? `${ocupacao}. ` : "") +
+      `${naSemana ? `${naSemana} ${naSemana === 1 ? "compromisso" : "compromissos"}` : "Nenhum compromisso"} nos próximos 7 dias e ` +
       `${atual.quantidade} ${atual.quantidade === 1 ? "lançamento" : "lançamentos"} neste mês.`;
 
     // Herói: saldo atual (soma das contas, ou o valor informado à mão enquanto
@@ -69,6 +69,7 @@
     renderAvisos();
     renderProximo();
     renderPilares(atual);
+    UI.renderNotas(document.getElementById("notas"), Leituras.todasNotas(6), "Nada pedindo ação agora. Cada aba tem a própria leitura, com o que vai bem e o que mudou.");
     renderAgenda();
     renderInsights(atual, anterior, mes);
     UI.montarLayout("home");
@@ -227,7 +228,7 @@
       const abertos = (p.itens || []).filter((i) => !i.concluido);
       const naSemana = urgentes(`pilar:${p.id}`);
       cartoes.push({
-        href: `pilar.html?id=${encodeURIComponent(p.id)}`, cor: "", corHex: p.cor,
+        href: `pilar.html?id=${encodeURIComponent(p.id)}`, cor: "", corHex: p.cor, glifo: p.icone,
         titulo: p.nome,
         valor: `${abertos.length}`,
         sub: `${abertos.length === 1 ? "item em aberto" : "itens em aberto"}, ${naSemana} nesta semana`,
@@ -236,7 +237,8 @@
 
     grid.innerHTML = cartoes
       .map((c) => `
-        <a class="card pillar ${c.cor}" href="${c.href}"${c.corHex ? ` style="--tint:${c.corHex}"` : ""}>
+        <a class="card pillar ${c.cor}" href="${c.href}"${c.corHex ? ` style="--tint:${fmt.escape(c.corHex)}"` : ""}>
+          <span class="pillar-ic">${c.corHex ? UI.iconeAba(c.glifo) : UI.icone(c.id)}</span>
           <div class="stat-label">${fmt.escape(c.titulo)}</div>
           <div class="stat-value num">${c.valor}</div>
           <div class="stat-sub">${c.sub}</div>

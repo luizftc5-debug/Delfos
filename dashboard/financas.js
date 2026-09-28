@@ -48,9 +48,16 @@ const Financas = (() => {
    * lançadas nela. Despesas no cartão não entram aqui: elas entram quando a
    * fatura é lançada como despesa da conta.
    */
+  /**
+   * O lançamento que um gasto fixo gera antes de ser pago é compromisso, não
+   * dinheiro que saiu: entra na leitura do mês e em "A pagar", mas não mexe
+   * no saldo da conta nem na fatura até ser pago (à mão ou pela importação).
+   */
+  const movimentou = (t) => !(t.fixoId && t.status === "pendente");
+
   function saldoConta(conta) {
     const chave = `conta:${conta.id}`;
-    return lancamentosDe(chave).reduce(
+    return lancamentosDe(chave).filter(movimentou).reduce(
       (soma, t) => soma + (t.tipo === "receita" ? 1 : -1) * (Number(t.valor) || 0),
       Number(conta.saldoInicial) || 0
     );
@@ -113,7 +120,7 @@ const Financas = (() => {
   function faturaCartao(cartao, hoje = new Date()) {
     const ciclo = cicloAtual(cartao, hoje);
     const itens = lancamentosDe(`cartao:${cartao.id}`).filter(
-      (t) => t.tipo === "despesa" && t.data >= ciclo.inicio && t.data <= ciclo.fim
+      (t) => t.tipo === "despesa" && movimentou(t) && t.data >= ciclo.inicio && t.data <= ciclo.fim
     );
     const total = itens.reduce((s, t) => s + (Number(t.valor) || 0), 0);
     const limite = Number(cartao.limite) || 0;
@@ -130,7 +137,7 @@ const Financas = (() => {
   /** Total já gasto no cartão em qualquer período (para o balanço geral). */
   function gastoTotalCartao(cartao) {
     return lancamentosDe(`cartao:${cartao.id}`)
-      .filter((t) => t.tipo === "despesa")
+      .filter((t) => t.tipo === "despesa" && movimentou(t))
       .reduce((s, t) => s + (Number(t.valor) || 0), 0);
   }
 
@@ -225,8 +232,277 @@ const Financas = (() => {
     return { aplicado, atual, ganho: atual - aplicado, percentual: aplicado > 0 ? ((atual - aplicado) / aplicado) * 100 : 0 };
   }
 
+  /* ------------------------------ Leitura do mês ---------------------------- */
+  // Tudo que a aba Financeiro diz sobre um mês sai daqui, calculado na hora a
+  // partir dos lançamentos — nada é guardado, pela mesma razão do saldo.
+
+  const valorDe = (t) => Number(t.valor) || 0;
+  const soma = (lista) => lista.reduce((s, t) => s + valorDe(t), 0);
+
+  function hojeISO(hoje = new Date()) {
+    return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
+  }
+
+  function deslocarMes(chave, n) {
+    const [a, m] = chave.split("-").map(Number);
+    const d = new Date(a, m - 1 + n, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }
+
+  function diasNoMes(chave) {
+    const [a, m] = chave.split("-").map(Number);
+    return new Date(a, m, 0).getDate();
+  }
+
+  const doMes = (chave, lista = transacoes()) => lista.filter((t) => (t.data || "").startsWith(chave));
+
+  function totais(lista) {
+    const receita = soma(lista.filter((t) => t.tipo === "receita"));
+    const despesa = soma(lista.filter((t) => t.tipo === "despesa"));
+    return { receita, despesa, resultado: receita - despesa };
+  }
+
+  function porCategoria(lista) {
+    const mapa = {};
+    lista.filter((t) => t.tipo === "despesa").forEach((t) => {
+      const c = t.categoria || "Outros";
+      mapa[c] = (mapa[c] || 0) + valorDe(t);
+    });
+    return mapa;
+  }
+
+  /**
+   * Chave que junta lançamentos "iguais" de meses diferentes: minúsculas, sem
+   * acento, sem números (parcela 3/10, data no extrato) e só as três primeiras
+   * palavras — "Sanar Flix 09/26" e "SANAR FLIX" viram a mesma coisa.
+   */
+  function chaveDescricao(desc) {
+    return String(desc || "")
+      .toLowerCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[0-9]+/g, " ")
+      .replace(/[^a-z\s]/g, " ")
+      .split(/\s+/)
+      .filter((p) => p.length > 1)
+      .slice(0, 3)
+      .join(" ");
+  }
+
+  const mediana = (nums) => {
+    const o = [...nums].sort((a, b) => a - b);
+    const m = Math.floor(o.length / 2);
+    return o.length % 2 ? o[m] : (o[m - 1] + o[m]) / 2;
+  };
+
+  /**
+   * Gastos que se repetem: a mesma descrição, com o mesmo valor (±5% da
+   * mediana), em pelo menos dois dos últimos quatro meses. A margem é curta
+   * de propósito — assinatura e mensalidade cobram o mesmo valor todo mês; o
+   * mercado da semana, que também se repete, varia demais para ser "fixo".
+   * `fixos` são as respostas da pessoa — true confirma (e basta um mês),
+   * false tira da lista.
+   */
+  function recorrentes(ate, fixos = {}) {
+    const meses = [0, 1, 2, 3].map((n) => deslocarMes(ate, -n));
+    const grupos = {};
+    // Os lançamentos de um fixo cadastrado já estão na lista dos fixos; e uma
+    // descrição que já virou fixo cadastrado não é "descoberta" de novo.
+    const jaCadastrados = new Set(Store.lista("financeiro.fixos").map((f) => chaveDescricao(f.descricao)));
+    transacoes()
+      .filter((t) => t.tipo === "despesa" && !t.fixoId && meses.some((m) => (t.data || "").startsWith(m)))
+      .forEach((t) => {
+        const k = chaveDescricao(t.descricao);
+        if (jaCadastrados.has(k)) return;
+        if (!k) return;
+        (grupos[k] = grupos[k] || []).push(t);
+      });
+
+    return Object.entries(grupos)
+      .map(([chave, itens]) => {
+        const tipico = mediana(itens.map(valorDe));
+        const parecidos = itens.filter((t) => Math.abs(valorDe(t) - tipico) <= tipico * 0.05);
+        const mesesVistos = new Set(parecidos.map((t) => t.data.slice(0, 7)));
+        const ultimo = [...itens].sort((a, b) => b.data.localeCompare(a.data))[0];
+        return {
+          chave,
+          descricao: ultimo.descricao,
+          categoria: ultimo.categoria || "Outros",
+          valor: tipico,
+          meses: mesesVistos.size,
+          ultimaData: ultimo.data,
+          confirmado: fixos[chave] === true,
+        };
+      })
+      .filter((r) => fixos[r.chave] !== false && (r.meses >= 2 || fixos[r.chave] === true))
+      .sort((a, b) => b.valor - a.valor);
+  }
+
+  /* ------------------------------ Gastos fixos ------------------------------ */
+
+  /** "2026-09" + dia 31 → "2026-09-30" (o dia cabe no mês). */
+  function dataNoMes(chave, dia) {
+    const d = Math.min(Math.max(Number(dia) || 1, 1), diasNoMes(chave));
+    return `${chave}-${String(d).padStart(2, "0")}`;
+  }
+
+  /**
+   * Cada gasto fixo ativo vira um lançamento por mês, a partir do mês em que
+   * começou, até o mês de hoje. `geradoAte` guarda o último mês já gerado:
+   * assim um lançamento que a pessoa apagou de propósito não volta, e abrir o
+   * painel duas vezes nunca duplica. Nasce "a pagar" e passa a "pago" com o
+   * botão Pago ou quando o extrato importado traz a cobrança (importar.js).
+   */
+  function gerarFixos(hoje = new Date()) {
+    const mesAtual = hojeISO(hoje).slice(0, 7);
+    const lista = Store.lista("financeiro.fixos");
+    let criados = 0;
+    lista.forEach((f) => {
+      if (f.ativo === false || !f.inicio) return;
+      let mes = f.geradoAte ? deslocarMes(f.geradoAte, 1) : f.inicio;
+      if (mes < f.inicio) mes = f.inicio;
+      let ultimo = f.geradoAte || "";
+      for (let n = 0; mes <= mesAtual && n < 36; n++, mes = deslocarMes(mes, 1)) {
+        if (f.fim && mes > f.fim) break;
+        const ja = transacoes().some((t) => t.fixoId === f.id && t.competencia === mes);
+        if (!ja) {
+          Store.inserir("financeiro.transacoes", {
+            tipo: "despesa",
+            descricao: f.descricao,
+            valor: Number(f.valor) || 0,
+            categoria: f.categoria || "Outros",
+            data: dataNoMes(mes, f.dia),
+            origem: f.origem || "",
+            forma: "Gasto fixo",
+            status: "pendente",
+            fixoId: f.id,
+            competencia: mes,
+          });
+          criados++;
+        }
+        ultimo = mes;
+      }
+      if (ultimo && ultimo !== f.geradoAte) Store.atualizar("financeiro.fixos", f.id, { geradoAte: ultimo });
+    });
+    return criados;
+  }
+
+  /** Situação de cada fixo no mês: o lançamento dele, pago ou não. */
+  function fixosDoMes(chave) {
+    return Store.lista("financeiro.fixos").map((f) => {
+      const t = transacoes().find((x) => x.fixoId === f.id && x.competencia === chave) || null;
+      return { fixo: f, lancamento: t, pago: !!t && t.status !== "pendente", valor: t ? valorDe(t) : Number(f.valor) || 0 };
+    });
+  }
+
+  /** Gasto acumulado dia a dia de um mês (posição 0 = dia 1). */
+  function acumuladoDiario(chave) {
+    const dias = diasNoMes(chave);
+    const porDia = new Array(dias).fill(0);
+    doMes(chave).filter((t) => t.tipo === "despesa").forEach((t) => {
+      const d = Number(t.data.slice(8, 10));
+      if (d >= 1 && d <= dias) porDia[d - 1] += valorDe(t);
+    });
+    let acc = 0;
+    return porDia.map((v) => (acc += v));
+  }
+
+  /**
+   * Tudo que a aba diz de um mês: totais, categorias comparadas ao mês
+   * anterior, ritmo, projeção e a média dos três meses antes dele.
+   */
+  function analisarMes(chave, prefs = {}, hoje = new Date()) {
+    const hojeStr = hojeISO(hoje);
+    const mesHoje = hojeStr.slice(0, 7);
+    const anteriorChave = deslocarMes(chave, -1);
+    const lista = doMes(chave);
+    const t = totais(lista);
+    const tAnt = totais(doMes(anteriorChave));
+    const cats = porCategoria(lista);
+    const catsAnt = porCategoria(doMes(anteriorChave));
+    const orc = prefs.orcamentos || {};
+
+    const categorias = Object.entries(cats)
+      .map(([nome, valor]) => {
+        const anterior = catsAnt[nome] || 0;
+        return {
+          nome, valor, anterior,
+          parte: t.despesa ? valor / t.despesa : 0,
+          variacao: valor - anterior,
+          variacaoPct: anterior ? (valor - anterior) / anterior : null,
+          orcamento: Number(orc[nome]) > 0 ? Number(orc[nome]) : null,
+        };
+      })
+      .sort((a, b) => b.valor - a.valor);
+
+    // Média dos três meses anteriores que tiveram algum gasto lançado.
+    const anteriores = [1, 2, 3].map((n) => totais(doMes(deslocarMes(chave, -n))).despesa).filter((v) => v > 0);
+    const mediaDespesa = anteriores.length ? anteriores.reduce((s, v) => s + v, 0) / anteriores.length : 0;
+
+    const nDias = diasNoMes(chave);
+    const ehAtual = chave === mesHoje;
+    const passou = chave < mesHoje;
+    const diaHoje = Number(hojeStr.slice(8, 10));
+    const diasPassados = ehAtual ? diaHoje : passou ? nDias : 0;
+
+    // Projeção só no mês corrente: o gasto até hoje, no mesmo ritmo, até o fim.
+    const gastoAteHoje = soma(lista.filter((x) => x.tipo === "despesa" && x.data <= hojeStr));
+    const agendado = soma(lista.filter((x) => x.tipo === "despesa" && x.data > hojeStr));
+    const projecao = ehAtual && diasPassados >= 5
+      ? (gastoAteHoje / diasPassados) * nDias + agendado
+      : null;
+
+    const despesas = lista.filter((x) => x.tipo === "despesa");
+    const fimDeSemana = soma(despesas.filter((x) => {
+      const d = new Date(x.data + "T00:00:00").getDay();
+      return d === 0 || d === 6;
+    }));
+
+    return {
+      chave, anteriorChave, ...t,
+      anterior: tAnt,
+      lancamentos: lista.length,
+      taxaPoupanca: t.receita > 0 ? t.resultado / t.receita : null,
+      categorias,
+      maiores: [...despesas].sort((a, b) => valorDe(b) - valorDe(a)).slice(0, 5),
+      semCategoria: despesas.filter((x) => !x.categoria || x.categoria === "Outros"),
+      mediaDespesa,
+      diasNoMes: nDias, diasPassados, ehAtual, passou, diaHoje,
+      gastoAteHoje, agendado, projecao,
+      parteFimDeSemana: t.despesa && despesas.length >= 6 ? fimDeSemana / t.despesa : null,
+    };
+  }
+
+  /** Despesas marcadas como pendentes (de qualquer mês), da mais antiga à mais nova. */
+  function pendentes() {
+    return transacoes()
+      .filter((t) => t.tipo === "despesa" && t.status === "pendente")
+      .sort((a, b) => (a.data || "").localeCompare(b.data || ""));
+  }
+
+  /** Dia do mês em que as receitas mais costumam cair (para sugerir o dia da renda). */
+  function diaTipicoDeRenda() {
+    const contagem = {};
+    transacoes().filter((t) => t.tipo === "receita" && t.data).forEach((t) => {
+      const d = Number(t.data.slice(8, 10));
+      contagem[d] = (contagem[d] || 0) + valorDe(t);
+    });
+    const melhor = Object.entries(contagem).sort((a, b) => b[1] - a[1])[0];
+    return melhor ? Number(melhor[0]) : null;
+  }
+
+  /**
+   * Data do lançamento mais recente até hoje — para notar quando a pessoa
+   * parou de lançar. Uma conta agendada para a semana que vem não conta.
+   */
+  function ultimoLancamento(hoje = new Date()) {
+    const limite = hojeISO(hoje);
+    return transacoes().reduce((m, t) => (t.data && t.data <= limite && t.data > m ? t.data : m), "");
+  }
+
   return {
     TIPOS_CONTA, BANDEIRAS, TIPOS_INVESTIMENTO,
+    deslocarMes, diasNoMes, doMes, totais, chaveDescricao, recorrentes, acumuladoDiario,
+    analisarMes, pendentes, diaTipicoDeRenda, ultimoLancamento, gerarFixos, fixosDoMes, dataNoMes,
     partesOrigem, nomeOrigem, opcoesOrigem, lancamentosDe,
     saldoConta, saldoTotal, temContas,
     cicloAtual, faturaCartao, gastoTotalCartao,

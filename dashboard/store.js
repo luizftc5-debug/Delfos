@@ -55,6 +55,31 @@ const Store = (() => {
       faculdade: { ativo: true, rotulo: "" },
       projetos: { ativo: true, rotulo: "" },
     },
+    // O que a aba Financeiro pergunta para ler o mês do jeito da pessoa.
+    // null = ainda não respondido (a pergunta aparece); qualquer outro valor
+    // é resposta, e a pergunta some. Editável depois em "Limites e preferências".
+    financeiro: {
+      orcamentoMensal: null, // limite de gastos por mês, em R$
+      orcamentos: {}, // limite por categoria: { "Alimentação": 600 }
+      metaPoupanca: null, // % do que entra que a pessoa quer guardar
+      diaRenda: null, // dia do mês em que a renda principal costuma cair
+      essenciais: null, // categorias que são gasto essencial (lista)
+      fixos: {}, // gasto repetido confirmado (true) ou recusado (false), por chave de descrição
+      dispensadas: {}, // pergunta → data do "agora não" (volta depois de 14 dias) ou "sempre"
+    },
+    // Respostas às perguntas das outras abas (v11). Mesma regra: null = a
+    // pergunta ainda aparece.
+    faculdade: {
+      mediaMinima: null, // média para passar na faculdade (vale para toda disciplina sem mínima própria)
+      horasEstudo: null, // horas por semana de estudo fora da aula que a pessoa quer cumprir
+    },
+    projetos: {
+      metaMensal: null, // quanto quer ganhar por mês com projetos, em R$
+      horasDisponiveis: null, // horas por semana que sobram para projetos
+    },
+    // "Agora não" das perguntas de todas as abas menos o Financeiro (que
+    // guarda as dele em financeiro.dispensadas): "<escopo>:<pergunta>" → data ou "sempre".
+    dispensadas: {},
   };
 
   function preferenciasPadrao() {
@@ -247,6 +272,9 @@ const Store = (() => {
     { valor: "#5a4fd4", rotulo: "Índigo" },
     { valor: "#6e8f22", rotulo: "Oliva" },
     { valor: "#5b6b7d", rotulo: "Ardósia" },
+    { valor: "#8e5bd0", rotulo: "Violeta" },
+    { valor: "#178f6c", rotulo: "Esmeralda" },
+    { valor: "#1f7a8c", rotulo: "Petróleo" },
   ];
 
   const ICONES_PILAR = [
@@ -281,7 +309,7 @@ const Store = (() => {
 
   function estadoVazio() {
     return {
-      versao: 9,
+      versao: 12,
       atualizadoEm: new Date().toISOString(),
       perfil: { ...PERFIL_PADRAO },
       preferencias: preferenciasPadrao(),
@@ -294,6 +322,7 @@ const Store = (() => {
         contas: [],
         cartoes: [],
         investimentos: [],
+        fixos: [],
       },
       faculdade: { disciplinas: [], prazos: [] },
       projetos: [],
@@ -435,6 +464,19 @@ const Store = (() => {
     Object.keys(out.preferencias.abasFixas).forEach((k) => {
       out.preferencias.abasFixas[k] = { ...out.preferencias.abasFixas[k], ...(e.preferencias?.abasFixas?.[k] || {}) };
     });
+    // v9 → v10: respostas às perguntas da aba Financeiro. Os três mapas
+    // precisam ser objeto mesmo que um backup antigo traga outra coisa.
+    const pf = { ...out.preferencias.financeiro, ...(e.preferencias?.financeiro || {}) };
+    ["orcamentos", "fixos", "dispensadas"].forEach((k) => {
+      if (!pf[k] || typeof pf[k] !== "object" || Array.isArray(pf[k])) pf[k] = {};
+    });
+    if (pf.essenciais !== null && !Array.isArray(pf.essenciais)) pf.essenciais = null;
+    out.preferencias.financeiro = pf;
+    // v10 → v11: perguntas das abas Faculdade e Projetos, e as dispensadas de todas.
+    out.preferencias.faculdade = { ...out.preferencias.faculdade, ...(e.preferencias?.faculdade || {}) };
+    out.preferencias.projetos = { ...out.preferencias.projetos, ...(e.preferencias?.projetos || {}) };
+    const disp = e.preferencias?.dispensadas;
+    out.preferencias.dispensadas = disp && typeof disp === "object" && !Array.isArray(disp) ? { ...disp } : {};
 
     out.financeiro = { ...base.financeiro, ...(e.financeiro || {}) };
     out.faculdade = { ...base.faculdade, ...(e.faculdade || {}) };
@@ -444,6 +486,9 @@ const Store = (() => {
     out.financeiro.cartoes = e.financeiro?.cartoes || [];
     // v4 → v5: investimentos passam a ter aba própria (renda fixa, ações, etc.).
     out.financeiro.investimentos = e.financeiro?.investimentos || [];
+    // v11 → v12: gastos fixos cadastrados (aluguel, mensalidade, assinatura).
+    // Cada um gera um lançamento por mês (ver Financas.gerarFixos).
+    out.financeiro.fixos = Array.isArray(e.financeiro?.fixos) ? e.financeiro.fixos : [];
     out.financeiro.categorias = e.financeiro?.categorias?.length ? e.financeiro.categorias : [...CATEGORIAS_PADRAO];
 
     // v2 → v3: lançamento passa a saber de qual conta ou cartão saiu.
@@ -559,7 +604,7 @@ const Store = (() => {
       return pil;
     });
 
-    out.versao = 9;
+    out.versao = 12;
     return out;
   }
 
@@ -686,8 +731,11 @@ const Store = (() => {
     // rótulo que já tinha sido escolhido para ela.
     definirPreferencias(patch) {
       const e = carregar();
-      const { abasFixas, ...resto } = patch;
+      const { abasFixas, financeiro, faculdade, projetos, ...resto } = patch;
       e.preferencias = { ...e.preferencias, ...resto };
+      if (financeiro) e.preferencias.financeiro = { ...e.preferencias.financeiro, ...financeiro };
+      if (faculdade) e.preferencias.faculdade = { ...e.preferencias.faculdade, ...faculdade };
+      if (projetos) e.preferencias.projetos = { ...e.preferencias.projetos, ...projetos };
       if (abasFixas) {
         Object.entries(abasFixas).forEach(([k, v]) => {
           e.preferencias.abasFixas[k] = { ...e.preferencias.abasFixas[k], ...v };

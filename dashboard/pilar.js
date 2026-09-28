@@ -30,124 +30,187 @@
 
   /* --------------------------------- Render --------------------------------- */
 
+  const $ = (x) => document.getElementById(x);
+  const rotulo = () => (pilar.rotuloItem || "item").toLowerCase();
+  const filtros = { grupo: "todos", busca: "" };
+  let verConcluidos = false;
+
   function render() {
     pilar = Store.achar(CAMINHO, id);
     if (!pilar) return (location.href = "index.html");
 
     document.title = `${pilar.nome} · ${UI.NOME}`;
-
-    // A cor da aba é um hex do usuário, então entra como variável na página:
-    // .card.tinted e .swatch já leem --tint.
-    const raiz = document.getElementById("conteudo");
+    // A cor da aba é um hex do usuário, então entra como variável na página
+    // (--tint): o quadradinho dos dias marcados e os destaques leem dela.
+    const raiz = $("conteudo");
     raiz.style.setProperty("--tint", pilar.cor);
 
-    const etiqueta = document.getElementById("etiqueta");
-    etiqueta.textContent = `${pilar.icone} sua aba`;
-    etiqueta.style.color = pilar.cor;
-    document.getElementById("swatch-lista").style.background = pilar.cor;
+    const etiqueta = $("etiqueta");
+    // O ponto do eyebrow leva a cor da aba; o texto fica na tinta normal.
+    etiqueta.textContent = pilar.sugeridoPor === "ia" ? "Aba criada por você, montada com IA" : "Aba criada por você";
+    etiqueta.style.setProperty("--marca", pilar.cor);
+    $("swatch-lista").style.background = pilar.cor;
 
-    document.getElementById("titulo").textContent = pilar.nome;
-    document.getElementById("subtitulo").textContent =
-      pilar.descricao ||
-      (ehAcademia()
-        ? "Seus dias de treino, com carga, repetições e recorde de cada exercício."
-        : "Cadastre aqui o que pertence a esta aba — entra na agenda da visão geral junto com os outros pilares.");
-
+    $("titulo").textContent = pilar.nome;
     const academia = ehAcademia();
-    document.getElementById("bloco-stats").classList.toggle("hidden", academia);
-    document.getElementById("secao-itens").classList.toggle("hidden", academia);
-    document.getElementById("secao-academia").classList.toggle("hidden", !academia);
-    document.getElementById("btn-item").classList.toggle("hidden", academia);
-    document.getElementById("btn-campos").classList.toggle("hidden", academia);
-    document.getElementById("btn-refazer-questionario").hidden = !academia;
-    document.getElementById("btn-dia").classList.toggle("hidden", !(academia && pilar.academia?.configuradoEm));
-    document.getElementById("nota-ajustes").textContent = academia
+    $("subtitulo").textContent =
+      pilar.descricao ||
+      (academia
+        ? "Seus dias de treino, com carga, repetições e recorde de cada exercício."
+        : pilar.checkin ? "Marque cada dia em que fez; o Delfos conta as sequências." : pilar.naAgenda ? "Com data, cada registro entra na agenda da visão geral." : "Registros que se acompanham, fora da agenda.");
+
+    $("btn-editar-aba").innerHTML = `${UI.icone("ajustes")}Personalizar`;
+    $("btn-item").textContent = `+ ${fmt.capitalizar(rotulo())}`;
+
+    $("bloco-stats").classList.toggle("hidden", academia);
+    $("secao-itens").classList.toggle("hidden", academia);
+    $("leitura").classList.toggle("hidden", academia);
+    $("secao-academia").classList.toggle("hidden", !academia);
+    $("btn-item").classList.toggle("hidden", academia);
+    $("btn-campos").classList.toggle("hidden", academia);
+    $("btn-refazer-questionario").hidden = !academia;
+    $("btn-dia").classList.toggle("hidden", !(academia && pilar.academia?.configuradoEm));
+    $("nota-ajustes").textContent = academia
       ? "Esta aba foi criada por você. Renomeá-la, trocar ícone e cor, ou refazer o questionário não mexe nos dias já montados; excluí-la apaga também os dias e exercícios cadastrados."
-      : "Esta aba foi criada por você. Renomeá-la, trocar ícone e cor, ou ajustar os campos não mexe no que já está cadastrado; excluí-la apaga também todos os itens dela.";
+      : "Esta aba foi criada por você. Personalizar (ícone, cor, meta, agrupamento, campos sugeridos pela IA) não mexe no que já está cadastrado; excluí-la apaga também todos os registros dela.";
 
     if (academia) {
-      document.getElementById("swatch-academia").style.background = pilar.cor;
+      $("swatch-academia").style.background = pilar.cor;
+      $("sec-perguntas").hidden = true;
       renderAcademia();
       UI.montarLayout("pilar", { idAtivo: id });
       return;
     }
 
-    const todos = itens();
-    const abertos = todos.filter((c) => !c.concluido);
-    const atrasados = abertos.filter((c) => (UI.diasAte(c.data) ?? 0) < 0);
-    const semana = abertos.filter((c) => {
-      const d = UI.diasAte(c.data);
-      return d !== null && d >= 0 && d <= 7;
-    });
-
-    document.getElementById("s-abertos").textContent = abertos.length;
-    document.getElementById("s-abertos-d").textContent =
-      `${todos.length} ${todos.length === 1 ? "registro no total" : "registros no total"}`;
-
-    // Uma aba fora da agenda (hábitos, coleção…) não tem "esta semana" nem
-    // "atrasado" — os mesmos dois cartões passam a mostrar concluídos e total.
-    if (pilar.naAgenda) {
-      document.getElementById("lbl-semana").textContent = "Nesta semana";
-      document.getElementById("s-semana").textContent = semana.length;
-      document.getElementById("s-semana-d").textContent = semana[0]
-        ? `próximo: ${semana[0].descricao}`
-        : "nada nos próximos 7 dias";
-
-      document.getElementById("lbl-atrasados").textContent = "Atrasados";
-      const elAtr = document.getElementById("s-atrasados");
-      elAtr.textContent = atrasados.length;
-      elAtr.className = `stat-value num ${atrasados.length ? "delta down" : ""}`;
-      document.getElementById("s-atrasados-d").textContent =
-        atrasados.length ? "vale reagendar ou concluir" : "nada atrasado";
-    } else {
-      const concluidos = todos.filter((c) => c.concluido).length;
-      document.getElementById("lbl-semana").textContent = "Concluídos";
-      document.getElementById("s-semana").textContent = concluidos;
-      document.getElementById("s-semana-d").textContent =
-        todos.length ? `${Math.round((concluidos / todos.length) * 100)}% do total` : "";
-
-      document.getElementById("lbl-atrasados").textContent = "Total";
-      const elAtr = document.getElementById("s-atrasados");
-      elAtr.textContent = todos.length;
-      elAtr.className = "stat-value num";
-      document.getElementById("s-atrasados-d").textContent =
-        todos.length === 1 ? "registro nesta aba" : "registros nesta aba";
-    }
-
-    renderLista(todos);
+    const L = Leituras.pilar(pilar);
+    $("leitura").innerHTML = L.frase;
+    renderStats(L);
+    renderFiltros(L);
+    renderLista(L);
+    renderResumos(L);
+    UI.renderNotas($("notas"), L.notas, L.itens.length
+      ? "Nada fora do comum por aqui."
+      : `Quando houver registros, o Delfos aponta aqui ${pilar.checkin ? "as sequências e o que ficou sem marcar" : pilar.meta ? "o ritmo da meta" : "o que merece atenção"}.`);
+    UI.renderPerguntas($("sec-perguntas"), $("perguntas"), `pilar:${pilar.id}`, perguntas(L), render);
     UI.montarLayout("pilar", { idAtivo: id });
   }
 
-  let verConcluidos = false;
+  const PERIODO = { semana: "da semana", mes: "do mês", ano: "do ano" };
 
-  function renderLista(todos) {
-    const box = document.getElementById("lista");
+  function renderStats(L) {
+    const t = [];
+    const rot = rotulo();
+    if (pilar.checkin) t.push({ l: fmt.capitalizar(Leituras.pluralizar(rot)), v: L.itens.length, s: "acompanhados por dia" });
+    else t.push({ l: "Em aberto", v: L.abertos.length, s: `${L.itens.length} ${L.itens.length === 1 ? "registro" : "registros"} no total` });
+    if (pilar.checkin) {
+      const hoje = L.checkin.filter((x) => x.hoje).length;
+      t.push({ l: "Marcados hoje", v: `${hoje} de ${L.checkin.length}`, s: hoje === L.checkin.length && L.checkin.length ? "tudo em dia" : "toque em Hoje em cada um" });
+      const melhor = [...L.checkin].sort((a, b) => b.seq - a.seq)[0];
+      t.push({ l: "Maior sequência", v: melhor ? `${melhor.seq} ${melhor.seq === 1 ? "dia" : "dias"}` : "—", s: melhor?.seq ? fmt.escape(melhor.i.descricao) : "comece hoje" });
+    } else if (pilar.naAgenda) {
+      t.push({ l: "Próximos 7 dias", v: L.semana.length, s: L.semana[0] ? `próximo: ${fmt.escape(L.semana[0].descricao)}` : "nada marcado" });
+      t.push({ l: "Atrasados", v: L.atrasados.length, s: L.atrasados.length ? "vale concluir ou remarcar" : "nada atrasado", classe: L.atrasados.length ? "delta down" : "" });
+    } else {
+      t.push({ l: "Concluídos", v: L.concluidos.length, s: L.itens.length ? `${Math.round((L.concluidos.length / L.itens.length) * 100)}% do total` : "" });
+    }
+    if (L.prog) {
+      const d = Leituras.descreverMeta(pilar, L.prog);
+      t.push({
+        l: `Meta ${PERIODO[L.prog.periodo]}`, v: d.f(L.prog.atual),
+        s: `de ${fmt.escape(d.f(L.prog.alvo))}${L.prog.atual >= L.prog.alvo ? ", cumprida" : L.prog.noRitmo ? ", no ritmo" : ""}<div class="meter-track" style="margin-top:8px;"><div class="meter-fill" style="width:${L.prog.pct * 100}%; background:${fmt.escape(pilar.cor)}"></div></div>`,
+      });
+    } else {
+      const dinheiro = L.resumoCampos.find((r) => r.tipo === "dinheiro");
+      const numero = L.resumoCampos.find((r) => r.tipo === "numero");
+      if (dinheiro) t.push({ l: `${fmt.escape(dinheiro.campo.rotulo)} no mês`, v: fmt.moeda(dinheiro.noMes), s: `${fmt.moeda(dinheiro.total)} no total` });
+      else if (numero) t.push({ l: `${fmt.escape(numero.campo.rotulo)}, média`, v: fmt.decimal(numero.media), s: `em ${numero.n} ${numero.n === 1 ? rot : Leituras.pluralizar(rot)}` });
+    }
+    const box = $("bloco-stats");
+    box.className = `grid ${t.length >= 4 ? "g4" : "g3"}`;
+    box.innerHTML = t.slice(0, 4).map((x) => `
+      <div class="card">
+        <div class="stat-label">${x.l}</div>
+        <div class="stat-value ${x.classe || ""}">${typeof x.v === "number" ? x.v : fmt.escape(String(x.v))}</div>
+        <div class="stat-sub">${x.s}</div>
+      </div>`).join("");
+  }
+
+  const campoGrupo = () => (pilar.campos || []).find((c) => c.id === pilar.agruparPor && c.tipo === "select");
+
+  function renderFiltros() {
+    const cg = campoGrupo();
+    const box = $("f-grupo");
+    box.hidden = !cg;
+    if (!cg) { filtros.grupo = "todos"; return; }
+    box.innerHTML = [["todos", "Tudo"], ...cg.opcoes.map((o) => [o, fmt.capitalizar(o)])]
+      .map(([v, r]) => `<button type="button" class="chip" data-grupo="${fmt.escape(v)}" aria-pressed="${v === filtros.grupo}">${fmt.escape(r)}</button>`).join("");
+  }
+
+  function renderLista(L) {
+    const box = $("lista");
     box.innerHTML = "";
-    const visiveis = todos
-      .filter((c) => verConcluidos || !c.concluido)
-      .sort((a, b) => (a.data || "9999").localeCompare(b.data || "9999"));
+    $("titulo-lista").lastChild.textContent = fmt.capitalizar(Leituras.pluralizar(rotulo()));
+    const cg = campoGrupo();
+    const busca = filtros.busca.trim().toLowerCase();
+    const visiveis = L.itens
+      .filter((c) => verConcluidos || pilar.checkin || !c.concluido)
+      .filter((c) => filtros.grupo === "todos" || (c.extras || {})[cg?.id] === filtros.grupo)
+      .filter((c) => !busca || (c.descricao || "").toLowerCase().includes(busca) || Object.values(c.extras || {}).some((v) => String(v).toLowerCase().includes(busca)))
+      .sort((a, b) => (pilar.naAgenda ? (a.data || "9999").localeCompare(b.data || "9999") : (b.criadoEm || "").localeCompare(a.criadoEm || "")));
 
     if (!visiveis.length) {
-      box.appendChild(
-        UI.vazio({
-          icone: pilar.icone,
-          titulo: todos.length ? "Nada em aberto" : `Nenhum item em ${pilar.nome} ainda`,
-          texto: pilar.naAgenda
-            ? "Cada item pode ter data e os campos que você configurar — e entra na agenda dos próximos 30 dias da visão geral."
-            : "Cada item pode ter data e os campos que você configurar. Esta aba não entra na agenda.",
-          rotuloAcao: "Adicionar item",
-          aoAcionar: novoItem,
-        })
-      );
+      box.appendChild(UI.vazio({
+        icone: "mais",
+        titulo: L.itens.length ? "Nada com esse filtro" : `Nenhum ${rotulo()} ainda`,
+        texto: L.itens.length ? "Troque o filtro ou marque “ver concluídos”." : pilar.checkin
+          ? `Cadastre cada ${rotulo()} que quer acompanhar; depois é só tocar em Hoje nos dias em que fizer.`
+          : `Cada ${rotulo()} guarda ${(pilar.campos || []).slice(0, 3).map((c) => c.rotulo.toLowerCase()).join(", ") || "nome e data"}${pilar.naAgenda ? " e entra na agenda da visão geral" : ""}.`,
+        rotuloAcao: L.itens.length ? "" : `Adicionar ${rotulo()}`,
+        aoAcionar: novoItem,
+      }));
       return;
     }
 
-    const ul = document.createElement("ul");
-    ul.className = "list";
-    visiveis.forEach((c) => {
-      const u = UI.urgencia(c.data);
-      const li = document.createElement("li");
-      const badge = pilar.naAgenda
+    // Agrupado pelo campo escolhido quando o filtro está em "Tudo".
+    const grupos = cg && filtros.grupo === "todos"
+      ? [...cg.opcoes, ""].map((v) => [v, visiveis.filter((c) => ((c.extras || {})[cg.id] || "") === v)]).filter(([, l]) => l.length)
+      : [[null, visiveis]];
+    grupos.forEach(([valor, lista]) => {
+      const g = document.createElement("div");
+      g.className = "grupo-tempo";
+      if (valor !== null) g.innerHTML = `<h3 class="grupo-tempo-titulo">${fmt.escape(valor ? fmt.capitalizar(valor) : `Sem ${cg.rotulo.toLowerCase()}`)} <span>${lista.length}</span></h3>`;
+      const ul = document.createElement("ul");
+      ul.className = "list";
+      lista.forEach((c) => ul.appendChild(linhaItem(c)));
+      g.appendChild(ul);
+      box.appendChild(g);
+    });
+  }
+
+  function linhaItem(c) {
+    const li = document.createElement("li");
+    const u = UI.urgencia(c.data);
+    const acoes = `
+      <span class="row-actions ${pilar.checkin ? "fixas" : ""}">
+        <button class="btn ghost sm icon" data-editar title="Editar" aria-label="Editar">${UI.icone("editar")}</button>
+        <button class="btn ghost sm icon" data-excluir title="Excluir" aria-label="Excluir">${UI.icone("lixeira")}</button>
+      </span>`;
+    if (pilar.checkin) {
+      const dias = Leituras.ultimos7(c.feitos);
+      const seq = Leituras.sequencia(c.feitos);
+      const hoje = (c.feitos || []).includes(UI.hojeISO());
+      li.innerHTML = `
+        <span class="grow">
+          <span class="title">${fmt.escape(c.descricao)}</span>
+          <span class="meta">${metaLista(c)}</span>
+        </span>
+        <span class="dias7" aria-label="Últimos 7 dias">${dias.map((d, k) => `<i class="${d.feito ? "feito" : ""} ${k === 6 ? "hoje" : ""}" title="${fmt.dataPorExtenso(d.iso)}${d.feito ? ", feito" : ""}">${d.dia}</i>`).join("")}</span>
+        <span class="seq">${seq ? `${seq} ${seq === 1 ? "dia" : "dias"}` : ""}</span>
+        <button class="btn sm ${hoje ? "marcado" : ""}" type="button" data-hoje aria-pressed="${hoje}">${hoje ? "Feito hoje" : "Hoje"}</button>
+        ${acoes}`;
+      li.querySelector("[data-hoje]").addEventListener("click", () => marcarHoje(c));
+    } else {
+      const badge = pilar.naAgenda && c.data
         ? `<span class="badge ${c.concluido ? "feito" : u.nivel}">${c.concluido ? "concluído" : u.rotulo}</span>`
         : c.concluido ? `<span class="badge feito">concluído</span>` : "";
       li.innerHTML = `
@@ -157,36 +220,96 @@
           <span class="meta">${metaLista(c)}</span>
         </span>
         ${badge}
-        <span class="row-actions">
-          <button class="btn ghost sm" data-editar>Editar</button>
-          <button class="btn ghost sm" data-excluir>Excluir</button>
-        </span>`;
+        ${acoes}`;
       li.querySelector("input").addEventListener("change", (ev) => {
-        Store.subAtualizar(CAMINHO, id, "itens", c.id, { concluido: ev.target.checked });
+        Store.subAtualizar(CAMINHO, id, "itens", c.id, { concluido: ev.target.checked, concluidoEm: ev.target.checked ? UI.hojeISO() : "" });
         render();
       });
-      li.querySelector("[data-editar]").addEventListener("click", () => editarItem(c));
-      li.querySelector("[data-excluir]").addEventListener("click", () => excluirItem(c));
-      ul.appendChild(li);
-    });
-    box.appendChild(ul);
+    }
+    li.querySelector("[data-editar]").addEventListener("click", () => editarItem(c));
+    li.querySelector("[data-excluir]").addEventListener("click", () => excluirItem(c));
+    return li;
+  }
+
+  function marcarHoje(c) {
+    const hoje = UI.hojeISO();
+    const feitos = new Set(c.feitos || []);
+    const marcou = !feitos.has(hoje);
+    marcou ? feitos.add(hoje) : feitos.delete(hoje);
+    Store.subAtualizar(CAMINHO, id, "itens", c.id, { feitos: [...feitos].sort() });
+    render();
+    if (marcou) {
+      const seq = Leituras.sequencia([...feitos]);
+      UI.toast(seq >= 2 ? `${c.descricao}: ${seq} dias seguidos.` : `${c.descricao}: marcado hoje.`);
+    }
   }
 
   /** Os campos próprios marcados "na lista", formatados, mais a data se houver. */
   function metaLista(c) {
+    const cg = campoGrupo();
     const partes = (pilar.campos || [])
-      .filter((campo) => campo.naLista)
+      .filter((campo) => campo.naLista && campo.id !== cg?.id)
       .map((campo) => {
         const v = (c.extras || {})[campo.id];
         if (v === undefined || v === null || v === "") return "";
         if (campo.tipo === "simNao") return v ? campo.rotulo : "";
         if (campo.tipo === "dinheiro") return fmt.moeda(v);
+        if (campo.tipo === "number") return `${campo.rotulo.replace(/\s*\(.*\)$/, "")}: ${fmt.decimal(v, Number.isInteger(Number(v)) ? 0 : 1)}${/\((.*)\)$/.test(campo.rotulo) ? ` ${campo.rotulo.match(/\((.*)\)$/)[1]}` : ""}`;
+        if (campo.tipo === "date") return fmt.dataPorExtenso(v);
         return String(v);
       })
       .filter(Boolean)
       .map(fmt.escape);
-    if (c.data) partes.push(fmt.data(c.data));
-    return partes.join(" · ") || "sem detalhes";
+    if (c.data) partes.push(fmt.escape(fmt.dataPorExtenso(c.data)));
+    return partes.join(", ") || "sem detalhes";
+  }
+
+  // Um cartão por campo que dá para resumir: distribuição das listas de
+  // opções, soma e média dos números, o que entrou em dinheiro.
+  function renderResumos(L) {
+    const box = $("resumos-campos");
+    box.innerHTML = "";
+    L.resumoCampos.slice(0, 3).forEach((r) => {
+      const card = document.createElement("section");
+      card.className = "card";
+      if (r.tipo === "distribuicao") {
+        card.innerHTML = `<div class="card-head"><h2 class="card-title">Por ${fmt.escape(r.campo.rotulo.toLowerCase())}</h2></div><div></div>`;
+        UI.barrasComMeta(card.lastChild, r.linhas.map((l) => ({ nome: fmt.capitalizar(l.nome), valor: l.valor })), { cor: pilar.cor, formatar: (v) => String(v) });
+      } else if (r.tipo === "numero") {
+        card.innerHTML = `<div class="card-head"><h2 class="card-title">${fmt.escape(r.campo.rotulo)}</h2></div>
+          <div class="mini-stats" style="margin:0;"><div><div class="stat-label">Média</div><div class="mini-valor">${fmt.decimal(r.media)}</div></div><div><div class="stat-label">Total</div><div class="mini-valor">${fmt.decimal(r.total, Number.isInteger(r.total) ? 0 : 1)}</div></div><div><div class="stat-label">Maior</div><div class="mini-valor">${fmt.decimal(r.max, Number.isInteger(r.max) ? 0 : 1)}</div></div></div>`;
+      } else if (r.tipo === "dinheiro") {
+        card.innerHTML = `<div class="card-head"><h2 class="card-title">${fmt.escape(r.campo.rotulo)}</h2></div>
+          <div class="mini-stats" style="margin:0;"><div><div class="stat-label">Este mês</div><div class="mini-valor">${fmt.moeda(r.noMes)}</div></div><div><div class="stat-label">Mês passado</div><div class="mini-valor">${fmt.moeda(r.antes)}</div></div><div><div class="stat-label">Total</div><div class="mini-valor">${fmt.moeda(r.total)}</div></div></div>`;
+      } else if (r.tipo === "simNao") {
+        card.innerHTML = `<div class="card-head"><h2 class="card-title">${fmt.escape(r.campo.rotulo)}</h2></div><p class="card-note" style="margin:0; font-size:14.5px; color:var(--texto-2);">${r.sim} de ${r.n} ${r.n === 1 ? rotulo() : Leituras.pluralizar(rotulo())}.</p>`;
+      }
+      box.appendChild(card);
+    });
+  }
+
+  function perguntas(L) {
+    const q = [];
+    if (!L.itens.length) return q;
+    if (!pilar.meta) q.push({
+      id: "meta",
+      texto: `Quer uma meta para ${pilar.nome}?`,
+      apoio: pilar.checkin ? "Por exemplo, quantas marcações por semana. O Delfos mostra se o ritmo está bom." : `Por exemplo, quantos ${Leituras.pluralizar(rotulo())} concluir por mês ou por ano.`,
+      controle: () => UI.resposta.botoes([["Definir meta", abrirPersonalizar, true]]),
+    });
+    const select = (pilar.campos || []).find((c) => c.tipo === "select");
+    if (!pilar.agruparPor && select) q.push({
+      id: `agrupar:${select.id}`,
+      texto: `Agrupar a lista por ${select.rotulo.toLowerCase()}?`,
+      apoio: `Os ${Leituras.pluralizar(rotulo())} ficam separados por ${select.opcoes.slice(0, 3).join(", ")}, com filtro no alto da lista.`,
+      controle: () => UI.resposta.botoes([["Agrupar", () => { Store.atualizar(CAMINHO, id, { agruparPor: select.id }); render(); }, true]]),
+    });
+    return q;
+  }
+
+  async function abrirPersonalizar() {
+    await Abas.abrir({ pilar });
+    render();
   }
 
   /* -------------------------------- Academia --------------------------------
@@ -315,7 +438,7 @@
           li.innerHTML = `
             <span class="grow">
               <span class="title">${fmt.escape(nomeExercicio(ex.exercicioId))}</span>
-              <span class="meta">${fmt.escape(grupoExercicio(ex.exercicioId))}${partes.length ? " · " + fmt.escape(partes.join(" · ")) : ""}</span>
+              <span class="meta">${fmt.escape(grupoExercicio(ex.exercicioId))}${partes.length ? ", " + fmt.escape(partes.join(", ")) : ""}</span>
             </span>
             <span class="row-actions">
               <button class="btn ghost sm" data-editar-ex>Editar</button>
@@ -484,33 +607,38 @@
   /* --------------------------------- Ações ---------------------------------- */
 
   // descricao e data são campos de sistema — o resto vem dos campos próprios
-  // da aba (modelo escolhido na criação, ajustáveis em "Campos desta aba").
+  // da aba (sugeridos na criação, ajustáveis em "Campos desta aba").
   const camposItem = () => [
-    { nome: "descricao", rotulo: "O que é", tipo: "text", obrigatorio: true, placeholder: `Ex.: algo de ${pilar.nome}` },
-    { nome: "data", rotulo: pilar.naAgenda ? "Data" : "Data (opcional)", tipo: "date", obrigatorio: !!pilar.naAgenda, valorPadrao: UI.hojeISO() },
+    { nome: "descricao", rotulo: pilar.checkin ? "O que você quer fazer" : "Nome", tipo: "text", obrigatorio: true, placeholder: `Ex.: ${exemploPara()}` },
+    ...(pilar.checkin ? [] : [{ nome: "data", rotulo: pilar.naAgenda ? "Data" : "Data (opcional)", tipo: "date", obrigatorio: !!pilar.naAgenda, valorPadrao: pilar.naAgenda ? UI.hojeISO() : "" }]),
     ...UI.camposItemPilar(pilar),
   ];
+
+  function exemploPara() {
+    const s = typeof Abas !== "undefined" ? Abas.sugerirLocal(pilar.nome) : null;
+    return s?.exemplos?.[0] || `um ${rotulo()} de ${pilar.nome}`;
+  }
 
   // Separa descricao/data (sistema) do resto (extras), nos dois sentidos.
   const paraExtras = (v) => {
     const { descricao, data, ...resto } = v;
-    return { descricao, data, extras: resto };
+    return { descricao, data: data || "", extras: resto };
   };
   const deExtras = (c) => ({ descricao: c.descricao, data: c.data, ...(c.extras || {}) });
 
   async function novoItem() {
-    const v = await UI.formulario({ titulo: `Novo item em ${pilar.nome}`, campos: camposItem() });
+    const v = await UI.formulario({ titulo: `Adicionar ${rotulo()}`, descricao: pilar.nome, campos: camposItem() });
     if (!v) return;
-    Store.subInserir(CAMINHO, id, "itens", { ...paraExtras(v), concluido: false });
-    UI.toast("Item cadastrado.");
+    Store.subInserir(CAMINHO, id, "itens", { ...paraExtras(v), concluido: false, criadoEm: new Date().toISOString(), ...(pilar.checkin ? { feitos: [] } : {}) });
+    UI.toast(`${fmt.capitalizar(rotulo())} cadastrado.`);
     render();
   }
 
   async function editarItem(c) {
-    const v = await UI.formulario({ titulo: "Editar item", campos: camposItem(), valores: deExtras(c) });
+    const v = await UI.formulario({ titulo: `Editar ${rotulo()}`, campos: camposItem(), valores: deExtras(c) });
     if (!v) return;
     Store.subAtualizar(CAMINHO, id, "itens", c.id, paraExtras(v));
-    UI.toast("Item atualizado.");
+    UI.toast("Atualizado.");
     render();
   }
 
@@ -518,22 +646,17 @@
     const antes = [...itens()];
     Store.subRemover(CAMINHO, id, "itens", c.id);
     render();
-    UI.toast("Item excluído.", {
+    UI.toast("Excluído.", {
       acaoRotulo: "Desfazer",
       aoAcionar: () => { Store.atualizar(CAMINHO, id, { itens: antes }); render(); },
     });
   }
 
   async function editarAba() {
-    const v = await UI.formulario({
-      titulo: "Editar aba",
-      descricao: "Nome, ícone e cor mudam só a aparência — o que você já cadastrou continua onde está.",
-      campos: UI.camposPilar(),
-      valores: pilar,
-    });
+    if (typeof Abas !== "undefined") return abrirPersonalizar();
+    const v = await UI.formulario({ titulo: "Editar aba", campos: UI.camposPilar(), valores: pilar });
     if (!v) return;
     Store.atualizar(CAMINHO, id, v);
-    UI.toast("Aba atualizada.");
     render();
   }
 
@@ -570,6 +693,17 @@
     verConcluidos = ev.target.checked;
     render();
   });
+  document.getElementById("f-grupo").addEventListener("click", (ev) => {
+    const c = ev.target.closest("[data-grupo]");
+    if (!c) return;
+    filtros.grupo = c.dataset.grupo;
+    render();
+  });
+  document.getElementById("f-busca").addEventListener("input", (ev) => {
+    filtros.busca = ev.target.value;
+    renderLista(Leituras.pilar(pilar));
+  });
+  document.querySelector(".fin-filtros .busca").insertAdjacentHTML("afterbegin", UI.icone("busca"));
 
   render();
 })();

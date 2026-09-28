@@ -1,0 +1,1 @@
+pdf.js 6.3.289 (pdfjs-dist, legacy build) — Mozilla, licença Apache 2.0 (LICENSE). Usado só por importar.js para ler extrato em PDF no navegador.

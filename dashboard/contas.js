@@ -22,7 +22,7 @@
 
     document.getElementById("s-faturas").textContent = fmt.moeda(totalFaturas);
     document.getElementById("s-faturas-d").textContent = b.cartoes.length
-      ? `${b.cartoes.length} ${b.cartoes.length === 1 ? "cartão" : "cartões"} · ciclo atual`
+      ? `${b.cartoes.length} ${b.cartoes.length === 1 ? "cartão" : "cartões"}, ciclo atual`
       : "Nenhum cartão cadastrado";
 
     const sobra = totalContas - totalFaturas;
@@ -94,7 +94,7 @@
         <a href="conta.html?tipo=conta&id=${fmt.escape(c.id)}" style="text-decoration:none; color:inherit; display:block;">
           <div class="stat-value num" style="font-size:22px; color:${c.saldo < 0 ? "var(--st-critical)" : "var(--texto)"};">${fmt.moeda(c.saldo)}</div>
           <div class="stat-sub">
-            abertura ${fmt.moeda(c.saldoInicial || 0)} · ${c.movimentos} ${c.movimentos === 1 ? "lançamento" : "lançamentos"}
+            abertura ${fmt.moeda(c.saldoInicial || 0)}, ${c.movimentos} ${c.movimentos === 1 ? "lançamento" : "lançamentos"}
           </div>
         </a>`;
       card.querySelector("[data-editar]").addEventListener("click", () => editarConta(c));
@@ -137,7 +137,7 @@
         <div class="card-head" style="align-items:flex-start; margin-bottom:10px;">
           <a class="linha-link" style="min-width:0;" href="conta.html?tipo=cartao&id=${fmt.escape(c.id)}">
             <h3 class="card-title" style="font-size:14px;"><span class="swatch projetos"></span><span class="title">${fmt.escape(c.nome)}</span></h3>
-            <div class="card-note" style="margin-top:3px;">${fmt.escape(c.bandeira || "cartão")} · fecha dia ${c.fechamento} · vence dia ${c.vencimento}</div>
+            <div class="card-note" style="margin-top:3px;">${fmt.escape(c.bandeira || "cartão")}, fecha dia ${c.fechamento}, vence dia ${c.vencimento}</div>
           </a>
           <span class="row-actions">
             <button class="btn ghost sm" data-editar>Editar</button>
@@ -159,13 +159,13 @@
         <div data-limite></div>
 
         <div class="stat-sub">
-          Ciclo de ${fmt.dataCurta(c.ciclo.inicio)} a ${fmt.dataCurta(c.ciclo.fim)} · ${c.movimentos} ${c.movimentos === 1 ? "compra" : "compras"}
+          Ciclo de ${fmt.dataCurta(c.ciclo.inicio)} a ${fmt.dataCurta(c.ciclo.fim)}, ${c.movimentos} ${c.movimentos === 1 ? "compra" : "compras"}
         </div>`;
 
       if (c.limite) {
         card.querySelector("[data-limite]").appendChild(
           UI.medidor({
-            rotulo: `Limite usado — ${Math.round(c.usoPercentual)}%`,
+            rotulo: `${Math.round(c.usoPercentual)}% do limite usado`,
             atual: c.fatura,
             alvo: c.limite,
             cor: c.usoPercentual >= 80 ? "var(--st-critical)" : "var(--s-projetos)",
@@ -209,7 +209,7 @@
       return;
     }
 
-    UI.barras(box, { linhas, cor: "var(--s-financeiro)" });
+    UI.barras(box, { linhas, cor: "var(--serie-saida)" });
   }
 
   /* --------------------------------- Ações ---------------------------------- */

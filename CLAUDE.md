@@ -1,8 +1,8 @@
 # Delfos — agente de organização pessoal do Luiz
 
-O painel se chama **Delfos**. O nome e a versão (`UI.NOME` / `UI.VERSAO`, em `ui.js`) aparecem
-como marca no rodapé da barra lateral, nos títulos das abas do navegador e no nome do arquivo de
-backup exportado.
+O painel se chama **Delfos** (versão atual: **1.5**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
+em `ui.js`) aparecem como marca no alto da barra lateral, ao lado do ônfalo, nos títulos das abas do
+navegador e no nome do arquivo de backup exportado.
 
 Duas coisas **continuam** com o nome antigo, de propósito:
 
@@ -31,12 +31,12 @@ Você é um assistente de IA especializado em organizar e gerenciar os quatro pi
 
 ## Arquitetura do dashboard
 
-Aplicação estática multi-página em `dashboard/`, sem build. Dependências externas: a tipografia (Google Fonts) e, só ao criar ou trocar senha, a consulta k-anônima ao Have I Been Pwned (`sessao.js`).
+Aplicação estática multi-página em `dashboard/`, sem build. Dependências externas: a tipografia (Google Fonts) e, só ao criar ou trocar senha, a consulta k-anônima ao Have I Been Pwned (`sessao.js`). O pdf.js (Mozilla, Apache 2.0) vem **copiado** em `dashboard/vendor/pdfjs/` — não de CDN — e só é baixado quando alguém importa um extrato em PDF.
 
 | Arquivo | Papel |
 |---|---|
 | `index.html` + `home.js` | Visão geral: saldo em destaque, alertas, agenda de 30 dias, leitura automática da situação |
-| `financeiro.html` + `financeiro.js` | Planilha de lançamentos, gráficos por mês e categoria, metas |
+| `financeiro.html` + `financeiro.js` | Resumo do mês: leitura, para onde foi o dinheiro, ritmo diário, perguntas, notas, a pagar, fixos, metas e a planilha |
 | `contas.html` + `contas.js` | Lista de contas e cartões, com o balanço geral |
 | `conta.html` + `conta.js` | Página de uma conta ou cartão: saldo/fatura, gastos por categoria só dela, lançamentos |
 | `investimentos.html` + `investimentos.js` | Carteira de investimentos: aplicado, valor atual, rentabilidade por tipo |
@@ -51,12 +51,14 @@ Aplicação estática multi-página em `dashboard/`, sem build. Dependências ex
 | `store.js` | Camada de dados: localStorage + CRUD + backup em JSON |
 | `personalizacao.js` | Traduz perfil/preferências em como o painel se apresenta (abas ligadas, saudação, ocupação) |
 | `arquivos.js` | Anexos (PDF, slides, fotos) no IndexedDB + export/import para o backup |
-| `importar.js` | Lançamentos a partir de extrato bancário (.ofx/.qfx/.csv) — leitura, mapeamento de colunas, revisão e confirmação |
+| `importar.js` | Lançamentos a partir de extrato bancário (PDF, .ofx/.qfx/.csv) — leitura, mapeamento de colunas, revisão e confirmação |
 | `entrar.html` + `entrar.js` | Entrar / criar conta / esqueci a senha: página sem barra lateral, a única que abre sem sessão |
 | `sessao.js` | Conta do usuário: endereço da API, login, cadastro, derivação da senha, porta de entrada das páginas |
 | `nuvem.js` | Sincronização com a conta (`backend/`): envio, conferência, conflito, versões, anexos, sair |
-| `financas.js` | Cálculos derivados: saldo por conta, ciclo e fatura de cartão, balanço, investimentos |
-| `ui.js` | Componentes: layout, perfil, modais de formulário, avisos, gráficos, datas/urgência |
+| `leituras.js` | Leitura das outras abas, no molde do Financeiro: `Leituras.faculdade()`, `projetos()`, `pessoal()`, `pilar(p)` devolvem números, a frase da leitura e as notas; `todasNotas()` alimenta a visão geral |
+| `abas.js` | Criador/editor de abas próprias (`Abas.abrir`): sugestão local por assunto (`sugerirLocal`, catálogo de ~30 domínios) e a do Claude pelo servidor (`pedirIA`), sempre passada por `sanear` |
+| `financas.js` | Cálculos derivados: saldo por conta, ciclo e fatura de cartão, balanço, investimentos, e a análise do mês (`analisarMes`, `recorrentes`, `acumuladoDiario`) |
+| `ui.js` | Componentes: layout, ícones (`UI.icone`), perfil, modais de formulário, avisos, gráficos, datas/urgência |
 | `theme.css` | Design system (tema claro/escuro) |
 | `config.js` + `google-integration.js` | Integração OAuth com Google Calendar e Drive (inclui busca/exportação de arquivos, usada pela importação em disciplina.js) |
 | `data.js` | Conteúdo inicial (seed), lido só na primeira abertura |
@@ -106,6 +108,12 @@ contas e os dados de cada uma. O localStorage continua sendo a cópia de trabalh
   anexos têm chave `(usuario_id, id)`. Cota de anexos por conta em `COTA_ANEXOS_MB`
   (`wrangler.toml`) — o D1 gratuito tem 500 MB no total.
 - **Cadastro** aberto, ou com convite se o segredo `CODIGO_CONVITE` existir.
+- **IA** (`backend/src/ia.js`, `POST /api/ia/aba`): recebe só o nome da aba, uma linha de contexto
+  (ocupação, cidade) e, na edição, o nome dos campos existentes — nada do estado. Usa o SDK oficial
+  (`@anthropic-ai/sdk`) com saída em JSON por esquema e esforço baixo; exige sessão e limita 40
+  pedidos por conta por hora (tabela `tentativas`, chave `ia:<id>`). **A chave `ANTHROPIC_API_KEY`
+  é segredo do Worker (workflow a publica a partir do segredo do GitHub) e nunca vai ao navegador.**
+  Sem chave: `/api/saude` devolve `ia: false`, a rota dá 503 e o painel usa só a sugestão local.
 - Migrações só se acrescentam (`0002_contas.sql` renomeou as tabelas da versão de senha única para
   `legado_*` em vez de apagar). Módulo Worker só exporta `default`. Testes: `cd backend && npm test`.
 
@@ -159,6 +167,18 @@ aparelho dela) e importa; o arquivo é lido só no navegador.
   fechamento de tag de valor) quanto XML (OFX 2.x) do mesmo jeito. Charset: decodifica UTF-8
   primeiro; se sobrar `\uFFFD` (byte inválido), refaz como ISO-8859-1 — banco brasileiro exporta
   nos dois.
+- **PDF** (`Importar.lerPDF` no navegador + `parseTextoExtrato`, puro): o pdf.js é carregado por
+  `import()` de `vendor/pdfjs/` só quando o arquivo é PDF, com `isEvalSupported: false`. As linhas
+  são remontadas pela altura (y) de cada pedaço de texto, colunas separadas por vão largo. Não há
+  leitor por banco: vale toda linha com data no começo (dd/mm[/aa], "15 SET", "15 de setembro") e
+  valor no padrão brasileiro; linha só com data vira a data das seguintes (Nubank); linha sem valor
+  logo depois de um lançamento complementa a descrição. Sinal, em ordem de confiança: escrito
+  (-, D/C, +), coluna de saldo (saldo anterior ± valor = saldo da linha), seção (Entradas/Saídas),
+  fatura (compra, negativo = crédito), palavras — só esse último marca `incerto` ("confira").
+  Saldo, total, limite e vencimento são ignorados (o saldo alimenta a dedução). PDF com senha →
+  `motivo: "senha"` e o assistente mostra o campo; PDF de imagem → `motivo: "semTexto"`. Na
+  revisão de PDF, data e valor viram campos (`[data-data]`, `[data-quantia]` — não `data-valor`,
+  que já é dos botões Despesa/Receita).
 - **CSV**: delimitador adivinhado (`;` vs `,`) pela primeira linha; aceita uma coluna "valor" com
   sinal OU um par "entrada"/"saída"; `sugerirMapeamento` chuta o papel de cada coluna pelo nome do
   cabeçalho, sempre revisável antes de continuar. Linha sem data/valor reconhecível é contada e
@@ -179,6 +199,49 @@ aparelho dela) e importa; o arquivo é lido só no navegador.
   `tbody` explícito no seletor as regras genéricas (pensadas para colunas só de leitura) ganhavam
   por especificidade e escondiam checkbox/descrição/tipo, que aqui são campos editáveis, não texto.
 
+### A aba Financeiro (`financeiro.js`)
+
+Abre falando: um seletor de mês (‹ setembro de 2026 ›) e a **leitura do mês** na voz, que diz
+quanto entrou, quanto saiu, quanto sobrou e o que mais pesou — ou quanto resta do limite, se houver.
+Tudo abaixo segue o mês escolhido. Os números vêm de `Financas.analisarMes(chave, prefs)`, que não
+toca DOM; `financeiro.js` só decide o que dizer e como mostrar.
+
+- **Faixa**: sobrou/faltou, entrou, saiu (ou % do limite) e saldo nas contas hoje. No mês corrente
+  a comparação é "agosto inteiro: R$ X", não porcentagem — comparar meio mês com um mês cheio
+  enganaria. Em mês fechado, variação com sinal ("+45% sobre agosto").
+- **Para onde foi o dinheiro**: categorias com barra, parte do total, comparação, marca de limite
+  por categoria (barra vermelha se passar). Clicar filtra a planilha.
+- **Ritmo do mês**: gasto acumulado dia a dia (SVG desenhado na largura real do cartão), o mês
+  anterior em cinza, projeção tracejada no mês corrente, linha do limite, mira + dica ao passar o
+  ponteiro, e uma frase que repete os números para nada depender do ponteiro.
+- **Perguntas do Delfos**: o que falta saber para ler o mês do jeito da pessoa — limite mensal,
+  quanto guardar (%), gasto repetido é fixo?, quais categorias são essenciais, dia da renda, limite
+  para a categoria que mais pesa, reserva de emergência (3 a 6 meses de gastos), gastos sem
+  categoria. Duas por vez; "Agora não" esconde por 14 dias. Respostas vão para
+  `preferencias.financeiro` (ver abaixo) e são editáveis em **Limites e preferências**.
+- **O que o Delfos notou**: até 6 frases ordenadas por gravidade — dias sem lançar (com atalho para
+  importar extrato), uso do limite e quanto dá por dia, meta de poupança, categoria que subiu/caiu,
+  peso dos fixos, essenciais × escolhas, fim de semana, maior gasto, saldo até a próxima renda.
+- **A pagar** (pendentes de qualquer mês + faturas abertas, com "Pago" e desfazer), **Fixos e
+  assinaturas** (`Financas.recorrentes`: mesma descrição, mesmo valor ±5%, em 2 dos últimos 4
+  meses — margem curta de propósito, o mercado da semana se repete mas não é fixo), **Maiores
+  gastos**, **Entradas e saídas** dos últimos 6 meses.
+- **Metas** em cartões: quanto falta, quanto guardar por mês até o prazo (ou em quantos meses fica
+  pronta no ritmo do que sobrou), botão **Guardar** (soma ao valor atual, com desfazer).
+- **Planilha**: pílulas Tudo/Saídas/Entradas/Pendentes ("Pendentes" ignora o mês), busca, categoria,
+  "Todos os meses"; por linha, editar, **repetir hoje** e excluir, e "pendente" vira botão de pagar.
+
+`preferencias.financeiro` (migração **v9 → v10** em `normalizar`; a **v11** acrescentou
+`preferencias.faculdade` = `{ mediaMinima, horasEstudo }`, `preferencias.projetos` = `{ metaMensal,
+horasDisponiveis }` e `preferencias.dispensadas`, com chave `"<escopo>:<pergunta>"`): `orcamentoMensal`, `orcamentos`
+(limite por categoria), `metaPoupanca` (%), `diaRenda`, `essenciais` (lista), `fixos` (chave de
+descrição → true/false) e `dispensadas` (pergunta → data do "agora não", ou "sempre"). `null` quer
+dizer "ainda não respondido" — é o que faz a pergunta aparecer. `Store.definirPreferencias({
+financeiro })` mescla campo a campo; os mapas são sempre passados inteiros.
+
+Contas e cartões e Investimentos ganharam as mesmas abas sublinhadas do alto do Financeiro (Resumo
+do mês / Contas e cartões / Investimentos), no lugar do link "← Financeiro".
+
 ### Contas, cartões e saldo
 
 - `financeiro.contas` guarda o `saldoInicial` de cada conta; o saldo atual é **calculado**
@@ -191,6 +254,31 @@ aparelho dela) e importa; o arquivo é lido só no navegador.
 - Cada conta/cartão tem página própria (`conta.html?tipo=conta|cartao&id=`), com os cálculos
   centralizados em `Financas.resumoConta`/`resumoCartao` — não duplique a lógica de saldo/fatura ali,
   só formate o que essas funções já devolvem.
+
+### Gastos fixos (estado v12)
+
+`financeiro.fixos` guarda o que se repete todo mês (aluguel, mensalidade, assinatura): `{ descricao,
+valor, dia, categoria, origem, inicio: "AAAA-MM", fim, ativo, geradoAte, nomesExtrato }`. Cadastro
+pelo "+ Gasto fixo" do cartão **Fixos e assinaturas** (`financeiro.js`: `novoFixo`, `editarFixo`,
+`excluirFixo`), que também lista os repetidos que `Financas.recorrentes` descobriu, com "Cadastrar".
+
+- **Um lançamento por mês.** `Financas.gerarFixos()` (chamado por `UI.iniciarPagina`, idempotente)
+  cria, para cada fixo ativo, o lançamento do mês — `fixoId`, `competencia`, `status: "pendente"`,
+  no dia do vencimento — do `inicio` até o mês de hoje. `geradoAte` impede recriar o que a pessoa
+  apagou de propósito. Pausar remove o pendente do mês; religar não cobra os meses parados.
+- **Pendente de fixo não é dinheiro que saiu**: entra na leitura do mês e em "A pagar", mas
+  `saldoConta`/`faturaCartao`/`gastoTotalCartao` ignoram (`movimentou`) até virar pago.
+- **Nunca contar duas vezes na importação** (`importar.js`, `casarFixos`, função pura): cada linha
+  de despesa do extrato é comparada com os lançamentos de fixo ainda não conferidos (`conciliadoEm`
+  vazio) do mesmo mês (ou até 10 dias). Casa se o valor bate (≤ 2% ou R$ 1) ou se há palavra em
+  comum com a descrição do fixo ou com `nomesExtrato` e o valor está a até 35%. A linha casada
+  **não cria lançamento**: atualiza o do fixo com data e valor reais, `status: "pago"`,
+  `conciliadoEm`, `descricaoExtrato`. Sem casamento automático, a revisão oferece "É gasto fixo?"
+  para a pessoa escolher, e o nome que o banco usou vai para `nomesExtrato` (até 5) — no mês
+  seguinte casa sozinho. O selo "fixo: X" é botão: tocar vira "lançar como novo". A checagem de
+  repetido ignora o fixo sendo confirmado; um fixo já conferido volta a ser "repetido?" se o mesmo
+  extrato for importado de novo. Desfazer devolve os fixos ao estado anterior.
+- `Financas.recorrentes` ignora lançamentos com `fixoId` e descrições já cadastradas como fixo.
 
 ### Investimentos
 
@@ -250,7 +338,26 @@ antes/depois a cada gravação e apaga do IndexedDB os que sumiram do texto; exc
 O seletor de fonte tem, além das de sistema (Georgia, Arial…), um punhado de fontes do Google Fonts
 importadas só por `resumo.html`/`disciplina.html` (Merriweather, Lora, Inter, Space Mono, Caveat) —
 mais variedade para ler, escrever fórmula ou anotar à mão. É conteúdo do usuário, não design system:
-não confunda com a tipografia do painel (`dashboard/DESIGN.md`), que continua só IBM Plex.
+não confunda com a tipografia do painel (`dashboard/DESIGN.md`), que é Funnel Sans + Newsreader.
+
+### As outras abas no molde do Financeiro (v1.5)
+
+Faculdade, Projetos, Pessoal e cada aba própria abrem do mesmo jeito que o Financeiro: **leitura**
+na voz (Newsreader), faixa de números, **O que o Delfos notou** e **Perguntas do Delfos**. O
+cálculo mora em `leituras.js` (sem DOM); os componentes são comuns em `ui.js`:
+`UI.renderPerguntas(secao, box, escopo, perguntas, aoMudar)`, `UI.resposta.valor/botoes/multipla`,
+`UI.renderNotas(ul, notas, textoVazio)` (nota com `area` e `acao` opcionais), `UI.ordenarNotas` e
+`UI.barrasComMeta`. "Agora não" esconde a pergunta por 14 dias (`UI.dispensarPergunta`).
+
+- **Faculdade**: próximas quatro semanas lado a lado, médias por disciplina com a marca da média
+  mínima (`preferencias.faculdade.mediaMinima`, que `UI.notaNecessaria` usa quando a disciplina não
+  tem a dela), avaliação sem data, horas de estudo por semana.
+- **Projetos**: recebido no mês × estimado por projeto, valor por hora (recebido ÷ horas do mês),
+  últimos seis meses, meta mensal e horas disponíveis.
+- **Pessoal**: linha do tempo agrupada (atrasados, hoje, semana, próximas…), filtro por tipo e aviso
+  quando um compromisso cai no mesmo dia de prova ou prazo de outra área.
+- **Visão geral**: "O que o Delfos notou" junta só alertas e atenções de todas as abas
+  (`Leituras.todasNotas`), com a área de cada uma.
 
 ### Abas criadas pelo usuário
 
@@ -284,6 +391,25 @@ Cada item guarda `descricao`, `data` e `concluido` como campos de sistema — s�
 `campo.id`. `UI.camposItemPilar(pilar)` traduz `pilar.campos` para o formato que `UI.formulario`
 entende; `pilar.js` junta esses campos com `descricao`/`data` e depois separa o resultado em
 `extras` (`paraExtras`/`deExtras`). Só os campos marcados `naLista` aparecem na linha da listagem.
+
+**Criador com IA (v1.5).** "Nova aba" abre `Abas.abrir()`: a pessoa digita o nome e, a cada letra,
+a sugestão local (`Abas.sugerirLocal`, catálogo por assunto — corrida, leitura, plantões, remédios,
+viagem…) monta ícone, cor, descrição, `rotuloItem`, campos, meta, agrupamento e exemplos. Parando de
+digitar (900 ms), se as contas estiverem ligadas e o servidor tiver a chave, o Claude refaz tudo para
+aquele assunto específico. Resposta atrasada (nome mudou) é descartada; se a pessoa já mexeu em
+algo, a sugestão da IA vira um botão "Usar sugestão da IA" em vez de sobrescrever. Tudo o que vem
+da IA passa por `Abas.sanear` (só ícones, cores, tipos e ids válidos; texto escapado na tela). Os
+exemplos só viram registros se marcados. "Personalizar" na página da aba reabre o mesmo modal em
+modo edição: muda nome/ícone/cor/descrição/meta/agrupamento e só **acrescenta** campos sugeridos,
+nunca remove os existentes.
+
+Campos novos da aba (todos opcionais, abas antigas continuam funcionando): `rotuloItem` (o nome de
+cada registro: "livro", "plantão" — vira o botão "+ Livro"), `checkin` (hábito marcado por dia),
+`agruparPor` (id de um campo select: separa a lista e vira pílulas de filtro), `meta = { tipo:
+concluidos|soma|checkins, campoId, alvo, periodo: semana|mes|ano }` e `sugeridoPor` (`"ia"` ou
+`"local"`). Itens ganharam `criadoEm`, `concluidoEm` e, com `checkin`, `feitos` (lista de datas
+ISO; a sequência e os últimos 7 dias saem daí, nunca são guardados). `Leituras.pilar(p)` resume os
+campos (distribuição dos selects, soma/média dos números e valores, sim/não) e a meta do período.
 
 Uma aba com `naAgenda: false` (Hábitos, Coleção) não entra na agenda dos 30 dias nem nos alertas de
 semana cheia, e os dois cartões de estatística que seriam "Nesta semana"/"Atrasados" viram
@@ -353,11 +479,15 @@ no topo com atalho para religar (`UI.avisarSeAbaDesligada`, chamado por `UI.inic
 barra lateral) e `home.js` (os cartões da visão geral) leem daqui, nunca direto do estado — para as
 duas telas nunca ficarem dessincronizadas sobre quais abas estão ligadas ou como se chamam.
 
-O cartão de perfil (`UI.abrirPerfil`) abre pelo botão do nome na barra lateral e é **o único lugar
-de configuração do painel**: ficha de dados, ocupação, abas do painel (liga/desliga e renomeia na
-hora, sem "Salvar"), troca de tema, acesso ao backup e "Refazer configuração inicial" (reabre o
-assistente) ficam todos ali. O rodapé da barra lateral não guarda botões, só a marca "Delfos" com a
-versão. Depois de gravar, `abrirPerfil` chama `montarLayout` de novo para a barra refletir a mudança
+O cartão de perfil (`UI.abrirPerfil(aba)`) abre pelo botão com foto e nome **no pé da barra
+lateral** e é **o único lugar de configuração do painel**. Tem três abas internas: **Sobre você**
+(números, ficha, textos), **Painel** (tema escolhido por amostra; abas fixas com ícone, nome
+editável e interruptor `.switch`, tudo na hora, sem "Salvar") e **Conta e dados** (sincronização,
+backup, "Refazer configuração inicial", sair). A própria foto é o botão de trocar a foto.
+`abrirPerfil` aceita a aba a abrir (reabre na mesma depois de trocar a foto) e ignora qualquer outro
+argumento — o botão da barra o chama por `() => abrirPerfil()`, senão o evento de clique viraria o
+nome da aba. O alto da barra guarda só a marca (ônfalo + "Delfos" + versão), que leva à visão geral.
+Depois de gravar, `abrirPerfil` chama `montarLayout` de novo para a barra refletir a mudança
 na hora — por isso `ui.js` guarda a página ativa em `paginaAtiva`/`opcoesAtivas`. `camposPerfil()`
 omite a seção "Vida acadêmica" quando `Personalizacao.eEstudante()` é falso — ela decide na hora de
 abrir o formulário, não reage a trocar `tipoOcupacao` dentro do mesmo formulário.
@@ -424,48 +554,65 @@ telas (botões "+ Lançamento", "+ Prazo", "+ Disciplina", "+ Projeto"), sem toc
   dados já acompanham a conta em qualquer aparelho; o backup continua como cópia fora do servidor.
 - Ao mudar o formato do estado, trate a migração em `store.js` (`normalizar`, que roda em toda carga
   e precisa ser idempotente). Nunca troque a chave do localStorage: isso apagaria os dados de quem
-  já usa. A conversão é gravada assim que a versão salva difere da atual.
+  já usa. A conversão é gravada assim que a versão salva difere da atual (versão atual do estado: **12**).
 
 ### Direção visual
 
-**"Oráculo sóbrio"** — o detalhe completo está em `dashboard/DESIGN.md`, que é a
-referência a consultar antes de mexer em qualquer coisa visual.
+**"Oráculo sóbrio", segunda leitura (v1.4)** — o detalhe completo, com os tokens e a paleta
+validada, está em `dashboard/DESIGN.md`, a referência a consultar antes de mexer em qualquer coisa
+visual.
 
-O princípio, em uma linha: **nada de padrão, textura ou enfeite**. Superfície é
-superfície. O caráter vem de tipografia, espaço e hierarquia — não de uma camada
-por cima. Duas direções anteriores foram descartadas por errar isso: "estúdio"
-(acumulava os vícios de tela gerada por IA — versalete em caixa alta acima de todo
-título, monoespaçada em rótulo, ponto médio colando metadados, preto falso, `→` no
-fim de link) e "azulejo baiano" (trocou aquilo por ornamento temático, que é ruído
-com sotaque).
+O princípio, em uma linha: **nada de padrão, textura ou enfeite**; o caráter vem de tipografia,
+espaço e hierarquia. Três execuções anteriores foram descartadas: "estúdio" (vícios de tela gerada
+por IA — versalete em caixa alta, monoespaçada em rótulo, ponto médio colando metadados, preto
+falso, `→` no fim de link), "azulejo baiano" (ornamento temático) e a própria v1.2–1.3 do oráculo
+(filete colorido na borda de todo cartão, ícones de glifo digitado, tudo em caixa com o mesmo raio).
 
-O cromo **não tem cor**: fundo grafite fosco, botão primário em osso sobre grafite,
-foco em osso. Cor existe só para identificar pilar (`--s-*`, dessaturados e
-terrosos) e marcar urgência (`--st-critical`). O escuro é o padrão; o claro é
-escolha explícita em `[data-theme="light"]`.
-
-Tipografia: **IBM Plex Sans** em tudo, com peso e tamanho fazendo a hierarquia.
-**IBM Plex Serif** aparece num único lugar — a frase de leitura no alto da visão
-geral (`.leitura`), o momento em que o painel fala. O resto é dado, e dado é sans.
+- **Tipografia**: **Newsreader** é a voz — título da página e das janelas, a leitura (`.leitura`),
+  as perguntas do Financeiro, o nome no perfil, a marca. **Funnel Sans** é todo o resto (dado,
+  número, interface). Dinheiro nunca em serifa. Número grande com algarismos proporcionais;
+  tabular (`.num`) só onde números se alinham em coluna.
+- **Cromo sem cor**: grafite com um fio de verde-louro, primário em osso, foco em osso. Cor só
+  identifica pilar (`--s-*`), distingue entradas × saídas nos gráficos (`--serie-entrada` azul,
+  `--serie-saida` bronze — verde × bronze reprova para daltonismo) e marca urgência
+  (`--st-critical`). O escuro é o padrão; o claro é escolha explícita em `[data-theme="light"]`.
+- **Ícones desenhados** por `UI.icone(nome)` (grade 24, traço 1,6). Glifo digitado só onde é dado do
+  usuário (o ícone de uma aba criada). Os avisos (`.notice .ic`) trocam o glifo que as páginas
+  escrevem por ícone via máscara no CSS; `UI.vazio` aceita nome de ícone ou os glifos antigos; e
+  `realcarBotoes` (em `iniciarPagina`, com um `MutationObserver`) troca o "+ " inicial de qualquer
+  `.btn` pelo ícone de mais — as páginas continuam escrevendo "+ Prazo".
+- **Sem filete na borda**: `.card.tinted` só define `--marca`; quem identifica pilar onde eles se
+  misturam é o ícone (`.pillar-ic` na visão geral). Toda faixa `.g3`/`.g4` de `.stat-value` vira
+  uma faixa contígua (1px entre as peças) sozinha, por `:has()` no CSS.
+- **Raio por hierarquia** (janela 18, superfície 14, controle 8, selo em pílula), **abas
+  sublinhadas** (`.abas`) para seções irmãs, **pílulas** (`.chip`) para filtro, **interruptor**
+  (`.switch`) para ligar/desligar.
+- **Movimento** (seção "Movimento" do `theme.css` + `UI.movimento` em `ui.js`, chamado por
+  `iniciarPagina` e pelo mesmo `MutationObserver` do `realcarBotoes`): curvas `--ease-*`, luz que
+  segue o ponteiro nos cartões (`--mx/--my`), destaque deslizante no menu (`.realce-nav`), nas
+  abas (`.indicador-abas`) e na escolha única (`.trilho-seg`). Só com mouse; nada com "reduzir
+  movimento". `UI.icone` marca cada SVG com `data-ico="<nome>"` (é o que gira o "+").
+- Metadados em frase ou com vírgula — nunca colados com " · " (só o título da aba do navegador
+  ainda usa).
 
 Números decimais saem por `UI.fmt.decimal` (8,2 — nunca `toFixed`, que escreve 8.2) e ordinais
 por `UI.fmt.ordinal` (nunca "6ºº"). `[hidden]` tem `display: none !important` no tema: sem isso,
-`el.hidden = true` não esconde nada que tenha `display` próprio (`.btn`, `.card`).
+`el.hidden = true` não esconde nada que tenha `display` próprio (`.btn`, `.card`). `.field input`
+exclui checkbox, radio e arquivo — sem o `:not`, o checkbox ganhava 100% de largura e empurrava o
+campo ao lado para fora (era o defeito das abas no perfil até a v1.3).
 
 No celular (≤ 900px), faixas de números `.g3`/`.g4` ficam 2 por linha, a barra lateral vira uma
-faixa rolável que se posiciona na aba atual, e a planilha de lançamentos (`table.sheet`) vira lista
-de cartões — data, categoria e "pago com" viram a linha `.so-celular` debaixo da descrição.
-
-Identidade de pilar é um **filete de 2px** na borda do cartão (`.card.tinted`,
-`.pillar`) — régua, não ornamento. Grupos afins se encostam num campo contíguo
-(`.campo`) separado por 1px, em vez de flutuarem soltos com sombra.
+faixa rolável (foto do perfil primeiro) que se posiciona na aba atual, e a planilha de lançamentos
+(`table.sheet`) vira lista de cartões — data, categoria e "pago com" viram a linha `.so-celular`
+debaixo da descrição.
 
 ### Cores de dados
 
-A paleta categórica é validada para daltonismo (Financeiro = verde-água, Faculdade = azul,
-Projetos = laranja). Cores de status (vermelho/amarelo/verde) são reservadas para urgência e nunca
+As cores dos pilares e o par entradas × saídas foram **validados com o script da skill de dataviz**
+(faixa de luminosidade, croma ≥ 0,10, separação para daltonismo e piso de visão normal ΔE ≥ 15,
+nos dois temas). Cores de status (vermelho/amarelo/verde) são reservadas para urgência e nunca
 usadas como série. Toda barra leva o valor escrito ao lado — a cor nunca é o único canal de leitura.
-Ao mexer em gráficos, mantenha essas regras.
+Ao mexer em cores, rode o validador de novo; não escolha a olho.
 
 ## Funcionalidades
 

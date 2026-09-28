@@ -38,9 +38,84 @@
       ? `${Math.round((feitos / passos.length) * 100)}% do planejado`
       : "Quebre os projetos em etapas";
 
+    const L = Leituras.projetos();
+    document.getElementById("leitura").innerHTML = L.frase;
+    renderRenda(L);
+    UI.renderNotas(document.getElementById("notas"), L.notas, lista.length
+      ? "Nada fora do comum. Com recebimentos, custos e horas por semana, o Delfos compara o que cada projeto paga."
+      : "Quando houver projetos, o Delfos aponta aqui prazos, próximos passos e quanto cada um rende por hora.");
+    UI.renderPerguntas(document.getElementById("sec-perguntas"), document.getElementById("perguntas"), "projetos", perguntas(L), render);
+
     renderProjetos();
     renderOportunidades();
     UI.montarLayout("projetos");
+  }
+
+  const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+
+  function renderRenda(L) {
+    const mesNome = MESES[Number(UI.mesAtual().slice(5)) - 1];
+    document.getElementById("titulo-renda").textContent = `Recebido por projeto em ${mesNome}`;
+    const box = document.getElementById("renda-projetos");
+    if (!L.porProjeto.length) box.innerHTML = `<p class="card-note" style="margin:0;">Nenhum projeto ativo.</p>`;
+    else UI.barrasComMeta(box, L.porProjeto.map((x) => ({
+      nome: x.p.nome, href: `projeto.html?id=${encodeURIComponent(x.p.id)}`,
+      valor: x.recMes, meta: x.estim || null,
+      sub: [
+        x.estim ? `<span>estimado ${fmt.moeda(x.estim)}</span>` : "<span>sem renda estimada</span>",
+        x.valorHora ? `<span>${fmt.moeda(x.valorHora)} por hora</span>` : "",
+        x.custoMes ? `<span>custos ${fmt.moeda(x.custoMes)}</span>` : "",
+      ].join(""),
+    })), { cor: "var(--s-projetos)", rotuloMeta: "renda estimada" });
+
+    const meses = document.getElementById("renda-meses");
+    document.getElementById("meses-nota").textContent = L.meta ? "marca na sua meta mensal" : "";
+    UI.barrasComMeta(meses, L.meses.map((m) => ({
+      nome: `${MESES[Number(m.chave.slice(5)) - 1]}${m.chave.slice(0, 4) !== UI.mesAtual().slice(0, 4) ? ` de ${m.chave.slice(0, 4)}` : ""}`,
+      valor: m.valor, meta: L.meta || null,
+    })), { cor: "var(--s-projetos)", rotuloMeta: "meta mensal" });
+  }
+
+  function perguntas(L) {
+    const prefs = Store.estado().preferencias.projetos || {};
+    const q = [];
+    const feito = (msg) => { UI.toast(msg); render(); };
+    if (!projetos().length) return q;
+    if (prefs.metaMensal === null || prefs.metaMensal === undefined) {
+      q.push({
+        id: "metaMensal",
+        texto: "Quanto você quer ganhar por mês com projetos?",
+        apoio: `${L.estimado ? `Somando as estimativas, os projetos ativos dariam ${fmt.moeda(L.estimado)} por mês. ` : ""}Com uma meta, o Delfos mostra quanto falta a cada mês.`,
+        controle: () => UI.resposta.valor({ sugestao: L.estimado ? Math.round(L.estimado / 50) * 50 : "", rotulo: "Definir meta", aoSalvar: (v) => { Store.definirPreferencias({ projetos: { metaMensal: v } }); feito(`Meta de ${fmt.moeda(v)} por mês.`); } }),
+      });
+    }
+    if (prefs.horasDisponiveis === null || prefs.horasDisponiveis === undefined) {
+      q.push({
+        id: "horasDisponiveis",
+        texto: "Quantas horas por semana sobram para projetos, fora a faculdade?",
+        apoio: `${L.horas ? `Hoje os projetos ativos pedem ${fmt.decimal(L.horas, 0)} h por semana. ` : ""}O Delfos avisa quando os projetos passarem do tempo que você tem.`,
+        controle: () => UI.resposta.valor({ sugestao: 10, rotulo: "Salvar", passo: "1", min: 1, max: 80, sufixo: "h", aoSalvar: (v) => { Store.definirPreferencias({ projetos: { horasDisponiveis: Math.round(v) } }); feito(`${Math.round(v)} h por semana para projetos.`); } }),
+      });
+    }
+    const semEstim = L.porProjeto.find((x) => !x.estim);
+    if (semEstim) {
+      q.push({
+        id: `estimativa:${semEstim.p.id}`,
+        texto: `Quanto ${semEstim.p.nome} deve render por mês?`,
+        apoio: "Um valor aproximado basta; serve para comparar com o que de fato entra.",
+        controle: () => UI.resposta.valor({ rotulo: "Salvar", aoSalvar: (v) => { Store.atualizar("projetos", semEstim.p.id, { rendaEstimada: v }); feito("Estimativa salva."); } }),
+      });
+    }
+    const semHoras = L.porProjeto.find((x) => !(Number(x.p.horasSemana) > 0));
+    if (semHoras) {
+      q.push({
+        id: `horas:${semHoras.p.id}`,
+        texto: `Quantas horas por semana ${semHoras.p.nome} toma?`,
+        apoio: "Com as horas, o Delfos calcula quanto o projeto paga por hora e compara com os outros.",
+        controle: () => UI.resposta.valor({ rotulo: "Salvar", passo: "0.5", min: 0.5, max: 80, sufixo: "h", aoSalvar: (v) => { Store.atualizar("projetos", semHoras.p.id, { horasSemana: v }); feito("Horas salvas."); } }),
+      });
+    }
+    return q;
   }
 
   function renderProjetos() {
@@ -175,7 +250,7 @@
         <span class="grow">
           <span class="title">${fmt.escape(o.descricao)}</span>
           <span class="meta">${[o.potencial && `retorno: ${o.potencial}`, o.esforco && `esforço: ${o.esforco}`]
-            .filter(Boolean).map(fmt.escape).join(" · ") || "sem detalhes"}</span>
+            .filter(Boolean).map(fmt.escape).join(", ") || "sem detalhes"}</span>
         </span>
         <span class="row-actions">
           <button class="btn ghost sm" data-virar>Virar projeto</button>

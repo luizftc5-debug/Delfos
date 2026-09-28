@@ -39,14 +39,14 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 
 | Onde | O que dá para fazer |
 |---|---|
-| **Visão geral** | Saldo, alertas de atraso e de semana cheia, agenda dos próximos 30 dias, leitura automática da situação |
-| **Financeiro** | Lançar receitas e despesas (dizendo de qual conta ou cartão saíram), ver gastos por categoria e por mês, acompanhar metas, **importar o extrato do banco** (.ofx/.csv) para não esquecer de lançar |
+| **Visão geral** | Saldo, alertas de atraso e de semana cheia, agenda dos próximos 30 dias, leitura automática da situação e **o que o Delfos notou** em todas as abas |
+| **Financeiro** | O mês lido em voz alta: quanto entrou, saiu e sobrou, **para onde foi o dinheiro**, o **ritmo do mês** comparado ao anterior, gastos fixos e assinaturas detectados, o que falta pagar, metas com "Guardar", e **perguntas** que deixam a leitura do seu jeito (limite do mês, quanto guardar, dia da renda). Também lançar entradas e saídas e **importar o extrato do banco** (PDF, .ofx ou .csv) para não esquecer de lançar |
 | **Contas e cartões** | Cadastrar contas com saldo, cadastrar cartões com fechamento e vencimento. Cada uma abre numa **página própria**, com saldo/fatura, gastos por categoria só dela e a lista de lançamentos |
 | **Investimentos** | Renda fixa, ações, fundos, cripto — o que já aplicou e quanto vale hoje, com rentabilidade calculada e distribuição por tipo |
-| **Faculdade** | Disciplinas, prazos e entregas. Cada disciplina abre em **página própria**, com avaliações e notas, prazos, materiais e resumos — em materiais e resumos dá para **anexar documentos** (PDF, slides, fotos) ou **importar do Google Drive** |
-| **Projetos** | Só iniciativas pessoais que geram renda. Cada projeto abre em **página própria**, com ficha completa, etapas, recebimentos, custos, documentos e anotações |
-| **Pessoal** | Consultas, tarefas e recados que não são financeiro, faculdade nem projeto — ex.: consulta médica, levar o carro à revisão |
-| **Suas abas** | Abas que você mesmo cria, com nome, ícone, cor e um modelo de partida (Compromissos, Tarefas, Hábitos, Coleção, Registros com valor, Do zero) — ex.: Academia, Leituras, Igreja. Depois, em "Ajustes da aba", dá pra adicionar seus próprios campos |
+| **Faculdade** | Leitura do semestre, **próximas quatro semanas** lado a lado, médias por disciplina com a média mínima marcada, avisos (prova sem resumo, semana cheia) e perguntas (média para passar, horas de estudo). Disciplinas, prazos e entregas. Cada disciplina abre em **página própria**, com avaliações e notas, prazos, materiais e resumos — em materiais e resumos dá para **anexar documentos** (PDF, slides, fotos) ou **importar do Google Drive** |
+| **Projetos** | Leitura do mês, **recebido × estimado** por projeto, **quanto cada um paga por hora**, últimos seis meses, meta mensal. Só iniciativas pessoais que geram renda. Cada projeto abre em **página própria**, com ficha completa, etapas, recebimentos, custos, documentos e anotações |
+| **Pessoal** | Consultas, tarefas e recados que não são financeiro, faculdade nem projeto — ex.: consulta médica, levar o carro à revisão. Linha do tempo (atrasados, hoje, esta semana…), filtro por tipo e aviso quando cai no mesmo dia de uma prova |
+| **Suas abas** | Abas que você mesmo cria: digite o nome e o Delfos (com IA, quando ligada) monta ícone, cor, campos, meta e agrupamento para aquele assunto — ex.: Plantões, Leituras, Corrida, Oração. Cada uma ganha leitura, números, resumo dos campos, meta do período e, para hábitos, marcação diária com sequência |
 
 > Trabalhos da faculdade e o TCC ficam em **Faculdade**, não em Projetos.
 
@@ -59,17 +59,58 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 
 Excluiu algo sem querer? O aviso que aparece embaixo traz **Desfazer**.
 
+### O Financeiro, mês a mês
+
+A aba abre com uma frase que resume o mês — quanto entrou, quanto saiu, quanto sobrou e o que mais
+pesou. As setas ao lado do mês (‹ setembro de 2026 ›) mudam tudo o que está abaixo para outro mês.
+
+- **Perguntas do Delfos**: duas perguntas curtas por vez (quanto quer gastar por mês, quanto quer
+  guardar, em que dia a renda cai, quais gastos são essenciais, se um gasto repetido é fixo).
+  Responda com um toque; "Agora não" esconde a pergunta por duas semanas. Mudou de ideia? O botão
+  **Limites e preferências**, no alto, mostra e edita todas as respostas — inclusive um limite para
+  cada categoria.
+- **Para onde foi o dinheiro**: toque numa categoria para ver só os lançamentos dela na planilha.
+- **Ritmo do mês**: a linha do gasto somado dia a dia, contra a do mês anterior. Passe o dedo (ou o
+  mouse) para ver o valor de cada dia.
+- **A pagar**: o que está marcado como pendente e as faturas abertas. "Pago" resolve com um toque.
+- **Metas**: **Guardar** soma o que você acabou de separar e diz quanto falta.
+- **Na planilha**, cada lançamento tem **repetir hoje** (a mesma conta de novo, com a data de hoje —
+  bom para gasto que se repete) e um "pendente" que vira pago ao toque.
+
+### Gastos fixos
+
+Em **Financeiro → Fixos e assinaturas → + Gasto fixo**, cadastre o que se repete todo mês: aluguel,
+mensalidade, plano de celular, Spotify. Diga o valor, o dia do vencimento e de qual conta ou cartão
+sai. A partir daí o Delfos lança sozinho, todo mês, e o gasto aparece em **A pagar** até ser pago
+(botão **Pago**). Enquanto está a pagar, ele conta na leitura do mês, mas não mexe no saldo da conta.
+O Delfos também lista os gastos que ele viu se repetir, com o botão **Cadastrar**.
+
+**Ao importar o extrato, o gasto fixo não é contado duas vezes.** Se o extrato traz a cobrança do
+aluguel, ela aparece na revisão com o selo **fixo: Aluguel** e, ao importar, só confirma o pagamento
+(com o valor e a data que o banco mostrou) em vez de criar outro gasto. Conta que muda de valor e
+vem com outro nome no banco (a luz como "COELBA ENERGIA") pode não ser reconhecida da primeira
+vez: escolha **É gasto fixo? → Conta de luz** naquela linha, e o Delfos aprende o nome para os
+próximos meses. Se o selo errar, toque nele para **lançar como novo**.
+
 ### Importar o extrato do banco
 
-Esquece de lançar? Em **Financeiro → Importar extrato**, exporte o extrato pelo app do seu banco
-(a maioria oferece .ofx/.qfx; se não tiver, .csv também serve) e importe aqui. **Nenhuma senha de
+Esquece de lançar? Em **Financeiro → Importar extrato**, baixe o extrato ou a fatura pelo app do
+seu banco e importe aqui: **o PDF de sempre** serve, e .ofx/.qfx ou .csv também. **Nenhuma senha de
 banco entra no Delfos** — o arquivo é só lido neste navegador, você confere cada linha antes de
 qualquer coisa ser salva, e pode cancelar a qualquer momento.
 
-1. No app do banco, procure por algo como "Exportar extrato" ou "Extrato para Excel/OFX".
+1. No app do banco, baixe o extrato do período ou a fatura do cartão em PDF (ou "Exportar extrato",
+   "Extrato para Excel/OFX").
 2. No Delfos, escolha de qual conta ou cartão é aquele extrato e selecione o arquivo.
-3. Se for .csv, confirme qual coluna é data, descrição e valor (o Delfos tenta adivinhar sozinho).
-4. Revise a lista: o Delfos já tenta acertar a categoria pelo que você categorizou antes, e avisa
+3. Se o PDF tiver senha (muitos bancos usam os primeiros dígitos do CPF), o Delfos pede; a senha só
+   abre o arquivo ali e não é guardada. Se for .csv, confirme qual coluna é data, descrição e valor.
+4. No PDF, o Delfos acha cada linha com data, descrição e valor, e deduz se é entrada ou saída pelo
+   sinal, pela coluna de saldo, pela seção ("Entradas"/"Saídas") ou, na fatura, tratando tudo como
+   compra e o negativo como estorno. Data e valor ficam editáveis na revisão, porque PDF não tem
+   colunas de verdade; o que ele não conseguiu decidir vem marcado **confira**, e o pagamento da
+   fatura anterior vem desmarcado (**pagamento?**), para não contar duas vezes. PDF que é foto ou
+   digitalização não tem texto para ler: nesse caso use o .ofx/.csv.
+5. Revise a lista: o Delfos já tenta acertar a categoria pelo que você categorizou antes, e avisa
    quando um lançamento parece repetido (algo parecido já lançado perto da mesma data) — essas
    linhas vêm desmarcadas, mas dá para marcar se for engano. Ajuste o que quiser e confirme.
 
@@ -104,20 +145,21 @@ Na lista de projetos, o cartão continua mostrando o resumo e a **próxima etapa
 
 ### Seu perfil e os ajustes do painel
 
-Clique no seu nome, no alto da barra lateral, para abrir o cartão de perfil. **É o único lugar de
-configuração** — tema e backup ficam ali dentro, junto com sua ficha.
+Clique na sua foto e nome, **no pé da barra lateral**, para abrir o cartão de perfil. **É o único
+lugar de configuração**, dividido em três abas: **Sobre você** (sua ficha), **Painel** (tema e
+quais abas aparecem) e **Conta e dados** (sincronização, backup, refazer a configuração, sair).
 
 - **Editar perfil** abre um formulário em partes: quem você é (nome, data de nascimento, pronomes,
   telefone, e-mail, cidade), ocupação (o que você faz e o momento — estudo, trabalho, os dois),
   vida acadêmica (só aparece para quem estuda: curso, instituição, semestre, matrícula, início do
   curso) e dois textos livres — sobre você e seus objetivos do momento. Só o que estiver preenchido
   aparece na ficha; a idade é calculada sozinha a partir da data de nascimento.
-- **Enviar foto** troca as iniciais por uma foto sua. A imagem é recortada e reduzida antes de
-  salvar, então ocupa poucos KB.
-- **Abas do painel**: ligue ou desligue Pessoal, Financeiro, Faculdade e Projetos, e renomeie cada
-  uma à vontade — útil se alguma não fizer sentido para você. Desligar não apaga nada, só tira da
-  barra lateral; dá para religar a qualquer momento.
-- **Tema do painel**: claro ou escuro. Muda na hora.
+- **Toque na foto** (ou nas iniciais) para trocar por uma foto sua. A imagem é recortada e reduzida
+  antes de salvar, então ocupa poucos KB.
+- **Abas do painel**: ligue ou desligue Pessoal, Financeiro, Faculdade e Projetos pelo interruptor, e
+  renomeie cada uma à vontade — útil se alguma não fizer sentido para você. Desligar não apaga nada,
+  só tira da barra lateral; dá para religar a qualquer momento.
+- **Tema**: claro ou escuro, escolhido pela amostra. Muda na hora.
 - **Backup e dados**: exportar, importar ou apagar tudo.
 - **Refazer configuração inicial**: reabre o assistente de boas-vindas (veja abaixo), já preenchido
   com o que você tinha salvo.
@@ -149,23 +191,33 @@ há algo não salvo. `Ctrl + S` (ou `Cmd + S`) salva na hora.
 
 ### Criar suas próprias abas
 
-O botão **＋ Nova aba**, embaixo da lista da barra lateral, cria uma aba sua: escolha nome, um dos
-vários **ícones** disponíveis, cor e um **modelo** de partida — Compromissos (o formato de sempre:
-data, tipo, local), Tarefas, Hábitos/rotina, Coleção (livros, filmes, cursos), Registros com valor,
-Academia (treino) ou Do zero. O modelo só decide os campos com que a aba começa; dá para ajustar
-depois.
+O botão **＋ Nova aba**, embaixo da lista da barra lateral, abre o criador. **Só digite o nome** —
+"Plantões", "Leituras", "Corrida", "Remédios", "Viagem a Lisboa" — e o Delfos monta a aba para
+esse assunto enquanto você digita: ícone, cor, o que cada registro é ("plantão", "livro"), os campos
+que valem a pena (setor e preceptor num plantão; autor e situação num livro), uma meta, como agrupar
+a lista e alguns exemplos para começar. À direita aparece a prévia de como a aba vai ficar. Tudo dá
+para mudar antes de criar: desligue um campo, troque a cor, marque só os exemplos que quiser.
 
-Abas dos modelos Compromissos, Tarefas e Registros com valor **entram na agenda dos próximos 30
-dias e nos alertas de semana cheia** da visão geral, junto com os prazos da faculdade, os deadlines
-dos projetos e os compromissos pessoais. Hábitos e Coleção ficam de fora — não fazem sentido como
-prazo.
+- **Com IA**: se as contas estiverem ligadas e o servidor tiver a chave da IA (ver
+  [backend/README.md](backend/README.md), "Como ligo a IA"), um segundo depois de você parar de
+  digitar o Claude refaz a sugestão sob medida para aquele nome, levando em conta seu curso e sua
+  cidade. Se você já tinha mexido em algo, ele não passa por cima: aparece o botão **Usar sugestão
+  da IA**. Só o nome da aba, sua ocupação e sua cidade vão para a IA — nada do que está cadastrado.
+- **Sem IA**: a sugestão rápida funciona no próprio aparelho, sem internet, para uns 30 assuntos
+  comuns; para um nome desconhecido, monta uma lista de tarefas com prioridade.
 
-Na página da aba, em **Ajustes da aba**, dá para:
+Abas **com data** entram na agenda dos próximos 30 dias e nos alertas de semana cheia da visão
+geral. Abas de **hábito** (oração, idioma, remédio diário) ganham um botão **Hoje** por item, os
+últimos sete dias e a sequência. Abas de coleção (livros, filmes) ficam fora da agenda.
 
-- **Editar aba**: renomear, trocar ícone e cor. Não mexe no que já está cadastrado.
-- **Campos desta aba**: adicionar, editar, excluir e reordenar os campos próprios dos itens — texto,
-  texto longo, data, número, valor em R$, lista de opções ou sim/não. Marque "mostrar na listagem"
-  para um campo aparecer direto na lista, sem precisar abrir o item.
+Na página da aba:
+
+- A **leitura** no alto diz como está a aba; os números, a **meta do período** e o resumo de cada
+  campo (quantos em cada situação, soma de km, média de nota) vêm logo abaixo.
+- **Perguntas do Delfos** oferecem o que falta: definir uma meta, agrupar a lista por um campo.
+- **Personalizar**: muda nome, ícone, cor, descrição, meta e agrupamento, e sugere campos novos (com
+  IA, se ligada) — só acrescenta, nunca apaga o que já existe.
+- **Campos desta aba**: adicionar, editar, excluir e reordenar os campos um a um.
 - **Excluir esta aba**: some da barra e apaga os itens junto.
 
 ### Academia
@@ -226,8 +278,8 @@ com os prazos da faculdade e os deadlines dos projetos.
 No próprio navegador (localStorage) — nada é enviado para lugar nenhum. Consequência prática: os
 dados ficam **naquele navegador, naquele computador**.
 
-Para backup ou para usar em outro aparelho, clique no **seu nome** na barra lateral e depois em
-**Backup e dados**:
+Para backup ou para usar em outro aparelho, clique no **seu nome** (pé da barra lateral), abra
+**Conta e dados** e depois **Backup e dados**:
 
 - **Exportar** gera um arquivo `.json` com tudo, inclusive os documentos anexados
 - **Importar** restaura esse arquivo em qualquer navegador, anexos e todos
@@ -265,6 +317,8 @@ dashboard/
   projeto.html         projeto.js        página de um projeto
   pessoal.html         pessoal.js        compromissos pessoais
   pilar.html           pilar.js          página de uma aba criada por você
+  abas.js                                criador/editor de abas (sugestão local e IA)
+  leituras.js                            leitura e notas de Faculdade, Projetos, Pessoal e abas próprias
   resumo.html          resumo.js         editor de texto dos resumos
   store.js                               dados: localStorage, CRUD e backup
   arquivos.js                            anexos: IndexedDB (PDF, slides, fotos)

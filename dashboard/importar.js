@@ -237,6 +237,191 @@ const Importar = (() => {
     return negativo ? -n : n;
   }
 
+  /* --------------------------------- PDF ------------------------------------
+     PDF não tem "linhas de dados": tem pedaços de texto soltos, cada um numa
+     posição da página. lerPDF (no navegador, com o pdf.js da Mozilla em
+     vendor/pdfjs) remonta as linhas pela altura de cada pedaço; daqui para
+     baixo é só texto, e dá para testar sem navegador.
+
+     Não existe um formato de extrato em PDF — cada banco desenha o seu. Em
+     vez de um leitor por banco (que quebraria na primeira mudança de layout),
+     o interpretador procura o que todo extrato tem: uma data, uma descrição
+     e um valor em reais na mesma linha. O resto é dedução, nesta ordem de
+     confiança, para decidir se é entrada ou saída:
+       1. sinal escrito no valor ("-45,90", "45,90 D", "+ 150,00", "45,90-");
+       2. coluna de saldo: se saldo anterior − valor = saldo da linha, saiu;
+       3. seção do extrato ("Total de entradas" / "Saídas" / "Débitos"…);
+       4. fatura de cartão: tudo é compra, menos o que vier negativo;
+       5. palavras da descrição ("recebido", "estorno" × "compra", "enviado").
+     Quando só a 5 decide, a linha vai marcada "confira" na revisão.
+     Nada entra sem a revisão, onde data, valor, tipo e descrição são editáveis. */
+
+  const MESES_PDF = { jan: 1, fev: 2, mar: 3, abr: 4, mai: 5, jun: 6, jul: 7, ago: 8, set: 9, out: 10, nov: 11, dez: 12 };
+  const NOMES_MES = "jan(?:eiro)?|fev(?:ereiro)?|mar(?:[cç]o)?|abr(?:il)?|mai(?:o)?|jun(?:ho)?|jul(?:ho)?|ago(?:sto)?|set(?:embro)?|out(?:ubro)?|nov(?:embro)?|dez(?:embro)?";
+  // Data no começo da linha: 15/09/2026, 15/09/26, 15/09, 15-09-2026, 15 SET 2026, 15 set, 15 de setembro de 2026.
+  const RE_DATA_INICIO = new RegExp(
+    `^\\s*(?:(\\d{1,2})[/.\\-](\\d{1,2})(?:[/.\\-](\\d{2,4}))?|(\\d{1,2})(?:\\s+de)?\\s+(${NOMES_MES})\\.?(?:\\s+(?:de\\s+)?(\\d{4}))?)(?![\\d,])`, "i");
+  // Valor em reais no padrão brasileiro, com sinal ou D/C opcionais.
+  const RE_VALOR = /(?<![\d.,/])([-−+–]\s?)?(?:R\$\s?)?([-−–]\s?)?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})(?![\d])(\s?[-−–](?![\d])|\s?[DC](?![A-Za-zÀ-ú]))?/g;
+  const RE_IGNORAR = /\bsaldo\b|\bsubtotal\b|^\s*total\b|\btotal (?:de|da|do|geral|a pagar|desta|dispon)|\blimite\b|\bsaldo anterior\b|valor m[ií]nimo|pagamento m[ií]nimo|melhor data|\bvencimento\b.*\d{2}\/\d{2}|p[aá]gina \d+|\bcet\b|taxa de juros|encargos (?:m[aá]ximos|para o pr[oó]ximo)/i;
+  const RE_ENTRADA = /\brecebid|\bcr[eé]dito\b|\bdep[oó]sito|\bestorno|\brendimento|\bsal[aá]rio|\breembolso|\bdevolu[cç]|\bresgate|\bcashback|\bpix recebido|\btransfer[eê]ncia recebida|\bted recebida|\bentrada\b/i;
+  const RE_SAIDA = /\benviad|\bpagamento|\bpagto|\bcompra|\bd[eé]bito\b|\bsaque|\btarifa|\bboleto|\baplica[cç][aã]o|\bpix enviado|\btransfer[eê]ncia enviada|\bted enviada|\bsa[ií]da\b|\biof\b|\banuidade|\bjuros\b/i;
+  const RE_PAGAMENTO_FATURA = /pagamento (?:recebido|de fatura|da fatura|efetuado)|pagto fatura|pagamento em \d{2}\/\d{2}/i;
+
+  function lerValoresPDF(linha) {
+    const achados = [];
+    RE_VALOR.lastIndex = 0;
+    let m;
+    while ((m = RE_VALOR.exec(linha))) {
+      const numero = Number(`${m[3].replace(/\./g, "")}.${m[4]}`);
+      const antes = (m[1] || "") + (m[2] || "");
+      const depois = (m[5] || "").trim().toUpperCase();
+      let sinal = 0;
+      if (/[-−–]/.test(antes) || /[-−–]/.test(depois) || depois === "D") sinal = -1;
+      else if (antes.includes("+") || depois === "C") sinal = 1;
+      achados.push({ numero, sinal, inicio: m.index, fim: m.index + m[0].length });
+    }
+    return achados;
+  }
+
+  function anoCom4(a) {
+    if (!a) return null;
+    const n = Number(a);
+    return a.length === 2 ? (n <= 69 ? 2000 + n : 1900 + n) : n;
+  }
+
+  /** Ano de referência: o que mais aparece em datas completas do documento (período do extrato). */
+  function anoDoDocumento(linhas, hoje = new Date()) {
+    const contagem = {};
+    const re = new RegExp(`\\b\\d{1,2}[/.\\-]\\d{1,2}[/.\\-](\\d{4})\\b|\\b(?:${NOMES_MES})\\.?(?:\\s+de)?\\s+(\\d{4})\\b|\\b\\d{2}\\/(\\d{4})\\b`, "gi");
+    linhas.forEach((l) => { let m; re.lastIndex = 0; while ((m = re.exec(l))) { const a = Number(m[1] || m[2] || m[3]); if (a > 1990 && a < 2100) contagem[a] = (contagem[a] || 0) + 1; } });
+    const [melhor] = Object.entries(contagem).sort((a, b) => b[1] - a[1] || b[0] - a[0]);
+    if (melhor) return Number(melhor[0]);
+    // Sem data completa: um ano solto no cabeçalho ("Movimentação 2025").
+    const solto = linhas.slice(0, 8).join(" ").match(/\b(19[9]\d|20\d{2})\b/);
+    return solto ? Number(solto[1]) : hoje.getFullYear();
+  }
+
+  /** Data no começo da linha → { iso, resto } ou null. Sem ano, usa `ano`. */
+  function dataNoInicio(linha, ano) {
+    const m = RE_DATA_INICIO.exec(linha);
+    if (!m) return null;
+    let d, mes, a;
+    if (m[1]) { d = Number(m[1]); mes = Number(m[2]); a = anoCom4(m[3]); }
+    else { d = Number(m[4]); mes = MESES_PDF[semAcento(m[5]).slice(0, 3).toLowerCase()]; a = m[6] ? Number(m[6]) : null; }
+    if (!mes || mes > 12 || d < 1 || d > 31) return null;
+    a = a || ano;
+    const iso = `${a}-${String(mes).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    if (Number.isNaN(Date.parse(iso))) return null;
+    return { iso, resto: linha.slice(m[0].length), semAno: !m[3] && !m[6], mes };
+  }
+
+  function limparDescricao(s) {
+    return linhaUnica(String(s || "")
+      .replace(/R\$/g, " ")
+      .replace(/\s[DC]\s*$/, " ")
+      .replace(/^[\s\-–—|:;,.]+|[\s\-–—|:;,.]+$/g, "")
+      .replace(/\s{2,}/g, " "));
+  }
+
+  /**
+   * Linhas de texto de um extrato em PDF → { linhas, ignoradas, fatura }.
+   * Cada linha devolvida: { data, descricao, valor, tipo, incerto?, duvidosa? }.
+   */
+  function parseTextoExtrato(textoLinhas, { hoje = new Date() } = {}) {
+    const linhas = textoLinhas.map((l) => String(l || "").replace(/ /g, " ")).filter((l) => l.trim());
+    const tudo = linhas.join("\n");
+    const fatura = /\bfatura\b/i.test(tudo) && /cart[aã]o|vencimento/i.test(tudo) && !/\bextrato\b.*\bconta\b/i.test(tudo);
+    const ano = anoDoDocumento(linhas, hoje);
+    // Extrato que atravessa o ano (dez → jan) sem ano nas datas: mês maior que o
+    // último mês visto na mesma leitura volta um ano.
+    const mesesComAno = new Set();
+
+    const saida = [];
+    let ignoradas = 0;
+    let dataAtual = null;
+    let secao = 0; // +1 entradas, −1 saídas, 0 desconhecida
+    let saldoAnterior = null;
+    let ultima = null; // última linha adicionada, para juntar descrição que quebra em duas
+
+    for (const bruta of linhas) {
+      const linha = bruta.trim();
+      const sem = semAcento(linha).toLowerCase();
+
+      // Seções (Nubank, Inter, C6…): "Total de entradas", "Saídas", "Créditos".
+      if (/^(?:total de )?(?:entradas|cr[eé]ditos|recebimentos|dep[oó]sitos)\b/.test(sem) || /\btotal de entradas\b/.test(sem)) secao = 1;
+      if (/^(?:total de )?(?:sa[ií]das|d[eé]bitos|pagamentos e compras|gastos|despesas)\b/.test(sem) || /\btotal de saidas\b/.test(sem)) secao = -1;
+
+      const data = dataNoInicio(linha, ano);
+      let resto = data ? data.resto : linha;
+      if (data) {
+        let iso = data.iso;
+        if (data.semAno && mesesComAno.size) {
+          const maior = Math.max(...mesesComAno);
+          if (data.mes > maior + 6) iso = `${ano - 1}${iso.slice(4)}`;
+        }
+        mesesComAno.add(data.mes);
+        dataAtual = iso;
+      }
+
+      const valores = lerValoresPDF(resto);
+
+      if (RE_IGNORAR.test(linha)) {
+        // Linha de saldo: não é lançamento, mas o número serve para deduzir o sinal das próximas.
+        if (/\bsaldo\b/i.test(linha) && valores.length) {
+          const v = valores[valores.length - 1];
+          saldoAnterior = v.numero * (v.sinal || 1);
+        }
+        ultima = null;
+        continue;
+      }
+
+      if (!valores.length) {
+        // Sem valor: pode ser o resto da descrição da linha anterior (Nubank quebra
+        // "Transferência enviada pelo Pix" / "FULANO - CPF…" em duas).
+        if (ultima && !data && linha.length < 90 && !/^\d+$/.test(linha)) {
+          const extra = limparDescricao(linha);
+          if (extra && (ultima.descricao + extra).length <= 110) ultima.descricao = `${ultima.descricao} — ${extra}`;
+          ultima = null; // no máximo uma linha de complemento
+        }
+        continue;
+      }
+      if (!dataAtual) { ignoradas++; continue; }
+
+      // Com duas quantias ou mais, a primeira é o lançamento e a última, o saldo.
+      const v = valores[0];
+      const saldoLinha = valores.length >= 2 ? valores[valores.length - 1] : null;
+      const descricao = limparDescricao(resto.slice(0, v.inicio) + " " + resto.slice(v.fim, saldoLinha ? saldoLinha.inicio : undefined)) || "Lançamento do extrato";
+      if (v.numero === 0) { ignoradas++; continue; }
+
+      // Na fatura o sinal escrito é do ponto de vista do cartão: negativo é
+      // crédito (estorno, pagamento); sem sinal, é compra.
+      let sinal = fatura ? (v.sinal < 0 ? 1 : -1) : v.sinal;
+      let incerto = false;
+      if (!sinal && saldoLinha && saldoAnterior !== null) {
+        const saldo = saldoLinha.numero * (saldoLinha.sinal || 1);
+        if (Math.abs(saldoAnterior - v.numero - saldo) < 0.011) sinal = -1;
+        else if (Math.abs(saldoAnterior + v.numero - saldo) < 0.011) sinal = 1;
+      }
+      if (!sinal && secao) sinal = secao;
+      if (!sinal && fatura) sinal = -1;
+      if (!sinal) {
+        const ent = RE_ENTRADA.test(descricao), sai = RE_SAIDA.test(descricao);
+        sinal = ent && !sai ? 1 : -1;
+        incerto = ent === sai; // nenhuma pista (ou pistas contraditórias)
+      }
+      const tipo = sinal > 0 ? "receita" : "despesa";
+      const item = { data: dataAtual, descricao, valor: v.numero, tipo };
+      if (incerto) item.incerto = true;
+      if (fatura && RE_PAGAMENTO_FATURA.test(descricao)) item.duvidosa = true; // pagamento da fatura anterior já saiu da conta
+      if (saldoLinha) saldoAnterior = saldoLinha.numero * (saldoLinha.sinal || 1);
+      else if (saldoAnterior !== null) saldoAnterior += sinal * v.numero;
+      saida.push(item);
+      ultima = item;
+    }
+    return { linhas: saida, ignoradas, fatura };
+  }
+
   /* --------------------------- Categoria e duplicata ------------------------ */
 
   /**
@@ -275,6 +460,53 @@ const Importar = (() => {
   }
 
   /**
+   * Gastos fixos: o Delfos já lança cada um todo mês (Financas.gerarFixos).
+   * Quando o extrato traz a cobrança de verdade, ela não pode virar um
+   * segundo lançamento — vira a confirmação do que já existe (valor e data
+   * reais, pago). Esta função decide qual linha do extrato é qual fixo.
+   *
+   * Candidatos: lançamentos de fixo ainda não conferidos com um extrato.
+   * Uma linha de despesa casa com um candidato quando é do mesmo mês de
+   * competência (ou até 10 dias da data prevista) e:
+   *   - o valor bate (até 2% ou R$ 1 de diferença), ou
+   *   - a descrição tem uma palavra em comum e o valor está a até 35% —
+   *     conta de luz e de água mudam de um mês para o outro.
+   * Cada candidato casa com uma linha só, a de maior pontuação.
+   * Devolve um array paralelo a `linhas`: o id do candidato ou null.
+   */
+  function casarFixos(linhas, candidatos) {
+    const palavras = (s) => new Set(semAcento(s).toLowerCase().match(/[a-z]{4,}/g) || []);
+    const pares = [];
+    linhas.forEach((l, i) => {
+      if (l.tipo !== "despesa") return;
+      const pl = palavras(l.descricao);
+      candidatos.forEach((c) => {
+        const cv = Number(c.valor) || 0;
+        if (cv <= 0) return;
+        const dias = Math.abs(Date.parse(l.data) - Date.parse(c.data)) / 86400000;
+        const mesmoMes = (l.data || "").slice(0, 7) === c.competencia;
+        if (!mesmoMes && dias > 10) return;
+        const dif = Math.abs(l.valor - cv);
+        const rel = dif / cv;
+        // Nomes que o banco já usou para este fixo (aprendidos em importações anteriores) também valem.
+        const nome = [c.descricao, ...(c.nomesExtrato || [])].some((n) => [...palavras(n)].some((p) => pl.has(p)));
+        const valorBate = dif <= 1 || rel <= 0.02;
+        if (!valorBate && !(nome && rel <= 0.35)) return;
+        pares.push({ i, id: c.id, pontos: (nome ? 2 : 0) + (valorBate ? 1 : 0) + (1 - rel) - dias / 100 });
+      });
+    });
+    pares.sort((a, b) => b.pontos - a.pontos);
+    const resultado = linhas.map(() => null);
+    const usados = new Set();
+    pares.forEach((p) => {
+      if (resultado[p.i] !== null || usados.has(p.id)) return;
+      resultado[p.i] = p.id;
+      usados.add(p.id);
+    });
+    return resultado;
+  }
+
+  /**
    * Mesmo valor (na mesma direção) a até 3 dias de distância de um
    * lançamento que já existe → provavelmente já foi lançado à mão antes de a
    * pessoa lembrar de importar o extrato. Só um alerta: a pessoa decide,
@@ -292,11 +524,80 @@ const Importar = (() => {
   return {
     extensao, lerTexto, parseOFX, parseCSV, sugerirMapeamento, aplicarMapeamento,
     normalizarData, normalizarValor, indiceCategoria, sugerirCategoria, provavelDuplicata,
+    parseTextoExtrato, lerValoresPDF, casarFixos,
   };
 })();
 
 // Só no navegador (o módulo da UI usa DOM, Store e UI — precisa deles no escopo global).
 if (typeof document !== "undefined") {
+  /**
+   * PDF → linhas de texto, no próprio navegador (pdf.js em vendor/pdfjs, só
+   * baixado quando alguém escolhe um PDF). Erros com `motivo`:
+   * "senha" (precisa de senha), "senhaErrada", "semTexto" (PDF de imagem).
+   */
+  Importar.lerPDF = async (file, senha) => {
+    const base = new URL("vendor/pdfjs/", document.baseURI).href;
+    const pdfjs = await import(base + "pdf.min.mjs");
+    pdfjs.GlobalWorkerOptions.workerSrc = base + "pdf.worker.min.mjs";
+    const dados = new Uint8Array(await file.arrayBuffer());
+    const tarefa = pdfjs.getDocument({ data: dados, password: senha || undefined, isEvalSupported: false, disableFontFace: true, useSystemFonts: false });
+    let doc;
+    try {
+      doc = await tarefa.promise;
+    } catch (e) {
+      tarefa.destroy();
+      if (e?.name === "PasswordException") {
+        const err = new Error(senha ? "Senha incorreta." : "Este PDF tem senha.");
+        err.motivo = senha ? "senhaErrada" : "senha";
+        throw err;
+      }
+      const err = new Error("Não consegui abrir esse PDF. Ele pode estar corrompido.");
+      err.motivo = "invalido";
+      throw err;
+    }
+    const linhas = [];
+    let caracteres = 0;
+    for (let n = 1; n <= Math.min(doc.numPages, 60); n++) {
+      const pagina = await doc.getPage(n);
+      const { items } = await pagina.getTextContent();
+      // Agrupa os pedaços pela altura (y); dentro da linha, ordena por x e
+      // separa colunas por um vão largo (dois espaços), palavras por um.
+      const pedacos = items
+        .filter((it) => it.str && it.str.trim())
+        .map((it) => ({ s: it.str, x: it.transform[4], y: it.transform[5], w: it.width, h: Math.abs(it.transform[3]) || it.height || 10 }));
+      pedacos.sort((a, b) => b.y - a.y || a.x - b.x);
+      const grupos = [];
+      for (const p of pedacos) {
+        const g = grupos.find((gr) => Math.abs(gr.y - p.y) <= Math.max(2, Math.min(gr.h, p.h) * 0.45));
+        if (g) g.itens.push(p); else grupos.push({ y: p.y, h: p.h, itens: [p] });
+      }
+      grupos.sort((a, b) => b.y - a.y);
+      for (const g of grupos) {
+        g.itens.sort((a, b) => a.x - b.x);
+        let texto = "";
+        let fim = null;
+        for (const it of g.itens) {
+          if (fim !== null) {
+            const vao = it.x - fim;
+            texto += vao > g.h * 1.2 ? "  " : vao > g.h * 0.12 && !texto.endsWith(" ") && !it.s.startsWith(" ") ? " " : "";
+          }
+          texto += it.s;
+          fim = it.x + it.w;
+        }
+        caracteres += texto.trim().length;
+        linhas.push(texto);
+      }
+      pagina.cleanup();
+    }
+    await tarefa.destroy();
+    if (caracteres < 20) {
+      const err = new Error("Esse PDF é uma imagem (foto ou digitalização), sem texto para ler.");
+      err.motivo = "semTexto";
+      throw err;
+    }
+    return linhas;
+  };
+
   Importar.abrirAssistente = (() => {
     const { fmt } = UI;
 
@@ -313,7 +614,7 @@ if (typeof document !== "undefined") {
       UI.abrirModal(`
         <div class="modal-head">
           <h2 class="modal-title">Importar extrato</h2>
-          <p class="modal-desc">Exporte o extrato pelo app do seu banco (.ofx, .qfx ou .csv) e importe aqui. O arquivo é lido neste navegador — nada é enviado a nenhum banco.</p>
+          <p class="modal-desc">Baixe o extrato ou a fatura pelo app do seu banco (PDF, .ofx, .qfx ou .csv) e importe aqui. O arquivo é lido neste navegador: não sai do aparelho e nada é enviado a nenhum banco.</p>
         </div>
         <div class="modal-body">
           ${!contasOk ? `<div class="notice info"><span class="ic">●</span><span>Sem conta ou cartão cadastrado, os lançamentos entram sem "pago com" definido. <a href="contas.html">Cadastrar agora</a>.</span></div>` : ""}
@@ -322,12 +623,17 @@ if (typeof document !== "undefined") {
             <select class="input" data-origem>${Financas.opcoesOrigem().map((o) => `<option value="${fmt.escape(o.valor)}">${fmt.escape(o.rotulo)}</option>`).join("")}</select>
           </div>
           <div class="anexos-campo">
-            <input type="file" accept=".ofx,.qfx,.csv,text/csv" class="hidden" data-entrada />
+            <input type="file" accept=".pdf,application/pdf,.ofx,.qfx,.csv,text/csv" class="hidden" data-entrada />
             <div class="dropzone" data-zona tabindex="0" role="button">
               <strong>Escolher arquivo do extrato</strong>
-              Clique aqui ou arraste — .ofx, .qfx ou .csv
+              Clique aqui ou arraste: PDF, .ofx, .qfx ou .csv
             </div>
             <p class="card-note" data-nome-arquivo style="margin:8px 0 0;"></p>
+          </div>
+          <div class="field hidden" data-campo-senha>
+            <label for="imp-senha">Senha do PDF</label>
+            <input class="input" type="password" id="imp-senha" data-senha autocomplete="off" />
+            <span class="hint">Muitos bancos protegem o extrato com os primeiros dígitos do CPF. A senha só abre o arquivo aqui; não é guardada.</span>
           </div>
           <span class="err hidden" data-erro></span>
         </div>
@@ -340,6 +646,10 @@ if (typeof document !== "undefined") {
           const entrada = modal.querySelector("[data-entrada]");
           const btnContinuar = modal.querySelector('[data-acao="continuar"]');
           const erro = modal.querySelector("[data-erro]");
+          const campoSenha = modal.querySelector("[data-campo-senha]");
+          const inpSenha = modal.querySelector("[data-senha]");
+          inpSenha.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); btnContinuar.click(); } });
+          const mostrarErro = (t) => { erro.textContent = t; erro.classList.remove("hidden"); };
 
           const escolher = () => entrada.click();
           zona.addEventListener("click", escolher);
@@ -352,20 +662,57 @@ if (typeof document !== "undefined") {
           async function receberArquivo(file) {
             erro.classList.add("hidden");
             const ext = Importar.extensao(file.name);
-            if (!["ofx", "qfx", "csv"].includes(ext)) {
-              erro.textContent = "Formato não reconhecido. Exporte como .ofx, .qfx ou .csv pelo app do banco.";
+            const ehPDF = ext === "pdf" || file.type === "application/pdf";
+            campoSenha.classList.add("hidden");
+            if (!ehPDF && !["ofx", "qfx", "csv"].includes(ext)) {
+              erro.textContent = "Formato não reconhecido. Use o PDF do extrato ou exporte como .ofx, .qfx ou .csv pelo app do banco.";
               erro.classList.remove("hidden");
               return;
             }
             s.arquivo = file;
-            s.tipoArquivo = ext === "csv" ? "csv" : "ofx";
-            modal.querySelector("[data-nome-arquivo]").textContent = `${file.name} · ${Arquivos.tamanhoLegivel(file.size)}`;
-            s.texto = await Importar.lerTexto(file);
+            s.tipoArquivo = ehPDF ? "pdf" : ext === "csv" ? "csv" : "ofx";
+            modal.querySelector("[data-nome-arquivo]").textContent = `${file.name}, ${Arquivos.tamanhoLegivel(file.size)}`;
+            s.texto = ehPDF ? "" : await Importar.lerTexto(file);
             btnContinuar.disabled = false;
           }
 
           btnContinuar.addEventListener("click", async () => {
             s.origem = modal.querySelector("[data-origem]").value;
+            erro.classList.add("hidden");
+            if (s.tipoArquivo === "pdf") {
+              const rotulo = btnContinuar.textContent;
+              btnContinuar.disabled = true;
+              btnContinuar.textContent = "Lendo o PDF…";
+              try {
+                const texto = await Importar.lerPDF(s.arquivo, inpSenha.value);
+                const r = Importar.parseTextoExtrato(texto);
+                if (!r.linhas.length) {
+                  mostrarErro("Li o PDF, mas não achei lançamentos com data e valor. Se for um comprovante ou um resumo, baixe o extrato completo do período; se o banco oferecer, o .ofx é o formato mais seguro.");
+                  return;
+                }
+                s.linhas = r.linhas;
+                s.ignoradasNoMapeamento = r.ignoradas;
+                s.fatura = r.fatura;
+                fechar(null);
+                abrirRevisao(s);
+              } catch (e) {
+                if (e.motivo === "senha" || e.motivo === "senhaErrada") {
+                  campoSenha.classList.remove("hidden");
+                  inpSenha.focus();
+                  if (e.motivo === "senhaErrada") { inpSenha.select(); mostrarErro("Senha incorreta. Confira no app do banco qual é a senha dos extratos."); }
+                  else mostrarErro("Este PDF tem senha. Digite abaixo e toque em Continuar.");
+                } else if (e.motivo === "semTexto") {
+                  mostrarErro("Esse PDF é uma imagem (foto ou digitalização), sem texto para ler. Baixe o extrato direto do app do banco, sem imprimir nem fotografar.");
+                } else {
+                  mostrarErro(e.motivo ? e.message : "Não consegui ler esse PDF agora. Tente de novo ou use o .ofx/.csv do banco.");
+                  if (!e.motivo) console.error(e);
+                }
+              } finally {
+                btnContinuar.disabled = false;
+                btnContinuar.textContent = rotulo;
+              }
+              return;
+            }
             if (s.tipoArquivo === "ofx") {
               const linhas = Importar.parseOFX(s.texto);
               if (!linhas.length) {
@@ -463,20 +810,48 @@ if (typeof document !== "undefined") {
       const categorias = Store.estado().financeiro.categorias;
       const indice = Importar.indiceCategoria(existentes);
 
-      const preparadas = s.linhas
-        .slice()
-        .sort((a, b) => b.data.localeCompare(a.data))
-        .map((l, i) => ({
+      // Lançamentos de gasto fixo ainda não conferidos com um extrato: se a
+      // cobrança estiver aqui, ela confirma o fixo em vez de virar outro gasto.
+      const fixosCadastrados = Store.lista("financeiro.fixos");
+      const candidatosFixo = existentes
+        .filter((t) => t.fixoId && !t.conciliadoEm && t.tipo === "despesa")
+        .map((t) => ({ ...t, nomesExtrato: fixosCadastrados.find((f) => f.id === t.fixoId)?.nomesExtrato || [] }));
+      const ordenadas = s.linhas.slice().sort((a, b) => b.data.localeCompare(a.data));
+      const casados = Importar.casarFixos(ordenadas, candidatosFixo);
+      // A checagem de repetido não pode ver o próprio fixo que está sendo confirmado.
+      const semCandidatos = existentes.filter((t) => !casados.includes(t.id));
+      const preparadas = ordenadas.map((l, i) => {
+        const fixo = casados[i] ? candidatosFixo.find((t) => t.id === casados[i]) : null;
+        return {
           ...l,
           id: `pre-${i}`,
-          categoria: Importar.sugerirCategoria(l.descricao, indice, categorias, l.tipo),
-          duplicata: Importar.provavelDuplicata(l, existentes),
-        }));
+          categoria: fixo ? fixo.categoria : Importar.sugerirCategoria(l.descricao, indice, categorias, l.tipo),
+          fixo,
+          duplicata: !fixo && Importar.provavelDuplicata(l, semCandidatos),
+        };
+      });
+      const nFixos = preparadas.filter((p) => p.fixo).length;
 
+      // No PDF o Delfos deduz o valor e a data do desenho da página: ficam editáveis.
+      const editavel = s.tipoArquivo === "pdf";
+      const seloFixo = (p) => `<button type="button" class="badge fixo" data-fixo title="Esta cobrança é o gasto fixo “${fmt.escape(p.fixo.descricao)}”, que já está lançado. Importar só confirma o pagamento com o valor e a data do extrato, sem lançar de novo. Toque se for outro gasto.">fixo: ${fmt.escape(p.fixo.descricao)}</button>`;
+      // Sem casamento automático (a conta de luz mudou de valor e o banco usa outro
+      // nome): a pessoa pode dizer qual fixo é. O Delfos guarda o nome do banco
+      // e reconhece sozinho nos próximos meses.
+      const livres = candidatosFixo.filter((c) => !casados.includes(c.id));
+      const escolherFixo = (p) => p.tipo === "despesa" && livres.length
+        ? `<select class="input sm" data-escolher-fixo title="Se esta cobrança for de um gasto fixo, escolha qual — ele é confirmado em vez de lançado de novo."><option value="">É gasto fixo?</option>${livres.map((c) => `<option value="${fmt.escape(c.id)}">${fmt.escape(c.descricao)}, ${fmt.moeda(c.valor)} (${fmt.dataCurta(c.data)})</option>`).join("")}</select>`
+        : "";
+      const selo = (p) => p.fixo ? seloFixo(p) : p.duplicata ? `<span class="badge urgente" title="Já existe um lançamento parecido perto dessa data">repetido?</span>` : p.duvidosa || p.incerto ? seloOutro(p) : escolherFixo(p);
+      const seloOutro = (p) => p.duplicata ? `<span class="badge urgente" title="Já existe um lançamento parecido perto dessa data">repetido?</span>`
+        : p.duvidosa ? `<span class="badge" title="Pagamento da fatura anterior: o dinheiro já saiu da conta, lançar de novo contaria duas vezes">pagamento?</span>`
+        : p.incerto ? `<span class="badge" title="O extrato não diz se é entrada ou saída; confira o tipo">confira</span>` : "";
       const linha = (p) => `
-        <tr data-linha="${p.id}" class="${p.duplicata ? "linha-duvidosa" : ""}">
-          <td><input type="checkbox" class="check" data-marcar ${p.duplicata ? "" : "checked"} /></td>
-          <td class="muted" style="white-space:nowrap;">${fmt.dataCurta(p.data)}</td>
+        <tr data-linha="${p.id}" class="${p.duplicata || p.duvidosa ? "linha-duvidosa" : ""}">
+          <td><input type="checkbox" class="check" data-marcar ${p.duplicata || p.duvidosa ? "" : "checked"} /></td>
+          ${editavel
+            ? `<td><input type="date" class="input sm" data-data value="${p.data}" /></td>`
+            : `<td class="muted" style="white-space:nowrap;">${fmt.dataCurta(p.data)}</td>`}
           <td><input type="text" class="input sm" data-descricao value="${fmt.escape(p.descricao)}" /></td>
           <td>
             <div class="seg sm" data-tipo>
@@ -488,8 +863,10 @@ if (typeof document !== "undefined") {
           <td>
             <select class="input sm" data-categoria>${categorias.map((c) => `<option value="${fmt.escape(c)}" ${c === p.categoria ? "selected" : ""}>${fmt.escape(c)}</option>`).join("")}</select>
           </td>
-          <td class="right num" data-valor-exibido>${fmt.moeda(p.valor)}</td>
-          <td>${p.duplicata ? `<span class="badge urgente" title="Já existe um lançamento parecido perto dessa data">repetido?</span>` : ""}</td>
+          ${editavel
+            ? `<td class="right"><input type="text" inputmode="decimal" class="input sm num right" data-quantia value="${fmt.decimal(p.valor, 2)}" /></td>`
+            : `<td class="right num" data-valor-exibido>${fmt.moeda(p.valor)}</td>`}
+          <td>${selo(p)}</td>
         </tr>`;
 
       const avisoIgnoradas = s.ignoradasNoMapeamento
@@ -499,14 +876,16 @@ if (typeof document !== "undefined") {
       UI.abrirModal(`
         <div class="modal-head">
           <h2 class="modal-title">Revisar antes de importar</h2>
-          <p class="modal-desc">Confira descrição, tipo e categoria — o Delfos já tenta adivinhar a categoria pelo que você categorizou antes. Linhas marcadas "possível repetido" já têm algo parecido lançado perto dessa data e vêm desmarcadas.</p>
+          <p class="modal-desc">${editavel
+            ? `O Delfos leu o PDF${s.fatura ? " como fatura de cartão" : ""} e separou ${preparadas.length} ${preparadas.length === 1 ? "lançamento" : "lançamentos"}. PDF não tem colunas de verdade, então confira data, valor e tipo: tudo é editável. Linhas com "confira" não diziam se eram entrada ou saída.`
+            : "Confira descrição, tipo e categoria — o Delfos já tenta adivinhar a categoria pelo que você categorizou antes."} Linhas marcadas "repetido?" já têm algo parecido lançado perto dessa data e vêm desmarcadas.${nFixos ? ` <b>${nFixos} ${nFixos === 1 ? "cobrança é de um gasto fixo" : "cobranças são de gastos fixos"}</b> que o Delfos já tinha lançado: ${nFixos === 1 ? "ela confirma" : "elas confirmam"} o pagamento, sem contar duas vezes.` : ""}</p>
         </div>
         <div class="modal-body">
           <div class="table-wrap" style="max-height:46vh; overflow-y:auto;">
-            <table class="sheet tabela-importar">
+            <table class="sheet tabela-importar${editavel ? " editavel" : ""}">
               <colgroup>
-                <col style="width:26px" /><col style="width:54px" /><col />
-                <col style="width:172px" /><col style="width:140px" /><col style="width:100px" /><col style="width:92px" />
+                <col style="width:26px" /><col style="width:${editavel ? 132 : 54}px" /><col />
+                <col style="width:${editavel ? 150 : 172}px" /><col style="width:${editavel ? 128 : 140}px" /><col style="width:100px" /><col style="width:${nFixos || livres.length ? 160 : preparadas.some(selo) ? 92 : 10}px" />
               </colgroup>
               <thead><tr><th></th><th>Data</th><th>Descrição</th><th>Tipo</th><th>Categoria</th><th class="right">Valor</th><th></th></tr></thead>
               <tbody data-corpo>${preparadas.map(linha).join("")}</tbody>
@@ -525,13 +904,39 @@ if (typeof document !== "undefined") {
           const btnImportar = modal.querySelector('[data-acao="importar"]');
 
           function atualizarResumo() {
-            const marcadas = [...corpo.querySelectorAll("[data-marcar]:checked")].length;
+            const marcadas = [...corpo.querySelectorAll("tr[data-linha]")].filter((tr) => tr.querySelector("[data-marcar]").checked);
+            const ehFixo = (tr) => { const p = preparadas.find((x) => x.id === tr.dataset.linha); return !!((p.fixo && !p.fixoIgnorado) || p.fixoEscolhido); };
+            const fixos = marcadas.filter(ehFixo).length;
+            const novos = marcadas.length - fixos;
             modal.querySelector("[data-resumo]").textContent =
-              `${marcadas} de ${preparadas.length} ${preparadas.length === 1 ? "lançamento selecionado" : "lançamentos selecionados"}.`;
-            btnImportar.disabled = marcadas === 0;
-            btnImportar.textContent = marcadas ? `Importar ${marcadas} ${marcadas === 1 ? "lançamento" : "lançamentos"}` : "Importar selecionados";
+              `${marcadas.length} de ${preparadas.length} ${preparadas.length === 1 ? "lançamento selecionado" : "lançamentos selecionados"}${fixos ? `: ${novos} ${novos === 1 ? "novo" : "novos"} e ${fixos} ${fixos === 1 ? "gasto fixo" : "gastos fixos"} a confirmar` : ""}.`;
+            btnImportar.disabled = marcadas.length === 0;
+            btnImportar.textContent = !marcadas.length ? "Importar selecionados"
+              : !fixos ? `Importar ${novos} ${novos === 1 ? "lançamento" : "lançamentos"}`
+              : !novos ? `Confirmar ${fixos} ${fixos === 1 ? "gasto fixo" : "gastos fixos"}`
+              : `Importar ${novos} e confirmar ${fixos} ${fixos === 1 ? "fixo" : "fixos"}`;
           }
           corpo.addEventListener("change", (ev) => { if (ev.target.matches("[data-marcar]")) atualizarResumo(); });
+          // O selo "fixo: X" alterna: tocar diz "é outro gasto" (entra como lançamento novo).
+          corpo.addEventListener("change", (ev) => {
+            const sel = ev.target.closest("[data-escolher-fixo]");
+            if (!sel) return;
+            const p = preparadas.find((x) => x.id === sel.closest("tr").dataset.linha);
+            p.fixoEscolhido = sel.value ? candidatosFixo.find((c) => c.id === sel.value) : null;
+            const tr = sel.closest("tr");
+            tr.querySelector("[data-marcar]").checked = true;
+            if (p.fixoEscolhido) tr.querySelector("[data-categoria]").value = p.fixoEscolhido.categoria;
+            atualizarResumo();
+          });
+          corpo.addEventListener("click", (ev) => {
+            const b = ev.target.closest("[data-fixo]");
+            if (!b) return;
+            const p = preparadas.find((x) => x.id === b.closest("tr").dataset.linha);
+            p.fixoIgnorado = !p.fixoIgnorado;
+            b.classList.toggle("desligado", p.fixoIgnorado);
+            b.textContent = p.fixoIgnorado ? "lançar como novo" : `fixo: ${p.fixo.descricao}`;
+            atualizarResumo();
+          });
           atualizarResumo();
 
           corpo.querySelectorAll("[data-tipo]").forEach((seg) => {
@@ -547,28 +952,64 @@ if (typeof document !== "undefined") {
 
           btnImportar.addEventListener("click", () => {
             const inseridos = [];
+            const confirmados = []; // [{ id, antes }] — fixos que o extrato confirmou
             corpo.querySelectorAll("tr[data-linha]").forEach((tr) => {
               if (!tr.querySelector("[data-marcar]").checked) return;
               const id = tr.dataset.linha;
               const original = preparadas.find((p) => p.id === id);
+              const dataEditada = tr.querySelector("[data-data]")?.value;
+              const valorEditado = tr.querySelector("[data-quantia]") ? Math.abs(Importar.normalizarValor(tr.querySelector("[data-quantia]").value) || 0) : null;
+              if (valorEditado === 0) return;
+              const alvoFixo = original.fixo && !original.fixoIgnorado ? original.fixo : original.fixoEscolhido;
+              if (alvoFixo && !confirmados.some((c) => c.id === alvoFixo.id)) {
+                const t = alvoFixo;
+                // Aprende o nome que o banco usa, para casar sozinho no mês que vem.
+                const f = Store.lista("financeiro.fixos").find((x) => x.id === t.fixoId);
+                const nomeBanco = tr.querySelector("[data-descricao]").value.trim();
+                if (f && nomeBanco && !(f.nomesExtrato || []).includes(nomeBanco)) {
+                  confirmados.push({ fixo: f.id, nomesAntes: f.nomesExtrato || [] });
+                  Store.atualizar("financeiro.fixos", f.id, { nomesExtrato: [nomeBanco, ...(f.nomesExtrato || [])].slice(0, 5) });
+                }
+                confirmados.push({ id: t.id, antes: { data: t.data, valor: t.valor, status: t.status, origem: t.origem, conciliadoEm: t.conciliadoEm || "", descricaoExtrato: t.descricaoExtrato || "" } });
+                Store.atualizar("financeiro.transacoes", t.id, {
+                  data: dataEditada || original.data,
+                  valor: valorEditado ?? original.valor,
+                  status: "pago",
+                  origem: s.origem || t.origem,
+                  conciliadoEm: new Date().toISOString(),
+                  descricaoExtrato: tr.querySelector("[data-descricao]").value.trim(),
+                });
+                return;
+              }
               const item = Store.inserir("financeiro.transacoes", {
-                data: original.data,
+                data: dataEditada || original.data,
                 descricao: tr.querySelector("[data-descricao]").value.trim() || "Lançamento importado",
                 tipo: tr.querySelector("[data-tipo] input").value,
                 categoria: tr.querySelector("[data-categoria]").value,
-                valor: original.valor,
+                valor: valorEditado ?? original.valor,
                 origem: s.origem,
-                forma: "Importado do extrato",
+                forma: s.tipoArquivo === "pdf" ? "Importado do extrato (PDF)" : "Importado do extrato",
                 status: "pago",
               });
               inseridos.push(item.id);
             });
             fechar(null);
-            if (!inseridos.length) return;
+            if (!inseridos.length && !confirmados.some((c) => c.id)) return;
             s.aoConcluir?.();
-            UI.toast(`${inseridos.length} ${inseridos.length === 1 ? "lançamento importado" : "lançamentos importados"}.`, {
+            const partes = [];
+            if (inseridos.length) partes.push(`${inseridos.length} ${inseridos.length === 1 ? "lançamento importado" : "lançamentos importados"}`);
+            const nConf = confirmados.filter((c) => c.id).length;
+            if (nConf) partes.push(`${nConf} ${nConf === 1 ? "gasto fixo confirmado, sem duplicar" : "gastos fixos confirmados, sem duplicar"}`);
+            UI.toast(`${partes.join("; ")}.`, {
               acaoRotulo: "Desfazer",
-              aoAcionar: () => { inseridos.forEach((id) => Store.remover("financeiro.transacoes", id)); s.aoConcluir?.(); UI.toast("Importação desfeita."); },
+              aoAcionar: () => {
+                inseridos.forEach((id) => Store.remover("financeiro.transacoes", id));
+                confirmados.forEach((c) => c.fixo
+                  ? Store.atualizar("financeiro.fixos", c.fixo, { nomesExtrato: c.nomesAntes })
+                  : Store.atualizar("financeiro.transacoes", c.id, c.antes));
+                s.aoConcluir?.();
+                UI.toast("Importação desfeita.");
+              },
               duracao: 6000,
             });
           });

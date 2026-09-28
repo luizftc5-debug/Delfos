@@ -40,7 +40,7 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 | Onde | O que dá para fazer |
 |---|---|
 | **Visão geral** | Saldo, alertas de atraso e de semana cheia, agenda dos próximos 30 dias, leitura automática da situação e **o que o Delfos notou** em todas as abas |
-| **Financeiro** | O mês lido em voz alta: quanto entrou, saiu e sobrou, **para onde foi o dinheiro**, o **ritmo do mês** comparado ao anterior, gastos fixos e assinaturas detectados, o que falta pagar, metas com "Guardar", e **perguntas** que deixam a leitura do seu jeito (limite do mês, quanto guardar, dia da renda). Também lançar entradas e saídas e **importar o extrato do banco** (.ofx/.csv) para não esquecer de lançar |
+| **Financeiro** | O mês lido em voz alta: quanto entrou, saiu e sobrou, **para onde foi o dinheiro**, o **ritmo do mês** comparado ao anterior, gastos fixos e assinaturas detectados, o que falta pagar, metas com "Guardar", e **perguntas** que deixam a leitura do seu jeito (limite do mês, quanto guardar, dia da renda). Também lançar entradas e saídas e **importar o extrato do banco** (PDF, .ofx ou .csv) para não esquecer de lançar |
 | **Contas e cartões** | Cadastrar contas com saldo, cadastrar cartões com fechamento e vencimento. Cada uma abre numa **página própria**, com saldo/fatura, gastos por categoria só dela e a lista de lançamentos |
 | **Investimentos** | Renda fixa, ações, fundos, cripto — o que já aplicou e quanto vale hoje, com rentabilidade calculada e distribuição por tipo |
 | **Faculdade** | Leitura do semestre, **próximas quatro semanas** lado a lado, médias por disciplina com a média mínima marcada, avisos (prova sem resumo, semana cheia) e perguntas (média para passar, horas de estudo). Disciplinas, prazos e entregas. Cada disciplina abre em **página própria**, com avaliações e notas, prazos, materiais e resumos — em materiais e resumos dá para **anexar documentos** (PDF, slides, fotos) ou **importar do Google Drive** |
@@ -79,15 +79,23 @@ pesou. As setas ao lado do mês (‹ setembro de 2026 ›) mudam tudo o que est�
 
 ### Importar o extrato do banco
 
-Esquece de lançar? Em **Financeiro → Importar extrato**, exporte o extrato pelo app do seu banco
-(a maioria oferece .ofx/.qfx; se não tiver, .csv também serve) e importe aqui. **Nenhuma senha de
+Esquece de lançar? Em **Financeiro → Importar extrato**, baixe o extrato ou a fatura pelo app do
+seu banco e importe aqui: **o PDF de sempre** serve, e .ofx/.qfx ou .csv também. **Nenhuma senha de
 banco entra no Delfos** — o arquivo é só lido neste navegador, você confere cada linha antes de
 qualquer coisa ser salva, e pode cancelar a qualquer momento.
 
-1. No app do banco, procure por algo como "Exportar extrato" ou "Extrato para Excel/OFX".
+1. No app do banco, baixe o extrato do período ou a fatura do cartão em PDF (ou "Exportar extrato",
+   "Extrato para Excel/OFX").
 2. No Delfos, escolha de qual conta ou cartão é aquele extrato e selecione o arquivo.
-3. Se for .csv, confirme qual coluna é data, descrição e valor (o Delfos tenta adivinhar sozinho).
-4. Revise a lista: o Delfos já tenta acertar a categoria pelo que você categorizou antes, e avisa
+3. Se o PDF tiver senha (muitos bancos usam os primeiros dígitos do CPF), o Delfos pede; a senha só
+   abre o arquivo ali e não é guardada. Se for .csv, confirme qual coluna é data, descrição e valor.
+4. No PDF, o Delfos acha cada linha com data, descrição e valor, e deduz se é entrada ou saída pelo
+   sinal, pela coluna de saldo, pela seção ("Entradas"/"Saídas") ou, na fatura, tratando tudo como
+   compra e o negativo como estorno. Data e valor ficam editáveis na revisão, porque PDF não tem
+   colunas de verdade; o que ele não conseguiu decidir vem marcado **confira**, e o pagamento da
+   fatura anterior vem desmarcado (**pagamento?**), para não contar duas vezes. PDF que é foto ou
+   digitalização não tem texto para ler: nesse caso use o .ofx/.csv.
+5. Revise a lista: o Delfos já tenta acertar a categoria pelo que você categorizou antes, e avisa
    quando um lançamento parece repetido (algo parecido já lançado perto da mesma data) — essas
    linhas vêm desmarcadas, mas dá para marcar se for engano. Ajuste o que quiser e confirme.
 

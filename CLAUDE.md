@@ -31,7 +31,7 @@ Você é um assistente de IA especializado em organizar e gerenciar os quatro pi
 
 ## Arquitetura do dashboard
 
-Aplicação estática multi-página em `dashboard/`, sem build. Dependências externas: a tipografia (Google Fonts) e, só ao criar ou trocar senha, a consulta k-anônima ao Have I Been Pwned (`sessao.js`).
+Aplicação estática multi-página em `dashboard/`, sem build. Dependências externas: a tipografia (Google Fonts) e, só ao criar ou trocar senha, a consulta k-anônima ao Have I Been Pwned (`sessao.js`). O pdf.js (Mozilla, Apache 2.0) vem **copiado** em `dashboard/vendor/pdfjs/` — não de CDN — e só é baixado quando alguém importa um extrato em PDF.
 
 | Arquivo | Papel |
 |---|---|
@@ -51,7 +51,7 @@ Aplicação estática multi-página em `dashboard/`, sem build. Dependências ex
 | `store.js` | Camada de dados: localStorage + CRUD + backup em JSON |
 | `personalizacao.js` | Traduz perfil/preferências em como o painel se apresenta (abas ligadas, saudação, ocupação) |
 | `arquivos.js` | Anexos (PDF, slides, fotos) no IndexedDB + export/import para o backup |
-| `importar.js` | Lançamentos a partir de extrato bancário (.ofx/.qfx/.csv) — leitura, mapeamento de colunas, revisão e confirmação |
+| `importar.js` | Lançamentos a partir de extrato bancário (PDF, .ofx/.qfx/.csv) — leitura, mapeamento de colunas, revisão e confirmação |
 | `entrar.html` + `entrar.js` | Entrar / criar conta / esqueci a senha: página sem barra lateral, a única que abre sem sessão |
 | `sessao.js` | Conta do usuário: endereço da API, login, cadastro, derivação da senha, porta de entrada das páginas |
 | `nuvem.js` | Sincronização com a conta (`backend/`): envio, conferência, conflito, versões, anexos, sair |
@@ -167,6 +167,18 @@ aparelho dela) e importa; o arquivo é lido só no navegador.
   fechamento de tag de valor) quanto XML (OFX 2.x) do mesmo jeito. Charset: decodifica UTF-8
   primeiro; se sobrar `\uFFFD` (byte inválido), refaz como ISO-8859-1 — banco brasileiro exporta
   nos dois.
+- **PDF** (`Importar.lerPDF` no navegador + `parseTextoExtrato`, puro): o pdf.js é carregado por
+  `import()` de `vendor/pdfjs/` só quando o arquivo é PDF, com `isEvalSupported: false`. As linhas
+  são remontadas pela altura (y) de cada pedaço de texto, colunas separadas por vão largo. Não há
+  leitor por banco: vale toda linha com data no começo (dd/mm[/aa], "15 SET", "15 de setembro") e
+  valor no padrão brasileiro; linha só com data vira a data das seguintes (Nubank); linha sem valor
+  logo depois de um lançamento complementa a descrição. Sinal, em ordem de confiança: escrito
+  (-, D/C, +), coluna de saldo (saldo anterior ± valor = saldo da linha), seção (Entradas/Saídas),
+  fatura (compra, negativo = crédito), palavras — só esse último marca `incerto` ("confira").
+  Saldo, total, limite e vencimento são ignorados (o saldo alimenta a dedução). PDF com senha →
+  `motivo: "senha"` e o assistente mostra o campo; PDF de imagem → `motivo: "semTexto"`. Na
+  revisão de PDF, data e valor viram campos (`[data-data]`, `[data-quantia]` — não `data-valor`,
+  que já é dos botões Despesa/Receita).
 - **CSV**: delimitador adivinhado (`;` vs `,`) pela primeira linha; aceita uma coluna "valor" com
   sinal OU um par "entrada"/"saída"; `sugerirMapeamento` chuta o papel de cada coluna pelo nome do
   cabeçalho, sempre revisável antes de continuar. Linha sem data/valor reconhecível é contada e

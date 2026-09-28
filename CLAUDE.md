@@ -1,6 +1,6 @@
 # Delfos — agente de organização pessoal do Luiz
 
-O painel se chama **Delfos** (versão atual: **1.5**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
+O painel se chama **Delfos** (versão atual: **1.6**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
 em `ui.js`) aparecem como marca no alto da barra lateral, ao lado do ônfalo, nos títulos das abas do
 navegador e no nome do arquivo de backup exportado.
 
@@ -45,7 +45,9 @@ Aplicação estática multi-página em `dashboard/`, sem build. Dependências ex
 | `resumo.html` + `resumo.js` | Editor de texto de um resumo: página inteira, sem barra lateral |
 | `projetos.html` + `projetos.js` | Projetos pessoais que geram renda + oportunidades |
 | `projeto.html` + `projeto.js` | Página de um projeto: ficha, etapas, recebimentos, custos, documentos e anotações |
-| `pessoal.html` + `pessoal.js` | Compromissos pessoais: consultas, tarefas, recados |
+| `pessoal.html` + `pessoal.js` | Compromissos pessoais: calendário do mês (vista padrão) ou lista, o que se aproxima, lembretes |
+| `calendario.js` | `Calendario`: leitura de .ics e de eventos do Google (puras, testáveis com Node), grade do mês, `itensEntre` (tudo com data, de todas as abas), importação com revisão |
+| `lancamento.js` | `Lancamento.abrir`: a janela de novo/editar lançamento (histórico, categorias por uso, parcelas, repetir todo mês) |
 | `pilar.html` + `pilar.js` | Página de uma aba criada pelo usuário, com modelo e campos próprios |
 | `bemvindo.html` + `bemvindo.js` | Assistente de boas-vindas: identidade, ocupação, abas fixas, ajustes finais |
 | `store.js` | Camada de dados: localStorage + CRUD + backup em JSON |
@@ -148,7 +150,7 @@ a migração o converte no primeiro recebimento da lista.
 levar o carro à revisão, um recado qualquer com data. Cada item tem `tipo` (consulta/tarefa/
 compromisso/recado/outro), `data`, `local` opcional e `concluido`. Entra no `UI.compromissos()`
 unificado com `area: "pessoal"`, então aparece na agenda da home e nos alertas de semana cheia junto
-com os outros três pilares — cor própria (`--s-pessoal`, roxo) para não colidir com as demais.
+com os outros três pilares — cor própria (`--s-pessoal`, roxo) para não colidir com as demais. Desde a 1.6, também `hora`, `repete`, `lembrete` e `importante` — ver "Delfos 1.6".
 
 ### Importar extrato (`importar.js`)
 
@@ -554,7 +556,77 @@ telas (botões "+ Lançamento", "+ Prazo", "+ Disciplina", "+ Projeto"), sem toc
   dados já acompanham a conta em qualquer aparelho; o backup continua como cópia fora do servidor.
 - Ao mudar o formato do estado, trate a migração em `store.js` (`normalizar`, que roda em toda carga
   e precisa ser idempotente). Nunca troque a chave do localStorage: isso apagaria os dados de quem
-  já usa. A conversão é gravada assim que a versão salva difere da atual (versão atual do estado: **12**).
+  já usa. A conversão é gravada assim que a versão salva difere da atual (versão atual do estado: **13**).
+
+### Delfos 1.6
+
+**Formulários (`UI.formulario`).** Um desenho só para toda janela de cadastro: cabeçalho com ícone
+(`icone`, `cor`), campos curtos lado a lado (`CURTOS`/`larguras`: pares vizinhos de data, número,
+dinheiro, select, hora, estrelas), `select` com até 5 opções curtas vira pílulas (`chipsDoSelect`,
+ou `chips: true`), data com atalhos e por extenso, `dinheiro` aceita conta (`avaliarDinheiro`:
+"45+12,90"), erro no próprio campo (`.tem-erro`), `rotuloExcluir`/`aoExcluir` no rodapé, `Enter`
+salva e `Esc` fecha. Tipos: text, textarea, select, buscaSelect, segmento, anexos, date, **time**,
+simNao, dinheiro, number, **estrelas** (1–5; o HTML vem de 5 para 1 e a linha é invertida no CSS,
+para `~` acender as da esquerda) e **link** (completa `https://`; só aceita o que `linkSeguro`
+aceita — http, https, mailto).
+
+**Novo lançamento (`lancamento.js`).** Substitui o antigo `camposLancamento`. Sugere pela descrição a
+partir do histórico (`Lancamento.historico`), ordena categorias por uso (`categoriasPorUso`),
+`Store.adicionarCategoria` cria uma ali mesmo, data futura vira pendente, parcelas criam N
+lançamentos, "repetir todo mês" cria um `financeiro.fixos` e chama `Financas.gerarFixos`.
+
+**Perfil e `preferencias.experiencia` (estado v13).** Cinco abas no perfil (sobre, aparência,
+painel, rotina, conta). `experiencia` = `{ tamanho, densidade, destaque, movimento, voz, contadores,
+paginaInicial, semanaComeca, ordemAbas, home: {topo, pilares, notas, agenda, insights}, lembretes:
+{antecedencia, navegador, resumoDoDia} }`; `Store.definirPreferencias({ experiencia })` mescla, e
+`home`/`lembretes` campo a campo. `UI.aplicarAparencia` põe cada escolha como `data-*` no `<html>`
+(o CSS lê dali); o tema "auto" segue `prefers-color-scheme`. `paginaInicial` só redireciona na
+primeira página da visita (`sessionStorage["delfos.visita"]`). `?` abre os atalhos de teclado.
+
+**Editor de resumos.** Barra em grupos (texto, parágrafo, inserir, ferramentas): estilos de
+parágrafo, cor, marca-texto, tachado, sub/sobrescrito, listas de tarefa, tabela, divisor, caixas de
+destaque (`data-tipo` nota/dica/importante/atenção — o rótulo vem do CSS `::before`, nunca do
+texto), buscar e substituir (CSS Custom Highlight API), sumário, folha (largura, papel, entrelinha —
+tokens próprios em `.editor-folha[data-papel]`, independentes do tema do painel), modo foco e
+exportar. **`UI.htmlSeguro` roda num documento inerte (`DOMParser`)**: num `div` solto, o
+navegador já disparava `onerror` de `<img>` antes da limpeza. Script, style, iframe, svg e afins
+somem inteiros (não só a tag); `style` só com propriedades e valores da lista (`ESTILOS_OK`).
+
+**Calendário e lembretes (Pessoal).** Compromisso ganhou `hora`, `repete` (`semanal`/`mensal`/
+`anual`, `UI.REPETICOES`), `repeteDesde` (primeira data da série — é dela que se conta, para "todo
+dia 31" não virar 28 depois de fevereiro), `repeteAte` (vindo de um .ics), `lembrete` ("" = o do
+perfil, "0".."7" dias, "nenhum") e `importante` (avisa também 7 dias antes).
+
+- `UI.rolarRecorrentes()` (em `iniciarPagina`) leva a data de um repetido que passou para a próxima
+  ocorrência; concluir um repetido na lista faz o mesmo. `UI.ocorrenciasEntre` projeta a série no
+  calendário. Nada disso cria itens novos: é um registro só, que anda.
+- `UI.lembretesAgora()` junta `UI.compromissos()` e `Financas.pendentes()` na janela de antecedência.
+  `verificarLembretes` (600 ms depois de `iniciarPagina`) abre o **resumo do dia** uma vez por dia
+  (`localStorage["delfos.resumoDoDia"]`) e, com permissão, notificações do navegador (uma por item
+  por dia, `delfos.avisados`, e de novo 1 h antes do que tem hora). Sem servidor de push: só avisa
+  com o Delfos aberto numa aba — dito com todas as letras na tela.
+- **Importação** (`Calendario.abrirImportacao`): pergunta a fonte (arquivo .ics, .ics no Drive,
+  Agenda do Google) e sempre passa por revisão. `parseICS` desdobra linhas, lê `TZID` (converte do
+  fuso do evento pelo `Intl`), UTC e dia inteiro, ignora cancelados e exceções (`RECURRENCE-ID`) e
+  só copia repetição simples (semanal/mensal/anual sem intervalo); o resto entra só na primeira data
+  com o selo "repetição não copiada". Passados e já importados (`origemImport` = UID, ou mesma data
+  + título) entram desmarcados. A pergunta "Quer trazer os compromissos de outro calendário?" some
+  depois que algo foi importado.
+- `google-integration.js` ganhou `googleComConexao(fn)`, `driveListarCalendarios`,
+  `driveBaixarTexto` e `agendaListarEventos` (escopos que já existiam: `calendar.readonly` e
+  `drive.readonly`). **Ordem dos scripts**: `google-integration.js` vem *antes* de `api.js` e
+  `gsi/client`, porque o `onload` deles chama `onGapiLoad`/`onGisLoad` — na ordem antiga essas
+  funções ainda não existiam e a conexão com o Google nunca iniciava.
+- Preferências só deste navegador: `delfos.pessoal.vista` (calendário ou lista). Não são dados.
+
+**Abas próprias: vistas e layout.** `pilar.visual = { vista, ordem, leitura, numeros, lateral,
+perguntas }` (opcional; sem ele, a aba é como antes). Vistas: lista, cartões, quadro (colunas pelo
+`agruparPor`, ou aberto × concluído; arrastar ou "mover para" mudam o valor), tabela (todos os
+campos menos textarea, cabeçalho ordena só na visita) e calendário (`Calendario.gradeDoMes`, por
+isso `pilar.html` carrega `calendario.js`). Abas de check-in só têm lista e cartões. Ordem: padrão,
+data, recentes, A–Z ou `campo:<id>` de número/dinheiro/estrelas/data. "Layout e exibição" também
+liga/desliga `naAgenda`. Quadro, tabela e calendário usam a largura toda (`.so-lista`) e a coluna
+lateral desce.
 
 ### Direção visual
 

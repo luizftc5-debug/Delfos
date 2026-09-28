@@ -1,4 +1,4 @@
-# Delfos — direção visual: oráculo sóbrio, segunda leitura (v1.4, estendida na 1.5)
+# Delfos — direção visual: oráculo sóbrio, segunda leitura (v1.4, estendida na 1.5 e na 1.6)
 
 Delfos é o nome de um oráculo, e o painel faz o que um oráculo faz: **lê a
 situação e diz o que ela é**. A estética sai daí — cada página abre falando, em
@@ -116,6 +116,19 @@ normal, com um ponto colorido do lado.
   agrupamento, exemplos em pílula). O estado da IA é uma linha discreta
   embaixo do nome, com o ícone `ia` — nunca um cartão chamativo, nunca brilho
   ou gradiente "mágico".
+- **Formulários (1.6)**: um desenho só em toda janela de cadastro — ícone da
+  área no cabeçalho, campos curtos em pares, pílulas no lugar de listas curtas,
+  valor em destaque no lançamento, erro escrito no próprio campo. Nada de
+  assistente em vários passos para cadastrar uma coisa só.
+- **Calendário (1.6)**: grade contígua (1px entre os dias, como a faixa de
+  números), hoje marcado pelo número em osso, cada item com a cor da área como
+  fio à esquerda e fundo lavado — a cor identifica a área, o texto diz o que é.
+  No celular, os itens viram pontos e o dia abre numa janela.
+- **Vistas das abas próprias (1.6)**: o seletor é um segmento com ícone
+  desenhado + palavra (a palavra some no celular). Quadro com colunas em fundo
+  rebaixado, cartões na superfície de cima; nenhuma cor nova além da da aba.
+- **Estrelas** usam `--st-warning` (o amarelo de status) só por serem o
+  símbolo universal de nota; nunca como série de gráfico.
 - **Hábitos** (aba com `checkin`): sete quadradinhos dos últimos dias e a
   sequência escrita; o botão "Hoje" fica sempre visível, fora do menu que
   aparece ao passar o ponteiro.

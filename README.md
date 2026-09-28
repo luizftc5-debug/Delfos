@@ -146,23 +146,20 @@ Na lista de projetos, o cartão continua mostrando o resumo e a **próxima etapa
 ### Seu perfil e os ajustes do painel
 
 Clique na sua foto e nome, **no pé da barra lateral**, para abrir o cartão de perfil. **É o único
-lugar de configuração**, dividido em três abas: **Sobre você** (sua ficha), **Painel** (tema e
-quais abas aparecem) e **Conta e dados** (sincronização, backup, refazer a configuração, sair).
+lugar de configuração**, dividido em cinco abas:
 
-- **Editar perfil** abre um formulário em partes: quem você é (nome, data de nascimento, pronomes,
-  telefone, e-mail, cidade), ocupação (o que você faz e o momento — estudo, trabalho, os dois),
-  vida acadêmica (só aparece para quem estuda: curso, instituição, semestre, matrícula, início do
-  curso) e dois textos livres — sobre você e seus objetivos do momento. Só o que estiver preenchido
-  aparece na ficha; a idade é calculada sozinha a partir da data de nascimento.
-- **Toque na foto** (ou nas iniciais) para trocar por uma foto sua. A imagem é recortada e reduzida
-  antes de salvar, então ocupa poucos KB.
-- **Abas do painel**: ligue ou desligue Pessoal, Financeiro, Faculdade e Projetos pelo interruptor, e
-  renomeie cada uma à vontade — útil se alguma não fizer sentido para você. Desligar não apaga nada,
-  só tira da barra lateral; dá para religar a qualquer momento.
-- **Tema**: claro ou escuro, escolhido pela amostra. Muda na hora.
-- **Backup e dados**: exportar, importar ou apagar tudo.
-- **Refazer configuração inicial**: reabre o assistente de boas-vindas (veja abaixo), já preenchido
-  com o que você tinha salvo.
+- **Sobre você**: sua ficha. **Editar perfil** abre um formulário em partes (quem você é, como
+  prefere ser chamado, ocupação, vida acadêmica — só para quem estuda — e dois textos livres). A
+  idade é calculada sozinha. **Toque na foto** para trocá-la.
+- **Aparência**: tema (claro, escuro ou automático, que segue o do aparelho), cor de destaque dos
+  botões e do que está escolhido, tamanho do texto, densidade (confortável ou compacta), a fonte das
+  leituras e títulos (serifa ou sem serifa) e se o painel usa animações.
+- **Painel**: quais abas aparecem, com que nome e **em que ordem** (setas para subir e descer), qual
+  página abre primeiro, se a barra mostra os contadores e quais blocos a visão geral mostra.
+- **Rotina e avisos**: em que dia a semana começa (vale para o calendário), com quanta antecedência
+  o Delfos lembra das coisas, se mostra o **resumo do dia** ao abrir e se usa **avisos do
+  navegador**. Também lista os **atalhos de teclado** (aperte `?` em qualquer página para vê-los).
+- **Conta e dados**: sincronização, backup, refazer a configuração inicial, sair.
 
 O cartão também mostra quantas disciplinas e registros você tem, quantos compromissos há nesta
 semana e quanto os documentos anexados ocupam.
@@ -172,15 +169,22 @@ semana e quanto os documentos anexados ocupam.
 Em **Resumos e anotações**, dentro da página de uma disciplina, o botão **+ Resumo** abre uma página
 inteira só para escrever — sem barra lateral, sem cartões, só o texto.
 
-Na barra de cima dá para trocar a **fonte** (fontes de sistema e mais algumas importadas — serifadas
-para ler, monoespaçada para fórmula, uma de letra à mão para anotação) e o **tamanho**, e usar
-**negrito**, **itálico** e **sublinhado**. Aplicam-se ao trecho que você selecionou; sem seleção,
-valem para o que você digitar em seguida. **Limpar estilo** desfaz a formatação do trecho
-selecionado.
+A barra de cima tem, em grupos:
 
-O botão **Imagem** insere uma foto direto no meio do texto — a imagem em si, não um ícone de
-arquivo. Também dá para **colar** (print, foto copiada) ou **arrastar** um arquivo de imagem para
-qualquer ponto do texto.
+- **Texto**: estilo do parágrafo (título 1 a 3, citação, código), fonte (de sistema e algumas
+  importadas — serifadas para ler, monoespaçada para fórmula, uma de letra à mão), tamanho,
+  negrito, itálico, sublinhado, tachado, subscrito (H₂O), sobrescrito (x²), **cor do texto**,
+  **marca-texto** e limpar a formatação.
+- **Parágrafo**: alinhamento, listas com marcadores, numeradas e **de tarefas** (com caixinha de
+  marcar), recuo.
+- **Inserir**: link, imagem (também dá para colar ou arrastar), **tabela**, divisor e **caixas de
+  destaque** (nota, dica, importante, atenção) — boas para "cai na prova" ou uma pérola clínica.
+- **Ferramentas**: **buscar e substituir** (`Ctrl + F`), **sumário** (os títulos do texto, para
+  pular direto), **folha** (largura, papel branco, sépia ou escuro, espaçamento entre linhas),
+  **modo foco** (só o texto) e **exportar** (imprimir/PDF, Word ou texto).
+
+Atalhos de digitação: `- ` vira lista, `1. ` vira lista numerada, `[] ` vira lista de tarefas,
+`---` e Enter vira divisor. O rodapé mostra palavras, caracteres e o tempo de leitura.
 
 O texto é salvo sozinho alguns segundos depois que você para de digitar — o indicador no alto diz se
 há algo não salvo. `Ctrl + S` (ou `Cmd + S`) salva na hora.
@@ -217,7 +221,17 @@ Na página da aba:
 - **Perguntas do Delfos** oferecem o que falta: definir uma meta, agrupar a lista por um campo.
 - **Personalizar**: muda nome, ícone, cor, descrição, meta e agrupamento, e sugere campos novos (com
   IA, se ligada) — só acrescenta, nunca apaga o que já existe.
-- **Campos desta aba**: adicionar, editar, excluir e reordenar os campos um a um.
+- **Campos desta aba**: adicionar, editar, excluir e reordenar os campos um a um. Além de texto,
+  data, número, valor em R$, lista de opções e sim/não, há **nota em estrelas** (1 a 5), **link** e
+  **hora**.
+- **Como ver**: no alto da lista, escolha entre **Lista**, **Cartões** (cada registro com todos os
+  campos), **Quadro** (uma coluna por opção do campo de agrupar — arraste um cartão de "quero ler"
+  para "lendo"; no celular, use o "mover para" do cartão), **Tabela** (todos os campos lado a lado;
+  toque no cabeçalho para ordenar) ou **Calendário** (o mês com os registros; toque num dia vazio
+  para criar um nele). Ao lado, a **ordem**: data, mais recentes, A a Z ou por um campo numérico.
+- **Layout e exibição**: a vista em que a aba abre, a ordem, e o que a página mostra — a leitura,
+  os números, a coluna com notas e resumos, as perguntas — e se os registros entram na agenda e nos
+  lembretes.
 - **Excluir esta aba**: some da barra e apaga os itens junto.
 
 ### Academia
@@ -266,12 +280,44 @@ Google Drive (exige estar conectado — veja a seção do Google mais abaixo):
 - Um **Google Docs** também pode virar **resumo**: o texto do documento é copiado direto para a
   disciplina, pronto para editar por aqui.
 
-### Pessoal
+### Lançamentos e formulários
+
+Toda janela de cadastro do painel segue o mesmo desenho: campos curtos lado a lado, **pílulas** em
+vez de listas quando há poucas opções, atalhos de data (**Ontem**, **Hoje**, **Amanhã**, **Em 1
+semana**), a data escrita por extenso embaixo do campo, aviso claro no campo que falta, e `Enter`
+salva, `Esc` fecha.
+
+O **+ Lançamento** foi refeito: Despesa ou Receita no alto, o **valor em destaque** (aceita conta:
+`45+12,90`), e ao digitar a descrição o Delfos sugere a partir do histórico e já preenche a
+categoria e a conta que você costuma usar. Categorias aparecem como pílulas, das mais usadas para
+as menos, com **+ Nova** para criar uma ali mesmo. "Pago com" também vira pílulas. Data no futuro
+entra como pendente sozinha. Em **Mais opções**: observação, **parcelar** (em N vezes, pelo total ou
+pelo valor da parcela) e **repetir todo mês** (vira um gasto fixo). Uma frase no rodapé resume o
+que vai ser salvo, e **Salvar e lançar outro** mantém a janela aberta.
+
+### Pessoal: calendário e lembretes
 
 Compromissos que não são de nenhum dos outros três pilares: consulta médica, levar o carro para a
-revisão, comprar algo específico. Cada um tem tipo (consulta, tarefa, compromisso, recado, outro),
-data e local opcional, e entra na agenda dos próximos 30 dias e nos alertas de semana cheia junto
-com os prazos da faculdade e os deadlines dos projetos.
+revisão, um aniversário. Cada um tem tipo, data, **hora**, local, se **repete** (toda semana, todo
+mês, todo ano), **quando lembrar** (no dia, 1, 2 ou 7 dias antes, ou como está no perfil) e se é
+**importante** (aí o Delfos avisa também uma semana antes).
+
+- **Calendário**: a aba abre no mês inteiro, com tudo o que tem data **em todas as abas** — provas,
+  prazos, projetos, contas a pagar, suas abas próprias e os compromissos pessoais, cada um na cor da
+  sua área. Toque num dia para ver o que há nele e criar um compromisso já naquela data. A vista
+  **Lista** continua lá, agrupada por quando.
+- **O que se aproxima**: as próximas duas semanas, com um selo nos itens que já estão na janela de
+  lembrete.
+- **Lembretes**: na primeira vez que você abre o Delfos no dia, uma janela mostra o que vence hoje e
+  o que está chegando. Com os **avisos do navegador** ligados, cada item vira uma notificação do
+  sistema (enquanto o Delfos estiver aberto numa aba), e o que tem hora avisa de novo 1 hora antes.
+- **Repetição**: um compromisso que se repete não fica "atrasado": marcar como feito passa para a
+  próxima data, e se a data passar ele anda sozinho para a próxima vez.
+- **Trazer outro calendário**: o botão **Importar calendário** (e uma pergunta do Delfos, enquanto
+  você não importou nada) oferece três caminhos — um **arquivo .ics** (exportado do Google Agenda,
+  Outlook ou iPhone), um **.ics guardado no Google Drive**, ou a **Agenda do Google** direto. Você
+  revisa tudo antes: o que já passou e o que já está no Delfos entra desmarcado, e importar o mesmo
+  arquivo duas vezes não duplica nada. "Desfazer" no aviso tira tudo de uma vez.
 
 ### Onde ficam seus dados
 
@@ -315,8 +361,10 @@ dashboard/
   disciplina.html      disciplina.js     página de uma disciplina
   projetos.html        projetos.js       projetos de renda e oportunidades
   projeto.html         projeto.js        página de um projeto
-  pessoal.html         pessoal.js        compromissos pessoais
-  pilar.html           pilar.js          página de uma aba criada por você
+  pessoal.html         pessoal.js        compromissos pessoais, calendário e lembretes
+  calendario.js                          grade do mês e importação de calendário (.ics, Drive, Google Agenda)
+  lancamento.js                          janela de novo lançamento (usada no Financeiro, visão geral e contas)
+  pilar.html           pilar.js          página de uma aba criada por você (lista, cartões, quadro, tabela, calendário)
   abas.js                                criador/editor de abas (sugestão local e IA)
   leituras.js                            leitura e notas de Faculdade, Projetos, Pessoal e abas próprias
   resumo.html          resumo.js         editor de texto dos resumos

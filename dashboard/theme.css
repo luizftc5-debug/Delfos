@@ -1593,6 +1593,8 @@ table.sheet .meta { font-size: 13px; color: var(--texto-3); margin-top: 3px; }
   cursor: pointer;
 }
 .editor-select.estreito { width: 68px; }
+#fonte.editor-select { max-width: 150px; }
+#bloco.editor-select { max-width: 110px; }
 .editor-select:focus { outline: none; border-color: var(--texto-2); }
 
 .editor-btn {
@@ -1668,6 +1670,167 @@ table.sheet .meta { font-size: 13px; color: var(--texto-3); margin-top: 3px; }
   color: var(--texto-3);
 }
 .editor-rodape .marca { color: var(--texto-3); padding: 0; font-size: 13px; }
+
+/* ---- Editor 1.6: barra agrupada, menus, blocos, folha, foco ---- */
+.editor-ferramentas { display: flex; gap: 2px; align-items: center; }
+.editor-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+.editor-btn .ico { width: 18px; height: 18px; }
+.editor-grupo { display: flex; align-items: center; gap: 2px; padding-right: 6px; margin-right: 4px; border-right: 1px solid var(--linha); }
+.editor-grupo:last-child { border-right: none; }
+.editor-btn.cor { position: relative; flex-direction: column; gap: 0; padding-top: 2px; }
+.letra-cor { font-weight: 650; font-size: 15px; line-height: 16px; }
+.faixa-cor { display: block; width: 16px; height: 3px; border-radius: 2px; background: var(--texto-3); margin-top: 1px; }
+.editor-btn.cor .ico { width: 16px; height: 16px; }
+
+.editor-menu {
+  position: absolute; z-index: 60; min-width: 190px; max-width: 320px;
+  background: var(--superficie); border: 1px solid var(--linha-forte); border-radius: var(--r-md);
+  box-shadow: var(--shadow-pop); padding: 8px; display: flex; flex-direction: column; gap: 2px;
+  animation: pop 0.16s var(--ease-saida, ease);
+}
+.menu-titulo { font-size: 12.5px; font-weight: 550; color: var(--texto-3); padding: 4px 6px 6px; display: flex; justify-content: space-between; gap: 10px; }
+.menu-sep { height: 1px; background: var(--linha); margin: 6px 0; }
+.editor-menu-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+  border: none; background: none; color: var(--texto); font: inherit; font-size: 14px;
+  padding: 7px 8px; border-radius: 7px; cursor: pointer;
+}
+.editor-menu-item:hover { background: var(--superficie-2); }
+.editor-menu-item .ico { width: 17px; height: 17px; color: var(--texto-2); }
+.paleta { display: grid; grid-template-columns: repeat(5, 30px); gap: 7px; padding: 2px 4px 4px; }
+.amostra {
+  width: 30px; height: 30px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--linha-forte); background: var(--c);
+}
+.amostra.realce { background: linear-gradient(var(--c), var(--c)), var(--superficie); }
+.amostra.vazia { background: linear-gradient(135deg, transparent 45%, var(--st-critical) 45% 55%, transparent 55%), var(--superficie); }
+.amostra:hover { transform: scale(1.08); }
+.bolinha-caixa { width: 12px; height: 12px; border-radius: 4px; background: var(--caixa, var(--texto-3)); flex-shrink: 0; }
+.grade-tabela { display: grid; grid-template-columns: repeat(6, 20px); gap: 4px; padding: 2px 6px 6px; }
+.celula-grade { width: 20px; height: 20px; border-radius: 4px; border: 1px solid var(--linha-forte); background: var(--fundo); cursor: pointer; padding: 0; }
+.celula-grade.ativa { background: color-mix(in srgb, var(--destaque) 35%, transparent); border-color: var(--destaque); }
+.menu-seg { display: flex; gap: 4px; padding: 0 4px 8px; }
+.menu-seg button {
+  flex: 1; border: 1px solid var(--linha-forte); background: var(--fundo); color: var(--texto-2);
+  font: inherit; font-size: 13px; padding: 6px 8px; border-radius: 7px; cursor: pointer;
+}
+.menu-seg button[aria-pressed="true"] { background: var(--destaque); border-color: var(--destaque); color: var(--sobre-destaque); }
+.menu-link { min-width: 280px; }
+.menu-link input { margin: 0 4px 8px; width: calc(100% - 8px); }
+.menu-acoes-linha { display: flex; gap: 6px; justify-content: flex-end; padding: 0 4px 2px; }
+.menu-acoes-linha .editor-menu-item { width: auto; }
+
+.editor-busca {
+  flex-basis: 100%;
+  display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+  padding: 8px 0 2px; margin-top: 4px; border-top: 1px solid var(--linha);
+}
+.editor-busca .input { width: 200px; }
+.editor-busca-n { font-size: 13px; color: var(--texto-3); min-width: 90px; }
+::highlight(busca-resumo) { background-color: rgba(250, 204, 21, 0.3); }
+::highlight(busca-atual) { background-color: rgba(250, 204, 21, 0.75); color: #141714; }
+
+.editor-meio { flex: 1; display: flex; justify-content: center; gap: 28px; width: 100%; }
+.editor-sumario {
+  position: sticky; top: 120px; align-self: flex-start; width: 220px; flex-shrink: 0; padding-left: 18px;
+  margin-top: 56px; max-height: calc(100vh - 180px); overflow-y: auto;
+}
+.editor-sumario-titulo { font-size: 12.5px; font-weight: 600; color: var(--texto-3); margin-bottom: 8px; }
+.editor-sumario ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.editor-sumario li.vazio { font-size: 13px; color: var(--texto-3); line-height: 1.5; }
+.editor-sumario button {
+  border: none; background: none; font: inherit; font-size: 13.5px; color: var(--texto-2); text-align: left;
+  padding: 5px 8px; border-radius: 6px; cursor: pointer; width: 100%; line-height: 1.35;
+}
+.editor-sumario button:hover { background: var(--superficie-2); color: var(--texto); }
+.editor-sumario .nivel-1 button { font-weight: 600; color: var(--texto); }
+.editor-sumario .nivel-2 button { padding-left: 18px; }
+.editor-sumario .nivel-3 button { padding-left: 30px; font-size: 13px; }
+
+/* Folha: largura, papel e entrelinhas escolhidos no próprio resumo. */
+.editor-folha[data-largura="estreita"] { max-width: 600px; }
+.editor-folha[data-largura="larga"] { max-width: 960px; }
+.editor-folha[data-papel="sepia"], .editor-folha[data-papel="claro"] {
+  border-radius: 4px; margin-top: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  /* O papel tem as próprias cores: tabela, caixa e código seguem ele, não o tema. */
+  --linha: rgba(0, 0, 0, 0.1); --linha-forte: rgba(0, 0, 0, 0.2);
+  --texto-2: #4f4a3f; --texto-3: #7a7466; --st-good: #477b3b; --st-warning: #9a7018; --serie-entrada: #32669d;
+}
+.editor-folha[data-papel="sepia"] { background: #f4ecd8; color: #3b3021; --texto: #3b3021; --fundo: #efe4c8; --superficie: #f4ecd8; --superficie-2: #e9ddbf; }
+.editor-folha[data-papel="claro"] { background: #fdfdfb; color: #1b1f1b; --texto: #1b1f1b; --fundo: #f2f3ef; --superficie: #fdfdfb; --superficie-2: #eceee8; }
+.editor-folha[data-papel="sepia"] .editor-area, .editor-folha[data-papel="sepia"] .editor-titulo { color: #3b3021; }
+.editor-folha[data-papel="claro"] .editor-area, .editor-folha[data-papel="claro"] .editor-titulo { color: #1b1f1b; }
+.editor-folha[data-papel="sepia"] .editor-titulo, .editor-folha[data-papel="claro"] .editor-titulo { border-bottom-color: rgba(0,0,0,.12); }
+.editor-folha[data-linhas="compacta"] .editor-area { line-height: 1.5; }
+.editor-folha[data-linhas="arejada"] .editor-area { line-height: 2; }
+
+/* Blocos dentro do texto (editor e pré-visualização na disciplina) */
+.editor-area h1, .resumo-texto.rico h1 { font-family: var(--font-voz); font-size: 1.75em; font-weight: 450; line-height: 1.2; margin: 1.1em 0 0.45em; letter-spacing: -0.012em; }
+.editor-area h2, .resumo-texto.rico h2 { font-size: 1.3em; font-weight: 650; line-height: 1.3; margin: 1.1em 0 0.4em; }
+.editor-area h3, .resumo-texto.rico h3 { font-size: 1.08em; font-weight: 650; margin: 1em 0 0.35em; }
+.editor-area blockquote, .resumo-texto.rico blockquote { margin: 0.9em 0; padding: 2px 0 2px 16px; border-left: 3px solid var(--linha-forte); color: var(--texto-2); font-style: italic; }
+.editor-area blockquote[style*="margin"], .resumo-texto.rico blockquote[style*="margin"] { border-left: none; font-style: normal; color: inherit; }
+.editor-area pre, .resumo-texto.rico pre {
+  font-family: "Space Mono", ui-monospace, "Courier New", monospace; font-size: 0.86em; line-height: 1.55;
+  background: var(--fundo); border: 1px solid var(--linha); border-radius: var(--r-sm); padding: 12px 14px; white-space: pre-wrap; margin: 0.9em 0;
+}
+.editor-area hr, .resumo-texto.rico hr { border: none; border-top: 1px solid var(--linha-forte); margin: 1.6em 0; }
+.editor-area a, .resumo-texto.rico a { color: var(--serie-entrada); text-decoration: underline; text-underline-offset: 3px; }
+.editor-area .callout, .resumo-texto.rico .callout {
+  --caixa: var(--texto-3);
+  margin: 1em 0; padding: 10px 14px; border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--caixa) 11%, transparent);
+  box-shadow: inset 3px 0 0 var(--caixa);
+}
+.callout p:last-child { margin-bottom: 0; }
+.callout::before { display: block; font-size: 0.78em; font-weight: 650; letter-spacing: 0.01em; color: var(--caixa); margin-bottom: 2px; content: "Nota"; }
+.callout[data-tipo="dica"]::before { content: "Dica"; }
+.callout[data-tipo="importante"]::before { content: "Importante"; }
+.callout[data-tipo="atencao"]::before { content: "Atenção"; }
+[data-tipo="dica"], .editor-area .callout[data-tipo="dica"], .resumo-texto.rico .callout[data-tipo="dica"] { --caixa: var(--st-good); }
+[data-tipo="importante"], .editor-area .callout[data-tipo="importante"], .resumo-texto.rico .callout[data-tipo="importante"] { --caixa: var(--serie-entrada); }
+[data-tipo="atencao"], .editor-area .callout[data-tipo="atencao"], .resumo-texto.rico .callout[data-tipo="atencao"] { --caixa: var(--st-warning); }
+.editor-area ul.checklist, .resumo-texto.rico ul.checklist { list-style: none; padding-left: 0; }
+ul.checklist > li { position: relative; padding-left: 28px; }
+ul.checklist > li::before {
+  content: ""; position: absolute; left: 2px; top: 0.36em; width: 15px; height: 15px; border-radius: 4px;
+  border: 1.5px solid var(--texto-3); background: transparent; cursor: pointer;
+}
+ul.checklist > li[data-feito]::before {
+  background: var(--destaque) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23141714' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center / 11px no-repeat;
+  border-color: var(--destaque);
+}
+ul.checklist > li[data-feito] { color: var(--texto-3); text-decoration: line-through; }
+.editor-area table, .resumo-texto.rico table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 0.94em; }
+.editor-area td, .editor-area th, .resumo-texto.rico td, .resumo-texto.rico th { border: 1px solid var(--linha-forte); padding: 7px 10px; vertical-align: top; min-width: 40px; }
+.editor-area th, .resumo-texto.rico th { background: var(--superficie-2); font-weight: 600; text-align: left; }
+.editor-area img.img-p, .resumo-texto.rico img.img-p { width: 33%; }
+.editor-area img.img-m, .resumo-texto.rico img.img-m { width: 60%; }
+.editor-area img.img-g, .resumo-texto.rico img.img-g { width: 100%; }
+.editor-area img.img-c, .resumo-texto.rico img.img-c { margin-left: auto; margin-right: auto; }
+.editor-area img { cursor: pointer; }
+.editor-area img.selecionada { outline: 2px solid var(--destaque); outline-offset: 3px; }
+.editor-img-barra {
+  position: absolute; z-index: 40; display: flex; gap: 2px; align-items: center; padding: 4px;
+  background: var(--superficie); border: 1px solid var(--linha-forte); border-radius: var(--r-md); box-shadow: var(--shadow-pop);
+}
+.editor-dica { font-size: 12.5px; color: var(--texto-3); }
+
+/* Modo foco: só a folha; a barra aparece ao chegar ao alto da tela. */
+body.modo-foco .editor-barra, body.modo-foco .editor-rodape, body.modo-foco .editor-sumario { opacity: 0; pointer-events: none; transition: opacity var(--t-medio, .28s) var(--ease-saida, ease); }
+body.modo-foco .editor-topo { opacity: 0.08; transition: opacity var(--t-medio, .28s) var(--ease-saida, ease); }
+body.modo-foco .editor-topo:hover, body.modo-foco .editor-topo:focus-within { opacity: 1; }
+body.modo-foco .editor-topo:hover ~ .editor-barra { opacity: 1; pointer-events: auto; }
+body.modo-foco .editor-folha { padding-top: 72px; }
+
+@media print {
+  .editor-topo, .editor-barra, .editor-rodape, .editor-busca, .editor-sumario, .editor-img-barra, .toasts { display: none !important; }
+  .editor-body, .editor-folha { background: #fff !important; color: #000 !important; box-shadow: none !important; }
+  .editor-folha { max-width: none; padding: 0; margin: 0; }
+  .editor-area, .editor-titulo { color: #000 !important; }
+  .editor-titulo { border: none; }
+  .editor-area .callout { box-shadow: inset 3px 0 0 #888; background: #f2f2f2; }
+}
 
 /* ====================== Assistente de boas-vindas =========================
    Página inteira, sem barra lateral — aqui é o painel que pergunta. */
@@ -2438,6 +2601,14 @@ body.entrando .main .wrap > *:nth-child(n+6) { animation-delay: 200ms; }
   .editor-folha { padding: 28px 17px 60px; }
   .editor-titulo { font-size: 28px; }
   .editor-rodape { padding: 8px 15px; }
+  .editor-dica { display: none; }
+  .editor-ferramentas .editor-btn[data-menu="folha"], .editor-ferramentas #btn-sumario { display: none; }
+  .editor-barra { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .editor-barra::-webkit-scrollbar { display: none; }
+  .editor-grupo { flex-shrink: 0; }
+  .editor-sumario { display: none; }
+  .editor-barra:has(.editor-busca:not([hidden])) { flex-wrap: wrap; }
+  .editor-busca .input { width: calc(50% - 4px); }
 
   .assistente { padding: 24px 14px 40px; }
   .assistente-card { padding: 28px 20px; }

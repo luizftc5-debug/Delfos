@@ -16,6 +16,13 @@
     <header class="editor-topo">
       <a class="editor-voltar" id="voltar" href="faculdade.html">← <span id="voltar-nome">Disciplina</span></a>
       <div class="editor-estado" id="estado">—</div>
+      <div class="editor-ferramentas">
+        <button class="editor-btn" id="btn-sumario" type="button" title="Sumário: os títulos do texto, para pular direto" aria-pressed="false" data-ico="sumario"></button>
+        <button class="editor-btn" id="btn-buscar" type="button" title="Buscar e substituir (Ctrl+F)" data-ico="busca"></button>
+        <button class="editor-btn" id="btn-folha" type="button" title="Folha: largura, papel e espaçamento" data-menu="folha" data-ico="folha"></button>
+        <button class="editor-btn" id="btn-foco" type="button" title="Modo foco: só o texto" aria-pressed="false" data-ico="foco"></button>
+        <button class="editor-btn" id="btn-exportar" type="button" title="Imprimir, PDF, Word ou texto" data-menu="exportar" data-ico="exportar"></button>
+      </div>
       <div class="editor-acoes">
         <button class="btn ghost sm" id="btn-excluir" type="button">Excluir</button>
         <button class="btn primary sm" id="btn-salvar" type="button">Salvar</button>
@@ -23,27 +30,89 @@
     </header>
 
     <div class="editor-barra" role="toolbar" aria-label="Formatação do texto">
-      <select class="editor-select" id="fonte" aria-label="Fonte"></select>
-      <select class="editor-select estreito" id="tamanho" aria-label="Tamanho da fonte"></select>
-      <span class="editor-sep"></span>
-      <button class="editor-btn" data-cmd="bold" title="Negrito (Ctrl+B)" aria-label="Negrito" type="button"><b>N</b></button>
-      <button class="editor-btn" data-cmd="italic" title="Itálico (Ctrl+I)" aria-label="Itálico" type="button"><i>I</i></button>
-      <button class="editor-btn" data-cmd="underline" title="Sublinhado (Ctrl+U)" aria-label="Sublinhado" type="button"><u>S</u></button>
-      <span class="editor-sep"></span>
-      <button class="editor-btn largo" id="btn-limpar" title="Remover formatação da seleção" type="button">Limpar estilo</button>
-      <span class="editor-sep"></span>
-      <button class="editor-btn largo" id="btn-imagem" title="Inserir imagem — também dá para colar ou arrastar" type="button">Imagem</button>
-      <input type="file" accept="image/*" class="hidden" id="f-imagem" />
+      <div class="editor-grupo">
+        <button class="editor-btn" data-cmd="undo" title="Desfazer (Ctrl+Z)" aria-label="Desfazer" data-ico="desfazer" type="button"></button>
+        <button class="editor-btn" data-cmd="redo" title="Refazer (Ctrl+Y)" aria-label="Refazer" data-ico="refazer-ed" type="button"></button>
+      </div>
+      <div class="editor-grupo">
+        <select class="editor-select" id="bloco" aria-label="Estilo do parágrafo" title="Estilo do parágrafo">
+          <option value="p">Texto</option>
+          <option value="h1">Título 1</option>
+          <option value="h2">Título 2</option>
+          <option value="h3">Título 3</option>
+          <option value="blockquote">Citação</option>
+          <option value="pre">Código</option>
+        </select>
+        <select class="editor-select" id="fonte" aria-label="Fonte" title="Fonte"></select>
+        <select class="editor-select estreito" id="tamanho" aria-label="Tamanho da fonte" title="Tamanho"></select>
+      </div>
+      <div class="editor-grupo">
+        <button class="editor-btn" data-cmd="bold" title="Negrito (Ctrl+B)" aria-label="Negrito" type="button"><b>N</b></button>
+        <button class="editor-btn" data-cmd="italic" title="Itálico (Ctrl+I)" aria-label="Itálico" type="button"><i>I</i></button>
+        <button class="editor-btn" data-cmd="underline" title="Sublinhado (Ctrl+U)" aria-label="Sublinhado" type="button"><u>S</u></button>
+        <button class="editor-btn" data-cmd="strikeThrough" title="Tachado" aria-label="Tachado" type="button"><s>T</s></button>
+        <button class="editor-btn" data-cmd="superscript" title="Sobrescrito (Na⁺, x²)" aria-label="Sobrescrito" type="button">x<sup>2</sup></button>
+        <button class="editor-btn" data-cmd="subscript" title="Subscrito (H₂O)" aria-label="Subscrito" type="button">x<sub>2</sub></button>
+        <button class="editor-btn" id="btn-limpar" title="Remover formatação da seleção" aria-label="Remover formatação" data-ico="limpar" type="button"></button>
+      </div>
+      <div class="editor-grupo">
+        <button class="editor-btn cor" data-menu="cor" title="Cor do texto" aria-label="Cor do texto" type="button"><span class="letra-cor">A</span><i class="faixa-cor" id="faixa-cor"></i></button>
+        <button class="editor-btn cor" data-menu="realce" title="Marca-texto" aria-label="Marca-texto" type="button" data-ico="marca-texto"><i class="faixa-cor" id="faixa-realce"></i></button>
+      </div>
+      <div class="editor-grupo">
+        <button class="editor-btn" data-cmd="insertUnorderedList" title="Lista com marcadores (- e espaço)" aria-label="Lista com marcadores" data-ico="lista" type="button"></button>
+        <button class="editor-btn" data-cmd="insertOrderedList" title="Lista numerada (1. e espaço)" aria-label="Lista numerada" data-ico="lista-num" type="button"></button>
+        <button class="editor-btn" id="btn-checklist" title="Lista de tarefas ([] e espaço)" aria-label="Lista de tarefas" data-ico="checklist" type="button"></button>
+      </div>
+      <div class="editor-grupo">
+        <button class="editor-btn" data-menu="alinhar" title="Alinhamento" aria-label="Alinhamento" data-ico="alinhar-esq" type="button"></button>
+        <button class="editor-btn" data-cmd="outdent" title="Diminuir recuo" aria-label="Diminuir recuo" data-ico="recuo-menos" type="button"></button>
+        <button class="editor-btn" data-cmd="indent" title="Aumentar recuo" aria-label="Aumentar recuo" data-ico="recuo-mais" type="button"></button>
+      </div>
+      <div class="editor-grupo">
+        <button class="editor-btn" id="btn-link" title="Link (Ctrl+K)" aria-label="Link" data-ico="link" type="button"></button>
+        <button class="editor-btn" id="btn-imagem" title="Imagem (também dá para colar ou arrastar)" aria-label="Imagem" data-ico="imagem" type="button"></button>
+        <input type="file" accept="image/*" class="hidden" id="f-imagem" />
+        <button class="editor-btn" data-menu="tabela" title="Tabela" aria-label="Tabela" data-ico="tabela" type="button"></button>
+        <button class="editor-btn" data-menu="destaque" title="Caixa de destaque: nota, dica, importante, atenção" aria-label="Caixa de destaque" data-ico="caixa" type="button"></button>
+        <button class="editor-btn" data-cmd="insertHorizontalRule" title="Divisor (--- e Enter)" aria-label="Divisor" data-ico="divisor" type="button"></button>
+      </div>
+      <div class="editor-busca" id="painel-busca" hidden>
+      <input class="input sm" id="busca-termo" placeholder="Buscar no texto" autocomplete="off" />
+      <input class="input sm" id="busca-troca" placeholder="Substituir por" autocomplete="off" />
+      <span class="editor-busca-n" id="busca-n"></span>
+      <button class="btn sm" type="button" id="busca-prox">Próximo</button>
+      <button class="btn sm" type="button" id="busca-trocar">Substituir</button>
+      <button class="btn sm" type="button" id="busca-todos">Substituir todos</button>
+      <button class="btn ghost sm icon" type="button" id="busca-fechar" aria-label="Fechar busca" data-ico="fechar"></button>
     </div>
 
-    <div class="editor-folha">
-      <input class="editor-titulo" id="titulo" placeholder="Título do resumo" aria-label="Título do resumo" />
-      <div class="editor-area" id="corpo" contenteditable="true" role="textbox" aria-multiline="true"
-           aria-label="Corpo do resumo" spellcheck="true"></div>
+    </div>
+
+    <div class="editor-meio">
+      <aside class="editor-sumario" id="sumario" hidden aria-label="Sumário">
+        <div class="editor-sumario-titulo">Sumário</div>
+        <ol id="sumario-lista"></ol>
+      </aside>
+      <div class="editor-folha" id="folha">
+        <input class="editor-titulo" id="titulo" placeholder="Título do resumo" aria-label="Título do resumo" />
+        <div class="editor-area" id="corpo" contenteditable="true" role="textbox" aria-multiline="true"
+             aria-label="Corpo do resumo" spellcheck="true"></div>
+      </div>
+    </div>
+
+    <div class="editor-img-barra" id="img-barra" hidden>
+      <button type="button" class="editor-btn largo" data-img="img-p">Pequena</button>
+      <button type="button" class="editor-btn largo" data-img="img-m">Média</button>
+      <button type="button" class="editor-btn largo" data-img="img-g">Inteira</button>
+      <span class="editor-sep"></span>
+      <button type="button" class="editor-btn largo" data-img="img-c">Centralizar</button>
+      <button type="button" class="editor-btn largo" data-img="remover">Remover</button>
     </div>
 
     <footer class="editor-rodape">
       <span id="contagem">0 palavras</span>
+      <span class="editor-dica">Atalhos: # título, - lista, [] tarefa, &gt; citação, --- divisor</span>
       <span class="marca">Delfos</span>
     </footer>
   </div>

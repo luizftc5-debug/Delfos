@@ -188,29 +188,94 @@ const UI = (() => {
   // escrito pelo próprio usuário, mas um backup importado pode trazer
   // qualquer coisa — e resumo é o único lugar do painel que exibe HTML em vez
   // de texto escapado.
-  const TAGS_OK = new Set(["P", "BR", "DIV", "SPAN", "B", "STRONG", "I", "EM", "U",
-    "UL", "OL", "LI", "H1", "H2", "H3", "BLOCKQUOTE", "FONT", "IMG"]);
-  const ESTILOS_OK = new Set(["font-family", "font-size", "font-weight", "font-style", "text-decoration"]);
+  const TAGS_OK = new Set(["P", "BR", "DIV", "SPAN", "B", "STRONG", "I", "EM", "U", "S", "STRIKE", "SUB", "SUP",
+    "UL", "OL", "LI", "H1", "H2", "H3", "BLOCKQUOTE", "FONT", "IMG", "HR", "PRE", "CODE", "A",
+    "TABLE", "THEAD", "TBODY", "TR", "TD", "TH"]);
+  // Cada propriedade de estilo só passa com um valor que o editor sabe produzir
+  // (cor, alinhamento, recuo, tamanho de imagem) — nada de url(), expression…
+  const COR = /^([a-z]{3,20}|#[0-9a-f]{3,8}|rgba?\(\s*[\d.]+%?\s*,\s*[\d.]+%?\s*,\s*[\d.]+%?\s*(,\s*[\d.]+\s*)?\)|transparent|inherit)$/i;
+  const MEDIDA = /^-?\d+(\.\d+)?(px|em|%)?$/;
+  const ESTILOS_OK = {
+    "font-family": (v) => /^[\w\s,'"-]+$/.test(v),
+    "font-size": (v) => MEDIDA.test(v) || /^(x{0,2}-?(small|large)|medium)$/.test(v),
+    "font-weight": (v) => /^(normal|bold|bolder|lighter|\d{3})$/.test(v),
+    "font-style": (v) => /^(normal|italic)$/.test(v),
+    "text-decoration": (v) => /^[a-z\s-]+$/.test(v),
+    "text-decoration-line": (v) => /^[a-z\s-]+$/.test(v),
+    "vertical-align": (v) => /^(sub|super|baseline)$/.test(v),
+    color: (v) => COR.test(v),
+    "background-color": (v) => COR.test(v),
+    "text-align": (v) => /^(left|right|center|justify|start|end)$/.test(v),
+    "margin-left": (v) => MEDIDA.test(v),
+    "margin": (v) => v.split(/\s+/).every((x) => MEDIDA.test(x)),
+    "padding": (v) => v.split(/\s+/).every((x) => MEDIDA.test(x)),
+    "border": (v) => /^(none|0(px)?)$/.test(v),
+    width: (v) => /^\d{1,3}%$/.test(v) || /^\d{1,4}px$/.test(v),
+  };
+  // Classes e dados que o editor usa para blocos próprios (caixa de destaque,
+  // checklist, tabela). Qualquer outro valor é jogado fora.
+  const CLASSES_OK = new Set(["callout", "checklist", "tabela-resumo", "img-p", "img-m", "img-g", "img-c"]);
+  const DADOS_OK = { "data-tipo": /^(nota|dica|importante|atencao)$/, "data-feito": /^1$/, "data-anexo-id": /^[\w-]{1,80}$/ };
+
+  function linkSeguro(href) {
+    const v = String(href || "").trim();
+    return /^(https?:|mailto:)/i.test(v) ? v : "";
+  }
+
   // "src" fica de fora de propósito: uma imagem inserida no editor vira
   // <img data-anexo-id> sem src — o navegador nunca guarda a URL do blob,
   // que morre a cada recarregamento. UI.resolverImagens() é quem repõe o
   // src na hora de exibir, buscando o arquivo de novo no IndexedDB.
-  const ATRIBUTOS_OK = new Set(["face", "size", "data-anexo-id", "alt"]); // "face"/"size": resquícios de <font> do execCommand
+  const ATRIBUTOS_OK = new Set(["face", "size", "alt", "colspan", "rowspan"]); // "face"/"size": resquícios de <font> do execCommand
+
+  /**
+   * Monta o HTML num documento inerte (DOMParser): ali nada carrega nem roda.
+   * Montar num <div> da página, mesmo solto, já dispara o onerror de um
+   * <img src=x onerror=…> antes de a limpeza acontecer.
+   */
+  function moldeInerte(html) {
+    return new DOMParser().parseFromString(`<!doctype html><body>${String(html || "")}</body>`, "text/html").body;
+  }
 
   function htmlSeguro(html) {
-    const molde = document.createElement("div");
-    molde.innerHTML = String(html || "");
+    const molde = moldeInerte(html);
     // querySelectorAll devolve lista estática: os filhos de uma tag removida
     // já estão nela e continuam sendo visitados depois de subirem de nível.
+    // Estes somem com o conteúdo junto (o texto de um <script> não é texto do resumo).
+    molde.querySelectorAll("script, style, iframe, object, embed, template, noscript, svg, math, link, meta").forEach((el) => el.remove());
     molde.querySelectorAll("*").forEach((el) => {
+      if (!molde.contains(el)) return;
       if (!TAGS_OK.has(el.tagName)) return el.replaceWith(...el.childNodes);
       [...el.attributes].forEach((a) => {
-        if (ATRIBUTOS_OK.has(a.name)) return;
-        if (a.name !== "style") return el.removeAttribute(a.name);
+        const nome = a.name.toLowerCase();
+        if (ATRIBUTOS_OK.has(nome)) {
+          if ((nome === "colspan" || nome === "rowspan") && !/^\d{1,2}$/.test(a.value)) el.removeAttribute(a.name);
+          return;
+        }
+        if (DADOS_OK[nome]) { if (!DADOS_OK[nome].test(a.value)) el.removeAttribute(a.name); return; }
+        if (nome === "class") {
+          const cls = a.value.split(/\s+/).filter((c) => CLASSES_OK.has(c));
+          if (cls.length) el.setAttribute("class", cls.join(" ")); else el.removeAttribute("class");
+          return;
+        }
+        if (nome === "href" && el.tagName === "A") {
+          const ok = linkSeguro(a.value);
+          if (ok) { el.setAttribute("href", ok); el.setAttribute("target", "_blank"); el.setAttribute("rel", "noopener noreferrer"); }
+          else el.removeAttribute("href");
+          return;
+        }
+        if ((nome === "target" || nome === "rel") && el.tagName === "A") return;
+        if (nome !== "style") return el.removeAttribute(a.name);
         const mantidos = a.value
           .split(";")
           .map((d) => d.trim())
-          .filter((d) => ESTILOS_OK.has(d.split(":")[0]?.trim().toLowerCase()));
+          .filter((d) => {
+            const i = d.indexOf(":");
+            if (i < 0) return false;
+            const prop = d.slice(0, i).trim().toLowerCase();
+            const val = d.slice(i + 1).trim();
+            return ESTILOS_OK[prop] && !/url\(|expression|javascript:/i.test(val) && ESTILOS_OK[prop](val.replace(/\s*!important$/, ""));
+          });
         if (mantidos.length) el.setAttribute("style", mantidos.join("; "));
         else el.removeAttribute("style");
       });
@@ -220,8 +285,7 @@ const UI = (() => {
 
   /** Ids dos anexos de imagem embutidos num HTML de resumo (<img data-anexo-id>). */
   function idsImagensEm(html) {
-    const molde = document.createElement("div");
-    molde.innerHTML = String(html || "");
+    const molde = moldeInerte(html);
     return [...molde.querySelectorAll("img[data-anexo-id]")].map((img) => img.dataset.anexoId).filter(Boolean);
   }
 

@@ -2,12 +2,13 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Contas e cartões · Delfos</title>
+  <meta name="theme-color" content="#121413" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=Funnel+Sans:ital,wght@0,300..800;1,300..800&display=swap" />
   <link rel="stylesheet" href="theme.css" />
 </head>
 <body>
@@ -37,17 +38,17 @@
         <div class="grid g3" style="margin-bottom:14px;">
           <div class="card tinted financeiro">
             <div class="stat-label">Total em contas</div>
-            <div class="stat-value num" id="s-total">—</div>
+            <div class="stat-value num" id="s-total">-</div>
             <div class="stat-sub" id="s-total-d"></div>
           </div>
           <div class="card tinted financeiro">
             <div class="stat-label">Faturas abertas</div>
-            <div class="stat-value num" id="s-faturas">—</div>
+            <div class="stat-value num" id="s-faturas">-</div>
             <div class="stat-sub" id="s-faturas-d"></div>
           </div>
           <div class="card tinted financeiro">
             <div class="stat-label">Sobra estimada</div>
-            <div class="stat-value num" id="s-sobra">—</div>
+            <div class="stat-value num" id="s-sobra">-</div>
             <div class="stat-sub">Contas menos faturas em aberto</div>
           </div>
         </div>
@@ -62,7 +63,7 @@
 
         <section class="section">
           <div class="section-head">
-            <h2 class="section-title"><span class="swatch projetos"></span>Cartões de crédito</h2>
+            <h2 class="section-title"><span class="swatch cartao"></span>Cartões de crédito</h2>
             <span class="card-note" id="cartoes-resumo"></span>
           </div>
           <div id="cartoes"></div>

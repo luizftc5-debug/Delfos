@@ -31,7 +31,7 @@ const Financas = (() => {
 
   // Opções para o campo "Pago com" do formulário de lançamento.
   function opcoesOrigem() {
-    const opcoes = [{ valor: "", rotulo: "— não informado —" }];
+    const opcoes = [{ valor: "", rotulo: "Não informado" }];
     contas().forEach((c) => opcoes.push({ valor: `conta:${c.id}`, rotulo: `${c.nome} (${c.tipo})` }));
     cartoes().forEach((c) => opcoes.push({ valor: `cartao:${c.id}`, rotulo: `${c.nome} (cartão)` }));
     return opcoes;

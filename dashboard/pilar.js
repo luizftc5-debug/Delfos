@@ -15,7 +15,7 @@
       UI.vazio({
         icone: "◌",
         titulo: "Aba não encontrada",
-        texto: "Pode ter sido excluída, ou este link é de outro navegador — os dados ficam salvos em cada navegador.",
+        texto: "Pode ter sido excluída, ou este link é de outro navegador: os dados ficam salvos em cada navegador.",
         rotuloAcao: "Voltar à visão geral",
         aoAcionar: () => (location.href = "index.html"),
       })
@@ -110,7 +110,7 @@
       const hoje = L.checkin.filter((x) => x.hoje).length;
       t.push({ l: "Marcados hoje", v: `${hoje} de ${L.checkin.length}`, s: hoje === L.checkin.length && L.checkin.length ? "tudo em dia" : "toque em Hoje em cada um" });
       const melhor = [...L.checkin].sort((a, b) => b.seq - a.seq)[0];
-      t.push({ l: "Maior sequência", v: melhor ? `${melhor.seq} ${melhor.seq === 1 ? "dia" : "dias"}` : "—", s: melhor?.seq ? fmt.escape(melhor.i.descricao) : "comece hoje" });
+      t.push({ l: "Maior sequência", v: melhor ? `${melhor.seq} ${melhor.seq === 1 ? "dia" : "dias"}` : "-", s: melhor?.seq ? fmt.escape(melhor.i.descricao) : "comece hoje" });
     } else if (pilar.naAgenda) {
       t.push({ l: "Próximos 7 dias", v: L.semana.length, s: L.semana[0] ? `próximo: ${fmt.escape(L.semana[0].descricao)}` : "nada marcado" });
       t.push({ l: "Atrasados", v: L.atrasados.length, s: L.atrasados.length ? "vale concluir ou remarcar" : "nada atrasado", classe: L.atrasados.length ? "delta down" : "" });
@@ -670,7 +670,7 @@
   const catalogoOpcoes = () =>
     [...EXERCICIOS]
       .sort((a, b) => a.grupo.localeCompare(b.grupo, "pt-BR") || a.nome.localeCompare(b.nome, "pt-BR"))
-      .map((e) => ({ valor: e.id, rotulo: `${e.grupo} — ${e.nome}` }));
+      .map((e) => ({ valor: e.id, rotulo: `${e.grupo}: ${e.nome}` }));
 
   const nomeExercicio = (exercicioId) => EXERCICIOS.find((e) => e.id === exercicioId)?.nome || "Exercício removido do catálogo";
   const grupoExercicio = (exercicioId) => EXERCICIOS.find((e) => e.id === exercicioId)?.grupo || "";
@@ -708,7 +708,7 @@
     card.innerHTML = `
       <h3 class="card-title" style="margin-bottom:10px;">Séries por grupo muscular</h3>
       <p class="card-note" style="margin:0 0 10px;">
-        Soma das séries de cada exercício cadastrado nos dias abaixo — não é meta nem recomendação,
+        Soma das séries de cada exercício cadastrado nos dias abaixo. Não é meta nem recomendação,
         só o que já está anotado.
       </p>
       <div class="assistente-resumo"><dl>${grupos
@@ -726,7 +726,7 @@
         UI.vazio({
           icone: pilar.icone,
           titulo: "Antes de começar",
-          texto: "Um questionário rápido — objetivo, experiência e frequência semanal — só para sugerir como organizar seus dias de treino. Você monta o que entra em cada um, escolhendo do catálogo de exercícios.",
+          texto: "Um questionário rápido (objetivo, experiência e frequência semanal) só para sugerir como organizar seus dias de treino. Você monta o que entra em cada um, escolhendo do catálogo de exercícios.",
           rotuloAcao: "Começar",
           aoAcionar: () => abrirQuestionario({ primeiraVez: true }),
         })
@@ -775,7 +775,7 @@
           const li = document.createElement("li");
           const partes = [];
           if (ex.seriesAtual || ex.repeticoesAtual) {
-            partes.push(`${ex.seriesAtual || "—"}x${ex.repeticoesAtual || "—"}`);
+            partes.push(`${ex.seriesAtual || "-"}x${ex.repeticoesAtual || "-"}`);
           }
           if (ex.cargaAtual !== null && ex.cargaAtual !== undefined) partes.push(`carga atual: ${ex.cargaAtual}${ex.unidade}`);
           if (ex.recorde !== null && ex.recorde !== undefined) partes.push(`recorde: ${ex.recorde}${ex.unidade}`);
@@ -815,7 +815,7 @@
     const atual = pilar.academia || {};
     const passo1 = await UI.formulario({
       titulo: primeiraVez ? "Antes de começar" : "Refazer o questionário",
-      descricao: "Isso não prescreve treino nenhum — só ajuda a sugerir como organizar seus dias. O que entra em cada um é você quem escolhe, do catálogo de exercícios.",
+      descricao: "Isso não prescreve treino nenhum; só ajuda a sugerir como organizar seus dias. O que entra em cada um é você quem escolhe, do catálogo de exercícios.",
       campos: [
         { nome: "objetivo", rotulo: "Objetivo principal", tipo: "select", opcoes: Store.ACADEMIA_OBJETIVOS, obrigatorio: true },
         { nome: "experiencia", rotulo: "Experiência com treino", tipo: "select", opcoes: Store.ACADEMIA_EXPERIENCIAS, obrigatorio: true },
@@ -834,7 +834,7 @@
 
     const passo2 = await UI.formulario({
       titulo: "Como você organiza o treino",
-      descricao: "Treinar cada grupo muscular umas duas vezes por semana costuma render mais do que uma vez só, com o mesmo volume total — por isso a sugestão abaixo. Mas a divisão que você já usa e gosta também é uma escolha válida.",
+      descricao: "Treinar cada grupo muscular umas duas vezes por semana costuma render mais do que uma vez só, com o mesmo volume total. Por isso a sugestão abaixo. Mas a divisão que você já usa e gosta também é uma escolha válida.",
       campos: [
         { nome: "divisao", rotulo: "Divisão de treino", tipo: "select", opcoes: Store.ACADEMIA_DIVISOES, valorPadrao: sugestao, obrigatorio: true },
       ],
@@ -856,7 +856,7 @@
         .map((nome) => ({ id: Store.uid("dia"), nome, exercicios: [] }));
     }
     Store.atualizar(CAMINHO, id, patch);
-    UI.toast(primeiraVez ? "Pronto — agora monte seus dias com exercícios do catálogo." : "Questionário atualizado.");
+    UI.toast(primeiraVez ? "Pronto. Agora monte seus dias com exercícios do catálogo." : "Questionário atualizado.");
     render();
   }
 

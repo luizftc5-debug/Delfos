@@ -406,7 +406,7 @@
       q.push({
         id: `fixo:${r.chave}`,
         texto: `“${r.descricao}” apareceu em ${r.meses} meses, sempre perto de ${moeda(r.valor)}. É um gasto fixo?`,
-        apoio: "Gasto fixo é o que já está comprometido todo mês — assinatura, aluguel, mensalidade.",
+        apoio: "Gasto fixo é o que já está comprometido todo mês: assinatura, aluguel, mensalidade.",
         controle: () => botoes([
           ["Sim, é fixo", () => { salvarPrefs({ fixos: { ...prefs().fixos, [r.chave]: true } }); feito("Anotado como gasto fixo."); }, true],
           ["Não é", () => { salvarPrefs({ fixos: { ...prefs().fixos, [r.chave]: false } }); feito("Anotado."); }],
@@ -1007,7 +1007,7 @@
           <span class="meta so-celular">${esc([fmt.dataCurta(item.data), item.categoria || "Outros", origem].filter(Boolean).join(", "))}</span>
         </td>
         <td><span class="badge">${esc(item.categoria || "Outros")}</span></td>
-        <td class="muted">${esc(origem || "—")}</td>
+        <td class="muted">${esc(origem || "-")}</td>
         <td>${pendente
           ? `<button class="badge urgente" type="button" data-pagar title="Marcar como pago" style="border:none; cursor:pointer; font:inherit; font-size:12.5px;">pendente</button>`
           : `<span class="muted" style="font-size:13.5px;">${receita ? "recebido" : "pago"}</span>`}</td>

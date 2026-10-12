@@ -2,12 +2,13 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Visão geral · Delfos</title>
+  <meta name="theme-color" content="#121413" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=Funnel+Sans:ital,wght@0,300..800;1,300..800&display=swap" />
   <link rel="stylesheet" href="theme.css" />
 </head>
 <body>
@@ -17,9 +18,8 @@
       <div class="wrap">
         <header class="topbar">
           <div>
-            <div class="eyebrow data" id="sub-hoje"></div>
-            <h1 id="saudacao">Visão geral</h1>
-            <p class="sub" id="sub-resumo"></p>
+            <h1>Visão geral</h1>
+            <p class="sub" id="sub-hoje"></p>
           </div>
           <div class="topbar-actions">
             <button class="btn" id="btn-lancamento">+ Lançamento</button>
@@ -27,52 +27,62 @@
           </div>
         </header>
 
-        <!-- A leitura: o painel diz em uma frase o que está acontecendo.
-             É o único texto em serifa da tela. -->
+        <!-- A leitura é o título da página: a saudação abre a frase, em tom
+             mais baixo, e o painel diz o que está acontecendo. -->
         <p class="leitura" id="leitura"></p>
 
-        <div id="avisos"></div>
-
-        <div class="grid g2" id="sec-topo" style="margin-bottom:14px;">
-          <section class="card hero">
-            <div class="stat-label">Saldo atual</div>
-            <div class="hero-value num" id="hero-saldo">—</div>
+        <!-- Razão: os quatro números do dia em colunas abertas, sem caixa. -->
+        <section class="razao" id="sec-topo" aria-label="Números de hoje">
+          <div class="razao-item principal">
+            <div class="stat-label" id="hero-rotulo">Saldo nas contas</div>
+            <div class="hero-value num" id="hero-saldo">-</div>
             <div class="stat-sub" id="hero-detalhe"></div>
-            <button class="btn sm" id="btn-saldo" style="margin-top:14px;">Ajustar saldo</button>
+            <button class="btn sm" id="btn-saldo">Ajustar saldo</button>
+          </div>
+          <div class="razao-item">
+            <div class="stat-label" id="mes-rotulo">No mês</div>
+            <div class="stat-value num" id="mes-valor">-</div>
+            <div class="stat-sub" id="mes-detalhe"></div>
+          </div>
+          <div class="razao-item" id="proximo"></div>
+          <div class="razao-item">
+            <div class="stat-label">A pagar</div>
+            <div class="stat-value num" id="pagar-valor">-</div>
+            <div class="stat-sub" id="pagar-detalhe"></div>
+          </div>
+        </section>
+
+        <div class="home-duas">
+          <section class="home-agenda" id="sec-agenda">
+            <div class="section-head">
+              <h2 class="section-title">Agenda</h2>
+              <span class="card-note" id="agenda-resumo"></span>
+            </div>
+            <div id="agenda"></div>
           </section>
 
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title">Próximo compromisso</h2>
-            </div>
-            <div id="proximo"></div>
-          </section>
+          <div class="home-lado">
+            <section id="sec-notas">
+              <div class="section-head">
+                <h2 class="section-title">O que o Delfos notou</h2>
+              </div>
+              <ul class="notas" id="notas"></ul>
+            </section>
+
+            <section id="sec-insights">
+              <div class="section-head">
+                <h2 class="section-title">Em números</h2>
+              </div>
+              <dl class="figuras" id="insights"></dl>
+            </section>
+          </div>
         </div>
 
-        <!-- Os pilares se encostam num campo contíguo, separados por 1px. -->
-        <div class="grid campo pilares" id="pilares"></div>
-
-        <section class="section" id="sec-notas">
+        <section class="section" id="sec-abas">
           <div class="section-head">
-            <h2 class="section-title">O que o Delfos notou</h2>
-            <span class="card-note">o que pede ação, de todas as abas</span>
+            <h2 class="section-title">Suas abas</h2>
           </div>
-          <div class="card"><ul class="notas" id="notas"></ul></div>
-        </section>
-
-        <section class="section" id="sec-agenda">
-          <div class="section-head">
-            <h2 class="section-title">Próximos 30 dias</h2>
-            <span class="card-note" id="agenda-resumo"></span>
-          </div>
-          <div class="card"><div id="agenda"></div></div>
-        </section>
-
-        <section class="section" id="sec-insights">
-          <div class="section-head">
-            <h2 class="section-title">Leitura da situação</h2>
-          </div>
-          <div class="grid g-auto" id="insights"></div>
+          <nav class="indice" id="pilares" aria-label="Suas abas"></nav>
         </section>
       </div>
     </main>

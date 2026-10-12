@@ -110,7 +110,7 @@ function conectarGoogle() {
       passos: [
         "Abra o arquivo dashboard/config.js.",
         'Substitua o texto "SEU_CLIENT_ID_AQUI.apps.googleusercontent.com" pelo Client ID criado no Google Cloud Console.',
-        "O valor precisa terminar em .apps.googleusercontent.com — cole ele inteiro, sem espaços.",
+        "O valor precisa terminar em .apps.googleusercontent.com. Cole ele inteiro, sem espaços.",
         "Salve o arquivo, envie a alteração (commit e push) e recarregue esta página.",
       ],
       origem,
@@ -122,7 +122,7 @@ function conectarGoogle() {
       titulo: "As bibliotecas do Google ainda estão carregando",
       passos: [
         "Espere alguns segundos e clique em conectar novamente.",
-        "Se a mensagem continuar, verifique sua conexão — as bibliotecas vêm dos servidores do Google.",
+        "Se a mensagem continuar, verifique sua conexão: as bibliotecas vêm dos servidores do Google.",
       ],
     });
   }
@@ -140,7 +140,7 @@ function explicarErro(resp) {
       passos: [
         "A janela do Google foi fechada antes de concluir.",
         "Clique em conectar de novo e aceite as permissões de leitura da agenda e do Drive.",
-        "Se o Google avisar que o app não é verificado, entre em “Avançado” e siga assim mesmo — o app é seu.",
+        "Se o Google avisar que o app não é verificado, entre em “Avançado” e siga assim mesmo: o app é seu.",
       ],
     });
   }

@@ -94,7 +94,7 @@
         valor: x.media ? x.media.media : 0, meta: min, acima: x.media && x.media.media < min,
         sub: partes.join(""),
       };
-    }), { cor: "var(--s-faculdade)", formatar: (v) => (v ? fmt.decimal(v) : "—"), rotuloMeta: "média mínima", escala: 10 });
+    }), { cor: "var(--s-faculdade)", formatar: (v) => (v ? fmt.decimal(v) : "-"), rotuloMeta: "média mínima", escala: 10 });
   }
 
   /* ------------------------------ Perguntas ------------------------------- */
@@ -270,7 +270,7 @@
       { nome: "tipo", rotulo: "Tipo", tipo: "select", opcoes: ["entrega", "seminário", "trabalho", "TCC", "outro"] },
       {
         nome: "disciplinaId", rotulo: "Disciplina", tipo: "select",
-        opcoes: [{ valor: "", rotulo: "— nenhuma —" }, ...disciplinas().map((d) => ({ valor: d.id, rotulo: d.nome }))],
+        opcoes: [{ valor: "", rotulo: "Nenhuma" }, ...disciplinas().map((d) => ({ valor: d.id, rotulo: d.nome }))],
       },
     ];
   }

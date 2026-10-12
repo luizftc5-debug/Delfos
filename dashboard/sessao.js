@@ -147,7 +147,7 @@ const Sessao = (() => {
     if (confirmacao !== undefined && senha !== confirmacao) return "As duas senhas não são iguais.";
     const vezes = await vezesVazada(senha);
     if (vezes) {
-      return `Essa senha já apareceu ${vezes.toLocaleString("pt-BR")} vezes em vazamentos de outros sites — é das primeiras que um invasor tenta. Escolha outra.`;
+      return `Essa senha já apareceu ${vezes.toLocaleString("pt-BR")} vezes em vazamentos de outros sites; é das primeiras que um invasor tenta. Escolha outra.`;
     }
     return "";
   }

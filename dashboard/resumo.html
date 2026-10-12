@@ -2,12 +2,13 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Resumo · Delfos</title>
+  <meta name="theme-color" content="#121413" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=Funnel+Sans:ital,wght@0,300..800;1,300..800&display=swap" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;600&family=Space+Mono:wght@400;700&family=Caveat:wght@500;700&display=swap" />
   <link rel="stylesheet" href="theme.css" />
 </head>
@@ -15,7 +16,7 @@
   <div class="editor" id="editor-raiz">
     <header class="editor-topo">
       <a class="editor-voltar" id="voltar" href="faculdade.html">← <span id="voltar-nome">Disciplina</span></a>
-      <div class="editor-estado" id="estado">—</div>
+      <div class="editor-estado" id="estado"></div>
       <div class="editor-ferramentas">
         <button class="editor-btn" id="btn-sumario" type="button" title="Sumário: os títulos do texto, para pular direto" aria-pressed="false" data-ico="sumario"></button>
         <button class="editor-btn" id="btn-buscar" type="button" title="Buscar e substituir (Ctrl+F)" data-ico="busca"></button>
@@ -78,8 +79,8 @@
         <button class="editor-btn" data-cmd="insertHorizontalRule" title="Divisor (--- e Enter)" aria-label="Divisor" data-ico="divisor" type="button"></button>
       </div>
       <div class="editor-busca" id="painel-busca" hidden>
-      <input class="input sm" id="busca-termo" placeholder="Buscar no texto" autocomplete="off" />
-      <input class="input sm" id="busca-troca" placeholder="Substituir por" autocomplete="off" />
+      <input class="input sm" id="busca-termo" placeholder="Buscar no texto…" aria-label="Buscar no texto" autocomplete="off" />
+      <input class="input sm" id="busca-troca" placeholder="Substituir por…" aria-label="Substituir por" autocomplete="off" />
       <span class="editor-busca-n" id="busca-n"></span>
       <button class="btn sm" type="button" id="busca-prox">Próximo</button>
       <button class="btn sm" type="button" id="busca-trocar">Substituir</button>

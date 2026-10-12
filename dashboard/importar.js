@@ -72,7 +72,7 @@ const Importar = (() => {
       const memo = decodificarEntidades(campoOFX(bloco, "MEMO"));
       // NAME é o estabelecimento; MEMO costuma repetir ou detalhar. Junta os
       // dois só quando dizem coisas diferentes, senão fica "Uber — Uber".
-      const descricao = linhaUnica(memo && memo !== nome ? [nome, memo].filter(Boolean).join(" — ") : nome || memo) || "Lançamento importado";
+      const descricao = linhaUnica(memo && memo !== nome ? [nome, memo].filter(Boolean).join(", ") : nome || memo) || "Lançamento importado";
       linhas.push({ data, descricao, valor: Math.abs(valor), tipo: valor >= 0 ? "receita" : "despesa" });
     }
     return linhas;
@@ -381,7 +381,7 @@ const Importar = (() => {
         // "Transferência enviada pelo Pix" / "FULANO - CPF…" em duas).
         if (ultima && !data && linha.length < 90 && !/^\d+$/.test(linha)) {
           const extra = limparDescricao(linha);
-          if (extra && (ultima.descricao + extra).length <= 110) ultima.descricao = `${ultima.descricao} — ${extra}`;
+          if (extra && (ultima.descricao + extra).length <= 110) ultima.descricao = `${ultima.descricao}, ${extra}`;
           ultima = null; // no máximo uma linha de complemento
         }
         continue;
@@ -790,7 +790,7 @@ if (typeof document !== "undefined") {
             }
             const { linhas: prontas, ignoradas } = Importar.aplicarMapeamento(linhas, mapa);
             if (!prontas.length) {
-              erro.textContent = "Nenhuma linha ficou reconhecível com esse mapeamento — confira o formato da data e do valor.";
+              erro.textContent = "Nenhuma linha ficou reconhecível com esse mapeamento. Confira o formato da data e do valor.";
               erro.classList.remove("hidden");
               return;
             }
@@ -840,7 +840,7 @@ if (typeof document !== "undefined") {
       // e reconhece sozinho nos próximos meses.
       const livres = candidatosFixo.filter((c) => !casados.includes(c.id));
       const escolherFixo = (p) => p.tipo === "despesa" && livres.length
-        ? `<select class="input sm" data-escolher-fixo title="Se esta cobrança for de um gasto fixo, escolha qual — ele é confirmado em vez de lançado de novo."><option value="">É gasto fixo?</option>${livres.map((c) => `<option value="${fmt.escape(c.id)}">${fmt.escape(c.descricao)}, ${fmt.moeda(c.valor)} (${fmt.dataCurta(c.data)})</option>`).join("")}</select>`
+        ? `<select class="input sm" data-escolher-fixo title="Se esta cobrança for de um gasto fixo, escolha qual: ele é confirmado em vez de lançado de novo."><option value="">É gasto fixo?</option>${livres.map((c) => `<option value="${fmt.escape(c.id)}">${fmt.escape(c.descricao)}, ${fmt.moeda(c.valor)} (${fmt.dataCurta(c.data)})</option>`).join("")}</select>`
         : "";
       const selo = (p) => p.fixo ? seloFixo(p) : p.duplicata ? `<span class="badge urgente" title="Já existe um lançamento parecido perto dessa data">repetido?</span>` : p.duvidosa || p.incerto ? seloOutro(p) : escolherFixo(p);
       const seloOutro = (p) => p.duplicata ? `<span class="badge urgente" title="Já existe um lançamento parecido perto dessa data">repetido?</span>`
@@ -878,7 +878,7 @@ if (typeof document !== "undefined") {
           <h2 class="modal-title">Revisar antes de importar</h2>
           <p class="modal-desc">${editavel
             ? `O Delfos leu o PDF${s.fatura ? " como fatura de cartão" : ""} e separou ${preparadas.length} ${preparadas.length === 1 ? "lançamento" : "lançamentos"}. PDF não tem colunas de verdade, então confira data, valor e tipo: tudo é editável. Linhas com "confira" não diziam se eram entrada ou saída.`
-            : "Confira descrição, tipo e categoria — o Delfos já tenta adivinhar a categoria pelo que você categorizou antes."} Linhas marcadas "repetido?" já têm algo parecido lançado perto dessa data e vêm desmarcadas.${nFixos ? ` <b>${nFixos} ${nFixos === 1 ? "cobrança é de um gasto fixo" : "cobranças são de gastos fixos"}</b> que o Delfos já tinha lançado: ${nFixos === 1 ? "ela confirma" : "elas confirmam"} o pagamento, sem contar duas vezes.` : ""}</p>
+            : "Confira descrição, tipo e categoria. O Delfos já tenta adivinhar a categoria pelo que você categorizou antes."} Linhas marcadas "repetido?" já têm algo parecido lançado perto dessa data e vêm desmarcadas.${nFixos ? ` <b>${nFixos} ${nFixos === 1 ? "cobrança é de um gasto fixo" : "cobranças são de gastos fixos"}</b> que o Delfos já tinha lançado: ${nFixos === 1 ? "ela confirma" : "elas confirmam"} o pagamento, sem contar duas vezes.` : ""}</p>
         </div>
         <div class="modal-body">
           <div class="table-wrap" style="max-height:46vh; overflow-y:auto;">

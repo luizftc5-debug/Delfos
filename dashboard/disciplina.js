@@ -18,7 +18,7 @@
       UI.vazio({
         icone: "◌",
         titulo: "Disciplina não encontrada",
-        texto: "Ela pode ter sido excluída, ou este link é de outro navegador — os dados ficam salvos em cada navegador.",
+        texto: "Ela pode ter sido excluída, ou este link é de outro navegador: os dados ficam salvos em cada navegador.",
         rotuloAcao: "Ver disciplinas",
         aoAcionar: () => (location.href = "faculdade.html"),
       })
@@ -43,7 +43,7 @@
       : `<span class="muted">Professor(a) não informado</span>`;
 
     const media = UI.mediaDisciplina(disciplina);
-    document.getElementById("s-media").textContent = media ? UI.fmt.decimal(media.media) : "—";
+    document.getElementById("s-media").textContent = media ? UI.fmt.decimal(media.media) : "-";
     // Abaixo da média, o que importa para o estudante: quanto falta tirar.
     const meta = UI.notaNecessaria(disciplina);
     const minima = meta ? UI.fmt.decimal(meta.minima) : "";
@@ -105,7 +105,7 @@
         UI.vazio({
           icone: "◎",
           titulo: "Nenhuma avaliação cadastrada",
-          texto: "Cadastre provas e trabalhos com data e peso. Quando a nota sair, é só lançar aqui — a média é calculada sozinha.",
+          texto: "Cadastre provas e trabalhos com data e peso. Quando a nota sair, é só lançar aqui; a média é calculada sozinha.",
           rotuloAcao: "Adicionar avaliação",
           aoAcionar: novaAvaliacao,
         })
@@ -340,8 +340,8 @@
   const camposMaterial = () => [
     { nome: "titulo", rotulo: "Título", tipo: "text", obrigatorio: true, placeholder: "Ex.: Slides da aula 4" },
     { nome: "tipo", rotulo: "Tipo", tipo: "select", opcoes: ["slides", "artigo", "vídeo", "livro", "exercícios", "link"] },
-    { nome: "url", rotulo: "Link", tipo: "text", placeholder: "https://drive.google.com/..." },
-    { nome: "anexos", rotulo: "Documentos", tipo: "anexos", dica: "PDF, slides, fotos — ficam guardados neste navegador e entram no backup." },
+    { nome: "url", rotulo: "Link", tipo: "text", placeholder: "https://drive.google.com/…" },
+    { nome: "anexos", rotulo: "Documentos", tipo: "anexos", dica: "PDF, slides, fotos. Ficam guardados neste navegador e entram no backup." },
   ];
 
   /* O texto do resumo é escrito em resumo.html, uma página só dele. Aqui

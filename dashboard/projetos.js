@@ -20,20 +20,20 @@
     document.getElementById("s-ativos-d").textContent = `${lista.length} ${lista.length === 1 ? "projeto no total" : "projetos no total"}`;
 
     const renda = emAndamento.reduce((s, p) => s + (Number(p.rendaEstimada) || 0), 0);
-    document.getElementById("s-renda").textContent = renda ? fmt.moeda(renda) : "—";
+    document.getElementById("s-renda").textContent = renda ? fmt.moeda(renda) : "-";
     document.getElementById("s-renda-d").textContent = renda
       ? "Por mês, somando os projetos ativos"
       : "Informe a renda estimada de cada projeto";
 
     const faturado = lista.reduce((s, p) => s + UI.resumoProjeto(p).faturado, 0);
-    document.getElementById("s-faturado").textContent = faturado ? fmt.moeda(faturado) : "—";
+    document.getElementById("s-faturado").textContent = faturado ? fmt.moeda(faturado) : "-";
     document.getElementById("s-faturado-d").textContent = faturado
       ? "Total já recebido nestes projetos"
       : "Registre os recebimentos dentro de cada projeto";
 
     const passos = lista.flatMap((p) => p.passos || []);
     const feitos = passos.filter((s) => s.feito).length;
-    document.getElementById("s-etapas").textContent = passos.length ? `${feitos}/${passos.length}` : "—";
+    document.getElementById("s-etapas").textContent = passos.length ? `${feitos}/${passos.length}` : "-";
     document.getElementById("s-etapas-d").textContent = passos.length
       ? `${Math.round((feitos / passos.length) * 100)}% do planejado`
       : "Quebre os projetos em etapas";
@@ -130,7 +130,7 @@
         UI.vazio({
           icone: "◇",
           titulo: "Nenhum projeto cadastrado",
-          texto: "Aqui entram iniciativas que trazem dinheiro — monitoria, cursinho, plantões, conteúdo, freelas. Trabalhos da faculdade e o TCC ficam na aba Faculdade.",
+          texto: "Aqui entram iniciativas que trazem dinheiro: monitoria, cursinho, plantões, conteúdo, freelas. Trabalhos da faculdade e o TCC ficam na aba Faculdade.",
           rotuloAcao: "Criar primeiro projeto",
           aoAcionar: novoProjeto,
         })
@@ -201,7 +201,7 @@
           ? `<b style="font-weight:640; color:var(--texto-2);">Próxima etapa:</b> ${fmt.escape(proxima.texto)}`
           : r.passos.total
             ? "Todas as etapas concluídas."
-            : "Sem etapas ainda — abra o projeto para quebrá-lo em passos."}
+            : "Sem etapas ainda. Abra o projeto para quebrá-lo em passos."}
       </p>
 
       <a class="btn sm" href="${href}" style="margin-top:12px;">Abrir projeto</a>`;

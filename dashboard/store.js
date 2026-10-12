@@ -84,7 +84,7 @@ const Store = (() => {
       densidade: "confortavel", // confortavel | compacta
       destaque: "osso", // osso | louro | anil | cobre | ameixa (cor do botão principal e do que está escolhido)
       movimento: "completo", // completo | reduzido
-      voz: "serifa", // serifa | sans (fonte da leitura e dos títulos)
+      voz: "serifa", // serifa = Funnel Display (a voz) | sans = Funnel Sans em tudo; o nome do valor ficou da 1.6
       contadores: true, // números ao lado das abas na barra
       paginaInicial: "home", // qual aba abre primeiro em cada visita
       semanaComeca: 1, // 0 domingo, 1 segunda (calendário)
@@ -128,7 +128,7 @@ const Store = (() => {
     {
       id: "compromissos",
       rotulo: "Compromissos",
-      descricao: "Data, tipo e local — o formato da aba Pessoal.",
+      descricao: "Data, tipo e local, no formato da aba Pessoal.",
       naAgenda: true,
       campos: [
         { id: "tipo", rotulo: "Tipo", tipo: "select", opcoes: ["compromisso", "tarefa", "lembrete", "meta", "outro"], naLista: true },
@@ -159,7 +159,7 @@ const Store = (() => {
     {
       id: "colecao",
       rotulo: "Coleção",
-      descricao: "Livros, filmes, cursos — algo que se acompanha, não agenda.",
+      descricao: "Livros, filmes, cursos: algo que se acompanha, não agenda.",
       naAgenda: false,
       campos: [
         { id: "situacao", rotulo: "Situação", tipo: "select", opcoes: ["quero", "em andamento", "concluído", "abandonado"], naLista: true },
@@ -172,7 +172,7 @@ const Store = (() => {
     {
       id: "registros",
       rotulo: "Registros com valor",
-      descricao: "Algo com valor — treinos pagos, freelas, gastos de um hobby.",
+      descricao: "Algo com valor: treinos pagos, freelas, gastos de um hobby.",
       naAgenda: true,
       campos: [
         { id: "valor", rotulo: "Valor (R$)", tipo: "dinheiro", naLista: true },
@@ -183,14 +183,14 @@ const Store = (() => {
     {
       id: "livre",
       rotulo: "Do zero",
-      descricao: "Sem campos prontos — monte em Ajustes da aba.",
+      descricao: "Sem campos prontos. Monte em Ajustes da aba.",
       naAgenda: true,
       campos: [],
     },
     {
       id: "academia",
       rotulo: "Academia (treino)",
-      descricao: "Dias de treino com exercícios do catálogo — carga, repetições e recorde de cada um.",
+      descricao: "Dias de treino com exercícios do catálogo: carga, repetições e recorde de cada um.",
       naAgenda: false,
       campos: [],
       // Marca que troca a interface genérica (itens com campos) pela tela

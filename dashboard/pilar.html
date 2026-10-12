@@ -2,12 +2,13 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Aba · Delfos</title>
+  <meta name="theme-color" content="#121413" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=Funnel+Sans:ital,wght@0,300..800;1,300..800&display=swap" />
   <link rel="stylesheet" href="theme.css" />
 </head>
 <body>
@@ -18,7 +19,7 @@
         <header class="topbar">
           <div>
             <div class="eyebrow" id="etiqueta">Sua aba</div>
-            <h1 id="titulo">—</h1>
+            <h1 id="titulo">&nbsp;</h1>
             <p class="sub" id="subtitulo"></p>
           </div>
           <div class="topbar-actions">
@@ -47,7 +48,7 @@
             </div>
             <div class="fin-filtros" style="margin-bottom:16px;">
               <div class="chips" id="f-grupo"></div>
-              <label class="busca"><span class="hidden">Buscar</span><input class="input" type="search" id="f-busca" placeholder="Buscar" /></label>
+              <label class="busca"><input class="input" type="search" id="f-busca" placeholder="Buscar…" aria-label="Buscar nesta aba" autocomplete="off" /></label>
               <select class="input" id="f-ordem" aria-label="Ordenar"></select>
               <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
             </div>

@@ -136,7 +136,7 @@
       card.innerHTML = `
         <div class="card-head" style="align-items:flex-start; margin-bottom:10px;">
           <a class="linha-link" style="min-width:0;" href="conta.html?tipo=cartao&id=${fmt.escape(c.id)}">
-            <h3 class="card-title" style="font-size:14px;"><span class="swatch projetos"></span><span class="title">${fmt.escape(c.nome)}</span></h3>
+            <h3 class="card-title" style="font-size:14px;"><span class="swatch cartao"></span><span class="title">${fmt.escape(c.nome)}</span></h3>
             <div class="card-note" style="margin-top:3px;">${fmt.escape(c.bandeira || "cartão")}, fecha dia ${c.fechamento}, vence dia ${c.vencimento}</div>
           </a>
           <span class="row-actions">
@@ -203,7 +203,7 @@
         UI.vazio({
           icone: "◍",
           titulo: "Sem gastos atribuídos ainda",
-          texto: "Ao lançar uma despesa no Financeiro, escolha em 'Pago com' de qual conta ou cartão ela saiu — o balanço se monta a partir daí.",
+          texto: "Ao lançar uma despesa no Financeiro, escolha em 'Pago com' de qual conta ou cartão ela saiu. O balanço se monta a partir daí.",
         })
       );
       return;
@@ -227,7 +227,7 @@
   const camposCartao = () => [
     { nome: "nome", rotulo: "Nome do cartão", tipo: "text", obrigatorio: true, placeholder: "Ex.: Nubank Roxinho" },
     { nome: "bandeira", rotulo: "Bandeira", tipo: "select", opcoes: Financas.BANDEIRAS },
-    { nome: "limite", rotulo: "Limite (R$)", tipo: "dinheiro", dica: "Opcional — usado para mostrar o quanto já foi consumido." },
+    { nome: "limite", rotulo: "Limite (R$)", tipo: "dinheiro", dica: "Opcional. Usado para mostrar o quanto já foi consumido." },
     { nome: "fechamento", rotulo: "Dia do fechamento", tipo: "number", obrigatorio: true, valorPadrao: 1, dica: "Compras após esse dia entram na fatura seguinte." },
     { nome: "vencimento", rotulo: "Dia do vencimento", tipo: "number", obrigatorio: true, valorPadrao: 10 },
   ];

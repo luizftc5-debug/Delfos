@@ -34,7 +34,7 @@
     $("aviso").classList.toggle("hidden", !texto);
   }
 
-  if (params.has("saiu")) avisar("Você saiu da conta. Os dados deste navegador foram apagados — continuam na sua conta.");
+  if (params.has("saiu")) avisar("Você saiu da conta. Os dados deste navegador foram apagados, mas continuam na sua conta.");
   else if (params.has("excluida")) avisar("Conta excluída. Tudo o que estava nela foi apagado do servidor e deste navegador.");
   else if (params.get("volta")) avisar("Entre para abrir o painel.");
 
@@ -140,7 +140,7 @@
         await Nuvem.mostrarCodigoRecuperacao(codigoNovo, {
           introducao: modo === "criar"
             ? "Sua conta foi criada. Este código é o único jeito de redefinir a senha se você esquecê-la."
-            : "Senha redefinida. O código antigo deixou de valer — guarde este, que é o novo.",
+            : "Senha redefinida. O código antigo deixou de valer; guarde este, que é o novo.",
         });
       }
 

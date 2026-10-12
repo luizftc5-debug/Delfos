@@ -16,7 +16,7 @@
       UI.vazio({
         icone: "◌",
         titulo: "Projeto não encontrado",
-        texto: "Pode ter sido excluído, ou este link é de outro navegador — os dados ficam salvos em cada navegador.",
+        texto: "Pode ter sido excluído, ou este link é de outro navegador: os dados ficam salvos em cada navegador.",
         rotuloAcao: "Ver projetos",
         aoAcionar: () => (location.href = "projetos.html"),
       })
@@ -43,7 +43,7 @@
     document.getElementById("titulo").textContent = projeto.nome;
     document.getElementById("titulo").className = r.encerrado ? "strike" : "";
     document.getElementById("subtitulo").textContent =
-      projeto.descricao || "Sem descrição — use “Editar projeto” para dizer o que é e para quem.";
+      projeto.descricao || "Sem descrição. Use “Editar projeto” para dizer o que é e para quem.";
 
     renderSelos(r);
     renderStats(r);
@@ -88,7 +88,7 @@
       </div>
       <div class="card tinted projetos">
         <div class="stat-label">Renda estimada</div>
-        <div class="stat-value num">${semMeta ? "—" : fmt.moeda(r.metaMensal)}</div>
+        <div class="stat-value num">${semMeta ? "-" : fmt.moeda(r.metaMensal)}</div>
         <div class="stat-sub">${semMeta ? "informe quanto espera por mês" : "esperado por mês"}</div>
       </div>`;
   }
@@ -241,7 +241,7 @@
       vazio: {
         icone: "◍",
         titulo: "Nenhum custo lançado",
-        texto: "Material, anúncio, transporte, ferramenta paga — o que o projeto consome antes de dar retorno.",
+        texto: "Material, anúncio, transporte, ferramenta paga: o que o projeto consome antes de dar retorno.",
         rotuloAcao: "Lançar custo",
         aoAcionar: novoCusto,
       },
@@ -260,7 +260,7 @@
         UI.vazio({
           icone: "◫",
           titulo: "Nenhum documento anexado",
-          texto: "Contrato, proposta, material de divulgação, planilha — os arquivos ficam neste navegador e entram no backup.",
+          texto: "Contrato, proposta, material de divulgação, planilha. Os arquivos ficam neste navegador e entram no backup.",
           rotuloAcao: "Anexar documentos",
           aoAcionar: editarAnexos,
         })
@@ -301,7 +301,7 @@
         UI.vazio({
           icone: "✎",
           titulo: "Sem anotações",
-          texto: "Contatos, combinados, valores acertados, ideias para a próxima rodada — o caderno solto do projeto.",
+          texto: "Contatos, combinados, valores acertados, ideias para a próxima rodada: o caderno solto do projeto.",
           rotuloAcao: "Escrever anotações",
           aoAcionar: editarAnotacoes,
         })
@@ -400,7 +400,7 @@
   async function novoCusto() {
     const v = await UI.formulario({
       titulo: "Novo custo",
-      descricao: "O que o projeto consumiu — material, anúncio, transporte, ferramenta.",
+      descricao: "O que o projeto consumiu: material, anúncio, transporte, ferramenta.",
       campos: camposMovimento("Valor gasto (R$)"),
     });
     if (!v) return;

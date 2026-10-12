@@ -252,7 +252,7 @@ option { background-color: var(--superficie); color: var(--texto); }
   align-items: center;
   gap: 11px;
   min-height: 38px;
-  padding: 8px 10px;
+  padding: 6px 10px;
   border-radius: var(--r-md);
   color: var(--texto-2);
   text-decoration: none;
@@ -264,36 +264,45 @@ option { background-color: var(--superficie); color: var(--texto); }
 .nav-item:hover { background: var(--superficie); color: var(--texto); }
 .nav-item.active { background: var(--superficie-2); color: var(--texto); font-weight: 600; }
 
-/* O ícone só ganha a cor do pilar onde você está — em repouso, a barra é cinza. */
+/* Ícone em duas camadas (UI.iconeDuo): o corpo fica por trás do contorno. */
+.ico .corpo { opacity: 0.2; transition: opacity 0.14s; }
+
+/* A cor de cada aba, para o selo da barra, da folha "Mais" e da barra do
+   celular. As criadas trazem --cor-aba inline (hex que o usuário escolheu). */
+:is(.nav-icon, .tab-ic).pessoal { --cor-aba: var(--s-pessoal); }
+:is(.nav-icon, .tab-ic).financeiro { --cor-aba: var(--s-financeiro); }
+:is(.nav-icon, .tab-ic).faculdade { --cor-aba: var(--s-faculdade); }
+:is(.nav-icon, .tab-ic).projetos { --cor-aba: var(--s-projetos); }
+
+/* Selo da aba (UI.seloAba): um quadrado no tom da aba, com fio do mesmo tom,
+   e o ícone na cor dela. A aba aberta fica com o selo cheio. Fixas e
+   criadas usam o mesmo desenho; a Visão geral, sem pilar, fica em grafite. */
 .nav-icon {
-  width: 20px;
-  height: 20px;
+  --cor-aba: var(--texto-2);
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  font-size: 12px;
-  color: var(--texto-3);
-  transition: color 0.14s;
-}
-.nav-icon .ico { width: 19px; height: 19px; }
-.nav-item:hover .nav-icon { color: var(--texto-2); }
-.nav-item.active .nav-icon { color: var(--texto); }
-.nav-item.active .nav-icon.financeiro { color: var(--s-financeiro); }
-.nav-item.active .nav-icon.faculdade { color: var(--s-faculdade); }
-.nav-item.active .nav-icon.projetos { color: var(--s-projetos); }
-.nav-item.active .nav-icon.pessoal { color: var(--s-pessoal); }
-
-/* Aba criada pelo usuário: o ícone que ele escolheu, na cor dela. */
-.nav-icon.propria {
-  width: 20px;
-  height: 20px;
-  border-radius: var(--r-xs);
-  font-size: 11px;
-  background: color-mix(in srgb, var(--cor-aba) 18%, transparent);
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1;
   color: var(--cor-aba);
+  background: color-mix(in oklab, var(--cor-aba) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--cor-aba) 12%, transparent);
+  transition: background-color 0.14s, color 0.14s, box-shadow 0.14s;
 }
-.nav-item.active .nav-icon.propria { background: var(--cor-aba); color: #fff; }
-.nav-icon.propria .ico { width: 14px; height: 14px; }
+.nav-icon .ico { width: 16px; height: 16px; }
+.nav-item:hover .nav-icon { background: color-mix(in oklab, var(--cor-aba) 22%, transparent); }
+.nav-item.active .nav-icon.geral { --cor-aba: var(--texto); }
+.nav-item.active .nav-icon {
+  background: var(--cor-aba);
+  color: var(--sobre-claro);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.16);
+}
+.nav-item.active .nav-icon .corpo { opacity: 0.3; }
+/* O hex de uma aba criada é de tom médio (lê nos dois temas): branco por cima. */
+.nav-item.active .nav-icon.propria { color: #fff; }
 
 .nav-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 
@@ -313,7 +322,7 @@ option { background-color: var(--superficie); color: var(--texto); }
   display: flex;
   flex-direction: column;
   gap: 1px;
-  margin: 2px 0 8px 20px;
+  margin: 2px 0 8px 22px; /* o fio desce do meio do selo da aba */
   padding-left: 11px;
   border-left: 1px solid var(--linha);
 }
@@ -686,6 +695,9 @@ option { background-color: var(--superficie); color: var(--texto); }
 /* Dinheiro grande: R$ e centavos menores (UI.dinheiroGrande), o inteiro lê primeiro. */
 .rs { font-size: 0.5em; font-weight: 400; color: var(--texto-3); letter-spacing: 0; margin-right: 0.18em; vertical-align: 0.42em; }
 .cent { font-size: 0.6em; letter-spacing: -0.01em; }
+/* O sinal (UI.dinheiroGrande): cola no número, com o mesmo peso dos algarismos. */
+.sinal { margin-right: -0.03em; }
+.sinal.menos { color: var(--critical-text); }
 
 .hero { padding: 24px; }
 .hero-value { font-family: var(--font-voz); font-size: 56px; font-weight: 300; letter-spacing: -0.035em; line-height: 1; margin-top: 6px; }
@@ -1414,8 +1426,7 @@ select.input.sm { padding-right: 28px; background-position: right 6px center; ba
 .abas-lista { list-style: none; margin: 0; padding: 0; border: 1px solid var(--linha); border-radius: var(--r-md); overflow: hidden; }
 .abas-lista li { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--linha); background: var(--superficie); }
 .abas-lista li:last-child { border-bottom: none; }
-.abas-lista .nav-icon { color: var(--marca, var(--texto-3)); }
-.abas-lista li.desligada .nav-icon { color: var(--texto-3); }
+.abas-lista li.desligada .nav-icon { --cor-aba: var(--texto-3); }
 .abas-lista .aba-nome {
   flex: 1;
   min-width: 0;
@@ -2342,7 +2353,7 @@ a.semana-item:hover .t { text-decoration: underline; text-underline-offset: 3px;
 .brand:active { transform: scale(0.985); transition-duration: 90ms; }
 
 /* Ícones dentro de botões respondem ao hover do botão. */
-.btn .ico, .nav-nova .ico, .pillar-ic, .nav-icon, .dz-icone, .brand-caret .ico, .empty-icon {
+.btn .ico, .nav-nova .ico, .pillar-ic, .nav-icon, .nav-icon .ico, .dz-icone, .brand-caret .ico, .empty-icon {
   transition: transform var(--t-medio) var(--ease-mola), color var(--t-medio) var(--ease-saida), background-color var(--t-medio) var(--ease-saida);
 }
 
@@ -2543,7 +2554,7 @@ body.entrando .main .wrap > .leitura { animation: chegar 620ms var(--ease-saida)
 
   /* Com o destaque deslizante ligado, o item em si não acende mais — quem acende é ele. */
   .com-realce .nav-item:hover, .com-realce .nav-subitem:hover, .com-realce ~ .nav-nova:hover { background: transparent; }
-  .nav-item:hover .nav-icon { transform: scale(1.1); }
+  .nav-item:hover .nav-icon .ico { transform: scale(1.1) rotate(-4deg); }
 }
 
 
@@ -2806,17 +2817,14 @@ body.entrando .main .wrap > .leitura { animation: chegar 620ms var(--ease-saida)
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
-  .tab-ic { width: 24px; height: 24px; display: grid; place-items: center; font-size: 13px; }
+  /* Na barra de baixo, o ícone vai solto (como nos apps do celular): cinza
+     em repouso, na cor da aba quando ela está aberta, com o corpo mais cheio. */
+  .tab-ic { --cor-aba: var(--texto); width: 24px; height: 24px; display: grid; place-items: center; font-size: 15px; line-height: 1; }
   .tab-ic .ico { width: 23px; height: 23px; }
-  .tab-ic.propria { width: 24px; height: 24px; border-radius: 7px; background: color-mix(in srgb, var(--cor-aba) 18%, transparent); color: var(--cor-aba); }
-  .tab-ic.propria .ico { width: 16px; height: 16px; }
   .tab-rotulo { font-size: 11.5px; font-weight: 550; line-height: 1.1; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tab.ativa { color: var(--texto); }
-  .tab.ativa .tab-ic.financeiro { color: var(--s-financeiro); }
-  .tab.ativa .tab-ic.faculdade { color: var(--s-faculdade); }
-  .tab.ativa .tab-ic.projetos { color: var(--s-projetos); }
-  .tab.ativa .tab-ic.pessoal { color: var(--s-pessoal); }
-  .tab.ativa .tab-ic.propria { background: var(--cor-aba); color: #fff; }
+  .tab.ativa .tab-ic { color: var(--cor-aba); }
+  .tab.ativa .tab-ic .corpo { opacity: 0.35; }
   .tab.ativa::before {
     content: "";
     position: absolute;

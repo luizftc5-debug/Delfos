@@ -101,6 +101,63 @@ const UI = (() => {
     "alerta-circulo": '<path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z"/>',
   };
 
+  // Camada de corpo do Phosphor duotone (mesma licença MIT): a forma cheia que
+  // fica por trás do contorno, com opacidade dada pelo CSS (.ico .corpo). Só
+  // os ícones de aba têm corpo; é o que dá peso a eles na barra lateral sem
+  // trocar o desenho. O contorno é o mesmo de ICONES; quando o do duotone é
+  // diferente, a entrada começa com "=" e traz o desenho inteiro.
+  const CORPOS = {
+    home: '<path class="corpo" d="M128,56C48,56,16,128,16,128s32,72,112,72,112-72,112-72S208,56,128,56Zm0,112a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z"/>',
+    pessoal: '<path class="corpo" d="M192,96a64,64,0,1,1-64-64A64,64,0,0,1,192,96Z"/>',
+    financeiro: '<path class="corpo" d="M224,80V192a8,8,0,0,1-8,8H56a16,16,0,0,1-16-16V56A16,16,0,0,0,56,72H216A8,8,0,0,1,224,80Z"/>',
+    faculdade: '<path class="corpo" d="M232,56V200H160a32,32,0,0,0-32,32,32,32,0,0,0-32-32H24V56H96a32,32,0,0,1,32,32,32,32,0,0,1,32-32Z"/>',
+    projetos: '<path class="corpo" d="M224,64V208H32V48H208A16,16,0,0,1,224,64Z"/>',
+    alvo: '<path class="corpo" d="M176,128a48,48,0,1,1-48-48A48,48,0,0,1,176,128Z"/>',
+    calendario: '<path class="corpo" d="M216,48V88H40V48a8,8,0,0,1,8-8H208A8,8,0,0,1,216,48Z"/>',
+    relogio: '<path class="corpo" d="M224,128a96,96,0,1,1-96-96A96,96,0,0,1,224,128Z"/>',
+    banco: '<path class="corpo" d="M232,96H24L128,32Z"/>',
+    cartao: '<path class="corpo" d="M232,96v96a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V96Z"/>',
+    investimentos: '<path class="corpo" d="M208,40V208H152V40Z"/>',
+    lampada: '<path class="corpo" d="M208,104a79.86,79.86,0,0,1-30.59,62.92A24.29,24.29,0,0,0,168,186v6a8,8,0,0,1-8,8H96a8,8,0,0,1-8-8v-6a24.11,24.11,0,0,0-9.3-19A79.87,79.87,0,0,1,48,104.45C47.76,61.09,82.72,25,126.07,24A80,80,0,0,1,208,104Z"/>',
+    cofre: '<path class="corpo" d="M240,112v32a16,16,0,0,1-16,16h-8l-18.1,50.69a8,8,0,0,1-7.54,5.31H177.64a8,8,0,0,1-7.54-5.31L166.29,200H97.71L93.9,210.69A8,8,0,0,1,86.36,216H73.64a8,8,0,0,1-7.54-5.31L53,174a79.7,79.7,0,0,1-21-54h0a80,80,0,0,1,80-80h32a80,80,0,0,1,73.44,48.22,82.22,82.22,0,0,1,2.9,7.78H224A16,16,0,0,1,240,112Z"/>',
+    sol: '<path class="corpo" d="M184,128a56,56,0,1,1-56-56A56,56,0,0,1,184,128Z"/>',
+    lua: '<path class="corpo" d="M227.89,147.89A96,96,0,1,1,108.11,28.11,96.09,96.09,0,0,0,227.89,147.89Z"/>',
+    usuario: '<path class="corpo" d="M224,128a95.76,95.76,0,0,1-31.8,71.37A72,72,0,0,0,128,160a40,40,0,1,0-40-40,40,40,0,0,0,40,40,72,72,0,0,0-64.2,39.37h0A96,96,0,1,1,224,128Z"/>',
+    chave: '<path class="corpo" d="M232,98.36C230.73,136.92,198.67,168,160.09,168a71.68,71.68,0,0,1-26.92-5.17h0L120,176H96v24H72v24H40a8,8,0,0,1-8-8V187.31a8,8,0,0,1,2.34-5.65l58.83-58.83h0A71.68,71.68,0,0,1,88,95.91c0-38.58,31.08-70.64,69.64-71.87A72,72,0,0,1,232,98.36Z"/>',
+    ia: '<path class="corpo" d="M194.82,151.43l-55.09,20.3-20.3,55.09a7.92,7.92,0,0,1-14.86,0l-20.3-55.09-55.09-20.3a7.92,7.92,0,0,1,0-14.86l55.09-20.3,20.3-55.09a7.92,7.92,0,0,1,14.86,0l20.3,55.09,55.09,20.3A7.92,7.92,0,0,1,194.82,151.43Z"/>',
+    camera: '<path class="corpo" d="M208,64H176L160,40H96L80,64H48A16,16,0,0,0,32,80V192a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V80A16,16,0,0,0,208,64ZM128,168a36,36,0,1,1,36-36A36,36,0,0,1,128,168Z"/>',
+    arquivo: '<path class="corpo" d="M208,88H152V32Z"/>',
+    nuvem: '<path class="corpo" d="M240,128a80,80,0,0,1-80,80H72A56,56,0,1,1,85.92,97.74l0,.1A80,80,0,0,1,240,128Z"/>',
+    haltere: '=<path class="corpo" d="M96,64V192a8,8,0,0,1-8,8H64a8,8,0,0,1-8-8V64a8,8,0,0,1,8-8H88A8,8,0,0,1,96,64Zm96-8H168a8,8,0,0,0-8,8V192a8,8,0,0,0,8,8h24a8,8,0,0,0,8-8V64A8,8,0,0,0,192,56Z"/><path d="M248,120h-8V88a16,16,0,0,0-16-16H208V64a16,16,0,0,0-16-16H168a16,16,0,0,0-16,16v56H104V64A16,16,0,0,0,88,48H64A16,16,0,0,0,48,64v8H32A16,16,0,0,0,16,88v32H8a8,8,0,0,0,0,16h8v32a16,16,0,0,0,16,16H48v8a16,16,0,0,0,16,16H88a16,16,0,0,0,16-16V136h48v56a16,16,0,0,0,16,16h24a16,16,0,0,0,16-16v-8h16a16,16,0,0,0,16-16V136h8a8,8,0,0,0,0-16ZM32,168V88H48v80Zm56,24H64V64H88V192Zm104,0H168V64h24V175.83c0,.06,0,.11,0,.17s0,.12,0,.17V192Zm32-24H208V88h16Z"/>',
+    livro: '<path class="corpo" d="M208,32V192H72a24,24,0,0,0-24,24V56A24,24,0,0,1,72,32Z"/>',
+    musica: '<path class="corpo" d="M208,164a28,28,0,1,1-28-28A28,28,0,0,1,208,164ZM52,168a28,28,0,1,0,28,28A28,28,0,0,0,52,168Z"/>',
+    coracao: '<path class="corpo" d="M232,102c0,66-104,122-104,122S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32A54,54,0,0,1,232,102Z"/>',
+    cruz: '<path class="corpo" d="M208,88v32a8,8,0,0,1-8,8H152v96a8,8,0,0,1-8,8H112a8,8,0,0,1-8-8V128H56a8,8,0,0,1-8-8V88a8,8,0,0,1,8-8h48V32a8,8,0,0,1,8-8h32a8,8,0,0,1,8,8V80h48A8,8,0,0,1,208,88Z"/>',
+    folha: '<path class="corpo" d="M63.81,192.19c-47.89-79.81,16-159.62,151.64-151.64C223.43,176.23,143.62,240.08,63.81,192.19Z"/>',
+    pata: '<path class="corpo" d="M232,108a20,20,0,1,1-20-20A20,20,0,0,1,232,108ZM64,108a20,20,0,1,0-20,20A20,20,0,0,0,64,108ZM92,80A20,20,0,1,0,72,60,20,20,0,0,0,92,80Zm72,0a20,20,0,1,0-20-20A20,20,0,0,0,164,80Zm19.24,75.85A43.46,43.46,0,0,1,162.57,130a36,36,0,0,0-69.14,0,43.49,43.49,0,0,1-20.67,25.9,32,32,0,0,0,27.73,57.62,72.49,72.49,0,0,1,55,0,32,32,0,0,0,27.73-57.62Z"/>',
+    carro: '<path class="corpo" d="M184,176h40v24a8,8,0,0,1-8,8H192a8,8,0,0,1-8-8ZM32,200a8,8,0,0,0,8,8H64a8,8,0,0,0,8-8V176H32ZM194.11,44.75A8,8,0,0,0,186.8,40H69.2a8,8,0,0,0-7.31,4.75L32,112H224Z"/>',
+    aviao: '=<path class="corpo" d="M209,81l-33,31,32,88-24,24-48-72-24,24v24L88,224,72,184,32,168l24-24H80l24-24L32,72,56,48l88,32,31-33A24,24,0,0,1,209,81Z"/><path d="M185.33,114.21l29.14-27.43.17-.16a32,32,0,0,0-45.26-45.26l-.16.17L141.79,70.67l-83-30.2a8,8,0,0,0-8.39,1.86l-24,24a8,8,0,0,0,1.22,12.31l63.89,42.59L76.69,136H56a8,8,0,0,0-5.65,2.34l-24,24A8,8,0,0,0,29,175.42l36.82,14.73,14.7,36.75.06.16a8,8,0,0,0,13.18,2.47l23.87-23.88A8,8,0,0,0,120,200V179.31l14.76-14.76,42.59,63.89a8,8,0,0,0,12.31,1.22l24-24a8,8,0,0,0,1.86-8.39Zm-.07,97.23-42.59-63.89A8,8,0,0,0,136.8,144a7.09,7.09,0,0,0-.79,0,8,8,0,0,0-5.66,2.34l-24,24A8,8,0,0,0,104,176v20.69L90.93,209.76,79.43,181A8,8,0,0,0,75,176.57l-28.74-11.5L59.32,152H80a8,8,0,0,0,5.66-2.34l24-24a8,8,0,0,0-1.22-12.32L44.56,70.74l13.5-13.49,83.22,30.26a8,8,0,0,0,8.56-2l30.94-32.88A16,16,0,0,1,203.4,75.22l-32.87,30.94a8,8,0,0,0-2,8.56l30.26,83.22Z"/>',
+    prato: '=<path class="corpo" d="M224,112a96,96,0,0,1-56,87.3V208a8,8,0,0,1-8,8H96a8,8,0,0,1-8-8v-8.7A96,96,0,0,1,32,112Z"/><path d="M224,104h-8.37a88,88,0,0,0-175.26,0H32a8,8,0,0,0-8,8,104.35,104.35,0,0,0,56,92.28V208a16,16,0,0,0,16,16h64a16,16,0,0,0,16-16v-3.72A104.35,104.35,0,0,0,232,112,8,8,0,0,0,224,104ZM173.48,56.23q2.75,2.25,5.27,4.75a87.92,87.92,0,0,0-49.15,43H100.1A72.26,72.26,0,0,1,168,56C169.83,56,171.66,56.09,173.48,56.23Zm15.91,18.2A71.45,71.45,0,0,1,199.54,104H148.12A71.84,71.84,0,0,1,189.39,74.43ZM128,40a71.87,71.87,0,0,1,19,2.57A88.36,88.36,0,0,0,83.33,104H56.46A72.08,72.08,0,0,1,128,40Zm36.66,152A8,8,0,0,0,160,199.3V208H96v-8.7A8,8,0,0,0,91.34,192a88.29,88.29,0,0,1-51-72H215.63A88.29,88.29,0,0,1,164.66,192Z"/>',
+    gota: '<path class="corpo" d="M208,144a80,80,0,0,1-160,0c0-72,80-128,80-128S208,72,208,144Z"/>',
+    estrela: '<path class="corpo" d="M229.06,108.79l-48.7,42,14.88,62.79a8.4,8.4,0,0,1-12.52,9.17L128,189.09,73.28,222.74a8.4,8.4,0,0,1-12.52-9.17l14.88-62.79-48.7-42A8.46,8.46,0,0,1,31.73,94L95.64,88.8l24.62-59.6a8.36,8.36,0,0,1,15.48,0l24.62,59.6L224.27,94A8.46,8.46,0,0,1,229.06,108.79Z"/>',
+    bandeira: '<path class="corpo" d="M224,56V176c-64,55.43-112-55.43-176,0V56C112,.57,160,111.43,224,56Z"/>',
+    casa: '<path class="corpo" d="M216,120v96H152V152H104v64H40V120a8,8,0,0,1,2.34-5.66l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,216,120Z"/>',
+    carrinho: '<path class="corpo" d="M224,64l-12.16,66.86A16,16,0,0,1,196.1,144H70.55L56,64Z"/>',
+    pincel: '<path class="corpo" d="M224,32c0,32.81-31.64,67.43-58.64,91.05A84.39,84.39,0,0,0,133,90.64C156.57,63.64,191.19,32,224,32Z"/>',
+    controle: '<path class="corpo" d="M216.86,207.57a28,28,0,0,1-24.66-7.77L150.09,152H172a51.94,51.94,0,0,0,51.2-61h0l16.36,84.17A28,28,0,0,1,216.86,207.57Z"/>',
+    bola: '<path class="corpo" d="M65.17,108.08l-33,25.34c-.1-1.8-.15-3.6-.15-5.42A95.61,95.61,0,0,1,53.23,67.78ZM46.92,179.42a96.12,96.12,0,0,0,57,41.52l-14.7-41.52Zm105.21,41.52a96.12,96.12,0,0,0,57-41.52H166.83ZM202.77,67.78l-11.94,40.3,33,25.34c.1-1.8.15-3.6.15-5.42A95.61,95.61,0,0,0,202.77,67.78Zm-38.52-28.7a96.34,96.34,0,0,0-72.5,0L128,64ZM152.72,160,168,115.5,128,88,88,115.5,103.28,160Z"/>',
+    tenis: '=<path class="corpo" d="M248,167.06V168H32V75.54A8,8,0,0,1,37.27,68L113,40.48a8,8,0,0,1,10,4.27L146.27,99.1a32,32,0,0,0,19.12,17.36l60.73,20.25A32,32,0,0,1,248,167.06Z"/><path d="M228.65,129.11l-60.73-20.24a24,24,0,0,1-14.32-13L130.39,41.6s0-.07,0-.1A16,16,0,0,0,110.25,33L34.53,60.49A16.05,16.05,0,0,0,24,75.53V192a16,16,0,0,0,16,16H240a16,16,0,0,0,16-16V167.06A40,40,0,0,0,228.65,129.11ZM40,75.53,115.72,48l7.11,16.63-21.56,7.85A8,8,0,0,0,104,88a7.91,7.91,0,0,0,2.73-.49l22.4-8.14,4.74,11.07-16.6,6A8,8,0,0,0,120,112a7.91,7.91,0,0,0,2.73-.49l17.6-6.4a40.06,40.06,0,0,0,7.68,10l-14.74,5.36A8,8,0,0,0,136,136a8.14,8.14,0,0,0,2.73-.48l28-10.18,56.87,18.95A24,24,0,0,1,238.93,160H40ZM240,192H40V176H240Z"/>',
+    estetoscopio: '<path class="corpo" d="M240,160a32,32,0,1,1-32-32A32,32,0,0,1,240,160Z"/>',
+    pilula: '=<path class="corpo" d="M160,160l-50.75,50.75a45.26,45.26,0,0,1-64,0h0a45.26,45.26,0,0,1,0-64L96,96Z"/><path d="M216.43,39.6a53.27,53.27,0,0,0-75.33,0L39.6,141.09a53.26,53.26,0,0,0,75.32,75.31L216.43,114.91A53.32,53.32,0,0,0,216.43,39.6ZM103.61,205.09h0a37.26,37.26,0,0,1-52.7-52.69L96,107.31,148.7,160ZM205.11,103.6,160,148.69,107.32,96l45.1-45.09a37.26,37.26,0,0,1,52.69,52.69ZM189.68,82.34a8,8,0,0,1,0,11.32l-24,24a8,8,0,1,1-11.31-11.32l24-24A8,8,0,0,1,189.68,82.34Z"/>',
+    grupo: '=<path class="corpo" d="M168,144a40,40,0,1,1-40-40A40,40,0,0,1,168,144ZM64,56A32,32,0,1,0,96,88,32,32,0,0,0,64,56Zm128,0a32,32,0,1,0,32,32A32,32,0,0,0,192,56Z"/><path d="M244.8,150.4a8,8,0,0,1-11.2-1.6A51.6,51.6,0,0,0,192,128a8,8,0,0,1,0-16,24,24,0,1,0-23.24-30,8,8,0,1,1-15.5-4A40,40,0,1,1,219,117.51a67.94,67.94,0,0,1,27.43,21.68A8,8,0,0,1,244.8,150.4ZM190.92,212a8,8,0,1,1-13.85,8,57,57,0,0,0-98.15,0,8,8,0,1,1-13.84-8,72.06,72.06,0,0,1,33.74-29.92,48,48,0,1,1,58.36,0A72.06,72.06,0,0,1,190.92,212ZM128,176a32,32,0,1,0-32-32A32,32,0,0,0,128,176ZM72,120a8,8,0,0,0-8-8A24,24,0,1,1,87.24,82a8,8,0,1,0,15.5-4A40,40,0,1,0,37,117.51,67.94,67.94,0,0,0,9.6,139.19a8,8,0,1,0,12.8,9.61A51.6,51.6,0,0,1,64,128,8,8,0,0,0,72,120Z"/>',
+    maleta: '=<path class="corpo" d="M224,118.31V200a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V118.31h0A191.14,191.14,0,0,0,128,144,191.08,191.08,0,0,0,224,118.31Z"/><path d="M104,112a8,8,0,0,1,8-8h32a8,8,0,0,1,0,16H112A8,8,0,0,1,104,112ZM232,72V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V72A16,16,0,0,1,40,56H80V48a24,24,0,0,1,24-24h48a24,24,0,0,1,24,24v8h40A16,16,0,0,1,232,72ZM96,56h64V48a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8ZM40,72v41.62A184.07,184.07,0,0,0,128,136a184,184,0,0,0,88-22.39V72ZM216,200V131.63A200.25,200.25,0,0,1,128,152a200.19,200.19,0,0,1-88-20.36V200H216Z"/>',
+    presente: '<path class="corpo" d="M208,128v72a8,8,0,0,1-8,8H56a8,8,0,0,1-8-8V128Z"/>',
+    cafe: '<path class="corpo" d="M208,88v48a88,88,0,0,1-51.3,80H83.3A88,88,0,0,1,32,136V88Z"/>',
+    globo: '<path class="corpo" d="M224,128a96,96,0,1,1-96-96A96,96,0,0,1,224,128Z"/>',
+    microscopio: '<path class="corpo" d="M136,32V136a8,8,0,0,1-8,8H80a8,8,0,0,1-8-8V32a8,8,0,0,1,8-8h48A8,8,0,0,1,136,32Z"/>',
+    lapis: '<path class="corpo" d="M221.66,90.34,192,120,136,64l29.66-29.66a8,8,0,0,1,11.31,0L221.66,79A8,8,0,0,1,221.66,90.34Z"/>',
+  };
+
   // Glifos que as páginas ainda passam para UI.vazio(): viram o ícone certo.
   const GLIFO_PARA_ICONE = { "＋": "mais", "◎": "alvo", "◷": "relogio", "▤": "faculdade", "▣": "banco", "✎": "editar", "◫": "arquivo" };
 
@@ -109,11 +166,36 @@ const UI = (() => {
     "prato", "gota", "cafe", "estrela", "bandeira", "casa", "carrinho", "pincel", "musica", "controle", "bola", "tenis",
     "grupo", "maleta", "presente", "globo", "microscopio", "lapis", "calendario", "alvo", "cofre", "lampada", "relogio", "sol", "lua", "camera"];
 
-  /** Ícone de uma aba do usuário: "svg:<nome>" é desenho; qualquer outra coisa é o glifo que ele escolheu. */
-  function iconeAba(valor) {
+  /**
+   * Ícone de uma aba do usuário: "svg:<nome>" é desenho; qualquer outra coisa
+   * é o glifo que ele escolheu. Com `duo`, o desenho vem com a camada de corpo
+   * (o mesmo traço das abas fixas na barra lateral).
+   */
+  function iconeAba(valor, duo = false) {
     const v = String(valor || "");
-    if (v.startsWith("svg:") && ICONES[v.slice(4)]) return icone(v.slice(4));
+    if (v.startsWith("svg:") && ICONES[v.slice(4)]) return duo ? iconeDuo(v.slice(4)) : icone(v.slice(4));
     return fmt.escape(v || "◆");
+  }
+
+  /** Ícone em duas camadas (corpo + contorno), para as abas; sem corpo, cai no ícone comum. */
+  function iconeDuo(nome, classe = "") {
+    const corpo = CORPOS[nome];
+    if (!corpo || !ICONES[nome]) return icone(nome, classe);
+    const miolo = corpo.startsWith("=") ? corpo.slice(1) : corpo + ICONES[nome];
+    return `<svg class="ico duo ${classe}" data-ico="${nome}" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">${miolo}</svg>`;
+  }
+
+  /**
+   * O selo de uma aba na navegação (barra lateral, folha "Mais", lista de
+   * abas do perfil): quadrado no tom da aba com o ícone em duas camadas. A
+   * cor vem de --cor-aba: classe do pilar nas fixas, hex inline nas criadas.
+   * É enfeite ao lado do nome: o leitor de tela pula (um glifo como "◆"
+   * seria lido antes do nome da aba).
+   */
+  function seloAba(p, classe = "nav-icon") {
+    return p.corHex
+      ? `<span class="${classe} propria" style="--cor-aba:${fmt.escape(p.corHex)}" aria-hidden="true">${iconeAba(p.icone, true)}</span>`
+      : `<span class="${classe} ${p.cor || "geral"}" aria-hidden="true">${iconeDuo(p.icone)}</span>`;
   }
 
   /** SVG de um ícone do Delfos (vazio se o nome não existir). */
@@ -135,12 +217,18 @@ const UI = (() => {
   const DATA_CURTA = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 
   const fmt = {
+    /**
+     * Dinheiro no formato brasileiro. O negativo sai com o sinal de menos de
+     * verdade (U+2212) em vez do hífen do Intl: o hífen é curto e baixo, e o
+     * navegador quebra a linha depois dele ("resultado de -" numa linha,
+     * "R$ 49,90" na outra). Com o menos, o valor nunca se separa do sinal.
+     */
     moeda(v) {
       return (Number(v) || 0).toLocaleString("pt-BR", {
         style: "currency",
         currency: Store.estado().financeiro.moeda || "BRL",
         maximumFractionDigits: 2,
-      });
+      }).replace(/^-/, "\u2212");
     },
     /** Número decimal no formato brasileiro (8,2 — não 8.2). */
     decimal(v, casas = 1) {
@@ -154,8 +242,9 @@ const UI = (() => {
     moedaCurta(v) {
       const n = Number(v) || 0;
       const abs = Math.abs(n);
-      if (abs >= 1000000) return `${n < 0 ? "-" : ""}R$ ${(abs / 1000000).toFixed(1).replace(".", ",")}M`;
-      if (abs >= 10000) return `${n < 0 ? "-" : ""}R$ ${(abs / 1000).toFixed(1).replace(".", ",")}k`;
+      // Mesmo sinal e mesmo espaço inquebrável de fmt.moeda.
+      if (abs >= 1000000) return `${n < 0 ? "\u2212" : ""}R$\u00a0${fmt.decimal(abs / 1000000, 1)}M`;
+      if (abs >= 10000) return `${n < 0 ? "\u2212" : ""}R$\u00a0${fmt.decimal(abs / 1000, 1)}k`;
       return fmt.moeda(n);
     },
     data(iso) {
@@ -591,14 +680,9 @@ const UI = (() => {
     const itens = paginas().map((p) => {
       const aberto = p.id === grupoAtivo;
       const subs = aberto ? subItens(p.id, ativo, idAtivo) : [];
-      // As abas criadas guardam um hex próprio, então a cor vai inline (como
-      // variável); as fixas usam a classe do pilar, que segue o tema.
-      const iconeHTML = p.corHex
-        ? `<span class="nav-icon propria" style="--cor-aba:${fmt.escape(p.corHex)}">${iconeAba(p.icone)}</span>`
-        : `<span class="nav-icon ${p.cor}">${icone(p.icone)}</span>`;
       return `
         <a class="nav-item ${aberto ? "active" : ""}" href="${p.href}"${aberto ? ' aria-current="page"' : ""}>
-          ${iconeHTML}
+          ${seloAba(p)}
           <span class="nav-label">${fmt.escape(p.rotulo)}</span>
           ${c[p.id] ? `<span class="nav-count ${p.id === "home" ? "alert" : ""}">${c[p.id]}</span>` : ""}
         </a>
@@ -620,11 +704,8 @@ const UI = (() => {
     if (aberta && !naBarra.includes(aberta)) naBarra[3] = aberta;
     const abaDaBarra = (p) => {
       const ativa = p.id === grupoAtivo;
-      const ic = p.corHex
-        ? `<span class="tab-ic propria" style="--cor-aba:${fmt.escape(p.corHex)}">${iconeAba(p.icone)}</span>`
-        : `<span class="tab-ic ${p.cor}">${icone(p.icone)}</span>`;
       return `<a class="tab ${ativa ? "ativa" : ""}" href="${p.href}"${ativa ? ' aria-current="page"' : ""}>
-          ${ic}<span class="tab-rotulo">${fmt.escape(p.rotulo)}</span>${c[p.id] ? `<span class="tab-conta ${p.id === "home" ? "alert" : ""}">${c[p.id]}</span>` : ""}
+          ${seloAba(p, "tab-ic")}<span class="tab-rotulo">${fmt.escape(p.rotulo)}</span>${c[p.id] ? `<span class="tab-conta ${p.id === "home" ? "alert" : ""}">${c[p.id]}</span>` : ""}
         </a>`;
     };
 
@@ -677,11 +758,8 @@ const UI = (() => {
   function abrirMaisAbas(grupoAtivo, c = contagens()) {
     const perfil = Store.estado().perfil || {};
     const linha = (p) => {
-      const ic = p.corHex
-        ? `<span class="nav-icon propria" style="--cor-aba:${fmt.escape(p.corHex)}">${iconeAba(p.icone)}</span>`
-        : `<span class="nav-icon ${p.cor}">${icone(p.icone)}</span>`;
       const ativa = p.id === grupoAtivo;
-      return `<a class="nav-item ${ativa ? "active" : ""}" href="${p.href}"${ativa ? ' aria-current="page"' : ""}>${ic}
+      return `<a class="nav-item ${ativa ? "active" : ""}" href="${p.href}"${ativa ? ' aria-current="page"' : ""}>${seloAba(p)}
         <span class="nav-label">${fmt.escape(p.rotulo)}</span>${c[p.id] ? `<span class="nav-count ${p.id === "home" ? "alert" : ""}">${c[p.id]}</span>` : ""}</a>`;
     };
     abrirModal(`
@@ -963,8 +1041,8 @@ const UI = (() => {
     const lista = [...ligadas, ...desligadas];
     return lista.map((pg, i) => {
       const fixa = fixas[pg.id];
-      const iconeHTML = pg.corHex ? `<span class="nav-icon propria" style="--cor-aba:${fmt.escape(pg.corHex)}">${iconeAba(pg.icone)}</span>` : `<span class="nav-icon">${icone(pg.icone)}</span>`;
-      return `<li class="${fixa && !fixa.ativo ? "desligada" : ""}" data-aba-id="${fmt.escape(pg.id)}" style="--marca: var(--s-${fmt.escape(pg.cor || "x")})">
+      const iconeHTML = seloAba(pg);
+      return `<li class="${fixa && !fixa.ativo ? "desligada" : ""}" data-aba-id="${fmt.escape(pg.id)}">
           <span class="ordem-setas">
             <button type="button" class="btn ghost sm icon" data-mover="-1" aria-label="Subir ${fmt.escape(pg.rotulo)}" ${i === 0 ? "disabled" : ""}>${icone("acima")}</button>
             <button type="button" class="btn ghost sm icon" data-mover="1" aria-label="Descer ${fmt.escape(pg.rotulo)}" ${i === lista.length - 1 ? "disabled" : ""}>${icone("abaixo")}</button>
@@ -1576,7 +1654,8 @@ const UI = (() => {
 
   /** "1.234,56", "45.9", "R$ 12", "1.200" → número (ou null). */
   function lerDinheiro(bruto) {
-    let s = String(bruto ?? "").replace(/r\$|\s/gi, "");
+    // Aceita o sinal de menos (U+2212) que fmt.moeda escreve, para o que for colado de volta.
+    let s = String(bruto ?? "").replace(/r\$|\s/gi, "").replace(/\u2212/g, "-");
     if (!s) return null;
     let negativo = false;
     if (s.startsWith("-")) { negativo = true; s = s.slice(1); }
@@ -1592,7 +1671,7 @@ const UI = (() => {
    * "120-15") para quem soma a nota de cabeça. Só + e −, nada de eval.
    */
   function avaliarDinheiro(bruto) {
-    const s = String(bruto ?? "").trim();
+    const s = String(bruto ?? "").trim().replace(/\u2212/g, "-");
     if (!s) return null;
     if (!/[+]|\d\s*-\s*\d/.test(s)) return lerDinheiro(s);
     const partes = s.replace(/\s/g, "").match(/[+-]?[^+-]+/g) || [];
@@ -1612,7 +1691,7 @@ const UI = (() => {
     const grupo = paginaAtiva === "pilar" ? `pilar:${opcoesAtivas?.idAtivo || ""}` : GRUPO_DE[paginaAtiva] || paginaAtiva;
     const p = paginas().find((x) => x.id === grupo);
     if (!p) return null;
-    return { icone: p.corHex ? iconeAba(p.icone) : icone(p.icone), cor: p.corHex || (p.cor ? `var(--s-${p.cor})` : "var(--texto-2)") };
+    return { icone: p.corHex ? iconeAba(p.icone, true) : iconeDuo(p.icone), cor: p.corHex || (p.cor ? `var(--s-${p.cor})` : "var(--texto-2)") };
   }
 
   // Tipos que cabem em meia linha; os demais ocupam a linha toda.
@@ -2859,12 +2938,21 @@ const UI = (() => {
     if (el.dataset.tam !== tam) el.dataset.tam = tam;
   }
 
-  /** "R$ 6.239,10" num número grande vira R$ e centavos menores: o inteiro lê primeiro. */
+  /**
+   * "R$ 6.239,10" num número grande vira R$ e centavos menores: o inteiro lê
+   * primeiro. O sinal sai de antes do R$ e cola no número ("R$ −48,83"): o
+   * hífen que o Intl escreve ficava baixo e curto ao lado do R$ suspenso. Vira
+   * o sinal de menos de verdade (U+2212, que a Funnel Display desenha na altura
+   * dos algarismos), em vermelho: saldo negativo é aviso.
+   */
   function dinheiroGrande(el) {
     if (el.children.length) return;
-    const m = el.textContent.trim().match(/^([+\-−]?)\s?R\$\s?([\d.]+)(,\d{2})$/);
+    const m = el.textContent.trim().match(/^([+\-−]?)\s?R\$\s?([+\-−]?)([\d.]+)(,\d{2})$/);
     if (!m) return;
-    el.innerHTML = `${m[1]}<span class="rs">R$</span>${m[2]}<span class="cent">${m[3]}</span>`;
+    const sinal = m[1] || m[2];
+    const negativo = sinal === "-" || sinal === "−";
+    const marca = sinal ? `<span class="sinal${negativo ? " menos" : ""}">${negativo ? "−" : "+"}</span>` : "";
+    el.innerHTML = `<span class="rs">R$</span>${marca}${m[3]}<span class="cent">${m[4]}</span>`;
   }
 
   let passadaMarcada = false;
@@ -2974,7 +3062,7 @@ const UI = (() => {
   }
 
   return {
-    NOME, VERSAO, ICONES, ICONES_ABA, icone, iconeAba, movimento, aplicarAparencia, experiencia, abrirAtalhos, realcarBotoes,
+    NOME, VERSAO, ICONES, ICONES_ABA, icone, iconeAba, iconeDuo, seloAba, movimento, aplicarAparencia, experiencia, abrirAtalhos, realcarBotoes,
     REPETICOES, somarPeriodo, ocorrenciasEntre, lembretesAgora, abrirResumoDoDia, textoQuando,
     lerDinheiro, avaliarDinheiro, formatarDinheiroCampo, dataPorExtensoCurta, isoMaisDias, marcaDaPagina,
     fmt, htmlSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,

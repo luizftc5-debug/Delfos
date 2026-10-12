@@ -1,6 +1,6 @@
 # Delfos — agente de organização pessoal do Luiz
 
-O painel se chama **Delfos** (versão atual: **1.6**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
+O painel se chama **Delfos** (versão atual: **1.7**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
 em `ui.js`) aparecem como marca no alto da barra lateral, ao lado do ônfalo, nos títulos das abas do
 navegador e no nome do arquivo de backup exportado.
 
@@ -31,11 +31,11 @@ Você é um assistente de IA especializado em organizar e gerenciar os quatro pi
 
 ## Arquitetura do dashboard
 
-Aplicação estática multi-página em `dashboard/`, sem build. Dependências externas: a tipografia (Google Fonts) e, só ao criar ou trocar senha, a consulta k-anônima ao Have I Been Pwned (`sessao.js`). O pdf.js (Mozilla, Apache 2.0) vem **copiado** em `dashboard/vendor/pdfjs/` — não de CDN — e só é baixado quando alguém importa um extrato em PDF.
+Aplicação estática multi-página em `dashboard/`, sem build. Dependências externas: a tipografia (Google Fonts) e, só ao criar ou trocar senha, a consulta k-anônima ao Have I Been Pwned (`sessao.js`). O pdf.js (Mozilla, Apache 2.0) vem **copiado** em `dashboard/vendor/pdfjs/` — não de CDN — e só é baixado quando alguém importa um extrato em PDF. Os ícones são Phosphor (MIT), também **copiados**: o miolo de cada SVG mora em `ui.js` e `resumo.js`, a licença em `dashboard/vendor/phosphor/`.
 
 | Arquivo | Papel |
 |---|---|
-| `index.html` + `home.js` | Visão geral: saldo em destaque, alertas, agenda de 30 dias, leitura automática da situação |
+| `index.html` + `home.js` | Visão geral: leitura com saudação, razão de números (saldo, mês, próximo, a pagar), agenda por semana, notas, índice das abas |
 | `financeiro.html` + `financeiro.js` | Resumo do mês: leitura, para onde foi o dinheiro, ritmo diário, perguntas, notas, a pagar, fixos, metas e a planilha |
 | `contas.html` + `contas.js` | Lista de contas e cartões, com o balanço geral |
 | `conta.html` + `conta.js` | Página de uma conta ou cartão: saldo/fatura, gastos por categoria só dela, lançamentos |
@@ -60,7 +60,7 @@ Aplicação estática multi-página em `dashboard/`, sem build. Dependências ex
 | `leituras.js` | Leitura das outras abas, no molde do Financeiro: `Leituras.faculdade()`, `projetos()`, `pessoal()`, `pilar(p)` devolvem números, a frase da leitura e as notas; `todasNotas()` alimenta a visão geral |
 | `abas.js` | Criador/editor de abas próprias (`Abas.abrir`): sugestão local por assunto (`sugerirLocal`, catálogo de ~30 domínios) e a do Claude pelo servidor (`pedirIA`), sempre passada por `sanear` |
 | `financas.js` | Cálculos derivados: saldo por conta, ciclo e fatura de cartão, balanço, investimentos, e a análise do mês (`analisarMes`, `recorrentes`, `acumuladoDiario`) |
-| `ui.js` | Componentes: layout, ícones (`UI.icone`), perfil, modais de formulário, avisos, gráficos, datas/urgência |
+| `ui.js` | Componentes: layout (barra lateral, barra de abas do celular), ícones Phosphor (`UI.icone`), perfil, modais de formulário, avisos, gráficos, datas/urgência |
 | `theme.css` | Design system (tema claro/escuro) |
 | `config.js` + `google-integration.js` | Integração OAuth com Google Calendar e Drive (inclui busca/exportação de arquivos, usada pela importação em disciplina.js) |
 | `data.js` | Conteúdo inicial (seed), lido só na primeira abertura |
@@ -340,12 +340,12 @@ antes/depois a cada gravação e apaga do IndexedDB os que sumiram do texto; exc
 O seletor de fonte tem, além das de sistema (Georgia, Arial…), um punhado de fontes do Google Fonts
 importadas só por `resumo.html`/`disciplina.html` (Merriweather, Lora, Inter, Space Mono, Caveat) —
 mais variedade para ler, escrever fórmula ou anotar à mão. É conteúdo do usuário, não design system:
-não confunda com a tipografia do painel (`dashboard/DESIGN.md`), que é Funnel Sans + Newsreader.
+não confunda com a tipografia do painel (`dashboard/DESIGN.md`), que é Funnel Sans + Funnel Display.
 
 ### As outras abas no molde do Financeiro (v1.5)
 
 Faculdade, Projetos, Pessoal e cada aba própria abrem do mesmo jeito que o Financeiro: **leitura**
-na voz (Newsreader), faixa de números, **O que o Delfos notou** e **Perguntas do Delfos**. O
+na voz (Funnel Display), faixa de números, **O que o Delfos notou** e **Perguntas do Delfos**. O
 cálculo mora em `leituras.js` (sem DOM); os componentes são comuns em `ui.js`:
 `UI.renderPerguntas(secao, box, escopo, perguntas, aoMudar)`, `UI.resposta.valor/botoes/multipla`,
 `UI.renderNotas(ul, notas, textoVazio)` (nota com `area` e `acao` opcionais), `UI.ordenarNotas` e
@@ -628,63 +628,102 @@ data, recentes, A–Z ou `campo:<id>` de número/dinheiro/estrelas/data. "Layout
 liga/desliga `naAgenda`. Quadro, tabela e calendário usam a largura toda (`.so-lista`) e a coluna
 lateral desce.
 
+### Delfos 1.7: a repaginação
+
+Pedido do Luiz: "menos cara de IA", mais estilizado e moderno, mantendo a ideia do oráculo. Feita com
+as skills de design instaladas na sessão (design-taste-frontend, redesign-existing-projects,
+high-end-visual-design, minimalist-ui, stitch-design-taste, gpt-taste, as de imagem e
+full-output-enforcement), auditada pela web-design-guidelines e testada com playwright-cli. A
+direção completa, com tokens e proibições, está em `dashboard/DESIGN.md`.
+
+- **A leitura é o título.** Em página com `.leitura` visível, o `h1` vira cabeça corrida (fonte
+  pequena, ícone da aba na cor dela, posto por `UI.marcarCabeca` a cada `montarLayout`) e a leitura
+  vem grande em Funnel Display. O tamanho segue o comprimento da frase: `UI.ajustarLeitura` põe
+  `data-tam` (g, m, p, pp). Quem detecta é o `MutationObserver` de `iniciarPagina` (`passarTextos`,
+  uma vez por quadro), então nenhuma página precisa chamar nada. A mesma passada roda
+  `UI.dinheiroGrande` em `.stat-value`/`.hero-value`: "R$ 6.239,10" vira R$ e centavos menores.
+- **Sem serifa.** `--font-voz` é Funnel Display (link do Google Fonts em todas as páginas; Newsreader
+  saiu). A preferência "Fonte da leitura e dos títulos" mostra Display/Texto, mas os valores
+  guardados continuam `serifa`/`sans` (nomes da 1.6, sem migração).
+- **Ícones Phosphor** (regular, MIT, `vendor/phosphor/LICENSE`), copiados para `ICONES` em `ui.js` e
+  `ICONES_ED` em `resumo.js` (miolo de `<svg viewBox="0 0 256 256" fill="currentColor">`). Só o
+  ônfalo continua desenho próprio (`MARCA`, em traço). Estrela de nota tem as duas versões (vazia e
+  cheia, classe `cheia`). Os ícones de área em CSS (`--ic-pessoal` etc., `--ic-cartao`) são data
+  URIs do Phosphor usadas como máscara: `.swatch.<pilar>`, `.eyebrow.<pilar>`, `.badge.<pilar>`,
+  `.nota-area` (quando a cor é `var(--s-*)`) desenham o ícone no lugar do pontinho. `.swatch` com
+  `style` inline (cor de aba própria) continua ponto. `realcarBotoes` troca o glifo inicial de
+  `.btn`, `.voltar` e `.editor-voltar` ("+ ", "← ", "⇩ ") e botões só com "↑"/"↓" por ícone.
+- **Menos caixa.** Toda faixa `.g3`/`.g4` de `.stat-value` virou razão aberta (fios, sem fundo).
+  `.badge` é texto colorido, não pílula. Cartão só com estado vazio fica com contorno tracejado. O
+  calendário do Pessoal não tem caixa em volta. Barras de comparação (`.chart-track`, `.cat-barra`)
+  não têm trilho; metas e limites (`.meter-track`) têm.
+- **Visão geral** (`index.html` + `home.js` reescritos): saudação dentro da leitura
+  (`.saudacao`), razão `#sec-topo` (saldo, sobrou/faltou no mês, próximo compromisso, a pagar),
+  agenda `#sec-agenda` agrupada (atrasado, esta semana, semana que vem, "Semana de…") com o dia do
+  mês grande e a marca "Semana cheia" vinda de `UI.conflitos()`, cada linha levando à página de
+  origem (`destino()`); `#sec-notas` e `#sec-insights` ("Em números", `<dl class="figuras">`) na
+  coluna lateral; `#sec-abas` com o índice `#pilares` (as linhas continuam `.pillar`, que os
+  testes contam). A pilha de avisos `#avisos` saiu. O perfil (Painel → A visão geral mostra)
+  continua escondendo topo, pilares, notas, agenda e insights pelas mesmas chaves.
+- **Celular (até 900px)**: `.sidebar` vira só o topo (marca e retrato); a navegação é `.tabbar`,
+  fixa embaixo, com as quatro primeiras abas de `paginas()` e "Mais" (`abrirMaisAbas`, folha que
+  sobe de baixo com todas as abas, Nova aba e Perfil). A aba aberta sempre aparece na barra. Área
+  segura com `viewport-fit=cover` e `env(safe-area-inset-*)`; `scroll-padding-bottom` para a
+  barra não cobrir o campo focado.
+- **Acessibilidade** (auditoria web-design-guidelines): `abrirModal` dá nome à janela
+  (`aria-labelledby` no `.modal-title`), põe o foco dentro, faz o Tab circular só nela (só a
+  janela de cima responde a Esc/Tab) e devolve o foco a quem abriu; `UI.formulario` só foca o
+  primeiro campo com mouse (no celular abriria o teclado); avisos (`.toasts`) com
+  `role="status" aria-live="polite"`; "Pular para o conteúdo" (`ligarPular`); `theme-color`
+  acompanha o tema (`UI.tema.pintar`); buscas com `aria-label`; `fmt.data` por
+  `Intl.DateTimeFormat`; `translate="no"` na marca; `touch-action: manipulation`;
+  `overscroll-behavior: contain` nas janelas.
+- **Texto**: sem travessão no texto visível (ponto, dois-pontos, ponto e vírgula ou parênteses);
+  valor vazio é "-". Títulos de avaliação na agenda são "Prova 1, Farmacologia"; metas,
+  "Meta: …". `UI.urgencia` diz "atrasado há 3 dias".
+
 ### Direção visual
 
-**"Oráculo sóbrio", segunda leitura (v1.4)** — o detalhe completo, com os tokens e a paleta
-validada, está em `dashboard/DESIGN.md`, a referência a consultar antes de mexer em qualquer coisa
-visual.
+**"Consulta" (v1.7)**: o detalhe completo, com tokens, paleta validada e proibições, está em
+`dashboard/DESIGN.md`, a referência a consultar antes de mexer em qualquer coisa visual.
 
-O princípio, em uma linha: **nada de padrão, textura ou enfeite**; o caráter vem de tipografia,
-espaço e hierarquia. Três execuções anteriores foram descartadas: "estúdio" (vícios de tela gerada
-por IA — versalete em caixa alta, monoespaçada em rótulo, ponto médio colando metadados, preto
-falso, `→` no fim de link), "azulejo baiano" (ornamento temático) e a própria v1.2–1.3 do oráculo
-(filete colorido na borda de todo cartão, ícones de glifo digitado, tudo em caixa com o mesmo raio).
+O princípio, em uma linha: **a leitura é o título e nada vira caixa sem motivo**; o caráter vem de
+tipografia, espaço e hierarquia. Quatro execuções anteriores foram descartadas e estão descritas
+no DESIGN.md (estúdio, azulejo baiano, oráculo sóbrio 1.2–1.3 e a segunda leitura 1.4–1.6).
 
-- **Tipografia**: **Newsreader** é a voz — título da página e das janelas, a leitura (`.leitura`),
-  as perguntas do Financeiro, o nome no perfil, a marca. **Funnel Sans** é todo o resto (dado,
-  número, interface). Dinheiro nunca em serifa. Número grande com algarismos proporcionais;
-  tabular (`.num`) só onde números se alinham em coluna.
-- **Cromo sem cor**: grafite com um fio de verde-louro, primário em osso, foco em osso. Cor só
-  identifica pilar (`--s-*`), distingue entradas × saídas nos gráficos (`--serie-entrada` azul,
-  `--serie-saida` bronze — verde × bronze reprova para daltonismo) e marca urgência
-  (`--st-critical`). O escuro é o padrão; o claro é escolha explícita em `[data-theme="light"]`.
-- **Ícones desenhados** por `UI.icone(nome)` (grade 24, traço 1,6). Glifo digitado só onde é dado do
-  usuário (o ícone de uma aba criada). Os avisos (`.notice .ic`) trocam o glifo que as páginas
-  escrevem por ícone via máscara no CSS; `UI.vazio` aceita nome de ícone ou os glifos antigos; e
-  `realcarBotoes` (em `iniciarPagina`, com um `MutationObserver`) troca o "+ " inicial de qualquer
-  `.btn` pelo ícone de mais — as páginas continuam escrevendo "+ Prazo".
-- **Sem filete na borda**: `.card.tinted` só define `--marca`; quem identifica pilar onde eles se
-  misturam é o ícone (`.pillar-ic` na visão geral). Toda faixa `.g3`/`.g4` de `.stat-value` vira
-  uma faixa contígua (1px entre as peças) sozinha, por `:has()` no CSS.
-- **Raio por hierarquia** (janela 18, superfície 14, controle 8, selo em pílula), **abas
-  sublinhadas** (`.abas`) para seções irmãs, **pílulas** (`.chip`) para filtro, **interruptor**
-  (`.switch`) para ligar/desligar.
-- **Movimento** (seção "Movimento" do `theme.css` + `UI.movimento` em `ui.js`, chamado por
-  `iniciarPagina` e pelo mesmo `MutationObserver` do `realcarBotoes`): curvas `--ease-*`, luz que
-  segue o ponteiro nos cartões (`--mx/--my`), destaque deslizante no menu (`.realce-nav`), nas
-  abas (`.indicador-abas`) e na escolha única (`.trilho-seg`). Só com mouse; nada com "reduzir
-  movimento". `UI.icone` marca cada SVG com `data-ico="<nome>"` (é o que gira o "+").
-- Metadados em frase ou com vírgula — nunca colados com " · " (só o título da aba do navegador
-  ainda usa).
+- **Tipografia**: **Funnel Display** é a voz (leitura, título de página sem leitura, títulos de
+  seção e de janela, números grandes, o dia na agenda, a marca). **Funnel Sans** é todo o resto.
+  Número grande com algarismos proporcionais; tabular (`.num`) só onde números se alinham.
+- **Cromo sem cor**: basalto com um fio de louro (`--fundo` #121413, `--lateral` atrás da barra),
+  primário e foco em osso. Cor só identifica pilar (`--s-*`), distingue entradas × saídas
+  (`--serie-entrada` azul, `--serie-saida` bronze) e marca urgência (`--st-critical`). O escuro é o
+  padrão; o claro (pedra clara #f4f5f1, sem creme) é escolha explícita em `[data-theme="light"]`.
+- **Raio por hierarquia**: janela 22, superfície 16, controle 10, miúdo 6, pílula só para escolha.
+  **Abas sublinhadas** (`.abas`) para seções irmãs, **pílulas** (`.chip`) para filtro,
+  **interruptor** (`.switch`) para ligar/desligar. Retrato em quadrado de cantos suaves.
+- **Movimento** (seção "Movimento" do `theme.css` + `UI.movimento`): uma entrada só (a leitura);
+  luz do ponteiro só no que leva a algum lugar (`a.card`, linha do índice); destaque deslizante
+  no menu, nas abas e na escolha única. Só com mouse; nada com "reduzir movimento".
+- Metadados em frase ou com vírgula, nunca colados com " · " (só o título da aba do navegador).
 
-Números decimais saem por `UI.fmt.decimal` (8,2 — nunca `toFixed`, que escreve 8.2) e ordinais
+Números decimais saem por `UI.fmt.decimal` (8,2, nunca `toFixed`, que escreve 8.2) e ordinais
 por `UI.fmt.ordinal` (nunca "6ºº"). `[hidden]` tem `display: none !important` no tema: sem isso,
 `el.hidden = true` não esconde nada que tenha `display` próprio (`.btn`, `.card`). `.field input`
-exclui checkbox, radio e arquivo — sem o `:not`, o checkbox ganhava 100% de largura e empurrava o
-campo ao lado para fora (era o defeito das abas no perfil até a v1.3).
+exclui checkbox, radio e arquivo; sem o `:not`, o checkbox ganhava 100% de largura.
 
-No celular (≤ 900px), faixas de números `.g3`/`.g4` ficam 2 por linha, a barra lateral vira uma
-faixa rolável (foto do perfil primeiro) que se posiciona na aba atual, e a planilha de lançamentos
-(`table.sheet`) vira lista de cartões — data, categoria e "pago com" viram a linha `.so-celular`
-debaixo da descrição.
+No celular (≤ 900px), a razão de números fica em 2 colunas, a navegação é a barra de abas de
+baixo, e a planilha de lançamentos (`table.sheet`) vira lista de cartões (data, categoria e "pago
+com" viram a linha `.so-celular` debaixo da descrição).
 
 ### Cores de dados
 
 As cores dos pilares e o par entradas × saídas foram **validados com o script da skill de dataviz**
 (faixa de luminosidade, croma ≥ 0,10, separação para daltonismo e piso de visão normal ΔE ≥ 15,
-nos dois temas). Cores de status (vermelho/amarelo/verde) são reservadas para urgência e nunca
-usadas como série. Toda barra leva o valor escrito ao lado — a cor nunca é o único canal de leitura.
-Ao mexer em cores, rode o validador de novo; não escolha a olho.
+nos dois temas, entre vizinhos; refeito na 1.7 contra os fundos novos). Com `--pairs all`, verde ×
+bronze (Financeiro × Projetos) reprova para deuteranopia: por isso toda marca de pilar que aparece
+junto de outra leva ícone e nome. Cores de status (vermelho/amarelo/verde) são reservadas para
+urgência e nunca usadas como série. Toda barra leva o valor escrito ao lado. Ao mexer em cores, rode
+o validador de novo; não escolha a olho.
 
 ## Funcionalidades
 

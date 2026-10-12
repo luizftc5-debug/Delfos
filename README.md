@@ -39,7 +39,7 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 
 | Onde | O que dá para fazer |
 |---|---|
-| **Visão geral** | Saldo, alertas de atraso e de semana cheia, agenda dos próximos 30 dias, leitura automática da situação e **o que o Delfos notou** em todas as abas |
+| **Visão geral** | A frase do dia no alto (o que venceu, o que vem e quanto sobrou), os quatro números do dia (saldo, o mês, o próximo compromisso, o que falta pagar), a **agenda** semana a semana com o que está atrasado no topo e as semanas cheias marcadas, **o que o Delfos notou** em todas as abas e um índice das suas abas |
 | **Financeiro** | O mês lido em voz alta: quanto entrou, saiu e sobrou, **para onde foi o dinheiro**, o **ritmo do mês** comparado ao anterior, gastos fixos e assinaturas detectados, o que falta pagar, metas com "Guardar", e **perguntas** que deixam a leitura do seu jeito (limite do mês, quanto guardar, dia da renda). Também lançar entradas e saídas e **importar o extrato do banco** (PDF, .ofx ou .csv) para não esquecer de lançar |
 | **Contas e cartões** | Cadastrar contas com saldo, cadastrar cartões com fechamento e vencimento. Cada uma abre numa **página própria**, com saldo/fatura, gastos por categoria só dela e a lista de lançamentos |
 | **Investimentos** | Renda fixa, ações, fundos, cripto — o que já aplicou e quanto vale hoje, com rentabilidade calculada e distribuição por tipo |
@@ -49,6 +49,15 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 | **Suas abas** | Abas que você mesmo cria: digite o nome e o Delfos (com IA, quando ligada) monta ícone, cor, campos, meta e agrupamento para aquele assunto — ex.: Plantões, Leituras, Corrida, Oração. Cada uma ganha leitura, números, resumo dos campos, meta do período e, para hábitos, marcação diária com sequência |
 
 > Trabalhos da faculdade e o TCC ficam em **Faculdade**, não em Projetos.
+
+### O visual (versão 1.7)
+
+- Em cada aba, **a frase do alto é o título**: o Delfos diz o que está acontecendo, em letra grande,
+  e os números vêm logo embaixo, em colunas.
+- **No celular**, as abas ficam numa barra embaixo da tela, ao alcance do polegar. As quatro
+  primeiras aparecem direto; **Mais** abre a lista com todas, o botão de criar aba e o seu perfil.
+- Se preferir a frase do alto na mesma letra do resto, troque em **Perfil → Aparência → Fonte da
+  leitura e dos títulos** (Display ou Texto).
 
 ### Como funcionam o saldo e a fatura
 

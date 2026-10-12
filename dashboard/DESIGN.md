@@ -1,187 +1,201 @@
-# Delfos — direção visual: oráculo sóbrio, segunda leitura (v1.4, estendida na 1.5 e na 1.6)
+# Design System: Delfos 1.7, "consulta"
 
-Delfos é o nome de um oráculo, e o painel faz o que um oráculo faz: **lê a
-situação e diz o que ela é**. A estética sai daí — cada página abre falando, em
-frase, e só depois mostra os números.
+Delfos é o nome de um oráculo, e o painel faz o que um oráculo faz: lê a
+situação e diz o que ela é. A 1.7 leva isso ao pé da letra: **em toda página,
+a leitura é o título**. A frase vem grande, leve, sem serifa; os números ficam
+ao pé dela, numa razão aberta; o resto se organiza por espaço e fio, não por
+caixa.
 
-Três tentativas anteriores erraram e ficam registradas para não se repetirem:
+O formato deste documento segue a skill `stitch-design-taste` (atmosfera,
+cor, tipografia, componentes, layout, movimento, proibições), adaptado a um
+painel de uso diário.
 
-1. **"Estúdio"** — acumulava os vícios de tela gerada por IA: etiqueta em CAIXA
-   ALTA acima de todo título, monoespaçada em rótulo de dado, metadados colados
-   com ponto médio, preto falso, `→` no fim de link.
-2. **"Azulejo baiano"** — trocou aquilo por ornamento: um padrão de fundo que
-   não servia à leitura e competia com ela. Decoração temática não é
-   personalidade; é ruído com sotaque.
-3. **"Oráculo sóbrio" v1.2–1.3** — o princípio estava certo, a execução ainda
-   lia como kit de painel: filete colorido na borda esquerda de todo cartão (o
-   tique mais comum de tela gerada), ícones feitos de glifo digitado (`◆ $ ▤ ☁
-   ⤓ ✕`, que mudam de cara em cada sistema), tudo em caixa com a mesma borda e o
-   mesmo raio, quatro cartões de número idênticos no alto de cada página, e o
-   "·" colando metadados que a própria direção proibia.
+## O que já foi tentado (e por que saiu)
 
-## O princípio
+1. **"Estúdio"**: etiqueta em caixa alta acima de todo título, monoespaçada em
+   rótulo de dado, metadados colados com ponto médio, preto falso, `→` no fim
+   de link. Vícios de tela gerada por IA.
+2. **"Azulejo baiano"**: ornamento temático de fundo competindo com a leitura.
+   Decoração temática não é personalidade.
+3. **"Oráculo sóbrio" v1.2 a v1.3**: filete colorido na borda de todo cartão,
+   ícones de glifo digitado, tudo em caixa com o mesmo raio.
+4. **"Oráculo sóbrio, segunda leitura" v1.4 a v1.6**: o princípio era bom,
+   mas a página continuava um kit de cartões iguais com borda de 1px sobre
+   quase-preto, a voz em serifa (Newsreader) lembrava a interface de um
+   assistente de IA, as faixas de números eram três ou quatro cartões
+   idênticos, os selos eram pílulas em toda linha, havia pontinhos coloridos
+   antes de tudo e os ícones eram desenhados à mão. No celular, a navegação
+   era uma faixa rolável no alto: um site espremido, não um app.
 
-**Nada de padrão, textura ou enfeite.** Superfície é superfície. O que dá
-caráter à tela é a tipografia, o espaço e a hierarquia. Se um elemento não
-ajuda a ler a situação, ele sai.
+## 1. Atmosfera
 
-A ousadia fica **num lugar só**: o alto de cada página, onde o título e a
-leitura falam na voz serifada. Todo o resto é quieto.
+Um dossiê sóbrio, lido de noite. A interface é calma e quase sem cor; quem
+fala é a frase do alto. Densidade de app diário (5 de 10), variação contida
+(5 de 10: alinhado à esquerda, assimetria só onde o conteúdo pede), movimento
+contido (4 de 10: um único momento de entrada, a leitura, e respostas ao
+gesto).
 
-## Tipografia
+**A ousadia fica num lugar só**: a leitura, em Funnel Display leve, como
+título de toda página que tem leitura. Todo o resto é quieto.
 
-| Papel | Fonte | Onde |
-|---|---|---|
-| **Voz** | **Newsreader** (tamanho ótico 6–72) | título da página, título de janela, a leitura (`.leitura`), as perguntas do Financeiro, nome no perfil, a marca |
-| **Dado e interface** | **Funnel Sans** | todo o resto: números, tabelas, botões, rótulos |
+## 2. Cor
 
-Newsreader foi desenhada para ler em tela e tem tamanho ótico — em 40px fica
-fina e elegante, em 19px continua firme. Funnel Sans é compacta e precisa, com
-algarismos tabulares limpos (o IBM Plex servido pelo Google Fonts não trazia o
-recurso `tnum`; Schibsted espaçava demais os tabulares; Atkinson e Mona Sans
-cortam o zero, o que lê como terminal).
-
-- **Números grandes** (faixa, herói) ficam em Funnel Sans com algarismos
-  **proporcionais** — tabular deixa "121" frouxo. Tabular só onde números se
-  alinham em coluna (`.num`, tabelas, eixos).
-- **Dinheiro nunca em serifa**, nem no herói: número é dado, e dado é sans.
-- Nada de caixa alta em rótulo, nada de monoespaçada, nada de uma palavra
-  pintada de outra cor no meio de um título.
-
-## Cor
-
-Grafite com um fio de verde-louro (o louro de Apolo, em Delfos) — fosco, nunca
-preto de mentira. **O cromo não tem cor**: botão primário é osso sobre grafite,
-foco é osso. Cor existe só para identificar pilar, distinguir as duas séries de
-dinheiro e marcar urgência.
+Uma família só de cinzas (basalto com um fio de louro), nunca preto puro.
+O cromo não tem cor: botão primário é osso sobre basalto, foco é osso. Cor
+existe para três coisas e só para elas: identificar pilar, distinguir as duas
+séries de dinheiro e marcar urgência.
 
 | Token | Escuro (padrão) | Claro | Papel |
 |---|---|---|---|
-| `--fundo` | `#141714` | `#f2f3ef` | a página |
-| `--superficie` | `#1a1e1a` | `#fcfdfa` | cartão |
-| `--superficie-2` | `#222622` | `#e8eae6` | recuo, item ativo, botão comum |
-| `--linha` | `#282d29` | `#dee0db` | fio de 1px |
-| `--texto` | `#eeede6` | `#141a15` | texto (osso / tinta) |
-| `--texto-2` | `#b0b2ab` | `#4f544e` | apoio |
-| `--texto-3` | `#7e817b` | `#6c716b` | legenda |
-| `--s-pessoal` | `#b9719b` | `#944d77` | malva |
-| `--s-financeiro` | `#76a15e` | `#477b3b` | louro |
-| `--s-faculdade` | `#508ac5` | `#32669d` | ardósia |
-| `--s-projetos` | `#c08849` | `#a06522` | bronze |
-| `--serie-entrada` | `#508ac5` | `#32669d` | entradas nos gráficos |
-| `--serie-saida` | `#c08849` | `#a06522` | saídas nos gráficos |
+| `--fundo` | Basalto `#121413` | Pedra clara `#f4f5f1` | a página |
+| `--lateral` | `#0e100f` | `#eaece6` | a barra lateral (plano de trás) |
+| `--superficie` | `#191c1a` | `#fdfdfb` | objeto que se toca (janela, meta, conta) |
+| `--superficie-2` | `#212422` | `#ebece7` | controle, item ativo |
+| `--linha` | osso a 8% | tinta a 9% | fio de 1px, translúcido, tingido |
+| `--texto` | Osso `#ecede6` | Tinta `#151916` | texto |
+| `--texto-2` | `#aaada6` | `#4c514b` | apoio |
+| `--texto-3` | `#80847d` | `#666b65` | legenda (4,5:1 ou mais sobre o fundo) |
+| `--s-pessoal` | malva `#b9719b` | `#944d77` | pilar |
+| `--s-financeiro` | louro `#76a15e` | `#477b3b` | pilar |
+| `--s-faculdade` | ardósia `#508ac5` | `#32669d` | pilar |
+| `--s-projetos` | bronze `#c08849` | `#a06522` | pilar |
+| `--serie-entrada` / `--serie-saida` | `#508ac5` / `#c08849` | `#32669d` / `#a06522` | entradas e saídas nos gráficos |
 | `--st-critical` | `#d36757` | `#af3e30` | só urgência, nunca série |
 
-**Validado, não escolhido a olho** (validador da skill de dataviz, OKLab, simulação
-Machado 2009): os quatro pilares, na ordem pessoal–financeiro–faculdade–projetos,
-passam faixa de luminosidade, croma mínimo (≥ 0,10), separação para daltonismo
-e o piso de visão normal (ΔE ≥ 15) nos dois temas. A paleta anterior reprovava
-em croma e tinha financeiro × faculdade com ΔE 11 — quase iguais.
+**Validado, não escolhido a olho** (`validate_palette.js` da skill de
+dataviz, rodado de novo na 1.7 contra os quatro fundos novos): os quatro
+pilares, em ordem, passam faixa de luminosidade, croma mínimo, separação para
+daltonismo e o piso de visão normal entre vizinhos; entradas × saídas passam
+com folga. O par verde × bronze (Financeiro × Projetos, que não são vizinhos)
+**não** se separa bem para deuteranopia; por isso, desde a 1.7, toda marca de
+pilar que aparece junto de outra leva o **ícone da área e o nome** ao lado
+(codificação secundária). Cor nunca é o único canal.
 
-**Entradas × saídas não usam as cores dos pilares.** Verde × bronze reprova para
-daltonismo (ΔE 3,5 em deuteranopia); azul × bronze passa com folga (ΔE 18,8).
+Uma luz ambiente fixa (radial, osso a 5,5%, sem cor) entra pelo alto da área
+principal, como a luz na nave de um templo. É o único gradiente do painel.
 
-Texto nunca veste a cor da série: o nome do pilar num selo fica em tinta
-normal, com um ponto colorido do lado.
+## 3. Tipografia
 
-## Estrutura
+| Papel | Fonte | Onde |
+|---|---|---|
+| **Voz** | **Funnel Display** (300 a 600) | a leitura, o título das páginas sem leitura, títulos de seção, janelas, números grandes, o dia na agenda, a marca |
+| **Dado e interface** | **Funnel Sans** | todo o resto: texto corrido, rótulos, botões, tabelas |
 
-- **Barra lateral**: no alto, a marca — o **ônfalo** (a pedra do "centro do
-  mundo" em Delfos) e o nome na voz. Abas com ícones desenhados; o ícone só
-  ganha a cor do pilar na aba aberta, em repouso a barra é cinza. No pé, quem
-  está usando (foto, nome, curso), que abre o perfil. No celular vira faixa
-  rolável com a foto primeiro.
-- **Ícones**: `UI.icone(nome)`, desenhados numa grade de 24 com traço 1,6 e
-  pontas redondas. Uma aba criada pelo usuário usa, de preferência, um desses
-  ícones desenhados (`"svg:<nome>"`, lista em `UI.ICONES_ABA`, lido por
-  `UI.iconeAba`); glifo digitado (`◆`) só sobrevive nas abas antigas.
-- **Sem filete colorido na borda**. A página já diz de que pilar é; onde
-  pilares se misturam (visão geral), quem identifica é o ícone do pilar.
-- **Faixa de números contígua**: toda `.g3`/`.g4` de `.stat-value` vira uma
-  faixa só, com as peças separadas por 1px, em vez de quatro cartões soltos.
-- **Raio segue a hierarquia**: janela 18, superfície 14, controle 8, selo em
-  pílula. Um raio só em tudo é outro tique de kit.
-- **Abas de página** (`.abas`): sublinhadas, para seções irmãs (Financeiro:
-  resumo do mês, contas e cartões, investimentos; perfil: sobre você, painel,
-  conta e dados).
-- **Interruptor** (`.switch`) para o que é de fato ligar e desligar; caixa de
-  marcar para concluir item.
-- Alinhamento à esquerda; números tabulares à direita.
-- **Toda aba abre do mesmo jeito (1.5)**: leitura na voz, faixa de números,
-  "O que o Delfos notou" e "Perguntas do Delfos". Leitura e notas vêm de
-  `leituras.js`; nenhuma página inventa componente próprio para isso.
-- **Criador de aba**: janela larga em duas colunas — à esquerda o que a pessoa
-  decide (nome grande na voz, ícones, cores, interruptores), à direita a
-  prévia viva de como a aba vai ficar (campos com interruptor, meta,
-  agrupamento, exemplos em pílula). O estado da IA é uma linha discreta
-  embaixo do nome, com o ícone `ia` — nunca um cartão chamativo, nunca brilho
-  ou gradiente "mágico".
-- **Formulários (1.6)**: um desenho só em toda janela de cadastro — ícone da
-  área no cabeçalho, campos curtos em pares, pílulas no lugar de listas curtas,
-  valor em destaque no lançamento, erro escrito no próprio campo. Nada de
-  assistente em vários passos para cadastrar uma coisa só.
-- **Calendário (1.6)**: grade contígua (1px entre os dias, como a faixa de
-  números), hoje marcado pelo número em osso, cada item com a cor da área como
-  fio à esquerda e fundo lavado — a cor identifica a área, o texto diz o que é.
-  No celular, os itens viram pontos e o dia abre numa janela.
-- **Vistas das abas próprias (1.6)**: o seletor é um segmento com ícone
-  desenhado + palavra (a palavra some no celular). Quadro com colunas em fundo
-  rebaixado, cartões na superfície de cima; nenhuma cor nova além da da aba.
-- **Estrelas** usam `--st-warning` (o amarelo de status) só por serem o
-  símbolo universal de nota; nunca como série de gráfico.
-- **Hábitos** (aba com `checkin`): sete quadradinhos dos últimos dias e a
-  sequência escrita; o botão "Hoje" fica sempre visível, fora do menu que
-  aparece ao passar o ponteiro.
+Serifa saiu da interface: três das skills de design proíbem serifa em painel
+e software, e a Newsreader sobre grafite lia como a tela de um assistente de
+IA. Funnel Display é o par de exibição da Funnel Sans (mesmo desenho, NORD
+ID): leve e aberta em 40px, com personalidade nos detalhes (o "g", o "ç", os
+algarismos), e casa sem esforço com o dado. Geist ficou de fora de propósito:
+é a fonte padrão das telas geradas pelo v0.
+
+- **Leitura**: `UI.ajustarLeitura` mede a frase e põe `data-tam` (g, m, p,
+  pp): 46, 39, 32 ou 27px no computador; 30, 27, 24 ou 21px no celular.
+  Frase curta é título grande; frase longa desce de corpo para nunca virar
+  parede de seis linhas.
+- **Dinheiro grande** (`.stat-value`, `.hero-value`): `UI.dinheiroGrande`
+  separa "R$" e centavos em corpo menor; o inteiro lê primeiro.
+- Números em coluna usam `tabular-nums`; número grande sozinho, proporcional.
+- Nada de caixa alta em rótulo, nada de monoespaçada, nada de travessão no
+  texto da interface (ponto, dois-pontos, vírgula ou parênteses no lugar).
+- Preferência do perfil "Fonte da leitura e dos títulos": **Display** (padrão)
+  ou **Texto** (Funnel Sans em tudo). Os valores guardados continuam
+  `serifa` e `sans`, nomes da 1.6, para não precisar de migração.
+
+## 4. Componentes
+
+- **Cabeça corrida**: numa página com leitura, o `h1` vira uma linha pequena
+  com o ícone da aba na cor dela (`UI.marcarCabeca`) e a descrição ao lado;
+  quem é grande é a leitura. Página sem leitura (Contas, Investimentos, uma
+  disciplina, um projeto) mantém o título grande, em Funnel Display leve.
+- **Razão de números**: toda faixa `.g3`/`.g4` de `.stat-value` vira colunas
+  abertas entre dois fios, separadas por fio vertical, sem fundo nem caixa.
+  No celular, duas colunas. Nenhuma página precisou mudar o HTML para isso.
+- **Superfície** (`.card`): tom levemente acima do fundo, fio translúcido e
+  um brilho de 1px no alto (no escuro). Só para o que é objeto: janela,
+  meta, conta, projeto, gráfico. Cartão que só tem estado vazio perde o fundo
+  e ganha contorno tracejado: é um espaço a preencher.
+- **Selo** (`.badge`): texto, não pílula. "em 2 dias" em âmbar, "atrasado há
+  3 dias" em vermelho; o de pilar leva o ícone da área.
+- **Ícone de área**: os quatro pilares têm ícone em máscara CSS
+  (`--ic-pessoal`, `--ic-financeiro`, `--ic-faculdade`, `--ic-projetos`, e
+  `--ic-cartao` para cartão de crédito); `.swatch`, `.eyebrow`, `.nota-area`
+  e os selos usam o ícone no lugar do pontinho. Ponto colorido só sobra onde
+  a cor é o único dado (aba criada pelo usuário, item do calendário).
+- **Ícones**: Phosphor regular (MIT), copiados para `ui.js` (`ICONES`) e
+  `resumo.js` (`ICONES_ED`), sem CDN. Só a marca, o ônfalo, é desenho
+  próprio. Glifo digitado no começo de botão ou link ("+ ", "← ", "⇩ ") vira
+  ícone sozinho (`UI.realcarBotoes`).
+- **Botões**: primário em osso; comum em superfície; fantasma para ação
+  secundária. Raio 10. Cedem a 97% ao clique.
+- **Janelas**: raio 22, fundo desfocado atrás, título na voz. Ganham nome
+  (`aria-labelledby`), foco dentro, Tab circulando nelas e foco de volta a
+  quem abriu. No celular, a folha "Mais" sobe de baixo.
+- **Barras**: comparação sem trilho (o valor escrito ao lado dá a escala);
+  progresso de meta com trilho (o trilho é o que falta).
+- **Retrato**: quadrado de cantos suaves, nunca círculo.
+
+**Raio por hierarquia** (vale em todo lugar): janela 22, superfície 16,
+controle 10, miúdo 6, pílula só para escolha (chips, segmentos, interruptor).
+
+## 5. Layout
 
 ```
-┌────────────┬─────────────────────────────────────────────────────┐
-│ ⌂ Delfos   │  Financeiro ⟨voz⟩           [ajustes] [importar] [+] │
-│            │  Resumo do mês   Contas e cartões   Investimentos    │
-│ ◉ Visão    │  ‹ Setembro de 2026 ›                                │
-│ ◯ Pessoal  │                                                      │
-│ ▭ Financ.  │  ⟨voz⟩ Em setembro, até agora, entraram R$ 1.150 e   │
-│ ▯ Faculd.  │  saíram R$ 545. Sobraram R$ 604, 53% do que entrou.  │
-│ ↗ Projetos │                                                      │
-│ + Nova aba │  ┌ Sobrou ┬ Entrou ┬ Saiu ┬ Saldo ┐  (faixa contígua) │
-│            │  Para onde foi ▬▬▬▬      │ Ritmo do mês  ╱╱          │
-│ (LF) Luiz  │  Perguntas do Delfos ⟨voz⟩                           │
-└────────────┴─────────────────────────────────────────────────────┘
+┌──────────────┬──────────────────────────────────────────────────────┐
+│ ⌂ Delfos 1.7 │ ◉ Visão geral  Segunda-feira, 12 de outubro  [+] [+] │
+│              │                                                      │
+│ ◉ Visão  5   │ Boa tarde, Luiz. Relatório de estágio venceu há      │
+│ ◯ Pessoal 1  │ 2 dias. No mês, sobrou R$ 316,20.   (leitura, 46px)  │
+│ ▭ Financ. 1  │──────────────────────────────────────────────────────│
+│ ▯ Faculd. 4  │ Saldo         │ Sobrou     │ Próximo      │ A pagar  │
+│ ↗ Projetos   │ R$ 6.239,10   │ R$ 316,20  │ Consulta…    │ R$ 300   │
+│ + Nova aba   │──────────────────────────────────────────────────────│
+│              │ Agenda                       │ O que o Delfos notou   │
+│              │ Atrasado                     │ ...                    │
+│              │ 10 sáb  Relatório de estágio │ Em números             │
+│              │ Esta semana   Semana cheia   │ ...                    │
+│              │ 14 qua  Consulta ...         │                        │
+│ (LF) Luiz    │ Suas abas (índice em duas colunas)                    │
+└──────────────┴──────────────────────────────────────────────────────┘
 ```
 
-## Movimento
+- **Barra lateral** num plano atrás (`--lateral`), sem borda; contagem em
+  algarismo simples (vermelho só na visão geral, quando há algo vencendo).
+- **Visão geral**: a saudação abre a leitura em tom mais baixo; a razão traz
+  saldo, o mês, o próximo compromisso e o que falta pagar; a agenda vai
+  semana a semana com o dia do mês grande à esquerda (o único "momento de
+  segunda leitura" da página) e a semana cheia marcada no próprio cabeçalho
+  (saiu a pilha de avisos do topo); "O que o Delfos notou" e "Em números"
+  ficam soltos na coluna lateral; as abas viram um índice.
+- **Celular** (até 900px): o alto é só a marca e o retrato; a navegação é
+  uma barra de abas fixa embaixo, ao alcance do polegar, com as quatro
+  primeiras abas e "Mais" (a aba aberta sempre aparece nela). Área segura do
+  iPhone respeitada (`viewport-fit=cover`, `env(safe-area-inset-*)`).
+- Conteúdo até 1160px, alinhado à esquerda; números tabulares à direita.
 
-O hover responde ao gesto em vez de "ligar" um estado. Três curvas em `theme.css`
-(`--ease-saida`, que chega rápido e assenta devagar; `--ease-mola`, que passa um
-fio do ponto e volta; `--ease-troca`) e três tempos (160/280/460 ms) para tudo.
+## 6. Movimento
 
-- **Luz que segue o ponteiro** nos cartões: um halo de osso a 6% (3,5% no claro)
-  e um fio de luz na borda perto do ponteiro — nenhuma cor nova, nenhum brilho.
-- **Destaque que desliza**: um único fundo percorre os itens do menu lateral; o
-  sublinhado das abas corre até a aba sob o ponteiro e volta à ativa; o fundo da
-  escolha única (Despesa/Receita) desliza até a opção marcada.
-- O que leva a algum lugar (cartão de pilar, anexo) sobe 2px com sombra; o resto
-  só acende. Botão cede ao clique e volta com mola; o "+" gira 90°; o sublinhado
-  dos links se desenha da esquerda para a direita; linhas de lista ganham um véu
-  e as ações chegam deslizando.
-- As seções da página chegam em cascata curta (40 ms entre elas), só na primeira
-  pintura — re-render não anima de novo.
-- Tudo de ponteiro fica em `(hover: hover) and (pointer: fine)`; com "reduzir
-  movimento" no sistema, `UI.movimento` não cria nada e o CSS zera as durações.
+- Três curvas (`--ease-saida`, `--ease-mola`, `--ease-troca`) e três tempos
+  (160/280/460 ms). Nada linear.
+- **Um momento de entrada só**: a leitura chega (opacidade, 10px e um leve
+  desfoque, 620 ms). As seções já estão no lugar; cascata em toda seção era
+  tique de tela gerada.
+- A luz que segue o ponteiro ficou só no que leva a algum lugar (linha do
+  índice de abas, `a.card`); cartão parado não acende.
+- Destaque deslizante no menu, sublinhado que corre nas abas, trilho na
+  escolha única, mola no interruptor: respostas ao gesto, não enfeite.
+- Barras aparecem sem animar largura (só propriedades de compositor).
+- Tudo de ponteiro fica em `(hover: hover) and (pointer: fine)`; com
+  "reduzir movimento" (sistema ou perfil) nada disso acontece.
 
-## Gráficos
+## 7. Proibições
 
-- Barra com 4px de ponta arredondada, até 20–24px de espessura, 2px de vão
-  entre barras vizinhas. Linha de 2px. Grade e eixo em fio de 1px, sólido.
-- **Toda barra leva o valor escrito ao lado**; cor nunca é o único canal.
-- Duas séries ou mais ⇒ legenda. Uma série ⇒ o título já diz o que é.
-- O **ritmo do mês** (gasto acumulado dia a dia) é ênfase: o mês aberto em
-  bronze, o anterior em cinza de contexto, a projeção tracejada (tracejado aqui
-  significa projeção — nunca em grade). Mira + dica ao passar o ponteiro, e a
-  frase embaixo repete os números, para nada depender do ponteiro.
-
-## Regras que continuam valendo
-
-- Cor significa **dado** (pilar, série) ou **urgência** — nunca decoração.
-- Vermelho é exclusivo de urgência.
-- Metadados em frase ou com vírgula, nunca colados com "·" (o "·" só sobrevive
-  no título da aba do navegador).
+- Serifa na interface; Inter; Geist; monoespaçada em rótulo.
+- Travessão (— ou –) no texto da interface.
+- Caixa alta com espaçamento em rótulo; etiqueta acima de todo título.
+- Fileira de cartões iguais para números; caixa dentro de caixa.
+- Pílula em todo selo; pontinho colorido antes de tudo.
+- Ícone desenhado à mão (fora a marca); glifo digitado como ícone.
+- Preto puro; sombra cinza genérica; brilho ou gradiente colorido.
+- Cascata de entrada em toda seção; animação de largura e altura.
+- Cor como único canal de informação; vermelho fora de urgência.
+- Metadados colados com " · " (só sobrevive no título da aba do navegador).

@@ -93,7 +93,11 @@ algarismos), e casa sem esforço com o dado. Geist ficou de fora de propósito:
   Frase curta é título grande; frase longa desce de corpo para nunca virar
   parede de seis linhas.
 - **Dinheiro grande** (`.stat-value`, `.hero-value`): `UI.dinheiroGrande`
-  separa "R$" e centavos em corpo menor; o inteiro lê primeiro.
+  separa "R$" e centavos em corpo menor; o inteiro lê primeiro. Negativo é
+  "R$ −48,83": o sinal de menos de verdade (U+2212, não o hífen), colado no
+  número e em vermelho de aviso; o hífen ficava baixo e curto ao lado do R$
+  suspenso e parecia sujeira. No texto corrido vale o mesmo sinal
+  (`fmt.moeda`): com o hífen, a linha podia quebrar entre "-" e "R$".
 - Números em coluna usam `tabular-nums`; número grande sozinho, proporcional.
 - Nada de caixa alta em rótulo, nada de monoespaçada, nada de travessão no
   texto da interface (ponto, dois-pontos, vírgula ou parênteses no lugar).
@@ -125,6 +129,13 @@ algarismos), e casa sem esforço com o dado. Geist ficou de fora de propósito:
   `resumo.js` (`ICONES_ED`), sem CDN. Só a marca, o ônfalo, é desenho
   próprio. Glifo digitado no começo de botão ou link ("+ ", "← ", "⇩ ") vira
   ícone sozinho (`UI.realcarBotoes`).
+- **Selo da aba** (`UI.seloAba`): na barra lateral, na folha "Mais" e na
+  lista de abas do perfil, toda aba tem o mesmo selo, fixa ou criada:
+  quadrado de 26px, raio 8, fundo a 14% da cor da aba e fio a 12%, ícone na
+  cor dela em duas camadas (contorno + corpo do Phosphor duotone a 20%). A
+  aba aberta fica com o selo cheio. A Visão geral, que não é pilar, fica em
+  grafite e enche em osso. Na barra do celular o ícone vai solto, como nos
+  apps do telefone.
 - **Botões**: primário em osso; comum em superfície; fantasma para ação
   secundária. Raio 10. Cedem a 97% ao clique.
 - **Janelas**: raio 22, fundo desfocado atrás, título na voz. Ganham nome
@@ -158,8 +169,10 @@ controle 10, miúdo 6, pílula só para escolha (chips, segmentos, interruptor).
 └──────────────┴──────────────────────────────────────────────────────┘
 ```
 
-- **Barra lateral** num plano atrás (`--lateral`), sem borda; contagem em
-  algarismo simples (vermelho só na visão geral, quando há algo vencendo).
+- **Barra lateral** num plano atrás (`--lateral`), sem borda; cada aba com
+  o seu selo colorido (a cor ali identifica a aba, que é o uso que a cor tem
+  no Delfos); contagem em algarismo simples (vermelho só na visão geral,
+  quando há algo vencendo).
 - **Visão geral**: a saudação abre a leitura em tom mais baixo; a razão traz
   saldo, o mês, o próximo compromisso e o que falta pagar; a agenda vai
   semana a semana com o dia do mês grande à esquerda (o único "momento de

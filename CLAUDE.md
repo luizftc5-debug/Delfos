@@ -641,7 +641,13 @@ direção completa, com tokens e proibições, está em `dashboard/DESIGN.md`.
   vem grande em Funnel Display. O tamanho segue o comprimento da frase: `UI.ajustarLeitura` põe
   `data-tam` (g, m, p, pp). Quem detecta é o `MutationObserver` de `iniciarPagina` (`passarTextos`,
   uma vez por quadro), então nenhuma página precisa chamar nada. A mesma passada roda
-  `UI.dinheiroGrande` em `.stat-value`/`.hero-value`: "R$ 6.239,10" vira R$ e centavos menores.
+  `UI.dinheiroGrande` em `.stat-value`/`.hero-value`: "R$ 6.239,10" vira R$ e centavos menores. O
+  sinal sai de antes do R$ e cola no número: "-R$ 48,83" vira "R$ −48,83", com o sinal de menos de
+  verdade (U+2212, desenhado pela Funnel Display na altura dos algarismos) em `.sinal.menos`,
+  vermelho de aviso. Nada lê o texto desses números de volta, então a troca é só de exibição.
+  O mesmo vale em todo o painel: `fmt.moeda` (e `fmt.moedaCurta`) escrevem o negativo com U+2212 em
+  vez do hífen do Intl; o hífen deixava o navegador quebrar a linha entre o sinal e o "R$". Sinal
+  escrito à mão antes de um valor também é "−". `lerDinheiro`/`avaliarDinheiro` aceitam os dois.
 - **Sem serifa.** `--font-voz` é Funnel Display (link do Google Fonts em todas as páginas; Newsreader
   saiu). A preferência "Fonte da leitura e dos títulos" mostra Display/Texto, mas os valores
   guardados continuam `serifa`/`sans` (nomes da 1.6, sem migração).
@@ -653,6 +659,18 @@ direção completa, com tokens e proibições, está em `dashboard/DESIGN.md`.
   `.nota-area` (quando a cor é `var(--s-*)`) desenham o ícone no lugar do pontinho. `.swatch` com
   `style` inline (cor de aba própria) continua ponto. `realcarBotoes` troca o glifo inicial de
   `.btn`, `.voltar` e `.editor-voltar` ("+ ", "← ", "⇩ ") e botões só com "↑"/"↓" por ícone.
+- **Selo das abas** (`UI.seloAba`): na barra lateral, na folha "Mais" e na lista de abas do perfil,
+  toda aba (fixa ou criada) tem o mesmo selo: quadrado de 26px, raio 8, fundo a 14% da cor da aba
+  com fio a 12%, ícone na cor dela; a aba aberta fica com o selo cheio (ícone em `--sobre-claro`
+  nas fixas, branco nas criadas, cujo hex é de tom médio). A cor vem de `--cor-aba` (classe do
+  pilar nas fixas, hex inline nas criadas); a Visão geral, sem pilar, é `.geral` (grafite, cheia em
+  osso). O ícone é **em duas camadas** (`UI.iconeDuo`): o contorno de `ICONES` mais o corpo do
+  Phosphor duotone, guardado em `CORPOS` (a forma cheia, `class="corpo"`, opacidade pelo CSS: 20%
+  em repouso, 30% no selo cheio). Onde o contorno do duotone difere do regular, a entrada de
+  `CORPOS` começa com "=" e traz o desenho inteiro. `iconeAba(valor, true)` faz o mesmo para as
+  abas criadas; glifo digitado continua glifo. Na barra do celular o ícone vai solto (cinza, e na
+  cor da aba quando aberta, com o corpo a 35%), e a cabeça corrida e o índice "Suas abas" usam o
+  mesmo ícone de duas camadas. O selo é `aria-hidden`: o nome da aba já está ao lado.
 - **Menos caixa.** Toda faixa `.g3`/`.g4` de `.stat-value` virou razão aberta (fios, sem fundo).
   `.badge` é texto colorido, não pílula. Cartão só com estado vazio fica com contorno tracejado. O
   calendário do Pessoal não tem caixa em volta. Barras de comparação (`.chart-track`, `.cat-barra`)
@@ -706,6 +724,7 @@ no DESIGN.md (estúdio, azulejo baiano, oráculo sóbrio 1.2–1.3 e a segunda l
   no menu, nas abas e na escolha única. Só com mouse; nada com "reduzir movimento".
 - Metadados em frase ou com vírgula, nunca colados com " · " (só o título da aba do navegador).
 
+Dinheiro negativo sai com o sinal de menos (−, U+2212), nunca o hífen.
 Números decimais saem por `UI.fmt.decimal` (8,2, nunca `toFixed`, que escreve 8.2) e ordinais
 por `UI.fmt.ordinal` (nunca "6ºº"). `[hidden]` tem `display: none !important` no tema: sem isso,
 `el.hidden = true` não esconde nada que tenha `display` próprio (`.btn`, `.card`). `.field input`

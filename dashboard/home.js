@@ -311,7 +311,7 @@
     grid.innerHTML = linhas
       .map((c) => `
         <a class="pillar indice-linha ${c.cor}" href="${c.href}"${c.corHex ? ` style="--tint:${fmt.escape(c.corHex)}"` : ""}>
-          <span class="pillar-ic">${c.corHex ? UI.iconeAba(c.glifo) : UI.icone(c.id)}</span>
+          <span class="pillar-ic" aria-hidden="true">${c.corHex ? UI.iconeAba(c.glifo, true) : UI.iconeDuo(c.id)}</span>
           <span class="indice-nome">${fmt.escape(c.titulo)}<small>${fmt.escape(c.sub)}</small></span>
           <span class="indice-valor num">${fmt.escape(c.valor)}<small>${fmt.escape(c.rotuloValor)}</small></span>
           <span class="indice-seta">${UI.icone("direita")}</span>
@@ -332,7 +332,7 @@
       const piorou = dif > 0;
       linhas.push({
         titulo: "Gastos sobre o mês anterior",
-        valor: `${dif >= 0 ? "+" : "-"}${fmt.moeda(Math.abs(dif))}`,
+        valor: `${dif >= 0 ? "+" : "−"}${fmt.moeda(Math.abs(dif))}`,
         classe: piorou ? "down" : "up",
         sub: anterior.despesa > 0
           ? `${Math.abs(pct)}% ${piorou ? "a mais" : "a menos"} que ${fmt.mesRotulo(UI.mesAnterior(mes))}`

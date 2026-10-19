@@ -6,7 +6,7 @@
 const UI = (() => {
   /** Nome e versão do painel — aparecem na marca do alto da barra lateral. */
   const NOME = "Delfos";
-  const VERSAO = "1.9";
+  const VERSAO = "2.0";
 
   /* -------------------------------- Ícones -------------------------------- */
 
@@ -763,9 +763,12 @@ const UI = (() => {
    * página chama depois de escrever o próprio título.
    */
   function marcarCabeca() {
+    const m = marcaDaPagina();
+    // A cor da aba também tinge o ícone de cada gaveta da página.
+    const wrap = document.querySelector(".wrap");
+    if (wrap && m) wrap.style.setProperty("--cor-pagina", m.cor);
     const h1 = document.querySelector(".wrap > .topbar h1");
     if (!h1 || h1.querySelector(".h1-ic")) return;
-    const m = marcaDaPagina();
     if (!m) return;
     h1.insertAdjacentHTML("afterbegin", `<span class="h1-ic" style="--h1-cor:${fmt.escape(m.cor)}" aria-hidden="true">${m.icone}</span>`);
   }
@@ -1254,7 +1257,7 @@ const UI = (() => {
 
         <div class="ajuste">
           <div class="ajuste-titulo">A visão geral mostra</div>
-          ${[["topo", "Saldo e próximo compromisso"], ["pilares", "Cartões das abas"], ["notas", "O que o Delfos notou"], ["agenda", "Próximos 30 dias"], ["insights", "Leitura da situação"]]
+          ${[["agenda", "Agenda"], ["topo", "Dinheiro"], ["insights", "Comparação e projeção do mês"], ["notas", "O que o Delfos notou"], ["pilares", "Suas abas"]]
             .map(([k, r]) => linhaAjuste(r, "", `<input type="checkbox" class="switch" data-pref-home="${k}" ${xp.home?.[k] !== false ? "checked" : ""} aria-label="${fmt.escape(r)}" />`, true)).join("")}
         </div>
 
@@ -2545,6 +2548,9 @@ const UI = (() => {
     const lista = perguntas.filter((q) => !perguntaDispensada(escopo, q.id));
     secao.hidden = !lista.length;
     box.innerHTML = "";
+    // Na gaveta, o puxador já diz a primeira pergunta: fechada, ela continua convidando.
+    const resumo = secao.querySelector(":scope > .gaveta-cab .gaveta-resumo");
+    if (resumo) resumo.textContent = lista.length === 1 ? lista[0].texto : lista.length ? `${lista.length} perguntas; a primeira: ${lista[0].texto}` : "";
     lista.slice(0, 2).forEach((q, i) => {
       const el = document.createElement("article");
       el.className = "pergunta";
@@ -2574,6 +2580,7 @@ const UI = (() => {
    */
   function renderNotas(ul, notas, textoVazio) {
     ul.innerHTML = "";
+    resumirNotas(ul, notas, textoVazio);
     if (!notas.length) {
       ul.innerHTML = `<li><span class="sinal">${icone("check")}</span><span>${fmt.escape(textoVazio)}</span></li>`;
       return;
@@ -2593,6 +2600,26 @@ const UI = (() => {
       }
       ul.appendChild(li);
     });
+  }
+
+  /**
+   * O puxador da gaveta de notas ([data-resumo-notas]): quantos avisos
+   * pedem atenção e o primeiro deles; sem aviso, a primeira nota; sem nota,
+   * a primeira frase do texto de vazio.
+   */
+  function resumirNotas(ul, notas, textoVazio) {
+    const alvo = ul.closest(".gaveta")?.querySelector(':scope > .gaveta-cab [data-resumo-notas]');
+    if (!alvo) return;
+    const texto = (html) => { const d = document.createElement("div"); d.innerHTML = html; return d.textContent.trim(); };
+    const pedem = notas.filter((n) => n.tipo === "alerta" || n.tipo === "atencao");
+    if (pedem.length) {
+      const classe = pedem.some((n) => n.tipo === "alerta") ? "alerta" : "atencao";
+      alvo.innerHTML = `<span class="${classe}">${pedem.length === 1 ? "1 aviso" : `${pedem.length} avisos`}</span>; ${fmt.escape(texto(pedem[0].html))}`;
+    } else if (notas.length) {
+      alvo.textContent = texto(notas[0].html);
+    } else {
+      alvo.textContent = String(textoVazio || "").split(/(?<=\.)\s/)[0];
+    }
   }
 
   const ORDEM_NOTAS = { alerta: 0, atencao: 1, bom: 2, info: 3 };
@@ -3009,6 +3036,176 @@ const UI = (() => {
     });
   }
 
+  /* ------------------------------- Registrar -------------------------------
+     "+ Registrar" na visão geral: a pessoa diz o que quer guardar e o painel
+     leva ao formulário certo, sem ela precisar saber em que aba cada coisa
+     mora. Cada aba ligada é uma opção (as criadas também). Quem chama pode
+     resolver algumas na própria página (`aoEscolher` devolve true); o resto
+     abre a página da aba com ?novo=, que toca o botão de registrar dela
+     (ligarNovo, em iniciarPagina). */
+
+  const REGISTRAR = {
+    financeiro: { rotulo: "Lançamento", texto: "Um gasto ou uma entrada de dinheiro.", novo: "lancamento" },
+    pessoal: { rotulo: "Compromisso", texto: "Consulta, tarefa ou recado com data.", novo: "compromisso", comData: true },
+    faculdade: { rotulo: "Prazo da faculdade", texto: "Prova, entrega, seminário ou TCC.", novo: "prazo", comData: true },
+    projetos: { rotulo: "Projeto", texto: "Algo que gera renda: monitoria, freela, curso.", novo: "projeto" },
+  };
+  // ?novo=<chave> só toca estes botões, nunca um id qualquer vindo da URL.
+  const BOTAO_NOVO = { lancamento: "btn-lancamento", compromisso: "btn-compromisso", prazo: "btn-prazo", projeto: "btn-projeto", item: "btn-item" };
+
+  function abrirRegistrar({ soComData = false, aoEscolher } = {}) {
+    const e = Store.estado();
+    const opcoes = paginas().filter((p) => p.id !== "home").map((p) => {
+      const base = REGISTRAR[p.id];
+      if (base) return { ...base, id: p.id, aba: p.rotulo, href: `${p.href}?novo=${base.novo}`, selo: seloAba(p, "registrar-selo") };
+      if (!p.id.startsWith("pilar:")) return null;
+      const pl = (e.pilares || []).find((x) => x.id === p.id.slice(6));
+      if (!pl || pl.modelo === "academia") return null;
+      return {
+        id: p.id, aba: pl.nome, href: `${p.href}&novo=item`, selo: seloAba(p, "registrar-selo"),
+        rotulo: pl.rotuloItem ? fmt.capitalizar(pl.rotuloItem) : `Registro em ${pl.nome}`,
+        texto: pl.descricao || `Um registro novo em ${pl.nome}.`,
+        comData: pl.naAgenda !== false,
+      };
+    }).filter((o) => o && (!soComData || o.comData));
+
+    abrirModal(`
+      <div class="modal-head">
+        <h2 class="modal-title">${soComData ? "O que você quer marcar?" : "O que você quer registrar?"}</h2>
+        <p class="modal-desc">Escolha e o Delfos abre o formulário certo, na aba onde isso mora.</p>
+      </div>
+      <div class="modal-body">
+        ${opcoes.length ? `<ul class="registrar-lista">${opcoes.map((o, i) => `<li>
+          <a class="registrar-opcao" href="${fmt.escape(o.href)}" data-i="${i}">
+            ${o.selo}
+            <span class="registrar-texto"><b>${fmt.escape(o.rotulo)}</b><small>${fmt.escape(o.texto)}</small></span>
+            <span class="registrar-aba">${fmt.escape(o.aba)}</span>
+          </a></li>`).join("")}</ul>`
+        : `<p class="modal-desc">Nenhuma aba ligada recebe registros com data. Ligue uma aba em Perfil, Painel.</p>`}
+      </div>`, {
+      classe: "registrar",
+      aoMontar(modal, fechar) {
+        modal.querySelectorAll(".registrar-opcao").forEach((a) => {
+          a.addEventListener("click", (ev) => {
+            if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button !== 0) return;
+            const o = opcoes[Number(a.dataset.i)];
+            if (aoEscolher?.(o.id)) { ev.preventDefault(); fechar(null); return; }
+            // Sem resolver aqui: segue o link (a página da aba abre o formulário).
+            fechar(null);
+          });
+        });
+        if (temPonteiro()) modal.querySelector(".registrar-opcao")?.focus();
+      },
+    });
+  }
+
+  /** ?novo=<chave> na URL: toca o botão de registrar da página (vindo do "+ Registrar"). */
+  function ligarNovo() {
+    const chave = parametro("novo");
+    const id = BOTAO_NOVO[chave];
+    if (!id) return false;
+    const tocar = () => {
+      const url = new URL(location.href);
+      url.searchParams.delete("novo");
+      history.replaceState(history.state, "", url.pathname.split("/").pop() + url.search + url.hash);
+      const bt = document.getElementById(id);
+      if (bt && !bt.hidden && !bt.classList.contains("hidden")) bt.click();
+    };
+    // Os scripts da página ligam os botões depois de iniciarPagina: espera todos rodarem.
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => setTimeout(tocar, 0), { once: true });
+    else setTimeout(tocar, 0);
+    return true;
+  }
+
+  /* -------------------------------- Gavetas --------------------------------
+     Cada página é um gaveteiro: seções delimitadas, cada uma com o seu
+     puxador (ícone, nome, o essencial numa linha e o botão de registrar).
+     O HTML escreve só <section class="gaveta" data-gaveta="nome"> com
+     .gaveta-cab (h2.gaveta-titulo, .gaveta-resumo, .gaveta-acoes) e
+     .gaveta-corpo; aqui o título vira o botão de abrir e fechar. Aberta ou
+     fechada é conveniência deste navegador (localStorage), não dado: some
+     com o navegador limpo, e a página continua inteira sem ele. */
+
+  const CHAVE_GAVETAS = "delfos.gavetas";
+  function gavetasSalvas() {
+    try { return JSON.parse(localStorage.getItem(CHAVE_GAVETAS) || "{}") || {}; } catch { return {}; }
+  }
+  const paginaDasGavetas = () => (location.pathname.split("/").pop() || "index.html").replace(/\.html$/, "") || "index";
+
+  /** Abre (ou fecha) uma gaveta; `guardar` lembra a escolha para a próxima visita. */
+  function abrirGaveta(g, aberta = true, { guardar = true } = {}) {
+    if (!g?.classList?.contains("gaveta") || !g.dataset.aberta) return;
+    const valor = aberta ? "sim" : "nao";
+    if (g.dataset.aberta === valor) return;
+    // Durante o movimento o conteúdo fica recortado; aberto e parado, nada
+    // é cortado (a dica do gráfico e o anel de foco podem passar da borda).
+    g.classList.add("movendo");
+    clearTimeout(g.timerGaveta);
+    g.timerGaveta = setTimeout(() => g.classList.remove("movendo"), semMovimento() ? 0 : 480);
+    g.dataset.aberta = valor;
+    g.querySelector(":scope > .gaveta-cab .gaveta-puxador")?.setAttribute("aria-expanded", String(aberta));
+    if (guardar && g.dataset.gaveta) {
+      try {
+        const m = gavetasSalvas();
+        m[`${paginaDasGavetas()}:${g.dataset.gaveta}`] = aberta;
+        localStorage.setItem(CHAVE_GAVETAS, JSON.stringify(m));
+      } catch { /* sem armazenamento: a escolha vale só nesta visita */ }
+    }
+  }
+
+  /** Abre a gaveta onde um elemento mora (um link para #metas, um filtro que leva à planilha). */
+  function abrirGavetaDe(el) {
+    let g = el?.closest?.(".gaveta");
+    while (g) {
+      abrirGaveta(g, true, { guardar: false });
+      g = g.parentElement?.closest(".gaveta");
+    }
+  }
+
+  function gavetas(raiz = document) {
+    const lista = raiz.querySelectorAll?.(".gaveta:not([data-aberta])");
+    if (!lista?.length) return;
+    const salvas = gavetasSalvas();
+    lista.forEach((g, i) => {
+      const cab = g.querySelector(":scope > .gaveta-cab");
+      const corpo = g.querySelector(":scope > .gaveta-corpo");
+      const h = cab?.querySelector(".gaveta-titulo");
+      if (!cab || !corpo || !h) return;
+      const nome = g.dataset.gaveta || `g${i}`;
+      if (!g.id) g.id = `gaveta-${nome}`;
+      if (!corpo.id) corpo.id = `${g.id}-corpo`;
+      if (!corpo.querySelector(":scope > .gaveta-dentro")) {
+        const dentro = document.createElement("div");
+        dentro.className = "gaveta-dentro";
+        dentro.append(...corpo.childNodes);
+        corpo.append(dentro);
+      }
+      const bt = document.createElement("button");
+      bt.type = "button";
+      bt.className = "gaveta-puxador";
+      bt.setAttribute("aria-controls", corpo.id);
+      const ic = g.dataset.icone;
+      if (ic && (ICONES[ic] || MARCA[ic])) bt.innerHTML = `<span class="gaveta-ic" aria-hidden="true">${iconeDuo(ic)}</span>`;
+      const rotulo = document.createElement("span");
+      rotulo.className = "gaveta-nome";
+      // Título que a página reescreve (o nome da lista de uma aba) leva o id junto.
+      if (h.id) { rotulo.id = h.id; h.removeAttribute("id"); }
+      rotulo.append(...h.childNodes);
+      bt.append(rotulo);
+      h.append(bt);
+      cab.insertAdjacentHTML("beforeend", `<span class="gaveta-seta" aria-hidden="true">${icone("abaixo")}</span>`);
+      const chave = `${paginaDasGavetas()}:${nome}`;
+      const aberta = chave in salvas ? !!salvas[chave] : !g.hasAttribute("data-fechada");
+      g.dataset.aberta = aberta ? "sim" : "nao";
+      bt.setAttribute("aria-expanded", String(aberta));
+      bt.addEventListener("click", () => abrirGaveta(g, g.dataset.aberta !== "sim"));
+    });
+    // Link direto para algo dentro de uma gaveta fechada (financeiro.html#metas): abre ela.
+    if (raiz === document && location.hash.length > 1) {
+      try { abrirGavetaDe(document.querySelector(location.hash)); } catch { /* hash que não é seletor */ }
+    }
+  }
+
   /**
    * A leitura muda de tamanho conforme o comprimento da frase: curta, ela é
    * o título grande da página; longa, desce de corpo para nunca virar uma
@@ -3064,6 +3261,7 @@ const UI = (() => {
   function iniciarPagina(ativo, opcoes) {
     tema.iniciar();
     aplicarAparencia();
+    gavetas(document);
     realcarBotoes(document);
     ligarPular();
     new MutationObserver((mudancas) => {
@@ -3071,7 +3269,11 @@ const UI = (() => {
       mudancas.forEach((m) => {
         if (m.target.nodeType !== Node.ELEMENT_NODE) return;
         realcarBotoes(m.target);
-        m.addedNodes.forEach((n) => { if (n.nodeType === Node.ELEMENT_NODE) movimento(n); });
+        m.addedNodes.forEach((n) => {
+          if (n.nodeType !== Node.ELEMENT_NODE) return;
+          movimento(n);
+          if (n.matches(".gaveta") || n.querySelector(".gaveta:not([data-aberta])")) gavetas(n.parentElement || document);
+        });
       });
     }).observe(document.body, { childList: true, subtree: true, characterData: true });
     passarTextos();
@@ -3111,7 +3313,9 @@ const UI = (() => {
     montarLayout(ativo, opcoes);
     avisarSeAbaDesligada(ativo);
     movimento(document);
-    setTimeout(() => { try { verificarLembretes(); } catch (e) { console.error("lembretes", e); } }, 600);
+    // Vindo do "+ Registrar", o formulário abre sozinho; o resumo do dia fica para a próxima página.
+    const abrindoFormulario = ligarNovo();
+    if (!abrindoFormulario) setTimeout(() => { try { verificarLembretes(); } catch (e) { console.error("lembretes", e); } }, 600);
   }
 
   /**
@@ -3153,6 +3357,7 @@ const UI = (() => {
     abrirBackup, abrirPerfil, avatarHTML, iniciais, vazio, barras, colunasMensais, medidor,
     novaAba, abrirCriadorDeAbas, prepararCriador, carregarScript, camposPilar, redimensionarFoto, camposItemPilar, editorCampos,
     perguntaDispensada, dispensarPergunta, resposta, renderPerguntas, renderNotas, ordenarNotas, barrasComMeta,
+    gavetas, abrirGaveta, abrirGavetaDe, abrirRegistrar,
   };
 })();
 

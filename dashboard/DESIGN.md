@@ -1,9 +1,14 @@
-# Design System: Delfos 1.8, "marfim"
+# Design System: Delfos 2.0, "marfim" em gavetas
 
 Delfos é o nome de um oráculo, e o painel faz o que um oráculo faz: lê a
 situação e diz o que ela é. Desde a 1.7, **em toda página, a leitura é o
-título**: a frase vem grande e leve, os números ficam ao pé dela, numa razão
-aberta, e o resto se organiza por espaço e fio, não por caixa.
+título**: a frase vem grande e leve. Desde a 2.0, **cada assunto mora numa
+gaveta**: os números da aba num painel só e, embaixo, uma coluna de
+superfícies delimitadas, cada uma com um puxador que diz o essencial (o nome,
+uma linha do que tem dentro, o botão de registrar). Aberta, a gaveta mostra o
+conteúdo; fechada, continua dizendo o principal. Dentro dela nada vira caixa
+de novo: listas, fios e, quando há peças que se tocam, compartimentos de tom
+mais escuro, sem borda.
 
 A 1.8 ganhou **identidade de marca**: o logotipo "Delfos" numa serifa
 clássica, marfim sobre preto, com a assinatura "Organização para o que
@@ -37,6 +42,12 @@ painel de uso diário.
    com ele. A serifa voltou, mas outra: de exibição, leve e de alto contraste,
    a mesma família do logotipo, sobre neutros quentes. O que lia como "tela de
    assistente" na 1.6 era a Newsreader de texto, pesada, sobre grafite frio.
+6. **"Página aberta" v1.7 a v1.9**: nada em caixa, tudo organizado por espaço
+   e fio, a razão de números solta entre dois fios e a coluna lateral com
+   "O que o Delfos notou" e "Em números". Elegante em print, mas na tela de
+   todo dia lia como poluída: sem limites, o olho não sabia onde um assunto
+   acabava, tudo aparecia ao mesmo tempo e o botão de criar ficava longe do
+   lugar onde a coisa mora. A 2.0 trouxe as gavetas.
 
 ## 1. Atmosfera
 
@@ -164,13 +175,31 @@ de largura seriam 76 KB).
   com o ícone da aba na cor dela (`UI.marcarCabeca`) e a descrição ao lado;
   quem é grande é a leitura. Página sem leitura (Contas, Investimentos, uma
   disciplina, um projeto) mantém o título grande, na voz, em peso 300.
-- **Razão de números**: toda faixa `.g3`/`.g4` de `.stat-value` vira colunas
-  abertas entre dois fios, separadas por fio vertical, sem fundo nem caixa.
-  No celular, duas colunas. Nenhuma página precisou mudar o HTML para isso.
-- **Superfície** (`.card`): tom levemente acima do fundo, fio translúcido e
-  um brilho de 1px no alto (no escuro). Só para o que é objeto: janela,
-  meta, conta, projeto, gráfico. Cartão que só tem estado vazio perde o fundo
-  e ganha contorno tracejado: é um espaço a preencher.
+- **Gaveta** (2.0, `.gaveta`): superfície (`--superficie`, fio `--linha`,
+  raio 16) com o **puxador** no alto: o ícone da aba num quadrado de 34px a
+  12% da cor da página, o nome na voz (20px, 450), o **resumo** em uma linha
+  (14px, `--texto-3`, com `<b>` e os tons de status), as ações (botão
+  pequeno) e a seta, que gira ao abrir. A faixa inteira é clicável; o foco
+  aparece como um anel por dentro dela. Um fio separa o puxador do conteúdo,
+  com 22px de respiro (16 no celular). Gavetas empilham numa coluna só, com
+  12px entre elas. Fechada por padrão só a que é análise ou ajuste.
+- **Painel de números**: a faixa `.g3`/`.g4` de `.stat-value` é uma
+  superfície delimitada, colunas separadas por fio, valor na voz a 30px. No
+  celular, duas colunas. Nenhuma página precisou mudar o HTML para isso.
+- **Compartimento**: dentro da gaveta, peça que se toca (pergunta, meta,
+  conta, projeto, resumo de campo, ladrilho de aba) tem o tom
+  `--superficie-2` a 62% sobre a superfície, raio 12, sem borda. Moldura de
+  tabela, de grade de semanas e de cartão que só embrulhava o vazio somem.
+- **Superfície solta** (`.card`) fica para o que não está em gaveta: janela,
+  o cartão de uma conta numa página sem gaveteiro.
+- **Estado vazio dentro da gaveta**: uma linha (ícone de 40px, título em
+  Funnel Sans, texto, ação à direita), nunca um cartaz centralizado. Se o
+  puxador já tem o botão de registrar, o vazio não repete o botão.
+- **Ladrilho de aba** (`.ladrilho`, visão geral): compartimento com o selo
+  da aba (34px), o nome na voz, o número que importa e uma linha do que há
+  nela. Leva à página da aba.
+- **Registrar** (`.modal.registrar`): "O que você quer registrar?", uma
+  linha por aba ligada (selo, o que se registra, uma frase, o nome da aba).
 - **Selo** (`.badge`): texto, não pílula. "em 2 dias" em âmbar, "atrasado há
   3 dias" em vermelho; o de pilar leva o ícone da área.
 - **Ícone de área**: os quatro pilares têm ícone em máscara CSS
@@ -215,20 +244,19 @@ controle 10, miúdo 6, pílula só para escolha (chips, segmentos, interruptor).
 
 ```
 ┌──────────────┬──────────────────────────────────────────────────────┐
-│ Delfos   1.8 │ ◉ Visão geral  Segunda-feira, 12 de outubro  [+] [+] │
+│ Delfos   2.0 │ ◉ Visão geral  Segunda-feira, 19 de outubro  [+ Reg.]│
 │              │                                                      │
 │ ◉ Visão  5   │ Boa tarde, Luiz. Relatório de estágio venceu há      │
-│ ◯ Pessoal 1  │ 2 dias. No mês, sobrou R$ 316,20.   (leitura, 46px)  │
-│ ▭ Financ. 1  │──────────────────────────────────────────────────────│
-│ ▯ Faculd. 4  │ Saldo         │ Sobrou     │ Próximo      │ A pagar  │
-│ ↗ Projetos   │ R$ 6.239,10   │ R$ 316,20  │ Consulta…    │ R$ 300   │
-│ + Nova aba   │──────────────────────────────────────────────────────│
-│              │ Agenda                       │ O que o Delfos notou   │
-│              │ Atrasado                     │ ...                    │
-│              │ 10 sáb  Relatório de estágio │ Em números             │
-│              │ Esta semana   Semana cheia   │ ...                    │
-│              │ 14 qua  Consulta ...         │                        │
-│ (LF) Luiz    │ Suas abas (índice em duas colunas)                    │
+│ ◯ Pessoal 1  │ 2 dias. No mês, sobrou R$ 304,20.   (leitura, 40px)  │
+│ ▭ Financ. 1  │ ╭──────────────────────────────────────────────────╮ │
+│ ▯ Faculd. 4  │ │ ▣ Agenda  1 atrasado; próximo: Consulta…  [+] ˄  │ │
+│ ↗ Projetos   │ │──────────────────────────────────────────────────│ │
+│ + Nova aba   │ │ 17 sáb  Relatório de estágio     venceu há 2 dias│ │
+│              │ │ 21 qua  Consulta oftalmologista        em 2 dias │ │
+│              │ ╰──────────────────────────────────────────────────╯ │
+│              │ ╭ ▭ Dinheiro  saldo R$ 6.239,10; sobrou…  [+]  ˄ ──╮ │
+│              │ ╭ ◌ O que o Delfos notou  6 avisos; …          ˄ ──╮ │
+│ (LF) Luiz    │ ╭ ▦ Suas abas  5 abas: …           [+ Nova aba] ˄ ─╮ │
 └──────────────┴──────────────────────────────────────────────────────┘
 ```
 
@@ -236,12 +264,16 @@ controle 10, miúdo 6, pílula só para escolha (chips, segmentos, interruptor).
   o seu selo colorido (a cor ali identifica a aba, que é o uso que a cor tem
   no Delfos); contagem em algarismo simples (vermelho só na visão geral,
   quando há algo vencendo).
-- **Visão geral**: a saudação abre a leitura em tom mais baixo; a razão traz
-  saldo, o mês, o próximo compromisso e o que falta pagar; a agenda vai
-  semana a semana com o dia do mês grande à esquerda (o único "momento de
-  segunda leitura" da página) e a semana cheia marcada no próprio cabeçalho
-  (saiu a pilha de avisos do topo); "O que o Delfos notou" e "Em números"
-  ficam soltos na coluna lateral; as abas viram um índice.
+- **Visão geral**: a saudação abre a leitura em tom mais baixo; "+ Registrar"
+  é o único botão da cabeça; quatro gavetas: a agenda (próximos sete dias,
+  semana a semana, com o dia do mês grande à esquerda, o único "momento de
+  segunda leitura" da página, e a semana cheia marcada no próprio
+  cabeçalho), o dinheiro (saldo, o mês e o que falta pagar lado a lado, com
+  a comparação e a projeção em palavras), o que o Delfos notou (três por vez)
+  e suas abas, em ladrilhos.
+- **Página de aba**: cabeça (título e o registro principal), leitura, painel
+  de números, gaveteiro. O botão de registrar mora na gaveta onde o registro
+  vai; a cabeça guarda só o principal.
 - **Celular** (até 900px): o alto é só a marca e o retrato; a navegação é
   uma barra de abas fixa embaixo, ao alcance do polegar, com as quatro
   primeiras abas e "Mais" (a aba aberta sempre aparece nela). Área segura do
@@ -255,8 +287,10 @@ controle 10, miúdo 6, pílula só para escolha (chips, segmentos, interruptor).
 - **Um momento de entrada só**: a leitura chega (opacidade, 10px e um leve
   desfoque, 620 ms). As seções já estão no lugar; cascata em toda seção era
   tique de tela gerada.
-- A luz que segue o ponteiro ficou só no que leva a algum lugar (linha do
-  índice de abas, `a.card`); cartão parado não acende.
+- A luz que segue o ponteiro ficou só no que leva a algum lugar (ladrilho
+  de "Suas abas", `a.card`); cartão parado não acende.
+- A gaveta desliza (`grid-template-rows` de 1fr a 0fr, 460 ms para abrir,
+  280 para fechar) e a seta gira junto; nada de medir altura em JS.
 - Destaque deslizante no menu, sublinhado que corre nas abas, trilho na
   escolha única, mola no interruptor: respostas ao gesto, não enfeite.
 - Barras aparecem sem animar largura (só propriedades de compositor).
@@ -277,7 +311,11 @@ controle 10, miúdo 6, pílula só para escolha (chips, segmentos, interruptor).
 - Travessão (— ou –) no texto da interface.
 - Caixa alta com espaçamento em rótulo (a assinatura da marca é a exceção);
   etiqueta acima de todo título.
-- Fileira de cartões iguais para números; caixa dentro de caixa.
+- Fileira de cartões iguais para números; caixa com borda dentro de gaveta
+  (dentro, só compartimento de tom, sem fio em volta).
+- Seção solta numa página de aba: todo assunto mora numa gaveta, com nome,
+  resumo e, se recebe registro, o botão de registrar no puxador.
+- Gaveta sem resumo útil: fechada, ela precisa dizer o essencial.
 - Pílula em todo selo; pontinho colorido antes de tudo.
 - Ícone desenhado à mão (fora a marca); glifo digitado como ícone.
 - Preto puro; sombra cinza genérica; brilho ou gradiente colorido.

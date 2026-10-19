@@ -33,60 +33,78 @@
 
         <div class="grid g4" id="bloco-stats" style="margin-bottom:14px;"></div>
 
-        <section class="section hidden" id="secao-academia">
-          <div class="section-head">
-            <h2 class="section-title"><span class="swatch" id="swatch-academia"></span>Dias de treino</h2>
-            <button class="btn ghost sm" id="btn-dia">+ Dia de treino</button>
-          </div>
-          <div id="academia-conteudo"></div>
+        <section class="gaveta hidden" id="secao-academia" data-gaveta="academia" data-icone="haltere">
+          <header class="gaveta-cab">
+            <h2 class="gaveta-titulo"><span class="swatch" id="swatch-academia"></span>Dias de treino</h2>
+            <span class="gaveta-resumo" id="academia-resumo"></span>
+            <div class="gaveta-acoes"><button class="btn sm" id="btn-dia" type="button">+ Dia de treino</button></div>
+          </header>
+          <div class="gaveta-corpo"><div id="academia-conteudo"></div></div>
         </section>
 
-        <div class="fin-duas section" id="secao-itens" style="margin-top:28px;">
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title" id="titulo-lista"><span class="swatch" id="swatch-lista"></span>Itens</h2>
-              <div class="seg sm vistas" id="f-vista" role="group" aria-label="Como ver"></div>
+        <div class="gaveteiro" id="secao-itens">
+          <section class="gaveta" data-gaveta="itens" data-icone="lista">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo" id="titulo-lista"><span class="swatch" id="swatch-lista"></span>Itens</h2>
+              <span class="gaveta-resumo" id="lista-resumo"></span>
+              <div class="gaveta-acoes"><div class="seg sm vistas" id="f-vista" role="group" aria-label="Como ver"></div></div>
+            </header>
+            <div class="gaveta-corpo">
+              <div class="fin-filtros" style="margin-bottom:16px;">
+                <div class="chips" id="f-grupo"></div>
+                <label class="busca"><input class="input" type="search" id="f-busca" placeholder="Buscar…" aria-label="Buscar nesta aba" autocomplete="off" /></label>
+                <select class="input" id="f-ordem" aria-label="Ordenar"></select>
+                <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
+              </div>
+              <div id="lista"></div>
             </div>
-            <div class="fin-filtros" style="margin-bottom:16px;">
-              <div class="chips" id="f-grupo"></div>
-              <label class="busca"><input class="input" type="search" id="f-busca" placeholder="Buscar…" aria-label="Buscar nesta aba" autocomplete="off" /></label>
-              <select class="input" id="f-ordem" aria-label="Ordenar"></select>
-              <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
-            </div>
-            <div id="lista"></div>
           </section>
-          <div class="fin-coluna" id="coluna-lado">
-            <section class="card">
-              <div class="card-head"><h2 class="card-title">O que o Delfos notou</h2></div>
-              <ul class="notas" id="notas"></ul>
+
+          <div class="gaveteiro" id="coluna-lado">
+            <section class="gaveta" data-gaveta="notas" data-icone="lampada">
+              <header class="gaveta-cab">
+                <h2 class="gaveta-titulo">O que o Delfos notou</h2>
+                <span class="gaveta-resumo" data-resumo-notas></span>
+              </header>
+              <div class="gaveta-corpo"><ul class="notas" id="notas"></ul></div>
             </section>
-            <div id="resumos-campos" class="fin-coluna"></div>
+            <section class="gaveta" data-gaveta="campos" data-icone="grade" hidden>
+              <header class="gaveta-cab">
+                <h2 class="gaveta-titulo">Em números</h2>
+                <span class="gaveta-resumo" id="campos-resumo"></span>
+              </header>
+              <div class="gaveta-corpo"><div id="resumos-campos" class="compartimentos"></div></div>
+            </section>
           </div>
         </div>
 
-        <section class="section" id="sec-perguntas" hidden>
-          <div class="section-head">
-            <h2 class="section-title">Perguntas do Delfos</h2>
-          </div>
-          <div class="perguntas" id="perguntas"></div>
-        </section>
+        <div class="gaveteiro">
+          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-icone="pergunta" data-fechada hidden>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Perguntas do Delfos</h2>
+              <span class="gaveta-resumo"></span>
+            </header>
+            <div class="gaveta-corpo"><div class="perguntas" id="perguntas"></div></div>
+          </section>
 
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Ajustes da aba</h2>
-          </div>
-          <div class="card">
-            <p class="proposito-aba" id="proposito-aba" hidden><b>Propósito</b><span></span></p>
-            <p class="card-note" id="nota-ajustes" style="margin:0 0 12px;"></p>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button class="btn" id="btn-editar-aba-2">Personalizar aba</button>
-              <button class="btn" id="btn-campos">Campos desta aba</button>
-              <button class="btn" id="btn-layout">Layout e exibição</button>
-              <button class="btn" id="btn-refazer-questionario" hidden>Refazer o questionário inicial</button>
-              <button class="btn danger" id="btn-excluir-aba">Excluir esta aba</button>
+          <section class="gaveta" data-gaveta="ajustes" data-icone="ajustes" data-fechada>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Ajustes da aba</h2>
+              <span class="gaveta-resumo">personalizar, campos, layout ou excluir</span>
+            </header>
+            <div class="gaveta-corpo">
+              <p class="proposito-aba" id="proposito-aba" hidden><b>Propósito</b><span></span></p>
+              <p class="card-note" id="nota-ajustes" style="margin:0 0 12px;"></p>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn" id="btn-editar-aba-2">Personalizar aba</button>
+                <button class="btn" id="btn-campos">Campos desta aba</button>
+                <button class="btn" id="btn-layout">Layout e exibição</button>
+                <button class="btn" id="btn-refazer-questionario" hidden>Refazer o questionário inicial</button>
+                <button class="btn danger" id="btn-excluir-aba">Excluir esta aba</button>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
     </main>
   </div>

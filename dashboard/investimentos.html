@@ -56,20 +56,23 @@
           </div>
         </div>
 
-        <section class="section" style="margin-top:28px;">
-          <div class="section-head">
-            <h2 class="section-title"><span class="swatch financeiro"></span>Por tipo</h2>
-          </div>
-          <div class="card"><div id="por-tipo"></div></div>
-        </section>
+        <div class="gaveteiro">
+          <section class="gaveta" data-gaveta="lista" data-icone="cofre">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Seus investimentos</h2>
+              <span class="gaveta-resumo" id="resumo"></span>
+            </header>
+            <div class="gaveta-corpo"><div id="lista"></div></div>
+          </section>
 
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Seus investimentos</h2>
-            <span class="card-note" id="resumo"></span>
-          </div>
-          <div id="lista"></div>
-        </section>
+          <section class="gaveta" data-gaveta="por-tipo" data-icone="investimentos">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Por tipo</h2>
+              <span class="gaveta-resumo" id="por-tipo-resumo"></span>
+            </header>
+            <div class="gaveta-corpo"><div id="por-tipo"></div></div>
+          </section>
+        </div>
       </div>
     </main>
   </div>

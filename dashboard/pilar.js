@@ -217,6 +217,11 @@
     const box = $("lista");
     box.innerHTML = "";
     $("titulo-lista").lastChild.textContent = fmt.capitalizar(Leituras.pluralizar(rotulo()));
+    const feitos = L.itens.filter((i) => i.concluido).length;
+    const emAberto = L.itens.length - feitos;
+    $("lista-resumo").textContent = !L.itens.length ? `Nenhum ${rotulo()} ainda`
+      : pilar.checkin ? `${L.itens.length} ${L.itens.length === 1 ? rotulo() : Leituras.pluralizar(rotulo())}`
+      : `${emAberto} em aberto${feitos ? `, ${feitos} ${feitos === 1 ? "concluído" : "concluídos"}` : ""}`;
     renderControlesVista();
     const vista = vistaAtual();
     box.dataset.vista = vista;
@@ -616,6 +621,16 @@
   function renderResumos(L) {
     const box = $("resumos-campos");
     box.innerHTML = "";
+    // O puxador diz o primeiro resumo em palavras; sem campo para resumir, a gaveta some.
+    const r0 = L.resumoCampos[0];
+    box.closest(".gaveta").hidden = !r0;
+    if (r0) {
+      $("campos-resumo").textContent =
+        r0.tipo === "distribuicao" ? `Por ${r0.campo.rotulo.toLowerCase()}: ${r0.linhas.slice(0, 3).map((l) => `${l.valor} ${l.nome}`).join(", ")}`
+        : r0.tipo === "numero" ? `${r0.campo.rotulo}: média ${fmt.decimal(r0.media)}`
+        : r0.tipo === "dinheiro" ? `${r0.campo.rotulo}: ${fmt.moeda(r0.noMes)} este mês`
+        : `${r0.campo.rotulo}: ${r0.sim} de ${r0.n}`;
+    }
     L.resumoCampos.slice(0, 3).forEach((r) => {
       const card = document.createElement("section");
       card.className = "card";
@@ -723,6 +738,11 @@
   function renderAcademia() {
     const box = document.getElementById("academia-conteudo");
     box.innerHTML = "";
+    const dias = pilar.dias || [];
+    const nEx = dias.reduce((t, d) => t + (d.exercicios || []).length, 0);
+    document.getElementById("academia-resumo").textContent = !pilar.academia?.configuradoEm ? "Falta o questionário inicial"
+      : dias.length ? `${dias.length === 1 ? "1 dia" : `${dias.length} dias`}, ${nEx === 1 ? "1 exercício" : `${nEx} exercícios`}: ${dias.map((d) => d.nome).join(", ")}`
+      : "Nenhum dia de treino ainda";
 
     if (!pilar.academia?.configuradoEm) {
       box.appendChild(

@@ -111,8 +111,13 @@
 
   function renderEtapas() {
     const box = document.getElementById("etapas");
-    box.innerHTML = "";
     const passos = projeto.passos || [];
+    const feitos = passos.filter((x) => x.feito).length;
+    const prox = passos.find((x) => !x.feito);
+    document.getElementById("etapas-resumo").innerHTML = passos.length
+      ? `${feitos} de ${passos.length} feitas${prox ? `; a próxima: <b>${fmt.escape(prox.texto || prox.descricao || prox.titulo || "")}</b>` : ""}`
+      : "Nenhuma etapa ainda";
+    box.innerHTML = "";
 
     if (!passos.length) {
       box.appendChild(
@@ -216,7 +221,9 @@
 
   function renderRecebimentos(r) {
     const n = (projeto.recebimentos || []).length;
-    document.getElementById("recebimentos-resumo").textContent = n ? `${fmt.moeda(r.faturado)} no total` : "";
+    document.getElementById("recebimentos-resumo").innerHTML = n
+      ? `<b>${fmt.moeda(r.faturado)}</b> no total, em ${n === 1 ? "1 recebimento" : `${n} recebimentos`}`
+      : "Nada recebido ainda";
     renderMovimentos({
       campo: "recebimentos",
       alvo: "recebimentos",
@@ -233,6 +240,10 @@
   }
 
   function renderCustos() {
+    const custos = projeto.custos || [];
+    document.getElementById("custos-resumo").innerHTML = custos.length
+      ? `<b>${fmt.moeda(custos.reduce((t, c) => t + (Number(c.valor) || 0), 0))}</b> em ${custos.length === 1 ? "1 custo" : `${custos.length} custos`}`
+      : "Nenhum custo lançado";
     renderMovimentos({
       campo: "custos",
       alvo: "custos",
@@ -254,6 +265,9 @@
     const box = document.getElementById("anexos");
     box.innerHTML = "";
     const anexos = projeto.anexos || [];
+    document.getElementById("anexos-resumo").textContent = anexos.length
+      ? `${anexos.length === 1 ? "1 documento" : `${anexos.length} documentos`}: ${anexos.slice(0, 2).map((a) => a.nome).join(", ")}`
+      : "Contrato, proposta, comprovantes";
 
     if (!anexos.length) {
       box.appendChild(
@@ -296,6 +310,8 @@
   function renderAnotacoes() {
     const box = document.getElementById("anotacoes");
     box.innerHTML = "";
+    const texto = String(projeto.anotacoes || "").replace(/\s+/g, " ").trim();
+    document.getElementById("anotacoes-resumo").textContent = texto || "O caderno solto do projeto";
     if (!projeto.anotacoes) {
       box.appendChild(
         UI.vazio({

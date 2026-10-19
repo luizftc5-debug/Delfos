@@ -33,36 +33,40 @@
 
         <div class="grid g4" style="margin-bottom:14px;" id="stats"></div>
 
-        <div class="grid g2">
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title"><span class="swatch financeiro" id="swatch-categorias"></span>Gastos por categoria</h2>
-            </div>
-            <div id="categorias"></div>
+        <div class="gaveteiro">
+          <section class="gaveta" data-gaveta="categorias" data-icone="lista">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo"><span class="swatch financeiro" id="swatch-categorias"></span>Gastos por categoria</h2>
+              <span class="gaveta-resumo" id="categorias-resumo"></span>
+            </header>
+            <div class="gaveta-corpo"><div id="categorias"></div></div>
           </section>
 
-          <section class="card" id="card-limite" style="display:none;">
-            <div class="card-head">
-              <h2 class="card-title">Limite do cartão</h2>
+          <section class="gaveta" id="card-limite" data-gaveta="limite" data-icone="alvo" style="display:none;">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Limite do cartão</h2>
+              <span class="gaveta-resumo" id="limite-resumo"></span>
+            </header>
+            <div class="gaveta-corpo"><div id="limite"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="lancamentos" data-icone="tabela">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Lançamentos</h2>
+              <span class="gaveta-resumo" id="lancamentos-resumo"></span>
+            </header>
+            <div class="gaveta-corpo">
+              <div class="table-wrap">
+                <table class="sheet">
+                  <thead>
+                    <tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Status</th><th style="text-align:right;">Valor</th><th></th></tr>
+                  </thead>
+                  <tbody id="lancamentos"></tbody>
+                </table>
+              </div>
             </div>
-            <div id="limite"></div>
           </section>
         </div>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Lançamentos</h2>
-            <span class="card-note" id="lancamentos-resumo"></span>
-          </div>
-          <div class="table-wrap">
-            <table class="sheet">
-              <thead>
-                <tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Status</th><th style="text-align:right;">Valor</th><th></th></tr>
-              </thead>
-              <tbody id="lancamentos"></tbody>
-            </table>
-          </div>
-        </section>
       </div>
     </main>
   </div>

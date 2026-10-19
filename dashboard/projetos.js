@@ -57,6 +57,11 @@
     const mesNome = MESES[Number(UI.mesAtual().slice(5)) - 1];
     document.getElementById("titulo-renda").textContent = `Recebido por projeto em ${mesNome}`;
     const box = document.getElementById("renda-projetos");
+    const recebido = L.porProjeto.reduce((t, x) => t + (Number(x.recMes) || 0), 0);
+    const estimado = L.porProjeto.reduce((t, x) => t + (Number(x.estim) || 0), 0);
+    document.getElementById("renda-resumo").innerHTML = L.porProjeto.length
+      ? `<b>${fmt.moeda(recebido)}</b> recebidos${estimado ? ` de ${fmt.moeda(estimado)} estimados` : ""}`
+      : "Nenhum projeto ativo";
     if (!L.porProjeto.length) box.innerHTML = `<p class="card-note" style="margin:0;">Nenhum projeto ativo.</p>`;
     else UI.barrasComMeta(box, L.porProjeto.map((x) => ({
       nome: x.p.nome, href: `projeto.html?id=${encodeURIComponent(x.p.id)}`,
@@ -69,7 +74,8 @@
     })), { cor: "var(--s-projetos)", rotuloMeta: "renda estimada" });
 
     const meses = document.getElementById("renda-meses");
-    document.getElementById("meses-nota").textContent = L.meta ? "marca na sua meta mensal" : "";
+    const somaMeses = L.meses.reduce((t, m) => t + (Number(m.valor) || 0), 0);
+    document.getElementById("meses-nota").innerHTML = `${fmt.moeda(somaMeses)} em seis meses${L.meta ? `; meta de ${fmt.moeda(L.meta)} por mês` : ""}`;
     UI.barrasComMeta(meses, L.meses.map((m) => ({
       nome: `${MESES[Number(m.chave.slice(5)) - 1]}${m.chave.slice(0, 4) !== UI.mesAtual().slice(0, 4) ? ` de ${m.chave.slice(0, 4)}` : ""}`,
       valor: m.valor, meta: L.meta || null,
@@ -122,6 +128,10 @@
     const box = document.getElementById("projetos");
     box.innerHTML = "";
     const lista = projetos();
+    const ativos = lista.filter((p) => p.status !== "concluído" && p.status !== "arquivado");
+    document.getElementById("projetos-resumo").textContent = lista.length
+      ? `${ativos.length === 1 ? "1 ativo" : `${ativos.length} ativos`}${lista.length > ativos.length ? ` de ${lista.length}` : ""}: ${ativos.map((p) => p.nome).join(", ").replace(/, ([^,]*)$/, " e $1") || "nenhum em andamento"}`
+      : "Nenhum projeto cadastrado";
 
     if (!lista.length) {
       const card = document.createElement("div");
@@ -228,6 +238,9 @@
     const box = document.getElementById("oportunidades");
     box.innerHTML = "";
     const lista = oportunidades();
+    document.getElementById("oportunidades-resumo").textContent = lista.length
+      ? `${lista.length === 1 ? "1 ideia anotada" : `${lista.length} ideias anotadas`}: ${lista.map((o) => o.nome || o.titulo || o.descricao).filter(Boolean).slice(0, 3).join(", ")}`
+      : "Ideias que ainda não viraram projeto";
 
     if (!lista.length) {
       box.appendChild(

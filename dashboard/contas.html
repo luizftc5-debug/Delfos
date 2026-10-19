@@ -23,7 +23,6 @@
             <p class="sub">Quanto você tem em cada conta e quanto deve em cada cartão.</p>
           </div>
           <div class="topbar-actions">
-            <button class="btn" id="btn-cartao">+ Cartão</button>
             <button class="btn primary" id="btn-conta">+ Conta</button>
           </div>
         </header>
@@ -54,31 +53,32 @@
           </div>
         </div>
 
-        <section class="section" style="margin-top:28px;">
-          <div class="section-head">
-            <h2 class="section-title"><span class="swatch financeiro"></span>Contas</h2>
-            <span class="card-note" id="contas-resumo"></span>
-          </div>
-          <div id="contas"></div>
-        </section>
+        <div class="gaveteiro">
+          <section class="gaveta" data-gaveta="contas" data-icone="banco">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Contas</h2>
+              <span class="gaveta-resumo" id="contas-resumo"></span>
+            </header>
+            <div class="gaveta-corpo"><div id="contas"></div></div>
+          </section>
 
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title"><span class="swatch cartao"></span>Cartões de crédito</h2>
-            <span class="card-note" id="cartoes-resumo"></span>
-          </div>
-          <div id="cartoes"></div>
-        </section>
+          <section class="gaveta" data-gaveta="cartoes" data-icone="cartao">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Cartões de crédito</h2>
+              <span class="gaveta-resumo" id="cartoes-resumo"></span>
+              <div class="gaveta-acoes"><button class="btn sm" id="btn-cartao" type="button">+ Cartão</button></div>
+            </header>
+            <div class="gaveta-corpo"><div id="cartoes"></div></div>
+          </section>
 
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Balanço</h2>
-            <span class="card-note">participação de cada conta e cartão nos gastos</span>
-          </div>
-          <div class="card">
-            <div id="balanco"></div>
-          </div>
-        </section>
+          <section class="gaveta" data-gaveta="balanco" data-icone="investimentos" data-fechada>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Balanço</h2>
+              <span class="gaveta-resumo">participação de cada conta e cartão nos gastos</span>
+            </header>
+            <div class="gaveta-corpo"><div id="balanco"></div></div>
+          </section>
+        </div>
       </div>
     </main>
   </div>

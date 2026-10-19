@@ -99,6 +99,7 @@
     const cardLimite = document.getElementById("card-limite");
     if (item.limite) {
       cardLimite.style.display = "";
+      document.getElementById("limite-resumo").innerHTML = `<span class="${r.usoPercentual >= 80 ? "alerta" : ""}">${Math.round(r.usoPercentual)}% usado</span> de ${fmt.moeda(item.limite)}`;
       document.getElementById("limite").innerHTML = "";
       document.getElementById("limite").appendChild(
         UI.medidor({
@@ -116,6 +117,10 @@
     const box = document.getElementById("categorias");
     box.innerHTML = "";
     const linhas = Financas.gastosPorCategoria(ORIGEM);
+    const total = linhas.reduce((t, l) => t + (Number(l.valor) || 0), 0);
+    document.getElementById("categorias-resumo").innerHTML = linhas.length
+      ? `<b>${fmt.escape(linhas[0].nome)}</b> pesou mais: ${fmt.moeda(linhas[0].valor)}${total ? `, ${Math.round((linhas[0].valor / total) * 100)}% dos gastos` : ""}`
+      : "Sem gastos ainda";
     if (!linhas.length) {
       box.appendChild(UI.vazio({ icone: "◍", titulo: "Sem gastos ainda", texto: `Lance uma despesa "Pago com" ${item.nome} para ver a distribuição aqui.` }));
       return;

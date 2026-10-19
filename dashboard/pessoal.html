@@ -55,46 +55,56 @@
 
         <section class="card calendario" id="calendario" data-na-vista="calendario"></section>
 
-        <div class="fin-duas section">
-          <section class="card" data-na-vista="calendario">
-            <div class="card-head">
-              <h2 class="card-title"><span class="swatch pessoal"></span>O que se aproxima</h2>
-              <span class="card-note">próximas duas semanas, de todas as abas</span>
+        <div class="gaveteiro">
+          <section class="gaveta" data-gaveta="proximos" data-icone="relogio" data-na-vista="calendario">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">O que se aproxima</h2>
+              <span class="gaveta-resumo" id="proximos-resumo">próximas duas semanas, de todas as abas</span>
+            </header>
+            <div class="gaveta-corpo">
+              <div id="proximos"></div>
+              <div class="lembrete-rodape" id="lembrete-config"></div>
             </div>
-            <div id="proximos"></div>
-            <div class="lembrete-rodape" id="lembrete-config"></div>
           </section>
-          <section class="card" data-na-vista="lista">
-            <div class="card-head">
-              <h2 class="card-title"><span class="swatch pessoal"></span>Compromissos</h2>
-              <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
-            </div>
-            <div class="chips" id="f-tipo" style="margin-bottom:18px;"></div>
-            <div id="lista"></div>
-          </section>
-          <div class="fin-coluna">
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">O que o Delfos notou</h2>
-              </div>
-              <ul class="notas" id="notas"></ul>
-            </section>
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">Por tipo</h2>
-                <span class="card-note">em aberto</span>
-              </div>
-              <div id="por-tipo"></div>
-            </section>
-          </div>
-        </div>
 
-        <section class="section" id="sec-perguntas" hidden>
-          <div class="section-head">
-            <h2 class="section-title">Perguntas do Delfos</h2>
-          </div>
-          <div class="perguntas" id="perguntas"></div>
-        </section>
+          <section class="gaveta" data-gaveta="lista" data-icone="lista" data-na-vista="lista">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Compromissos</h2>
+              <span class="gaveta-resumo" id="lista-resumo"></span>
+              <div class="gaveta-acoes">
+                <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
+              </div>
+            </header>
+            <div class="gaveta-corpo">
+              <div class="chips" id="f-tipo" style="margin-bottom:18px;"></div>
+              <div id="lista"></div>
+            </div>
+          </section>
+
+          <section class="gaveta" data-gaveta="notas" data-icone="lampada">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">O que o Delfos notou</h2>
+              <span class="gaveta-resumo" data-resumo-notas></span>
+            </header>
+            <div class="gaveta-corpo"><ul class="notas" id="notas"></ul></div>
+          </section>
+
+          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-icone="pergunta" data-fechada hidden>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Perguntas do Delfos</h2>
+              <span class="gaveta-resumo"></span>
+            </header>
+            <div class="gaveta-corpo"><div class="perguntas" id="perguntas"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="por-tipo" data-icone="grade" data-fechada>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Por tipo</h2>
+              <span class="gaveta-resumo" id="por-tipo-resumo"></span>
+            </header>
+            <div class="gaveta-corpo"><div id="por-tipo"></div></div>
+          </section>
+        </div>
       </div>
     </main>
   </div>

@@ -23,8 +23,7 @@
             <p class="sub" id="sub-hoje"></p>
           </div>
           <div class="topbar-actions">
-            <button class="btn" id="btn-lancamento">+ Lançamento</button>
-            <button class="btn primary" id="btn-prazo">+ Prazo</button>
+            <button class="btn primary" id="btn-registrar" type="button">+ Registrar</button>
           </div>
         </header>
 
@@ -32,59 +31,72 @@
              mais baixo, e o painel diz o que está acontecendo. -->
         <p class="leitura" id="leitura"></p>
 
-        <!-- Razão: os quatro números do dia em colunas abertas, sem caixa. -->
-        <section class="razao" id="sec-topo" aria-label="Números de hoje">
-          <div class="razao-item principal">
-            <div class="stat-label" id="hero-rotulo">Saldo nas contas</div>
-            <div class="hero-value num" id="hero-saldo">-</div>
-            <div class="stat-sub" id="hero-detalhe"></div>
-            <button class="btn sm" id="btn-saldo">Ajustar saldo</button>
-          </div>
-          <div class="razao-item">
-            <div class="stat-label" id="mes-rotulo">No mês</div>
-            <div class="stat-value num" id="mes-valor">-</div>
-            <div class="stat-sub" id="mes-detalhe"></div>
-          </div>
-          <div class="razao-item" id="proximo"></div>
-          <div class="razao-item">
-            <div class="stat-label">A pagar</div>
-            <div class="stat-value num" id="pagar-valor">-</div>
-            <div class="stat-sub" id="pagar-detalhe"></div>
-          </div>
-        </section>
-
-        <div class="home-duas">
-          <section class="home-agenda" id="sec-agenda">
-            <div class="section-head">
-              <h2 class="section-title">Agenda</h2>
-              <span class="card-note" id="agenda-resumo"></span>
+        <!-- O gaveteiro: cada gaveta diz o essencial no puxador e guarda o
+             resto dentro (UI.gavetas liga o abrir e fechar). -->
+        <div class="gaveteiro">
+          <section class="gaveta" id="sec-agenda" data-gaveta="agenda" data-icone="calendario">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Agenda</h2>
+              <span class="gaveta-resumo" id="agenda-resumo"></span>
+              <div class="gaveta-acoes"><button class="btn sm" id="btn-agenda-novo" type="button">+ Compromisso</button></div>
+            </header>
+            <div class="gaveta-corpo">
+              <div id="agenda"></div>
             </div>
-            <div id="agenda"></div>
           </section>
 
-          <div class="home-lado">
-            <section id="sec-notas">
-              <div class="section-head">
-                <h2 class="section-title">O que o Delfos notou</h2>
+          <section class="gaveta" id="sec-topo" data-gaveta="dinheiro" data-icone="financeiro" style="--cor-pagina: var(--s-financeiro)">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Dinheiro</h2>
+              <span class="gaveta-resumo" id="dinheiro-resumo"></span>
+              <div class="gaveta-acoes"><button class="btn sm" id="btn-lancamento" type="button">+ Lançamento</button></div>
+            </header>
+            <div class="gaveta-corpo">
+              <div class="trio" aria-label="Números do dinheiro">
+                <div class="trio-item">
+                  <div class="stat-label" id="hero-rotulo">Saldo nas contas</div>
+                  <div class="stat-value num" id="hero-saldo">-</div>
+                  <div class="stat-sub" id="hero-detalhe"></div>
+                  <button class="btn sm" id="btn-saldo" type="button">Ajustar saldo</button>
+                </div>
+                <div class="trio-item">
+                  <div class="stat-label" id="mes-rotulo">No mês</div>
+                  <div class="stat-value num" id="mes-valor">-</div>
+                  <div class="stat-sub" id="mes-detalhe"></div>
+                </div>
+                <div class="trio-item">
+                  <div class="stat-label">A pagar</div>
+                  <div class="stat-value num" id="pagar-valor">-</div>
+                  <div class="stat-sub" id="pagar-detalhe"></div>
+                </div>
               </div>
+              <dl class="figuras" id="sec-insights"></dl>
+              <a class="link-gaveta" href="financeiro.html">Abrir o Financeiro</a>
+            </div>
+          </section>
+
+          <section class="gaveta" id="sec-notas" data-gaveta="notas" data-icone="lampada">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">O que o Delfos notou</h2>
+              <span class="gaveta-resumo" id="notas-resumo"></span>
+            </header>
+            <div class="gaveta-corpo">
               <ul class="notas" id="notas"></ul>
-            </section>
+              <button class="link-gaveta" id="notas-mais" type="button" hidden></button>
+            </div>
+          </section>
 
-            <section id="sec-insights">
-              <div class="section-head">
-                <h2 class="section-title">Em números</h2>
-              </div>
-              <dl class="figuras" id="insights"></dl>
-            </section>
-          </div>
+          <section class="gaveta" id="sec-abas" data-gaveta="abas" data-icone="grade">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Suas abas</h2>
+              <span class="gaveta-resumo" id="abas-resumo"></span>
+              <div class="gaveta-acoes"><button class="btn sm" id="btn-nova-aba-home" type="button">+ Nova aba</button></div>
+            </header>
+            <div class="gaveta-corpo">
+              <nav class="estante" id="pilares" aria-label="Suas abas"></nav>
+            </div>
+          </section>
         </div>
-
-        <section class="section" id="sec-abas">
-          <div class="section-head">
-            <h2 class="section-title">Suas abas</h2>
-          </div>
-          <nav class="indice" id="pilares" aria-label="Suas abas"></nav>
-        </section>
       </div>
     </main>
   </div>

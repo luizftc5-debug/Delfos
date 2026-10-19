@@ -96,6 +96,12 @@
   function renderAvaliacoes() {
     const box = document.getElementById("avaliacoes");
     box.innerHTML = "";
+    const avs = disciplina.avaliacoes || [];
+    const media = UI.mediaDisciplina(disciplina);
+    const semNota = avs.filter((a) => a.nota === "" || a.nota === null || a.nota === undefined).length;
+    document.getElementById("avaliacoes-resumo").innerHTML = avs.length
+      ? `${avs.length === 1 ? "1 avaliação" : `${avs.length} avaliações`}${media ? `; média <b>${UI.fmt.decimal(media.media ?? media)}</b>` : ""}${semNota ? `; ${semNota === 1 ? "1 sem nota" : `${semNota} sem nota`}` : ""}`
+      : "Nenhuma avaliação ainda";
     const lista = (disciplina.avaliacoes || [])
       .slice()
       .sort((a, b) => (a.data || "9999").localeCompare(b.data || "9999"));
@@ -145,6 +151,11 @@
     const box = document.getElementById("prazos");
     box.innerHTML = "";
     const lista = prazosDaDisciplina().sort((a, b) => (a.data || "").localeCompare(b.data || ""));
+    const abertosP = lista.filter((p) => !p.concluido);
+    const proxP = abertosP.find((p) => (UI.diasAte(p.data) ?? -1) >= 0);
+    document.getElementById("prazos-resumo").innerHTML = abertosP.length
+      ? `${abertosP.length} em aberto${proxP ? `; o próximo: <b>${UI.fmt.escape(proxP.descricao || "sem nome")}</b>, ${UI.fmt.escape(UI.urgencia(proxP.data).rotulo)}` : ""}`
+      : "Nada em aberto";
 
     if (!lista.length) {
       box.appendChild(
@@ -194,6 +205,9 @@
     const box = document.getElementById("materiais");
     box.innerHTML = "";
     const lista = disciplina.materiais || [];
+    document.getElementById("materiais-resumo").textContent = lista.length
+      ? `${lista.length === 1 ? "1 material" : `${lista.length} materiais`}: ${lista.slice(0, 3).map((m) => m.titulo || m.nome).filter(Boolean).join(", ")}`
+      : "Slides, PDFs, artigos e links da disciplina";
 
     if (!lista.length) {
       box.appendChild(
@@ -275,6 +289,9 @@
     const lista = (disciplina.resumos || [])
       .slice()
       .sort((a, b) => (b.atualizadoEm || "").localeCompare(a.atualizadoEm || ""));
+    document.getElementById("resumos-resumo").innerHTML = lista.length
+      ? `${lista.length === 1 ? "1 resumo" : `${lista.length} resumos`}; o último: <b>${UI.fmt.escape(lista[0].titulo || "sem título")}</b>`
+      : "Nenhum resumo ainda";
 
     if (!lista.length) {
       const card = document.createElement("div");
@@ -567,7 +584,6 @@
   document.getElementById("btn-editar").addEventListener("click", editarDisciplina);
   document.getElementById("btn-drive").addEventListener("click", importarDoDrive);
   document.getElementById("btn-avaliacao").addEventListener("click", novaAvaliacao);
-  document.getElementById("btn-avaliacao-2").addEventListener("click", novaAvaliacao);
   document.getElementById("btn-prazo").addEventListener("click", novoPrazo);
   document.getElementById("btn-material").addEventListener("click", novoMaterial);
   document.getElementById("btn-resumo").addEventListener("click", novoResumo);

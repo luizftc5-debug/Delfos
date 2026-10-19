@@ -1,13 +1,14 @@
 /* ===========================================================================
-   Delfos — design system (v1.8, "marfim")
+   Delfos — design system (v2.0, "marfim" em gavetas)
 
    Ver DESIGN.md. A identidade é o logotipo: "Delfos" numa serifa clássica,
    marfim sobre preto. O painel fala na mesma voz: a leitura é o título da
-   página, em Noto Serif Display leve e grande; os números ficam ao pé dela,
-   numa razão aberta, sem caixa. Dado e controle ficam em Funnel Sans. Cromo
-   sem cor (preto, carvão, grafite, marfim, cinza quente); cor só para dado.
-   Caixa só onde o que está dentro é um objeto que se toca; o resto se
-   organiza por espaço e fio. Ícones: Phosphor (regular), copiados em ui.js.
+   página, em Noto Serif Display leve e grande. Desde a 2.0, os números da
+   aba ficam num painel e cada assunto mora numa gaveta (ver "Gavetas (2.0)",
+   no fim do arquivo): superfície delimitada, puxador com o essencial,
+   conteúdo dentro, sem caixa dentro de caixa. Dado e controle ficam em
+   Funnel Sans. Cromo sem cor (preto, carvão, grafite, marfim, cinza
+   quente); cor só para dado. Ícones: Phosphor (regular), copiados em ui.js.
    =========================================================================== */
 
 :root {
@@ -2557,7 +2558,7 @@ table.sheet tbody tr { transition: background-color var(--t-medio) var(--ease-sa
   --my: 50%;
 }
 /* A luz que segue o ponteiro fica só no que leva a algum lugar (a.card,
-   linha do índice de abas); cartão parado não acende. */
+   ladrilho de "Suas abas"); cartão parado não acende. */
 a.card::after, .pillar::after {
   content: "";
   position: absolute;
@@ -2697,42 +2698,13 @@ body.entrando .main .wrap > .leitura { animation: chegar 620ms var(--ease-saida)
 :root[data-movimento="reduzido"] .pillar::before, :root[data-movimento="reduzido"] .pillar::after { display: none; }
 
 /* ============================== Visão geral ===============================
-   A leitura no alto; embaixo dela, a razão dos números do dia; depois a
-   agenda (a coluna larga) ao lado do que o Delfos notou; por fim, o índice
-   das abas. Nada em caixa: fios e espaço organizam. */
+   A leitura no alto e, embaixo, o gaveteiro (ver "Gavetas (2.0)"): agenda,
+   dinheiro, o que o Delfos notou e suas abas. Aqui ficam as peças de
+   dentro: a agenda semana a semana e as linhas de "Em números". */
 
-.razao {
-  display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr);
-  border-top: 1px solid var(--linha);
-  border-bottom: 1px solid var(--linha);
-  margin-bottom: 64px;
-}
-.razao-item { padding: 22px 24px 24px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
-.razao-item:first-child { padding-left: 0; }
-.razao-item + .razao-item { border-left: 1px solid var(--linha); }
-.razao-item .hero-value { margin-top: 0; font-size: 52px; }
-.razao-item .btn { margin-top: 14px; }
-.razao-titulo {
-  font-family: var(--font-voz);
-  font-size: 22px;
-  font-weight: 450;
-  letter-spacing: -0.006em;
-  line-height: 1.18;
-  text-decoration: none;
-  color: var(--texto);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.razao-quando { display: flex; gap: 7px; align-items: baseline; }
-.razao-quando .marca-area { transform: translateY(2px); }
 .valor-ruim { color: var(--critical-text); }
 .valor-bom { color: var(--success-text); }
 
-.home-duas { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 32px 64px; align-items: start; }
-.home-lado { display: flex; flex-direction: column; gap: 52px; min-width: 0; }
 
 /* Agenda: semana a semana, o dia do mês grande à esquerda — o numeral é o
    único momento de "segunda leitura" da página e organiza a coluna. */
@@ -2783,8 +2755,7 @@ body.entrando .main .wrap > .leitura { animation: chegar 620ms var(--ease-saida)
 .agenda-texto .m { font-size: 13px; color: var(--texto-3); display: flex; align-items: center; gap: 7px; }
 .ponto-area { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
 
-/* O que o Delfos notou e Em números, soltos na coluna lateral. */
-.home-lado .notas li:first-child { padding-top: 0; }
+/* Em números: rótulo e valor em linhas (na gaveta do dinheiro). */
 .figuras { margin: 0; display: flex; flex-direction: column; }
 .figuras > div {
   display: flex;
@@ -2801,34 +2772,9 @@ body.entrando .main .wrap > .leitura { animation: chegar 620ms var(--ease-saida)
 .figuras dt small { display: block; font-size: 13px; font-weight: 400; color: var(--texto-3); margin-top: 2px; line-height: 1.4; }
 .figuras dd { margin: 0; font-size: 15.5px; font-weight: 600; white-space: nowrap; }
 
-/* Índice das abas: uma linha por aba, como o sumário de um dossiê. */
-.indice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 48px; border-top: 1px solid var(--linha); }
-.indice-linha {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) auto 18px;
-  gap: 16px;
-  align-items: center;
-  padding: 18px 10px 18px 0;
-  border-bottom: 1px solid var(--linha);
-  border-radius: 0;
-  text-decoration: none;
-  color: inherit;
-}
-.indice-linha .pillar-ic { margin: 0; width: 22px; height: 22px; }
-.indice-linha .pillar-ic .ico { width: 22px; height: 22px; }
-.indice-nome { font-family: var(--font-voz); font-size: 20px; font-weight: 450; letter-spacing: -0.006em; line-height: 1.15; min-width: 0; }
-.indice-nome small, .indice-valor small { display: block; font-family: var(--font); font-size: 13px; font-weight: 400; letter-spacing: 0; color: var(--texto-3); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.indice-valor { text-align: right; font-size: 17px; font-weight: 600; white-space: nowrap; }
-.indice-seta { color: var(--texto-3); transition: transform var(--t-medio, 0.28s) var(--ease-mola, ease), color 0.2s; }
-.indice-seta .ico { width: 16px; height: 16px; }
-.indice-linha::before, .indice-linha::after { border-radius: 0 !important; }
-
 @media (hover: hover) and (pointer: fine) {
   .agenda-linha:hover { background: var(--lavado); }
   .agenda-linha:hover .t { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
-  .pillar.indice-linha:hover { background: transparent; transform: none; box-shadow: none; }
-  .indice-linha:hover .indice-seta { color: var(--texto); transform: translateX(4px); }
-  .indice-linha:hover .indice-nome { color: var(--texto); }
 }
 
 /* "Mais" (celular): todas as abas numa folha. */
@@ -3048,19 +2994,6 @@ body.entrando .main .wrap > .leitura { animation: chegar 620ms var(--ease-saida)
   .section { margin-top: 36px; }
 
   .modal { border-radius: var(--r-lg); max-height: 92vh; }
-  .razao { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 48px; }
-  .razao-item { padding: 16px 0 18px 16px; }
-  .razao-item:nth-child(odd) { padding-left: 0; border-left: none !important; }
-  .razao-item:nth-child(n+3) { border-top: 1px solid var(--linha); }
-  .razao-item.principal { grid-column: 1 / -1; padding-left: 0; }
-  .razao-item.principal + .razao-item { border-left: none; padding-left: 0; border-top: 1px solid var(--linha); }
-  .razao-item.principal ~ .razao-item:nth-child(3) { border-left: 1px solid var(--linha) !important; padding-left: 16px; }
-  .razao-item.principal ~ .razao-item:nth-child(4) { grid-column: 1 / -1; padding-left: 0; border-left: none !important; }
-  .razao-item .hero-value { font-size: 44px; }
-  .razao-titulo { font-size: 19px; }
-  .home-duas { grid-template-columns: minmax(0, 1fr); gap: 48px; }
-  .home-lado { gap: 48px; }
-  .indice { grid-template-columns: minmax(0, 1fr); }
   .agenda-linha { grid-template-columns: 40px minmax(0, 1fr); row-gap: 2px; }
   .agenda-linha .badge { grid-column: 2; }
   .agenda-dia b { font-size: 25px; }
@@ -3341,3 +3274,420 @@ body.entrando .main .wrap > .leitura { animation: chegar 620ms var(--ease-saida)
   .quadro { grid-auto-columns: minmax(78%, 1fr); scroll-snap-type: x mandatory; }
   .quadro-coluna { scroll-snap-align: start; }
 }
+
+/* ============================== Gavetas (2.0) ===============================
+   Pedido do Luiz: tudo organizado e delimitado, como gavetas com informação
+   fácil, simples e objetiva. Cada página vira um gaveteiro: a leitura no
+   alto, os números da aba num painel só e, embaixo, uma coluna de gavetas.
+   Cada gaveta é uma superfície delimitada com o seu puxador: o ícone da
+   aba, o nome, o essencial numa linha (o que se lê com ela fechada) e o
+   botão de registrar o que mora nela. Aberta, mostra o conteúdo; fechada,
+   continua dizendo o principal. Dentro dela nada vira caixa de novo: listas
+   e fios; quando há peças que se tocam (perguntas, metas), elas são
+   compartimentos de tom mais escuro, sem borda. A lógica de abrir e
+   fechar mora em ui.js (UI.gavetas). */
+
+.gaveteiro { display: flex; flex-direction: column; gap: 12px; }
+.gaveta + .gaveta, .gaveteiro + .gaveta, .gaveta + .gaveteiro, .gaveteiro + .gaveteiro { margin-top: 12px; }
+/* Numa grade de duas colunas (a lista e o lado de uma aba), as gavetas já se separam pelo vão. */
+.fin-duas > .gaveta, .fin-coluna > .gaveta { margin-top: 0; }
+
+.gaveta {
+  position: relative;
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: var(--r-lg);
+  box-shadow: var(--brilho);
+  min-width: 0;
+  scroll-margin-top: 16px;
+}
+
+/* O puxador: a cabeça inteira abre e fecha (o ::after do botão cobre a
+   faixa; ações e links ficam por cima dele). */
+.gaveta-cab {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "titulo resumo acoes seta";
+  align-items: center;
+  gap: 4px 16px;
+  min-height: 66px;
+  padding: 12px 14px 12px 16px;
+}
+.gaveta-titulo { grid-area: titulo; margin: 0; font: inherit; min-width: 0; }
+.gaveta-puxador {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  color: var(--texto);
+  font-family: var(--font-voz);
+  font-size: 20px;
+  font-weight: 450;
+  letter-spacing: -0.006em;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.gaveta-puxador::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: calc(var(--r-lg) - 1px);
+  transition: background-color var(--t-medio) var(--ease-saida);
+}
+.gaveta[data-aberta="sim"] .gaveta-puxador::after { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.gaveta-puxador:focus-visible { outline: none; }
+.gaveta-puxador:focus-visible::after { box-shadow: inset 0 0 0 2px var(--destaque); }
+.gaveta-nome { min-width: 0; overflow-wrap: anywhere; }
+.gaveta-nome .swatch { display: none; }
+
+/* O ícone da gaveta: o selo da aba em ponto pequeno, na cor da página. */
+.gaveta-ic {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  color: var(--cor-pagina, var(--texto-2));
+  background: color-mix(in srgb, var(--cor-pagina, var(--texto)) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cor-pagina, var(--texto)) 10%, transparent);
+}
+.gaveta-ic .ico { width: 18px; height: 18px; }
+.gaveta-ic .ico.duo .corpo { opacity: 0.2; }
+
+.gaveta-resumo {
+  grid-area: resumo;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--texto-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+.gaveta-resumo b { color: var(--texto-2); font-weight: 600; }
+.gaveta-resumo .alerta { color: var(--critical-text); font-weight: 600; }
+.gaveta-resumo .atencao { color: var(--warning-text); font-weight: 600; }
+.gaveta-resumo .bem { color: var(--success-text); font-weight: 600; }
+.gaveta-resumo a, .gaveta-resumo button { pointer-events: auto; position: relative; }
+.gaveta-acoes { grid-area: acoes; display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap; min-width: 0; }
+.gaveta-acoes .google-state { margin-right: 6px; }
+.gaveta-seta {
+  grid-area: seta;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: var(--texto-3);
+  pointer-events: none;
+  transition: transform var(--t-medio) var(--ease-saida), color var(--t-medio) var(--ease-saida), background-color var(--t-medio) var(--ease-saida);
+}
+.gaveta-seta .ico { width: 16px; height: 16px; }
+.gaveta[data-aberta="sim"] > .gaveta-cab .gaveta-seta { transform: rotate(180deg); }
+
+@media (hover: hover) and (pointer: fine) {
+  .gaveta-puxador:hover::after { background: color-mix(in srgb, var(--texto) 3%, transparent); }
+  .gaveta-cab:has(.gaveta-puxador:hover) .gaveta-seta { color: var(--texto); background: var(--superficie-2); }
+}
+
+/* O conteúdo: a linha do grid vai de 1fr a 0fr, então a gaveta desliza
+   sem medir altura em JS. Fechada, fica invisível para o leitor de tela e
+   fora do Tab (visibility). */
+.gaveta-corpo {
+  display: grid;
+  /* minmax(0, 1fr): conteúdo largo (tabela, gráfico) rola dentro da gaveta, nunca estica a página. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--t-lento) var(--ease-saida);
+}
+.gaveta[data-aberta="nao"] > .gaveta-corpo {
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition: grid-template-rows var(--t-medio) var(--ease-saida), visibility 0s linear var(--t-medio);
+}
+.gaveta-dentro { min-height: 0; min-width: 0; padding: 0 22px; }
+.gaveta-dentro::before { content: ""; display: block; height: 1px; background: var(--linha); margin: 0 -22px 20px; }
+.gaveta-dentro::after { content: ""; display: block; height: 22px; }
+.gaveta[data-aberta="nao"] > .gaveta-corpo > .gaveta-dentro,
+.gaveta.movendo > .gaveta-corpo > .gaveta-dentro { overflow: hidden; }
+/* Antes do script ligar a gaveta, o conteúdo já sai com o respiro certo. */
+.gaveta-corpo:not(:has(> .gaveta-dentro)) { padding: 0 22px 22px; }
+
+/* Dentro da gaveta, o que era título de cartão some (a gaveta já tem nome)
+   e as peças viram compartimentos: tom mais escuro, sem borda. */
+.gaveta .card, .gaveta .pergunta, .gaveta .meta-cartao {
+  background: color-mix(in srgb, var(--superficie-2) 62%, var(--superficie));
+  border: none;
+  box-shadow: none;
+}
+.gaveta .card-head:empty { display: none; }
+.gaveta .perguntas { gap: 10px; }
+
+/* Estado vazio dentro da gaveta: uma linha, não um cartaz no meio dela. */
+.gaveta .empty {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "ic titulo acao" "ic texto acao";
+  align-items: center;
+  column-gap: 14px;
+  text-align: left;
+  padding: 2px 0;
+}
+.gaveta .empty-icon { grid-area: ic; margin: 0; width: 40px; height: 40px; }
+.gaveta .empty-title { grid-area: titulo; font-family: var(--font); font-size: 15px; font-weight: 600; margin: 0; letter-spacing: 0; }
+.gaveta .empty-text { grid-area: texto; margin: 2px 0 0; max-width: 60ch; font-size: 13.5px; line-height: 1.5; }
+.gaveta .empty .btn { grid-area: acao; }
+.gaveta .empty:not(:has(.empty-text)) .empty-title { grid-row: 1 / 3; }
+
+/* Números da aba: o painel de cima, delimitado como as gavetas. */
+.grid.g3:has(> .card > .stat-value),
+.grid.g4:has(> .card > .stat-value) {
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: var(--r-lg);
+  box-shadow: var(--brilho);
+  overflow: hidden;
+  margin-bottom: 12px !important;
+}
+.grid.g3:has(> .card > .stat-value) > .card,
+.grid.g4:has(> .card > .stat-value) > .card { padding: 18px 22px 20px; }
+.grid.g3:has(> .card > .stat-value) > .card:first-child,
+.grid.g4:has(> .card > .stat-value) > .card:first-child { padding-left: 22px; }
+.grid.g3:has(> .card > .stat-value) .stat-value,
+.grid.g4:has(> .card > .stat-value) .stat-value { font-size: 30px; }
+
+/* Com gavetas, a leitura fala um tom abaixo: é a frase do dia, não um cartaz. */
+.wrap:has(.gaveta) > .leitura { margin-bottom: 26px; }
+.wrap:has(.gaveta) > .leitura[data-tam="g"] { font-size: 40px; }
+.wrap:has(.gaveta) > .leitura[data-tam="m"] { font-size: 34px; }
+.wrap:has(.gaveta) > .leitura[data-tam="p"] { font-size: 29px; }
+.wrap:has(.gaveta) > .leitura[data-tam="pp"] { font-size: 25px; }
+
+@media (max-width: 900px) {
+  .grid.g3:has(> .card > .stat-value) > .card,
+  .grid.g4:has(> .card > .stat-value) > .card { padding: 14px 16px 16px; }
+  .grid.g3:has(> .card > .stat-value) > .card:first-child,
+  .grid.g4:has(> .card > .stat-value) > .card:first-child,
+  .grid.g3:has(> .card > .stat-value) > .card:nth-child(odd),
+  .grid.g4:has(> .card > .stat-value) > .card:nth-child(odd) { padding-left: 16px; }
+  .wrap:has(.gaveta) > .leitura[data-tam] { font-size: 27px; }
+  .wrap:has(.gaveta) > .leitura[data-tam="pp"] { font-size: 23px; }
+}
+
+@media (max-width: 640px) {
+  .gaveta-cab {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "titulo acoes seta" "resumo resumo resumo";
+    gap: 2px 8px;
+    min-height: 58px;
+    padding: 11px 8px 11px 12px;
+  }
+  .gaveta-puxador { font-size: 18px; gap: 11px; }
+  .gaveta-ic { width: 32px; height: 32px; }
+  .gaveta-resumo { padding-left: 43px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 13.5px; }
+  .gaveta-resumo:empty { display: none; }
+  .gaveta-dentro { padding: 0 14px; }
+  .gaveta-dentro::before { margin: 0 -14px 16px; }
+  .gaveta-dentro::after { height: 16px; }
+  .gaveta .empty { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "ic titulo" "ic texto" ". acao"; row-gap: 2px; }
+  .gaveta .empty .btn { justify-self: start; margin-top: 10px; }
+}
+
+/* ---- Visão geral em gavetas ---- */
+
+/* Três números lado a lado dentro da gaveta do dinheiro. */
+.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.trio-item { min-width: 0; padding: 0 22px; display: flex; flex-direction: column; align-items: flex-start; }
+.trio-item:first-child { padding-left: 0; }
+.trio-item + .trio-item { border-left: 1px solid var(--linha); }
+.trio-item .btn { margin-top: 12px; }
+.trio .stat-value { font-size: 32px; }
+.trio + .figuras { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--linha); }
+.figuras > div:first-child { padding-top: 0; }
+
+/* "Ver mais", "Abrir o Financeiro": a saída de dentro da gaveta, em texto. */
+.link-gaveta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto-2);
+  cursor: pointer;
+  text-decoration: none;
+}
+.link-gaveta::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  transition: transform var(--t-medio) var(--ease-mola);
+}
+button.link-gaveta::after { transform: rotate(90deg); }
+.link-gaveta:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; border-radius: 6px; }
+@media (hover: hover) and (pointer: fine) {
+  .link-gaveta:hover { color: var(--texto); }
+  a.link-gaveta:hover::after { transform: translateX(3px); }
+}
+.gaveta .agenda-grupo:first-child .agenda-cab { padding-top: 0; }
+
+/* Suas abas: um ladrilho por aba, como compartimentos da gaveta. */
+.estante { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.ladrilho {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: "selo nome" "valor valor" "sub sub";
+  align-items: center;
+  gap: 12px 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--superficie-2) 62%, var(--superficie));
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+.ladrilho-selo {
+  grid-area: selo;
+  --cor-aba: var(--texto-2);
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  color: var(--cor-aba);
+  background: color-mix(in oklab, var(--cor-aba) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--cor-aba) 12%, transparent);
+}
+.ladrilho-selo.pessoal { --cor-aba: var(--s-pessoal); }
+.ladrilho-selo.financeiro { --cor-aba: var(--s-financeiro); }
+.ladrilho-selo.faculdade { --cor-aba: var(--s-faculdade); }
+.ladrilho-selo.projetos { --cor-aba: var(--s-projetos); }
+.ladrilho-selo .ico { width: 18px; height: 18px; }
+.ladrilho-selo .ico.duo .corpo { opacity: 0.2; }
+.ladrilho-nome { grid-area: nome; font-family: var(--font-voz); font-size: 19px; font-weight: 450; letter-spacing: -0.006em; line-height: 1.2; min-width: 0; overflow-wrap: anywhere; }
+.ladrilho-valor { grid-area: valor; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.1; }
+.ladrilho-valor small { font-size: 13px; font-weight: 500; color: var(--texto-3); letter-spacing: 0; }
+.ladrilho-sub { grid-area: sub; margin-top: -6px; font-size: 13px; color: var(--texto-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ladrilho.pillar:hover { background: color-mix(in srgb, var(--superficie-2) 90%, var(--superficie)); }
+.ladrilho:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
+
+/* A janela "O que você quer registrar?". */
+.modal.registrar { max-width: 520px; }
+.registrar-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.registrar-opcao {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--superficie-2) 55%, transparent);
+  text-decoration: none;
+  color: inherit;
+  transition: background-color var(--t-medio) var(--ease-saida);
+}
+.registrar-opcao:focus-visible { outline: 2px solid var(--destaque); outline-offset: 1px; }
+.registrar-selo {
+  --cor-aba: var(--texto-2);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  color: var(--cor-aba);
+  background: color-mix(in oklab, var(--cor-aba) 14%, transparent);
+}
+.registrar-selo.pessoal { --cor-aba: var(--s-pessoal); }
+.registrar-selo.financeiro { --cor-aba: var(--s-financeiro); }
+.registrar-selo.faculdade { --cor-aba: var(--s-faculdade); }
+.registrar-selo.projetos { --cor-aba: var(--s-projetos); }
+.registrar-selo .ico { width: 19px; height: 19px; }
+.registrar-selo .ico.duo .corpo { opacity: 0.2; }
+.registrar-texto { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.registrar-texto b { font-size: 15.5px; font-weight: 600; }
+.registrar-texto small { font-size: 13.5px; color: var(--texto-3); line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.registrar-aba { font-size: 13px; color: var(--texto-3); white-space: nowrap; }
+@media (hover: hover) and (pointer: fine) {
+  .registrar-opcao:hover { background: var(--superficie-2); }
+}
+
+@media (max-width: 900px) {
+  .trio { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 16px; }
+  .trio-item:first-child { grid-column: 1 / -1; padding: 0 0 16px; border-bottom: 1px solid var(--linha); }
+  .trio-item:nth-child(2) { padding-left: 0; border-left: none; }
+  .trio-item { padding: 0 0 0 16px; }
+}
+@media (max-width: 640px) {
+  .estante { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .ladrilho { padding: 14px 12px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "selo" "nome" "valor" "sub"; gap: 8px; }
+  .ladrilho-nome { font-size: 17px; }
+  .ladrilho-valor { font-size: 19px; }
+  .ladrilho-valor small { display: block; margin-top: 2px; }
+  .ladrilho-sub { margin-top: -2px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .registrar-aba { display: none; }
+  .registrar-texto small { white-space: normal; }
+}
+.link-gaveta { text-align: left; }
+@media (max-width: 640px) {
+  .figuras > div { flex-direction: column; gap: 4px; }
+  .figuras dd { white-space: normal; }
+}
+/* Uma linha de apoio dentro da gaveta (o que fazer com o que está nela). */
+.dica-gaveta { margin: 0 0 16px; font-size: 13.5px; color: var(--texto-3); line-height: 1.5; max-width: 72ch; }
+.dica-gaveta.depois { margin: 16px 0 0; }
+/* A planilha dentro da gaveta: sem a moldura própria (a gaveta já é a moldura). */
+.gaveta .table-wrap { border: none; border-radius: 0; background: none; margin: 0 -22px; }
+.gaveta .table-wrap table.sheet th { background: var(--superficie); }
+.gaveta .table-wrap table.sheet th:first-child, .gaveta .table-wrap table.sheet td:first-child { padding-left: 22px; }
+.gaveta .table-wrap table.sheet th:last-child, .gaveta .table-wrap table.sheet td:last-child { padding-right: 22px; }
+.gaveta .table-wrap .tfoot-row { background: color-mix(in srgb, var(--superficie-2) 62%, var(--superficie)); }
+@media (max-width: 900px) {
+  .gaveta .table-wrap { margin: 0; }
+  .gaveta .table-wrap table.sheet th:first-child, .gaveta .table-wrap table.sheet td:first-child { padding-left: 0; }
+  .gaveta .table-wrap table.sheet th:last-child, .gaveta .table-wrap table.sheet td:last-child { padding-right: 0; }
+}
+/* Um cartão que só embrulhava o estado vazio some dentro da gaveta. */
+.gaveta .card:has(> .empty:only-child) { background: none; padding: 0; border: none; }
+/* Gaveteiro dentro de gaveteiro (a lista e o lado de uma aba): o vão do flex já separa. */
+.gaveteiro > .gaveta, .gaveteiro > .gaveteiro { margin-top: 0; }
+/* Compartimentos: os resumos de campo de uma aba, lado a lado dentro da gaveta. */
+.compartimentos { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; align-items: start; }
+.gaveta .compartimentos > .card { padding: 16px 18px; }
+.gaveta .compartimentos .card-head { margin-bottom: 12px; }
+/* As vistas da lista (Lista, Cartões, Quadro...) moram no puxador. */
+.gaveta-acoes .seg.vistas { position: relative; }
+/* As quatro semanas da Faculdade dentro da gaveta: colunas separadas por fio, sem a moldura própria. */
+.gaveta .semanas { border: none; border-radius: 0; background: none; gap: 0; overflow: visible; }
+.gaveta .semana { background: none; padding: 2px 16px 4px; min-height: 120px; }
+.gaveta .semana:first-child { padding-left: 0; }
+.gaveta .semana + .semana { border-left: 1px solid var(--linha); }
+.gaveta .semana.agora .semana-titulo { color: var(--texto); }
+@media (max-width: 900px) {
+  .gaveta .semana { padding: 12px 0; min-height: 0; }
+  .gaveta .semana + .semana { border-left: none; border-top: 1px solid var(--linha); }
+  .gaveta .semana:first-child { padding-top: 0; }
+}
+/* Vazio numa gaveta que já tem o botão de registrar no puxador: o botão não se repete. */
+.gaveta:has(> .gaveta-cab .gaveta-acoes .btn) .gaveta-corpo .empty .btn { display: none; }
+#progresso + #etapas { margin-top: 14px; }

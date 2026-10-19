@@ -73,6 +73,11 @@
     const avisa = new Set(UI.lembretesAgora().map((i) => `${i.id}|${i.data}`));
     const box = document.getElementById("proximos");
     const dias = Object.keys(mapa).sort().map((iso) => [iso, mapa[iso].filter((i) => !i.concluido)]).filter(([, l]) => l.length);
+    const nItens = dias.reduce((t, [, l]) => t + l.length, 0);
+    const primeiro = dias[0]?.[1][0];
+    document.getElementById("proximos-resumo").innerHTML = primeiro
+      ? `${nItens === 1 ? "1 coisa" : `${nItens} coisas`} em duas semanas; a próxima: <b>${fmt.escape(primeiro.titulo)}</b>, ${fmt.escape(UI.dataPorExtensoCurta(dias[0][0]))}`
+      : "Nada nas próximas duas semanas";
     box.innerHTML = dias.length ? dias.map(([iso, itens]) => `
       <div class="grupo-tempo">
         <h3 class="grupo-tempo-titulo">${fmt.escape(fmt.capitalizar(UI.dataPorExtensoCurta(iso)))}</h3>
@@ -132,6 +137,9 @@
     abertos.forEach((c) => { const t = c.tipo || "compromisso"; cont[t] = (cont[t] || 0) + 1; });
     const linhas = Object.entries(cont).sort((a, b) => b[1] - a[1]).map(([nome, valor]) => ({ nome: fmt.capitalizar(nome), valor }));
     const box = document.getElementById("por-tipo");
+    document.getElementById("por-tipo-resumo").textContent = linhas.length
+      ? `em aberto: ${linhas.map((l) => `${l.valor} ${l.nome.toLowerCase()}`).join(", ")}`
+      : "Nada em aberto";
     if (!linhas.length) box.innerHTML = `<p class="card-note" style="margin:0;">Nada em aberto.</p>`;
     else UI.barrasComMeta(box, linhas, { cor: "var(--s-pessoal)", formatar: (v) => String(v) });
   }
@@ -156,6 +164,11 @@
   function renderLista(todos) {
     const box = document.getElementById("lista");
     box.innerHTML = "";
+    const abertos = todos.filter((c) => !c.concluido);
+    const atrasados = abertos.filter((c) => grupoDe(c) === "atrasados").length;
+    document.getElementById("lista-resumo").innerHTML = abertos.length
+      ? `${abertos.length} em aberto${atrasados ? `; <span class="alerta">${atrasados === 1 ? "1 atrasado" : `${atrasados} atrasados`}</span>` : ""}`
+      : "Nada em aberto";
     const visiveis = todos
       .filter((c) => verConcluidos || !c.concluido)
       .filter((c) => filtroTipo === "todos" || (c.tipo || "compromisso") === filtroTipo)

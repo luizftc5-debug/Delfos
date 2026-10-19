@@ -173,7 +173,10 @@
   function renderCategorias(a) {
     const box = $("categorias");
     box.innerHTML = "";
-    $("cat-nota").textContent = a.categorias.length > 1 ? "toque numa categoria para ver os lançamentos" : "";
+    const maior = a.categorias[0];
+    $("cat-nota").innerHTML = maior
+      ? `<b>${esc(maior.nome)}</b> pesou mais: ${moeda(maior.valor)}, ${pct(maior.parte)} dos gastos`
+      : `Nenhum gasto em ${esc(nomeMes(a.chave))}`;
 
     if (!a.categorias.length) {
       box.appendChild(UI.vazio({
@@ -220,6 +223,13 @@
       box.appendChild(p);
     }
 
+    if (visiveis.length > 1) {
+      const dica = document.createElement("p");
+      dica.className = "dica-gaveta depois";
+      dica.textContent = "Toque numa categoria para ver os lançamentos dela.";
+      box.appendChild(dica);
+    }
+
     lista.querySelectorAll("[data-cat]").forEach((linha) => {
       const abrir = () => filtrarCategoria(linha.dataset.cat);
       linha.addEventListener("click", abrir);
@@ -232,6 +242,7 @@
     filtros.todosMeses = false;
     renderFiltros();
     renderTabela();
+    UI.abrirGavetaDe($("tabela"));
     $("sec-lancamentos").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -342,6 +353,9 @@
     }
 
     box.innerHTML = svg + legenda + `<p class="ritmo-nota">${nota}</p>`;
+    $("ritmo-resumo").innerHTML = a.projecao && a.ehAtual
+      ? `no ritmo atual, fecha perto de <b>${moeda(a.projecao)}</b>${o && a.projecao > o ? ', <span class="alerta">acima do limite</span>' : ""}`
+      : "gasto somado dia a dia";
 
     // Mira: segue o ponteiro até o dia mais próximo e mostra os dois meses.
     const el = box.querySelector("svg");
@@ -583,7 +597,10 @@
     });
     itens.sort((x, y) => (x.data || "").localeCompare(y.data || ""));
     const total = itens.reduce((s, i) => s + i.valor, 0);
-    $("apagar-total").textContent = itens.length ? moeda(total) : "";
+    const prox = itens[0];
+    $("apagar-total").innerHTML = itens.length
+      ? `<b>${moeda(total)}</b> em ${itens.length === 1 ? "1 conta" : `${itens.length} contas`}; a próxima ${UI.diasAte(prox.data) < 0 ? '<span class="alerta">está atrasada</span>' : `vence ${UI.diasAte(prox.data) === 0 ? "hoje" : UI.diasAte(prox.data) === 1 ? "amanhã" : `em ${UI.diasAte(prox.data)} dias`}`}`
+      : "Nada pendente";
 
     if (!itens.length) {
       box.innerHTML = `<p class="card-note" style="margin:0;">Nada pendente. Um lançamento marcado como pendente, ou a fatura aberta de um cartão, aparece aqui até ser pago.</p>`;
@@ -639,7 +656,9 @@
     const ativos = cadastrados.filter((x) => x.fixo.ativo !== false);
     const detectados = Financas.recorrentes(mesHoje, prefs().fixos);
     const total = ativos.reduce((s, x) => s + x.valor, 0);
-    $("fixos-total").textContent = ativos.length ? `${moeda(total)} por mês` : "";
+    $("fixos-total").innerHTML = ativos.length
+      ? `<b>${moeda(total)}</b> por mês em ${ativos.length === 1 ? "1 fixo" : `${ativos.length} fixos`}${detectados.length ? `; ${detectados.length === 1 ? "1 repetido" : `${detectados.length} repetidos`} sem cadastro` : ""}`
+      : detectados.length ? `${detectados.length === 1 ? "1 gasto se repete" : `${detectados.length} gastos se repetem`} todo mês; nenhum cadastrado` : "Nenhum gasto fixo cadastrado";
 
     if (!cadastrados.length && !detectados.length) {
       box.innerHTML = `<p class="card-note" style="margin:0;">Cadastre aluguel, mensalidade, plano de celular, assinaturas: o Delfos lança cada um todo mês, mostra em "A pagar" e, ao importar o extrato, reconhece a cobrança para não contar duas vezes.</p>`;
@@ -820,6 +839,9 @@
 
   function renderMaiores(a) {
     const box = $("maiores");
+    $("maiores-resumo").innerHTML = a.maiores.length
+      ? `o maior: <b>${esc(a.maiores[0].descricao || "Sem descrição")}</b>, ${moeda(a.maiores[0].valor)}`
+      : `Nenhum gasto em ${esc(nomeMes(a.chave))}`;
     if (!a.maiores.length) {
       box.innerHTML = `<p class="card-note" style="margin:0;">Nenhum gasto em ${esc(nomeMes(a.chave))}.</p>`;
       return;
@@ -839,19 +861,21 @@
     const metas = Store.lista("financeiro.metas");
     box.innerHTML = "";
 
+    const resumo = $("metas-resumo");
     if (!metas.length) {
-      const card = document.createElement("div");
-      card.className = "card";
-      card.appendChild(UI.vazio({
+      resumo.textContent = "Nenhuma meta ainda";
+      box.appendChild(UI.vazio({
         icone: "alvo",
         titulo: "Nenhuma meta ainda",
         texto: "Um objetivo com valor e prazo (reserva de emergência, notebook, viagem). O Delfos diz quanto guardar por mês para chegar lá.",
         rotuloAcao: "Criar primeira meta",
         aoAcionar: () => novaMeta(),
       }));
-      box.appendChild(card);
       return;
     }
+    const comAlvo = metas.filter((m) => Number(m.valorAlvo) > 0);
+    const perto = comAlvo.map((m) => ({ m, p: Math.min(1, (Number(m.valorAtual) || 0) / Number(m.valorAlvo)) })).sort((x, y) => y.p - x.p)[0];
+    resumo.innerHTML = `${metas.length === 1 ? "1 meta" : `${metas.length} metas`}${perto ? `; <b>${esc(perto.m.descricao || perto.m.nome || "a mais adiantada")}</b> em ${pct(perto.p)}` : ""}`;
 
     const grade = document.createElement("div");
     grade.className = "metas-grade";

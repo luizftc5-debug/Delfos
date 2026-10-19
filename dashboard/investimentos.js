@@ -34,6 +34,7 @@
     const box = document.getElementById("por-tipo");
     box.innerHTML = "";
     if (!lista.length) {
+      document.getElementById("por-tipo-resumo").textContent = "Nada aplicado ainda";
       box.appendChild(UI.vazio({ icone: "◍", titulo: "Nenhum investimento cadastrado", texto: "Cadastre onde seu dinheiro está aplicado para ver a distribuição por tipo." }));
       return;
     }
@@ -43,6 +44,8 @@
       porTipo[chave] = (porTipo[chave] || 0) + (Number(i.valorAtual ?? i.valorAplicado) || 0);
     });
     const linhas = Object.entries(porTipo).map(([nome, valor]) => ({ nome, valor })).sort((a, b) => b.valor - a.valor);
+    const total = linhas.reduce((t, l) => t + l.valor, 0);
+    document.getElementById("por-tipo-resumo").innerHTML = `${linhas.length === 1 ? "1 tipo" : `${linhas.length} tipos`}; o maior: <b>${fmt.escape(linhas[0].nome)}</b>${total ? `, ${Math.round((linhas[0].valor / total) * 100)}% do total` : ""}`;
     UI.barras(box, { linhas, cor: "var(--s-financeiro)" });
   }
 

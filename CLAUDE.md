@@ -1,6 +1,6 @@
 # Delfos — agente de organização pessoal do Luiz
 
-O painel se chama **Delfos** (versão atual: **1.9**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
+O painel se chama **Delfos** (versão atual: **2.0**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
 em `ui.js`) aparecem no alto da barra lateral (o logotipo, com a versão ao lado), nos títulos das
 abas do navegador e no nome do arquivo de backup exportado. Desde a 1.8 o nome tem **logotipo**
 (desenho vetorizado do quadro da marca, `UI.logotipo()`) e assinatura, "Organização para o que
@@ -37,7 +37,7 @@ Aplicação estática multi-página em `dashboard/`, sem build. Dependências ex
 
 | Arquivo | Papel |
 |---|---|
-| `index.html` + `home.js` | Visão geral: leitura com saudação, razão de números (saldo, mês, próximo, a pagar), agenda por semana, notas, índice das abas |
+| `index.html` + `home.js` | Visão geral: leitura com saudação, "+ Registrar" e quatro gavetas (agenda, dinheiro, o que o Delfos notou, suas abas) |
 | `financeiro.html` + `financeiro.js` | Resumo do mês: leitura, para onde foi o dinheiro, ritmo diário, perguntas, notas, a pagar, fixos, metas e a planilha |
 | `contas.html` + `contas.js` | Lista de contas e cartões, com o balanço geral |
 | `conta.html` + `conta.js` | Página de uma conta ou cartão: saldo/fatura, gastos por categoria só dela, lançamentos |
@@ -672,13 +672,13 @@ direção completa, com tokens e proibições, está em `dashboard/DESIGN.md`.
   em repouso, 30% no selo cheio). Onde o contorno do duotone difere do regular, a entrada de
   `CORPOS` começa com "=" e traz o desenho inteiro. `iconeAba(valor, true)` faz o mesmo para as
   abas criadas; glifo digitado continua glifo. Na barra do celular o ícone vai solto (cinza, e na
-  cor da aba quando aberta, com o corpo a 35%), e a cabeça corrida e o índice "Suas abas" usam o
+  cor da aba quando aberta, com o corpo a 35%), e a cabeça corrida e os ladrilhos de "Suas abas" usam o
   mesmo ícone de duas camadas. O selo é `aria-hidden`: o nome da aba já está ao lado.
-- **Menos caixa.** Toda faixa `.g3`/`.g4` de `.stat-value` virou razão aberta (fios, sem fundo).
+- **Menos caixa** (a 2.0 trocou por gavetas; ver "Delfos 2.0"). Toda faixa `.g3`/`.g4` de `.stat-value` virou razão aberta (fios, sem fundo).
   `.badge` é texto colorido, não pílula. Cartão só com estado vazio fica com contorno tracejado. O
   calendário do Pessoal não tem caixa em volta. Barras de comparação (`.chart-track`, `.cat-barra`)
   não têm trilho; metas e limites (`.meter-track`) têm.
-- **Visão geral** (`index.html` + `home.js` reescritos): saudação dentro da leitura
+- **Visão geral** (`index.html` + `home.js` reescritos; refeita em gavetas na 2.0): saudação dentro da leitura
   (`.saudacao`), razão `#sec-topo` (saldo, sobrou/faltou no mês, próximo compromisso, a pagar),
   agenda `#sec-agenda` agrupada (atrasado, esta semana, semana que vem, "Semana de…") com o dia do
   mês grande e a marca "Semana cheia" vinda de `UI.conflitos()`, cada linha levando à página de
@@ -819,6 +819,84 @@ linguagem: a "inteligência" é vocabulário, regras e conhecimento de cada assu
 - Também corrigido: o estado vazio de "Em números" (`.figuras > .empty`) estourava a largura do
   celular; o botão de registrar ficava em linha com o título.
 
+### Delfos 2.0: as gavetas
+
+Pedido do Luiz, olhando a visão geral: "muito poluído"; quer cada aba pensada para a pessoa receber e
+criar informação de forma intuitiva, tudo organizado e delimitado "como se fossem gavetas", com
+informação fácil, simples e objetiva. Reverte o "menos caixa" da 1.7: cada assunto passa a morar numa
+superfície delimitada, e o que é secundário fica fechado, dizendo só o essencial.
+
+- **Gaveteiro.** Toda página de conteúdo (visão geral, Financeiro, Contas e cartões, uma conta,
+  Investimentos, Pessoal, Faculdade, uma disciplina, Projetos, um projeto, aba própria) é: cabeça
+  (título e o registro principal da aba), leitura (um tom abaixo da 1.9: 40/34/29/25 px, 27 no
+  celular), painel de números e uma coluna de gavetas (`.gaveteiro`). O painel de números é a mesma
+  faixa `.g3`/`.g4` de `.stat-value`, agora delimitada (só CSS, nenhuma página mudou o HTML dela).
+  O calendário do Pessoal continua fora de gaveta: é o objeto da página, delimitado pela própria grade.
+- **Gaveta (HTML).** `<section class="gaveta" data-gaveta="<nome>" data-icone="<ícone de ICONES>"
+  [data-fechada]>` com `<header class="gaveta-cab">` (`h2.gaveta-titulo`, `.gaveta-resumo`,
+  `.gaveta-acoes` opcional) e `<div class="gaveta-corpo">`. `UI.gavetas()` (em `iniciarPagina`, e no
+  `MutationObserver` para gaveta criada depois) põe o conteúdo em `.gaveta-dentro`, troca o título
+  por um `button.gaveta-puxador` (`aria-expanded`, `aria-controls`) com o ícone em duas camadas na
+  cor da página (`--cor-pagina`, posto por `marcarCabeca`; a gaveta pode trazer a sua inline, como
+  a do dinheiro na visão geral), acrescenta a seta e decide aberta ou fechada. Id no `h2` passa para
+  o `span.gaveta-nome`: a página que reescreve o título continua achando (`#titulo-lista`,
+  `#titulo-renda`). Ids de conteúdo e de seção (`#sec-perguntas`, `#sec-lancamentos`...) não mudaram.
+- **Puxador.** A cabeça inteira abre e fecha: o `::after` do botão cobre a faixa (`z-index: -1` num
+  `.gaveta-cab` com `isolation`), resumo e seta têm `pointer-events: none`, ações e links ficam por
+  cima. O **resumo** é o que se lê com a gaveta fechada, e cada página escreve o seu (o maior gasto,
+  quanto falta pagar e quando vence, o próximo prazo, quantos em aberto, a meta mais adiantada...).
+  Dois são automáticos: `UI.renderPerguntas` escreve a primeira pergunta no resumo da gaveta da
+  seção, e `UI.renderNotas` escreve "N avisos; o primeiro" em `[data-resumo-notas]`
+  (`resumirNotas`). No resumo: `<b>`, `.alerta`, `.atencao`, `.bem`.
+- **Abrir e fechar.** `grid-template-rows` de 1fr a 0fr (sem medir altura em JS), com
+  `grid-template-columns: minmax(0, 1fr)` e `min-width: 0` no miolo: sem isso, uma tabela larga
+  esticava a gaveta e a página inteira rolava de lado no celular; fechada,
+  `visibility: hidden` (fora do leitor de tela e do Tab); `overflow: hidden` só fechada ou durante o
+  movimento (`.movendo`), para a dica do gráfico e o anel de foco não serem cortados. A escolha fica
+  em `localStorage["delfos.gavetas"]` (`"<página>:<gaveta>": true/false`), conveniência deste
+  navegador, não dado. `UI.abrirGaveta(g, aberta, { guardar })` e `UI.abrirGavetaDe(el)`: o filtro de
+  categoria do Financeiro abre a planilha antes de rolar até ela, e um link com `#âncora` para dentro
+  de gaveta fechada a abre.
+- **Aberta ou fechada por padrão.** Aberto o que pede ação e o que se consulta sempre; fechado
+  (`data-fechada`) o que é análise ou ajuste: Perguntas do Delfos em todas as abas; no Financeiro,
+  Fixos, Ritmo, Maiores gastos, Entradas e saídas e Drive; Balanço (contas); Por tipo (Pessoal);
+  Google Calendar (Faculdade); Recebido por projeto e Últimos seis meses (Projetos); Ficha e
+  Documentos (um projeto); Ajustes da aba (aba própria).
+- **Onde mora o botão de registrar.** A cabeça da página guarda o registro principal da aba (Novo
+  lançamento, + Conta, + Investimento, + Compromisso, + Prazo, + Avaliação, + Projeto,
+  + Recebimento, + Item); os outros moram na gaveta onde o registro vai (+ Meta, + Gasto fixo,
+  + Cartão, + Disciplina, + Oportunidade, + Etapa, + Custo, + Resumo, + Material, + Dia de treino).
+  Numa gaveta com botão no puxador, o estado vazio não repete o botão.
+- **Dentro da gaveta nada vira caixa de novo.** `.card`, `.pergunta` e `.meta-cartao` viram
+  compartimentos (tom mais escuro, sem borda); cartão que só embrulhava o vazio some; a planilha perde
+  a moldura; as quatro semanas da Faculdade viram colunas entre fios; o estado vazio vira uma linha
+  (ícone, título, texto, ação). `.dica-gaveta` é a linha de apoio ("Toque numa categoria...").
+- **Visão geral.** "+ Registrar" é o único botão da cabeça, e há quatro gavetas: **Agenda**
+  (próximos 7 dias, no mínimo 4 compromissos, o resto até 30 dias a um toque; "+ Compromisso" abre o
+  Registrar só com o que tem data), **Dinheiro** (saldo, o mês e a pagar lado a lado em `.trio`;
+  comparação com o mês anterior e projeção em palavras, "R$ 529,30 a menos", nunca um negativo
+  pintado de verde; "Abrir o Financeiro"), **O que o Delfos notou** (três, "Ver todos") e **Suas
+  abas** (`.estante` de `.ladrilho`, com o selo da aba, o número que importa e uma linha; o de
+  Projetos traz o progresso das etapas). A razão de quatro números e "Em números" saíram; a semana
+  mais carregada já aparece como "Semana cheia" na agenda. As chaves do perfil (`home.agenda`,
+  `topo`, `insights`, `notas`, `pilares`) continuam: `topo` é a gaveta do dinheiro e `insights`, a
+  comparação e a projeção dentro dela (`#sec-insights`).
+- **"+ Registrar"** (`UI.abrirRegistrar({ soComData, aoEscolher })`): a janela "O que você quer
+  registrar?" com uma linha por aba ligada (Lançamento, Compromisso, Prazo da faculdade, Projeto e o
+  registro de cada aba própria, menos a academia), com o selo e o nome da aba. Quem chama resolve na
+  própria página o que der (`aoEscolher` devolve true: na visão geral, lançamento e prazo); o resto
+  é link para a aba com `?novo=<chave>`, e `ligarNovo` (em `iniciarPagina`, rodando depois de todos
+  os scripts) toca o botão de registrar dela, tira o parâmetro da URL e deixa o resumo do dia para a
+  próxima página. Só as chaves de `BOTAO_NOVO` (lancamento, compromisso, prazo, projeto, item) viram
+  clique; nunca um id vindo da URL.
+- **Celular**: o puxador vai em duas linhas (nome, ações e seta; o resumo embaixo, até duas linhas);
+  ladrilhos em duas colunas; no `.trio`, o saldo em cima e os outros dois lado a lado; a planilha
+  continua virando cartões.
+- **Testes** (fora do repositório, como os de antes): os e2e antigos abrem todas as gavetas ao
+  carregar (`gavetasAbertas` no ajudante de fontes), porque conferem o que mora dentro delas;
+  `reg.mjs` testa a janela Registrar, `?novo=`, fechar, lembrar ao recarregar, clique no resumo e
+  teclado (Enter e Espaço).
+
 ### Delfos 1.8: a marca
 
 Pedido do Luiz: o quadro da identidade (logotipo "Delfos" numa serifa clássica, marfim sobre preto,
@@ -858,10 +936,12 @@ paleta preto `#0B0B0B`, carvão `#1F1F1F`, grafite `#3A3A3A`, marfim `#EDE9E1`, 
 **"Marfim" (v1.8)**: o detalhe completo, com a marca, tokens, paleta validada e proibições, está em
 `dashboard/DESIGN.md`, a referência a consultar antes de mexer em qualquer coisa visual.
 
-O princípio, em uma linha: **a leitura é o título e nada vira caixa sem motivo**; o caráter vem de
-tipografia, espaço e hierarquia, na voz e nas cores do logotipo. Cinco execuções anteriores foram
-descartadas e estão descritas no DESIGN.md (estúdio, azulejo baiano, oráculo sóbrio 1.2–1.3, a
-segunda leitura 1.4–1.6 e a consulta 1.7, sem serifa).
+O princípio, em uma linha: **a leitura é o título e cada assunto mora numa gaveta** (2.0): uma
+superfície delimitada que diz o essencial no puxador e guarda o resto dentro, onde nada vira caixa de
+novo; o caráter vem de tipografia, espaço e hierarquia, na voz e nas cores do logotipo. Seis
+execuções anteriores foram descartadas e estão descritas no DESIGN.md (estúdio, azulejo baiano,
+oráculo sóbrio 1.2–1.3, a segunda leitura 1.4–1.6, a consulta 1.7, sem serifa, e a página aberta
+1.7–1.9, sem caixa, que o Luiz achou poluída).
 
 - **Marca**: o logotipo é desenho (`LOGOTIPO` em `ui.js`, `UI.logotipo()`), nunca "Delfos" digitado
   numa fonte parecida. O D sozinho é `icone("delfos")` e o favicon; `apple-touch-icon.png` é o
@@ -881,7 +961,7 @@ segunda leitura 1.4–1.6 e a consulta 1.7, sem serifa).
   **Abas sublinhadas** (`.abas`) para seções irmãs, **pílulas** (`.chip`) para filtro,
   **interruptor** (`.switch`) para ligar/desligar. Retrato em quadrado de cantos suaves.
 - **Movimento** (seção "Movimento" do `theme.css` + `UI.movimento`): uma entrada só (a leitura);
-  luz do ponteiro só no que leva a algum lugar (`a.card`, linha do índice); destaque deslizante
+  luz do ponteiro só no que leva a algum lugar (`a.card`, ladrilho de "Suas abas"); destaque deslizante
   no menu, nas abas e na escolha única. Só com mouse; nada com "reduzir movimento".
 - Metadados em frase ou com vírgula, nunca colados com " · " (só o título da aba do navegador).
 

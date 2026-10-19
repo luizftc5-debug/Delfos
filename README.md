@@ -39,7 +39,7 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 
 | Onde | O que dá para fazer |
 |---|---|
-| **Visão geral** | A frase do dia no alto (o que venceu, o que vem e quanto sobrou), os quatro números do dia (saldo, o mês, o próximo compromisso, o que falta pagar), a **agenda** semana a semana com o que está atrasado no topo e as semanas cheias marcadas, **o que o Delfos notou** em todas as abas e um índice das suas abas |
+| **Visão geral** | A frase do dia no alto e quatro **gavetas**: a **agenda** dos próximos dias (o que está atrasado no topo, as semanas cheias marcadas), o **dinheiro** (saldo, o mês e o que falta pagar), **o que o Delfos notou** em todas as abas e **suas abas**. O botão **+ Registrar** pergunta o que você quer guardar e abre o formulário certo |
 | **Financeiro** | O mês lido em voz alta: quanto entrou, saiu e sobrou, **para onde foi o dinheiro**, o **ritmo do mês** comparado ao anterior, gastos fixos e assinaturas detectados, o que falta pagar, metas com "Guardar", e **perguntas** que deixam a leitura do seu jeito (limite do mês, quanto guardar, dia da renda). Também lançar entradas e saídas e **importar o extrato do banco** (PDF, .ofx ou .csv) para não esquecer de lançar |
 | **Contas e cartões** | Cadastrar contas com saldo, cadastrar cartões com fechamento e vencimento. Cada uma abre numa **página própria**, com saldo/fatura, gastos por categoria só dela e a lista de lançamentos |
 | **Investimentos** | Renda fixa, ações, fundos, cripto — o que já aplicou e quanto vale hoje, com rentabilidade calculada e distribuição por tipo |
@@ -50,6 +50,23 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 
 > Trabalhos da faculdade e o TCC ficam em **Faculdade**, não em Projetos.
 
+### As gavetas (versão 2.0)
+
+Cada aba é um **gaveteiro**: a frase do alto, os números da aba num quadro só e, embaixo, as
+**gavetas**, uma para cada assunto (A pagar, Lançamentos, Metas, Prazos, Disciplinas...).
+
+- **O nome da gaveta já diz o principal**: mesmo fechada, ela mostra numa linha o que tem dentro
+  ("R$ 706,30 em 2 contas; a próxima vence em 5 dias").
+- **Toque em qualquer ponto da faixa do nome** para abrir ou fechar. O Delfos lembra como você
+  deixou, neste navegador.
+- **O botão de registrar fica na gaveta onde a coisa mora**: "+ Meta" na gaveta Metas, "+ Cartão"
+  em Cartões, "+ Disciplina" em Disciplinas. O registro principal de cada aba continua no alto.
+- O que é análise ou ajuste (Perguntas do Delfos, Ritmo do mês, Ajustes da aba...) começa fechado,
+  para a página não ficar carregada. Abra quando quiser.
+- Na **Visão geral**, o botão **+ Registrar** pergunta *o que você quer registrar* (um lançamento,
+  um compromisso, um prazo, um projeto, um item de uma aba sua) e abre o formulário certo, sem você
+  precisar lembrar em que aba cada coisa fica.
+
 ### O visual (versão 1.8)
 
 - **A marca**: o logotipo "Delfos" no alto da barra lateral, na entrada e no ícone da aba do
@@ -57,7 +74,7 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
   ter o Delfos na tela inicial do celular, abra o painel no navegador e use **Adicionar à tela de
   início**: o ícone é o logotipo em marfim sobre preto.
 - Em cada aba, **a frase do alto é o título**: o Delfos diz o que está acontecendo, em letra grande,
-  na mesma serifa do logotipo, e os números vêm logo embaixo, em colunas.
+  na mesma serifa do logotipo, e os números vêm logo embaixo, num quadro.
 - **Tema claro**: o fundo vira marfim e o texto, preto. Troque em **Perfil → Aparência → Tema**.
 - **No celular**, as abas ficam numa barra embaixo da tela, ao alcance do polegar. As quatro
   primeiras aparecem direto; **Mais** abre a lista com todas, o botão de criar aba e o seu perfil.

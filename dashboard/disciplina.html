@@ -58,42 +58,45 @@
           </div>
         </div>
 
-        <div class="grid g2">
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title"><span class="swatch faculdade"></span>Avaliações e notas</h2>
-              <button class="btn ghost sm" id="btn-avaliacao-2">+ Adicionar</button>
-            </div>
-            <div id="avaliacoes"></div>
+        <div class="gaveteiro">
+          <section class="gaveta" data-gaveta="avaliacoes" data-icone="alvo">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Avaliações e notas</h2>
+              <span class="gaveta-resumo" id="avaliacoes-resumo"></span>
+            </header>
+            <div class="gaveta-corpo"><div id="avaliacoes"></div></div>
           </section>
 
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title">Prazos e entregas</h2>
-              <button class="btn ghost sm" id="btn-prazo">+ Adicionar</button>
-            </div>
-            <div id="prazos"></div>
+          <section class="gaveta" data-gaveta="prazos" data-icone="relogio">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Prazos e entregas</h2>
+              <span class="gaveta-resumo" id="prazos-resumo"></span>
+              <div class="gaveta-acoes"><button class="btn sm" id="btn-prazo" type="button">+ Prazo</button></div>
+            </header>
+            <div class="gaveta-corpo"><div id="prazos"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="resumos" data-icone="lapis">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Resumos e anotações</h2>
+              <span class="gaveta-resumo" id="resumos-resumo"></span>
+              <div class="gaveta-acoes"><button class="btn sm" id="btn-resumo" type="button">+ Resumo</button></div>
+            </header>
+            <div class="gaveta-corpo"><div id="resumos"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="materiais" data-icone="arquivo">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Materiais</h2>
+              <span class="gaveta-resumo" id="materiais-resumo"></span>
+              <div class="gaveta-acoes">
+                <button class="btn ghost sm" id="btn-drive" type="button">⇩ Importar do Drive</button>
+                <button class="btn sm" id="btn-material" type="button">+ Material</button>
+              </div>
+            </header>
+            <div class="gaveta-corpo"><div id="materiais"></div></div>
           </section>
         </div>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Materiais</h2>
-            <span style="display:flex; gap:8px;">
-              <button class="btn ghost sm" id="btn-drive">⇩ Importar do Drive</button>
-              <button class="btn ghost sm" id="btn-material">+ Material</button>
-            </span>
-          </div>
-          <div class="card"><div id="materiais"></div></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Resumos e anotações</h2>
-            <button class="btn ghost sm" id="btn-resumo">+ Resumo</button>
-          </div>
-          <div id="resumos"></div>
-        </section>
       </div>
     </main>
   </div>

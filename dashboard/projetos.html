@@ -23,7 +23,6 @@
             <p class="sub">Iniciativas pessoais que geram renda. Trabalhos da faculdade e o TCC ficam em <a href="faculdade.html">Faculdade</a>.</p>
           </div>
           <div class="topbar-actions">
-            <button class="btn" id="btn-oportunidade">+ Oportunidade</button>
             <button class="btn primary" id="btn-projeto">+ Projeto</button>
           </div>
         </header>
@@ -53,55 +52,59 @@
           </div>
         </div>
 
-        <div class="fin-duas">
-          <div class="fin-coluna">
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">O que o Delfos notou</h2>
-              </div>
-              <ul class="notas" id="notas"></ul>
-            </section>
-          </div>
-          <div class="fin-coluna">
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title" id="titulo-renda">Recebido por projeto</h2>
-                <span class="card-note">marca na renda estimada</span>
-              </div>
-              <div id="renda-projetos"></div>
-            </section>
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">Últimos seis meses</h2>
-                <span class="card-note" id="meses-nota"></span>
-              </div>
-              <div id="renda-meses"></div>
-            </section>
-          </div>
+        <div class="gaveteiro">
+          <section class="gaveta" data-gaveta="projetos" data-icone="projetos">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Seus projetos</h2>
+              <span class="gaveta-resumo" id="projetos-resumo"></span>
+            </header>
+            <div class="gaveta-corpo"><div id="projetos"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="notas" data-icone="lampada">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">O que o Delfos notou</h2>
+              <span class="gaveta-resumo" data-resumo-notas></span>
+            </header>
+            <div class="gaveta-corpo"><ul class="notas" id="notas"></ul></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="oportunidades" data-icone="lampada">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Oportunidades de renda</h2>
+              <span class="gaveta-resumo" id="oportunidades-resumo">ideias que ainda não viraram projeto</span>
+              <div class="gaveta-acoes"><button class="btn sm" id="btn-oportunidade" type="button">+ Oportunidade</button></div>
+            </header>
+            <div class="gaveta-corpo"><div id="oportunidades"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="renda" data-icone="cofre" data-fechada>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo" id="titulo-renda">Recebido por projeto</h2>
+              <span class="gaveta-resumo" id="renda-resumo">marca na renda estimada</span>
+            </header>
+            <div class="gaveta-corpo"><div id="renda-projetos"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="meses" data-icone="investimentos" data-fechada>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Últimos seis meses</h2>
+              <span class="gaveta-resumo" id="meses-nota"></span>
+            </header>
+            <div class="gaveta-corpo"><div id="renda-meses"></div></div>
+          </section>
+
+          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-icone="pergunta" data-fechada hidden>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Perguntas do Delfos</h2>
+              <span class="gaveta-resumo"></span>
+            </header>
+            <div class="gaveta-corpo">
+              <p class="dica-gaveta">Cada resposta deixa a leitura mais sua.</p>
+              <div class="perguntas" id="perguntas"></div>
+            </div>
+          </section>
         </div>
-
-        <section class="section" id="sec-perguntas" hidden>
-          <div class="section-head">
-            <h2 class="section-title">Perguntas do Delfos</h2>
-            <span class="card-note">Cada resposta deixa a leitura mais sua.</span>
-          </div>
-          <div class="perguntas" id="perguntas"></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Seus projetos</h2>
-          </div>
-          <div id="projetos"></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Oportunidades de renda</h2>
-            <span class="card-note">ideias ainda não viraram projeto</span>
-          </div>
-          <div class="card"><div id="oportunidades"></div></div>
-        </section>
       </div>
     </main>
   </div>

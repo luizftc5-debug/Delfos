@@ -46,117 +46,122 @@
 
         <div class="grid g4 fin-faixa" id="faixa"></div>
 
-        <div class="fin-duas">
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title">Para onde foi o dinheiro</h2>
-              <span class="card-note" id="cat-nota"></span>
-            </div>
-            <div id="categorias"></div>
+        <!-- O gaveteiro do mês: o que pede ação e o que se consulta sempre
+             fica aberto; o resto, fechado, diz o essencial no puxador. -->
+        <div class="gaveteiro">
+          <section class="gaveta" data-gaveta="apagar" data-icone="relogio">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">A pagar</h2>
+              <span class="gaveta-resumo" id="apagar-total"></span>
+            </header>
+            <div class="gaveta-corpo"><div id="apagar"></div></div>
           </section>
 
-          <section class="card ritmo">
-            <div class="card-head">
-              <h2 class="card-title">Ritmo do mês</h2>
-              <span class="card-note">gasto somado dia a dia</span>
+          <section class="gaveta" data-gaveta="categorias" data-icone="lista">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Para onde foi o dinheiro</h2>
+              <span class="gaveta-resumo" id="cat-nota"></span>
+            </header>
+            <div class="gaveta-corpo"><div id="categorias"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="notas" data-icone="lampada">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">O que o Delfos notou</h2>
+              <span class="gaveta-resumo" data-resumo-notas></span>
+            </header>
+            <div class="gaveta-corpo"><ul class="notas" id="notas"></ul></div>
+          </section>
+
+          <section class="gaveta" id="sec-lancamentos" data-gaveta="lancamentos" data-icone="tabela">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Lançamentos</h2>
+              <span class="gaveta-resumo num" id="resumo-filtro"></span>
+            </header>
+            <div class="gaveta-corpo">
+              <div class="fin-filtros">
+                <div class="chips" id="f-tipo" role="group" aria-label="Tipo de lançamento">
+                  <button class="chip" type="button" data-tipo="todos" aria-pressed="true">Tudo</button>
+                  <button class="chip" type="button" data-tipo="despesa" aria-pressed="false">Saídas</button>
+                  <button class="chip" type="button" data-tipo="receita" aria-pressed="false">Entradas</button>
+                  <button class="chip" type="button" data-tipo="pendente" aria-pressed="false">Pendentes</button>
+                </div>
+                <label class="busca">
+                  <span class="hidden">Buscar</span>
+                  <input class="input" type="search" id="f-busca" placeholder="Buscar descrição…" aria-label="Buscar nos lançamentos" autocomplete="off" />
+                </label>
+                <select class="input" id="f-categoria" aria-label="Categoria"></select>
+                <button class="chip" type="button" id="f-todos-meses" aria-pressed="false">Todos os meses</button>
+              </div>
+              <div id="tabela"></div>
             </div>
-            <div id="ritmo"></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="metas" data-icone="alvo">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Metas</h2>
+              <span class="gaveta-resumo" id="metas-resumo"></span>
+              <div class="gaveta-acoes"><button class="btn sm" id="btn-meta" type="button"></button></div>
+            </header>
+            <div class="gaveta-corpo"><div id="metas"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="fixos" data-icone="repetir" data-fechada>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Fixos e assinaturas</h2>
+              <span class="gaveta-resumo num" id="fixos-total"></span>
+              <div class="gaveta-acoes"><button class="btn sm" type="button" id="btn-fixo">+ Gasto fixo</button></div>
+            </header>
+            <div class="gaveta-corpo"><div id="fixos"></div></div>
+          </section>
+
+          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-icone="pergunta" data-fechada>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Perguntas do Delfos</h2>
+              <span class="gaveta-resumo"></span>
+            </header>
+            <div class="gaveta-corpo">
+              <p class="dica-gaveta">Cada resposta deixa a leitura mais sua. Dá para mudar depois em Limites e preferências.</p>
+              <div class="perguntas" id="perguntas"></div>
+            </div>
+          </section>
+
+          <section class="gaveta ritmo" data-gaveta="ritmo" data-icone="investimentos" data-fechada>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Ritmo do mês</h2>
+              <span class="gaveta-resumo" id="ritmo-resumo">gasto somado dia a dia</span>
+            </header>
+            <div class="gaveta-corpo"><div id="ritmo"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="maiores" data-icone="subiu" data-fechada>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Maiores gastos do mês</h2>
+              <span class="gaveta-resumo" id="maiores-resumo"></span>
+            </header>
+            <div class="gaveta-corpo"><div id="maiores"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="meses" data-icone="calendario" data-fechada>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Entradas e saídas</h2>
+              <span class="gaveta-resumo" id="meses-resumo">últimos 6 meses</span>
+            </header>
+            <div class="gaveta-corpo"><div id="grafico-meses"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="drive" data-icone="nuvem" data-fechada>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Documentos no Google Drive</h2>
+              <span class="gaveta-resumo google-state" id="google-status"><span class="google-dot"></span><span id="google-texto">Não conectado</span></span>
+            </header>
+            <div class="gaveta-corpo">
+              <p class="dica-gaveta">Conecte para ver os documentos financeiros mais recentes do seu Drive: extratos, boletos, comprovantes.</p>
+              <button class="btn" id="google-connect-btn" type="button">Conectar ao Google</button>
+              <div id="google-drive-list" style="margin-top:12px;"></div>
+            </div>
           </section>
         </div>
-
-        <section class="section" id="sec-perguntas">
-          <div class="section-head">
-            <h2 class="section-title">Perguntas do Delfos</h2>
-            <span class="card-note">Cada resposta deixa a leitura mais sua. Dá para mudar depois em Limites e preferências.</span>
-          </div>
-          <div class="perguntas" id="perguntas"></div>
-        </section>
-
-        <div class="fin-duas section">
-          <div class="fin-coluna">
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">O que o Delfos notou</h2>
-              </div>
-              <ul class="notas" id="notas"></ul>
-            </section>
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">Entradas e saídas</h2>
-                <span class="card-note">últimos 6 meses</span>
-              </div>
-              <div id="grafico-meses"></div>
-            </section>
-          </div>
-
-          <div class="fin-coluna">
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">A pagar</h2>
-                <span class="card-note num" id="apagar-total"></span>
-              </div>
-              <div id="apagar"></div>
-            </section>
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">Fixos e assinaturas</h2>
-                <span class="card-note num" id="fixos-total"></span>
-                <button class="btn ghost sm" type="button" id="btn-fixo">+ Gasto fixo</button>
-              </div>
-              <div id="fixos"></div>
-            </section>
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">Maiores gastos do mês</h2>
-              </div>
-              <div id="maiores"></div>
-            </section>
-          </div>
-        </div>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Metas</h2>
-            <button class="btn sm" id="btn-meta" type="button"></button>
-          </div>
-          <div id="metas"></div>
-        </section>
-
-        <section class="section" id="sec-lancamentos">
-          <div class="section-head">
-            <h2 class="section-title">Lançamentos</h2>
-            <span class="card-note num" id="resumo-filtro"></span>
-          </div>
-
-          <div class="fin-filtros">
-            <div class="chips" id="f-tipo" role="group" aria-label="Tipo de lançamento">
-              <button class="chip" type="button" data-tipo="todos" aria-pressed="true">Tudo</button>
-              <button class="chip" type="button" data-tipo="despesa" aria-pressed="false">Saídas</button>
-              <button class="chip" type="button" data-tipo="receita" aria-pressed="false">Entradas</button>
-              <button class="chip" type="button" data-tipo="pendente" aria-pressed="false">Pendentes</button>
-            </div>
-            <label class="busca">
-              <span class="hidden">Buscar</span>
-              <input class="input" type="search" id="f-busca" placeholder="Buscar descrição…" aria-label="Buscar nos lançamentos" autocomplete="off" />
-            </label>
-            <select class="input" id="f-categoria" aria-label="Categoria"></select>
-            <button class="chip" type="button" id="f-todos-meses" aria-pressed="false">Todos os meses</button>
-          </div>
-
-          <div id="tabela"></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Documentos no Google Drive</h2>
-            <span class="google-state" id="google-status"><span class="google-dot"></span><span id="google-texto">Não conectado</span></span>
-          </div>
-          <div class="card">
-            <p class="card-note" style="margin:0 0 12px;">Conecte para ver os documentos financeiros mais recentes do seu Drive: extratos, boletos, comprovantes.</p>
-            <button class="btn" id="google-connect-btn" type="button">Conectar ao Google</button>
-            <div id="google-drive-list" style="margin-top:12px;"></div>
-          </div>
-        </section>
       </div>
     </main>
   </div>

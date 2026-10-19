@@ -24,7 +24,6 @@
             <p class="sub" id="sub-faculdade">Disciplinas, provas, entregas e TCC.</p>
           </div>
           <div class="topbar-actions">
-            <button class="btn" id="btn-disciplina">+ Disciplina</button>
             <button class="btn primary" id="btn-prazo">+ Prazo</button>
           </div>
         </header>
@@ -49,69 +48,76 @@
           </div>
         </div>
 
-        <section class="section" style="margin-top:28px;">
-          <div class="section-head">
-            <h2 class="section-title">Próximas quatro semanas</h2>
-            <span class="card-note">provas e entregas, de segunda a domingo</span>
-          </div>
-          <div class="semanas" id="semanas"></div>
-        </section>
-
-        <div class="fin-duas section">
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title">O que o Delfos notou</h2>
-            </div>
-            <ul class="notas" id="notas"></ul>
+        <div class="gaveteiro">
+          <section class="gaveta" data-gaveta="semanas" data-icone="calendario">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Próximas quatro semanas</h2>
+              <span class="gaveta-resumo" id="semanas-resumo">provas e entregas, de segunda a domingo</span>
+            </header>
+            <div class="gaveta-corpo"><div class="semanas" id="semanas"></div></div>
           </section>
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title">Médias por disciplina</h2>
-              <span class="card-note" id="medias-nota"></span>
+
+          <section class="gaveta" data-gaveta="prazos" data-icone="relogio">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Prazos e entregas</h2>
+              <span class="gaveta-resumo" id="prazos-resumo"></span>
+              <div class="gaveta-acoes">
+                <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                  <input type="checkbox" class="check" id="ver-concluidos" /> ver concluídos
+                </label>
+              </div>
+            </header>
+            <div class="gaveta-corpo"><div id="prazos"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="disciplinas" data-icone="faculdade">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Disciplinas</h2>
+              <span class="gaveta-resumo" id="disciplinas-resumo"></span>
+              <div class="gaveta-acoes"><button class="btn sm" id="btn-disciplina" type="button">+ Disciplina</button></div>
+            </header>
+            <div class="gaveta-corpo"><div id="disciplinas"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="notas" data-icone="lampada">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">O que o Delfos notou</h2>
+              <span class="gaveta-resumo" data-resumo-notas></span>
+            </header>
+            <div class="gaveta-corpo"><ul class="notas" id="notas"></ul></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="medias" data-icone="alvo">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Médias por disciplina</h2>
+              <span class="gaveta-resumo" id="medias-nota"></span>
+            </header>
+            <div class="gaveta-corpo"><div id="medias"></div></div>
+          </section>
+
+          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-icone="pergunta" data-fechada hidden>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Perguntas do Delfos</h2>
+              <span class="gaveta-resumo"></span>
+            </header>
+            <div class="gaveta-corpo">
+              <p class="dica-gaveta">Cada resposta deixa a leitura mais sua.</p>
+              <div class="perguntas" id="perguntas"></div>
             </div>
-            <div id="medias"></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="google" data-icone="calendario" data-fechada>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Google Calendar</h2>
+              <span class="gaveta-resumo google-state" id="google-status"><span class="google-dot"></span><span id="google-texto">Não conectado</span></span>
+            </header>
+            <div class="gaveta-corpo">
+              <p class="dica-gaveta">Conecte para ver os próximos eventos da sua agenda ao lado dos prazos cadastrados aqui.</p>
+              <button class="btn" id="google-connect-btn" type="button">Conectar ao Google</button>
+              <div id="google-calendar-list" style="margin-top:12px;"></div>
+            </div>
           </section>
         </div>
-
-        <section class="section" id="sec-perguntas" hidden>
-          <div class="section-head">
-            <h2 class="section-title">Perguntas do Delfos</h2>
-            <span class="card-note">Cada resposta deixa a leitura mais sua.</span>
-          </div>
-          <div class="perguntas" id="perguntas"></div>
-        </section>
-
-        <div class="grid g2 section">
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title"><span class="swatch faculdade"></span>Disciplinas</h2>
-              <button class="btn ghost sm" id="btn-disciplina-2">+ Adicionar</button>
-            </div>
-            <div id="disciplinas"></div>
-          </section>
-
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title">Prazos e entregas</h2>
-              <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-                <input type="checkbox" class="check" id="ver-concluidos" /> ver concluídos
-              </label>
-            </div>
-            <div id="prazos"></div>
-          </section>
-        </div>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Google Calendar</h2>
-            <span class="google-state" id="google-status"><span class="google-dot"></span><span id="google-texto">Não conectado</span></span>
-          </div>
-          <div class="card">
-            <p class="card-note" style="margin:0 0 12px;">Conecte para ver os próximos eventos da sua agenda ao lado dos prazos cadastrados aqui.</p>
-            <button class="btn" id="google-connect-btn">Conectar ao Google</button>
-            <div id="google-calendar-list" style="margin-top:12px;"></div>
-          </div>
-        </section>
       </div>
     </main>
   </div>

@@ -55,6 +55,11 @@
 
   function renderSemanas(L) {
     const box = document.getElementById("semanas");
+    const total = L.semanas.reduce((t, s) => t + s.itens.length, 0);
+    const desta = L.semanas[0]?.itens || [];
+    document.getElementById("semanas-resumo").innerHTML = total
+      ? `${total === 1 ? "1 prova ou entrega" : `${total} provas e entregas`} em quatro semanas${desta.length ? `; esta semana: <b>${fmt.escape(desta[0].titulo)}</b>${desta.length > 1 ? ` e mais ${desta.length - 1}` : ""}` : "; esta semana está livre"}`
+      : "Nada nas próximas quatro semanas";
     const rotulos = ["Esta semana", "A seguinte", "Em 2 semanas", "Em 3 semanas"];
     box.innerHTML = L.semanas.map((s, i) => {
       const fim = new Date(s.chave + "T00:00:00");
@@ -76,7 +81,11 @@
     const box = document.getElementById("medias");
     const comDados = L.porDisciplina.filter((x) => x.media || x.nec);
     const minima = Number(Store.estado().preferencias.faculdade?.mediaMinima) || 7;
-    document.getElementById("medias-nota").textContent = comDados.length ? `marca na média mínima` : "";
+    const notas = comDados.filter((x) => x.media);
+    const risco = comDados.filter((x) => x.nec?.situacao === "impossivel").length;
+    document.getElementById("medias-nota").innerHTML = comDados.length
+      ? `${notas.length === 1 ? "1 disciplina com nota" : `${notas.length} disciplinas com nota`}; mínima ${fmt.decimal(minima)}${risco ? `; <span class="alerta">${risco === 1 ? "1 não fecha" : `${risco} não fecham`}</span>` : ""}`
+      : "Sem notas lançadas ainda";
     if (!comDados.length) {
       box.innerHTML = `<p class="card-note" style="margin:0;">Lance as notas das avaliações dentro de cada disciplina e as médias aparecem aqui, com a mínima marcada.</p>`;
       return;
@@ -148,6 +157,9 @@
     const box = document.getElementById("disciplinas");
     box.innerHTML = "";
     const lista = disciplinas();
+    document.getElementById("disciplinas-resumo").textContent = lista.length
+      ? `${lista.length === 1 ? "1 disciplina" : `${lista.length} disciplinas`}: ${lista.map((d) => d.nome).join(", ").replace(/, ([^,]*)$/, " e $1")}`
+      : "Nenhuma cadastrada";
 
     if (!lista.length) {
       box.appendChild(
@@ -205,6 +217,13 @@
   function renderPrazos() {
     const box = document.getElementById("prazos");
     box.innerHTML = "";
+    const abertos = prazos().filter((p) => !p.concluido).sort((a, b) => (a.data || "").localeCompare(b.data || ""));
+    const atras = abertos.filter((p) => (UI.diasAte(p.data) ?? 0) < 0).length;
+    const prox = abertos.find((p) => (UI.diasAte(p.data) ?? -1) >= 0);
+    document.getElementById("prazos-resumo").innerHTML = abertos.length
+      ? [atras ? `<span class="alerta">${atras === 1 ? "1 atrasado" : `${atras} atrasados`}</span>` : `${abertos.length} em aberto`,
+        prox ? `o próximo: <b>${fmt.escape(prox.descricao || "sem nome")}</b>, ${fmt.escape(UI.urgencia(prox.data).rotulo)}` : ""].filter(Boolean).join("; ")
+      : "Nada em aberto";
     const lista = prazos()
       .filter((p) => verConcluidos || !p.concluido)
       .sort((a, b) => (a.data || "").localeCompare(b.data || ""));
@@ -329,7 +348,6 @@
   }
 
   document.getElementById("btn-disciplina").addEventListener("click", novaDisciplina);
-  document.getElementById("btn-disciplina-2").addEventListener("click", novaDisciplina);
   document.getElementById("btn-prazo").addEventListener("click", novoPrazo);
   document.getElementById("ver-concluidos").addEventListener("change", (e) => {
     verConcluidos = e.target.checked;

@@ -34,55 +34,62 @@
 
         <div class="grid g4" id="stats" style="margin-bottom:14px;"></div>
 
-        <div class="grid g2">
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title"><span class="swatch projetos"></span>Etapas</h2>
-              <button class="btn ghost sm" id="btn-etapa">+ Etapa</button>
+        <div class="gaveteiro">
+          <section class="gaveta" data-gaveta="etapas" data-icone="lista">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Etapas</h2>
+              <span class="gaveta-resumo" id="etapas-resumo"></span>
+              <div class="gaveta-acoes"><button class="btn sm" id="btn-etapa" type="button">+ Etapa</button></div>
+            </header>
+            <div class="gaveta-corpo">
+              <div id="progresso"></div>
+              <div id="etapas"></div>
             </div>
-            <div id="progresso"></div>
-            <div id="etapas"></div>
           </section>
 
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title">Ficha do projeto</h2>
-            </div>
-            <div id="ficha"></div>
+          <section class="gaveta" data-gaveta="recebimentos" data-icone="cofre">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Recebimentos</h2>
+              <span class="gaveta-resumo" id="recebimentos-resumo"></span>
+            </header>
+            <div class="gaveta-corpo"><div id="recebimentos"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="custos" data-icone="carrinho">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Custos do projeto</h2>
+              <span class="gaveta-resumo" id="custos-resumo"></span>
+              <div class="gaveta-acoes"><button class="btn sm" id="btn-custo" type="button">+ Custo</button></div>
+            </header>
+            <div class="gaveta-corpo"><div id="custos"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="ficha" data-icone="info" data-fechada>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Ficha do projeto</h2>
+              <span class="gaveta-resumo" id="ficha-resumo">tipo, cliente, datas, prioridade e horas</span>
+            </header>
+            <div class="gaveta-corpo"><div id="ficha"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="anotacoes" data-icone="lapis">
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Anotações</h2>
+              <span class="gaveta-resumo" id="anotacoes-resumo"></span>
+              <div class="gaveta-acoes"><button class="btn sm" id="btn-anotacoes" type="button">Editar anotações</button></div>
+            </header>
+            <div class="gaveta-corpo"><div id="anotacoes"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="anexos" data-icone="anexar" data-fechada>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Documentos</h2>
+              <span class="gaveta-resumo" id="anexos-resumo"></span>
+              <div class="gaveta-acoes"><button class="btn sm" id="btn-anexos" type="button">Anexar documentos</button></div>
+            </header>
+            <div class="gaveta-corpo"><div id="anexos"></div></div>
           </section>
         </div>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title"><span class="swatch financeiro"></span>Recebimentos</h2>
-            <span class="card-note" id="recebimentos-resumo"></span>
-          </div>
-          <div class="card"><div id="recebimentos"></div></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Custos do projeto</h2>
-            <button class="btn ghost sm" id="btn-custo">+ Custo</button>
-          </div>
-          <div class="card"><div id="custos"></div></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Documentos</h2>
-            <button class="btn ghost sm" id="btn-anexos">Anexar documentos</button>
-          </div>
-          <div class="card"><div id="anexos"></div></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Anotações</h2>
-            <button class="btn ghost sm" id="btn-anotacoes">Editar anotações</button>
-          </div>
-          <div class="card"><div id="anotacoes"></div></div>
-        </section>
       </div>
     </main>
   </div>

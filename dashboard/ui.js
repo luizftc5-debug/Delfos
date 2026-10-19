@@ -6,7 +6,7 @@
 const UI = (() => {
   /** Nome e versão do painel — aparecem na marca do alto da barra lateral. */
   const NOME = "Delfos";
-  const VERSAO = "1.8";
+  const VERSAO = "1.9";
 
   /* -------------------------------- Ícones -------------------------------- */
 

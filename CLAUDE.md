@@ -1,8 +1,10 @@
 # Delfos — agente de organização pessoal do Luiz
 
 O painel se chama **Delfos** (versão atual: **1.8**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
-em `ui.js`) aparecem como marca no alto da barra lateral, ao lado do ônfalo, nos títulos das abas do
-navegador e no nome do arquivo de backup exportado.
+em `ui.js`) aparecem no alto da barra lateral (o logotipo, com a versão ao lado), nos títulos das
+abas do navegador e no nome do arquivo de backup exportado. Desde a 1.8 o nome tem **logotipo**
+(desenho vetorizado do quadro da marca, `UI.logotipo()`) e assinatura, "Organização para o que
+importa"; ver "Delfos 1.8: a marca".
 
 Duas coisas **continuam** com o nome antigo, de propósito:
 
@@ -343,12 +345,13 @@ antes/depois a cada gravação e apaga do IndexedDB os que sumiram do texto; exc
 O seletor de fonte tem, além das de sistema (Georgia, Arial…), um punhado de fontes do Google Fonts
 importadas só por `resumo.html`/`disciplina.html` (Merriweather, Lora, Inter, Space Mono, Caveat) —
 mais variedade para ler, escrever fórmula ou anotar à mão. É conteúdo do usuário, não design system:
-não confunda com a tipografia do painel (`dashboard/DESIGN.md`), que é Funnel Sans + Funnel Display.
+não confunda com a tipografia do painel (`dashboard/DESIGN.md`), que é Funnel Sans + Noto Serif
+Display.
 
 ### As outras abas no molde do Financeiro (v1.5)
 
 Faculdade, Projetos, Pessoal e cada aba própria abrem do mesmo jeito que o Financeiro: **leitura**
-na voz (Funnel Display), faixa de números, **O que o Delfos notou** e **Perguntas do Delfos**. O
+na voz (Funnel Display na 1.5 a 1.7; Noto Serif Display desde a 1.8), faixa de números, **O que o Delfos notou** e **Perguntas do Delfos**. O
 cálculo mora em `leituras.js` (sem DOM); os componentes são comuns em `ui.js`:
 `UI.renderPerguntas(secao, box, escopo, perguntas, aoMudar)`, `UI.resposta.valor/botoes/multipla`,
 `UI.renderNotas(ul, notas, textoVazio)` (nota com `area` e `acao` opcionais), `UI.ordenarNotas` e
@@ -489,7 +492,7 @@ editável e interruptor `.switch`, tudo na hora, sem "Salvar") e **Conta e dados
 backup, "Refazer configuração inicial", sair). A própria foto é o botão de trocar a foto.
 `abrirPerfil` aceita a aba a abrir (reabre na mesma depois de trocar a foto) e ignora qualquer outro
 argumento — o botão da barra o chama por `() => abrirPerfil()`, senão o evento de clique viraria o
-nome da aba. O alto da barra guarda só a marca (ônfalo + "Delfos" + versão), que leva à visão geral.
+nome da aba. O alto da barra guarda só a marca (logotipo + versão), que leva à visão geral.
 Depois de gravar, `abrirPerfil` chama `montarLayout` de novo para a barra refletir a mudança
 na hora — por isso `ui.js` guarda a página ativa em `paginaAtiva`/`opcoesAtivas`. `camposPerfil()`
 omite a seção "Vida acadêmica" quando `Personalizacao.eEstudante()` é falso — ela decide na hora de
@@ -764,22 +767,64 @@ o criador) e `sugeridoPor: "delfos"`. A página da aba mostra o propósito em "A
   0,01 ms (não zero, para os eventos de fim seguirem chegando). No JS, `semMovimento()` inclui o
   modo leve (sem luz do mouse, sem destaques deslizantes) e o Google não vem sozinho.
 
+### Delfos 1.8: a marca
+
+Pedido do Luiz: o quadro da identidade (logotipo "Delfos" numa serifa clássica, marfim sobre preto,
+ícones de app com o logotipo, assinatura "Organização para o que importa" com um fio curto em cima,
+paleta preto `#0B0B0B`, carvão `#1F1F1F`, grafite `#3A3A3A`, marfim `#EDE9E1`, cinza quente
+`#D6D1C7`) aplicado ao site inteiro, "compatível com a logo e o mais harmônico possível".
+
+- **Logotipo** (`LOGOTIPO` em `ui.js`): o maior "Delfos" do quadro, recortado, ampliado 6x e
+  vetorizado com potrace (um caminho só, viewBox `0 -1 530 166`, coordenadas com uma casa decimal).
+  `UI.logotipo(classe)` devolve o SVG em `currentColor`, `aria-hidden`; quem o põe dá o nome
+  (`aria-label` no link da barra, `role="img"` no `h1` da entrada e das boas-vindas, que têm o
+  caminho copiado no HTML porque desenham antes do script). O rodapé do editor de resumos recebe o
+  logotipo de `resumo.js`. Se a marca mudar, refaça o traçado a partir da imagem nova; não troque
+  por texto numa fonte parecida.
+- **D** (`MARCA.delfos`, `icone("delfos")`): os dois contornos do D do mesmo traçado. Substituiu o
+  ônfalo desenhado à mão (no título "O que o Delfos entendeu" e no favicon).
+- **Favicon** (`favicon.svg`, D marfim em quadrado preto de raio 7,5/32, com traço do mesmo tom para
+  os fios finos não sumirem em 16px) e **ícone da tela inicial** (`apple-touch-icon.png`, 180px, o
+  logotipo inteiro em marfim sobre preto; `<link rel="apple-touch-icon">` em todas as páginas).
+- **Voz**: Noto Serif Display no lugar da Funnel Display, escolhida desenhando "Delfos" em mais de
+  90 famílias de serifa do Google Fonts e comparando com o recorte do quadro (proporção, altura de
+  x, contraste, D, "f", "s"), depois em frase, dinheiro e título reais. A finalista Playfair saiu
+  pelos algarismos antigos. Pesos e espaçamento foram recalibrados regra a regra (a serifa vai
+  leve e quase sem espaço negativo). A preferência "Fonte da leitura e dos títulos" agora diz
+  Serifa / Sem serifa (valores `serifa`/`sans` de sempre).
+- **Paleta** nos tokens dos dois temas (ver Direção visual), nas amostras de tema do perfil, na seta
+  do select, nas sombras e no fundo das janelas. O destaque padrão (`osso`) agora se chama Marfim
+  na tela; o valor guardado não mudou. As cores dos pilares não mudaram: passaram de novo no
+  validador sobre os fundos e superfícies novos.
+- **Assinatura** (`.assinatura` dentro de `.marca-bloco`): só em `entrar.html` e `bemvindo.html`.
+- Auditoria web-design-guidelines nos arquivos tocados: `theme-color` passou a ser o fundo da
+  página (`#111110`/`#ede9e1`), a entrada e as boas-vindas ganharam `h1` (o logotipo), aspas e
+  reticências tipográficas no texto da divisão "livre" da academia.
+
 ### Direção visual
 
-**"Consulta" (v1.7)**: o detalhe completo, com tokens, paleta validada e proibições, está em
+**"Marfim" (v1.8)**: o detalhe completo, com a marca, tokens, paleta validada e proibições, está em
 `dashboard/DESIGN.md`, a referência a consultar antes de mexer em qualquer coisa visual.
 
 O princípio, em uma linha: **a leitura é o título e nada vira caixa sem motivo**; o caráter vem de
-tipografia, espaço e hierarquia. Quatro execuções anteriores foram descartadas e estão descritas
-no DESIGN.md (estúdio, azulejo baiano, oráculo sóbrio 1.2–1.3 e a segunda leitura 1.4–1.6).
+tipografia, espaço e hierarquia, na voz e nas cores do logotipo. Cinco execuções anteriores foram
+descartadas e estão descritas no DESIGN.md (estúdio, azulejo baiano, oráculo sóbrio 1.2–1.3, a
+segunda leitura 1.4–1.6 e a consulta 1.7, sem serifa).
 
-- **Tipografia**: **Funnel Display** é a voz (leitura, título de página sem leitura, títulos de
-  seção e de janela, números grandes, o dia na agenda, a marca). **Funnel Sans** é todo o resto.
-  Número grande com algarismos proporcionais; tabular (`.num`) só onde números se alinham.
-- **Cromo sem cor**: basalto com um fio de louro (`--fundo` #121413, `--lateral` atrás da barra),
-  primário e foco em osso. Cor só identifica pilar (`--s-*`), distingue entradas × saídas
-  (`--serie-entrada` azul, `--serie-saida` bronze) e marca urgência (`--st-critical`). O escuro é o
-  padrão; o claro (pedra clara #f4f5f1, sem creme) é escolha explícita em `[data-theme="light"]`.
+- **Marca**: o logotipo é desenho (`LOGOTIPO` em `ui.js`, `UI.logotipo()`), nunca "Delfos" digitado
+  numa fonte parecida. O D sozinho é `icone("delfos")` e o favicon; `apple-touch-icon.png` é o
+  logotipo em marfim sobre preto. A assinatura (caixa alta espaçada, fio curto em cima) só aparece
+  na entrada e nas boas-vindas.
+- **Tipografia**: **Noto Serif Display** (só o eixo de peso, 300 a 600) é a voz (leitura, título de
+  página sem leitura, títulos de seção e de janela, números grandes, o dia na agenda). **Funnel
+  Sans** é todo o resto. Algarismos alinhados (a voz já os tem por padrão); tabular (`.num`) só onde
+  números se alinham. Espaço entre letras quase nenhum: a serifa de exibição já vem justa.
+- **Cromo sem cor**: a paleta da marca, preto `#0b0b0b` (`--lateral`), carvão `#1f1f1f`, grafite
+  `#3a3a3a`, marfim `#ede9e1` (o texto no escuro, o fundo no claro) e cinza quente `#d6d1c7`;
+  `--fundo` escuro `#111110`. Primário e foco em marfim. Cor só identifica pilar (`--s-*`),
+  distingue entradas × saídas (`--serie-entrada` azul, `--serie-saida` bronze) e marca urgência
+  (`--st-critical`). O escuro é o padrão; o claro (marfim) é escolha explícita em
+  `[data-theme="light"]`. `theme-color` acompanha o fundo (`#111110` / `#ede9e1`).
 - **Raio por hierarquia**: janela 22, superfície 16, controle 10, miúdo 6, pílula só para escolha.
   **Abas sublinhadas** (`.abas`) para seções irmãs, **pílulas** (`.chip`) para filtro,
   **interruptor** (`.switch`) para ligar/desligar. Retrato em quadrado de cantos suaves.
@@ -802,7 +847,7 @@ com" viram a linha `.so-celular` debaixo da descrição).
 
 As cores dos pilares e o par entradas × saídas foram **validados com o script da skill de dataviz**
 (faixa de luminosidade, croma ≥ 0,10, separação para daltonismo e piso de visão normal ΔE ≥ 15,
-nos dois temas, entre vizinhos; refeito na 1.7 contra os fundos novos). Com `--pairs all`, verde ×
+nos dois temas, entre vizinhos; refeito na 1.8 contra os fundos e superfícies da marca). Com `--pairs all`, verde ×
 bronze (Financeiro × Projetos) reprova para deuteranopia: por isso toda marca de pilar que aparece
 junto de outra leva ícone e nome. Cores de status (vermelho/amarelo/verde) são reservadas para
 urgência e nunca usadas como série. Toda barra leva o valor escrito ao lado. Ao mexer em cores, rode

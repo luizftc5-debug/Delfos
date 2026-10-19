@@ -140,7 +140,7 @@ const Abas = (() => {
             <span class="hint">Escreva do seu jeito: o que cada registro guarda, se tem data ou é de todo dia, a meta e como quer ver.</span>
           </div>
           <section class="delfos-leu" aria-live="polite" aria-label="O que o Delfos entendeu">
-            <h3 class="delfos-titulo">${icone("onfalo")}O que o Delfos entendeu</h3>
+            <h3 class="delfos-titulo">${icone("delfos")}O que o Delfos entendeu</h3>
             <ul class="delfos-lista" data-entendeu></ul>
             <div class="delfos-aplicar" data-aplicar hidden>
               <span>Você mexeu em alguns ajustes. A leitura nova não passa por cima deles.</span>

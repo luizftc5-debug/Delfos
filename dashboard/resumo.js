@@ -19,6 +19,8 @@
   let resumoId = UI.parametro("id");
   UI.aplicarAparencia?.();
   UI.realcarBotoes?.(document);
+  const assinatura = document.querySelector(".editor-rodape .marca");
+  if (assinatura) assinatura.innerHTML = UI.logotipo();
 
   const disciplina = Store.achar(CAMINHO, disciplinaId);
 

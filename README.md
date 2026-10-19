@@ -50,14 +50,19 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 
 > Trabalhos da faculdade e o TCC ficam em **Faculdade**, não em Projetos.
 
-### O visual (versão 1.7)
+### O visual (versão 1.8)
 
+- **A marca**: o logotipo "Delfos" no alto da barra lateral, na entrada e no ícone da aba do
+  navegador; as cores são as da identidade (preto, carvão, grafite, marfim e cinza quente). Para
+  ter o Delfos na tela inicial do celular, abra o painel no navegador e use **Adicionar à tela de
+  início**: o ícone é o logotipo em marfim sobre preto.
 - Em cada aba, **a frase do alto é o título**: o Delfos diz o que está acontecendo, em letra grande,
-  e os números vêm logo embaixo, em colunas.
+  na mesma serifa do logotipo, e os números vêm logo embaixo, em colunas.
+- **Tema claro**: o fundo vira marfim e o texto, preto. Troque em **Perfil → Aparência → Tema**.
 - **No celular**, as abas ficam numa barra embaixo da tela, ao alcance do polegar. As quatro
   primeiras aparecem direto; **Mais** abre a lista com todas, o botão de criar aba e o seu perfil.
 - Se preferir a frase do alto na mesma letra do resto, troque em **Perfil → Aparência → Fonte da
-  leitura e dos títulos** (Display ou Texto).
+  leitura e dos títulos** (Serifa ou Sem serifa).
 
 ### Computador mais simples (modo leve)
 

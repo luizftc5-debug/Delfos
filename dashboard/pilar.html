@@ -2,12 +2,14 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Aba · Delfos</title>
+  <meta name="theme-color" content="#111110" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
   <link rel="stylesheet" href="theme.css" />
 </head>
 <body>
@@ -18,7 +20,7 @@
         <header class="topbar">
           <div>
             <div class="eyebrow" id="etiqueta">Sua aba</div>
-            <h1 id="titulo">—</h1>
+            <h1 id="titulo">&nbsp;</h1>
             <p class="sub" id="subtitulo"></p>
           </div>
           <div class="topbar-actions">
@@ -43,11 +45,13 @@
           <section class="card">
             <div class="card-head">
               <h2 class="card-title" id="titulo-lista"><span class="swatch" id="swatch-lista"></span>Itens</h2>
-              <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
+              <div class="seg sm vistas" id="f-vista" role="group" aria-label="Como ver"></div>
             </div>
             <div class="fin-filtros" style="margin-bottom:16px;">
               <div class="chips" id="f-grupo"></div>
-              <label class="busca"><span class="hidden">Buscar</span><input class="input" type="search" id="f-busca" placeholder="Buscar" /></label>
+              <label class="busca"><input class="input" type="search" id="f-busca" placeholder="Buscar…" aria-label="Buscar nesta aba" autocomplete="off" /></label>
+              <select class="input" id="f-ordem" aria-label="Ordenar"></select>
+              <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
             </div>
             <div id="lista"></div>
           </section>
@@ -72,10 +76,12 @@
             <h2 class="section-title">Ajustes da aba</h2>
           </div>
           <div class="card">
+            <p class="proposito-aba" id="proposito-aba" hidden><b>Propósito</b><span></span></p>
             <p class="card-note" id="nota-ajustes" style="margin:0 0 12px;"></p>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button class="btn" id="btn-editar-aba-2">Personalizar aba</button>
               <button class="btn" id="btn-campos">Campos desta aba</button>
+              <button class="btn" id="btn-layout">Layout e exibição</button>
               <button class="btn" id="btn-refazer-questionario" hidden>Refazer o questionário inicial</button>
               <button class="btn danger" id="btn-excluir-aba">Excluir esta aba</button>
             </div>
@@ -95,7 +101,7 @@
   <script src="nuvem.js"></script>
   <script src="financas.js"></script>
   <script src="leituras.js"></script>
-  <script src="abas.js"></script>
+  <script src="calendario.js"></script>
   <script src="pilar.js"></script>
 </body>
 </html>

@@ -1,14 +1,12 @@
-/* Visão geral — resumo dos três pilares e leitura automática da situação. */
+/* Visão geral — a leitura do dia, os números, a agenda e o índice das abas. */
 
 (() => {
   UI.iniciarPagina("home");
 
   const { fmt } = UI;
 
-  // Cada compromisso já traz a cor e o rótulo da sua área, então o selo é o
-  // mesmo para os pilares fixos e para as abas que o usuário criou.
-  const seloArea = (i) =>
-    `<span class="badge" style="color:${i.cor}; background:color-mix(in srgb, ${i.cor} 14%, transparent);">${fmt.escape(i.areaRotulo)}</span>`;
+  const DIAS_SEMANA = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+  const DIAS_LONGOS = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
 
   /* --------------------------- Cálculos de apoio --------------------------- */
 
@@ -24,54 +22,47 @@
     return new Date(a, m, 0).getDate();
   }
 
+  const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
+
+  /** Para onde leva um item da agenda: a página de onde ele veio. */
+  function destino(i) {
+    if (i.area === "faculdade") return i.disciplinaId ? `disciplina.html?id=${encodeURIComponent(i.disciplinaId)}` : "faculdade.html";
+    if (i.area === "projetos") return `projeto.html?id=${encodeURIComponent(i.id)}`;
+    if (i.area === "financeiro") return i.tipo === "conta" ? "financeiro.html" : "financeiro.html#metas";
+    if (i.area === "pessoal") return "pessoal.html";
+    if (String(i.area).startsWith("pilar:")) return `pilar.html?id=${encodeURIComponent(i.area.slice(6))}`;
+    return "index.html";
+  }
+
+  /** O ícone da área (pilares fixos) ou um ponto da cor dela (abas próprias). */
+  function marcaArea(i) {
+    const fixa = ["pessoal", "financeiro", "faculdade", "projetos"].includes(i.area);
+    return fixa
+      ? `<i class="marca-area" style="--marca:var(--s-${i.area}); --ic-marca:var(--ic-${i.area})" aria-hidden="true"></i>`
+      : `<i class="ponto-area" style="background:${fmt.escape(i.cor || "var(--texto-3)")}" aria-hidden="true"></i>`;
+  }
+
   /* -------------------------------- Render --------------------------------- */
 
   function render() {
-    const e = Store.estado();
     const mes = UI.mesAtual();
     const atual = totaisDoMes(mes);
     const anterior = totaisDoMes(UI.mesAnterior(mes));
 
-    document.getElementById("sub-hoje").textContent = new Date().toLocaleDateString("pt-BR", {
-      weekday: "long", day: "numeric", month: "long", year: "numeric",
-    });
+    const hoje = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+    document.getElementById("sub-hoje").textContent = fmt.capitalizar(hoje);
 
-    // A página abre falando com ele pelo primeiro nome, não com "usuário".
-    document.getElementById("saudacao").textContent = Personalizacao.saudacao();
-
-    const naSemana = UI.compromissos().filter((i) => {
-      const d = UI.diasAte(i.data);
-      return d !== null && d >= 0 && d <= 7;
-    }).length;
-    // A ocupação abre a linha quando preenchida — o painel fala com quem a
-    // pessoa disse ser, em vez de presumir um perfil fixo.
-    const ocupacao = Personalizacao.ocupacaoResumo();
-    document.getElementById("sub-resumo").textContent =
-      (ocupacao ? `${ocupacao}. ` : "") +
-      `${naSemana ? `${naSemana} ${naSemana === 1 ? "compromisso" : "compromissos"}` : "Nenhum compromisso"} nos próximos 7 dias e ` +
-      `${atual.quantidade} ${atual.quantidade === 1 ? "lançamento" : "lançamentos"} neste mês.`;
-
-    // Herói: saldo atual (soma das contas, ou o valor informado à mão enquanto
-    // não houver contas cadastradas)
-    document.getElementById("hero-saldo").textContent = fmt.moeda(Financas.saldoTotal());
-    document.getElementById("btn-saldo").classList.toggle("hidden", Financas.temContas());
-    const detalhe = document.getElementById("hero-detalhe");
-    if (atual.quantidade === 0) {
-      detalhe.innerHTML = `<span class="muted">Nenhum lançamento neste mês ainda.</span>`;
-    } else {
-      const sinal = atual.resultado >= 0 ? "up" : "down";
-      detalhe.innerHTML = `Resultado do mês:
-        <span class="delta ${sinal}">${atual.resultado >= 0 ? "▲" : "▼"} ${fmt.moeda(Math.abs(atual.resultado))}</span>
-        <br><span class="muted">${fmt.moeda(atual.receita)} entrou, ${fmt.moeda(atual.despesa)} saiu</span>`;
-    }
+    // O que a visão geral mostra é escolha do perfil (Painel → A visão geral mostra).
+    const mostra = UI.experiencia().home || {};
+    [["sec-topo", "topo"], ["sec-abas", "pilares"], ["sec-notas", "notas"], ["sec-agenda", "agenda"], ["sec-insights", "insights"]]
+      .forEach(([id, k]) => { const el = document.getElementById(id); if (el) el.hidden = mostra[k] === false; });
 
     renderLeitura(atual);
-    renderAvisos();
-    renderProximo();
-    renderPilares(atual);
-    UI.renderNotas(document.getElementById("notas"), Leituras.todasNotas(6), "Nada pedindo ação agora. Cada aba tem a própria leitura, com o que vai bem e o que mudou.");
+    renderRazao(atual);
     renderAgenda();
+    UI.renderNotas(document.getElementById("notas"), Leituras.todasNotas(6), "Nada pedindo ação agora. Cada aba tem a própria leitura, com o que vai bem e o que mudou.");
     renderInsights(atual, anterior, mes);
+    renderPilares(atual);
     UI.montarLayout("home");
   }
 
@@ -80,8 +71,8 @@
    * sentido ao nome: um oráculo lê a situação e a enuncia, em vez de só
    * empilhar números para o leitor interpretar sozinho.
    *
-   * Uma frase sobre o tempo (o que está atrasado ou mais próximo) e uma sobre
-   * dinheiro. Nunca mais que isso.
+   * A saudação abre a frase, em tom mais baixo; depois, uma frase sobre o
+   * tempo (o que está atrasado ou mais próximo) e uma sobre dinheiro.
    */
   function renderLeitura(atual) {
     const alvo = document.getElementById("leitura");
@@ -101,7 +92,7 @@
       const pior = atrasados[0];
       const dias = Math.abs(UI.diasAte(pior.data));
       tempo = atrasados.length === 1
-        ? `<b>${nome(pior)}</b> venceu há <span class="destaque">${dias} ${dias === 1 ? "dia" : "dias"}</span>.`
+        ? `<b>${nome(pior)}</b> venceu há <span class="destaque">${plural(dias, "dia", "dias")}</span>.`
         : `Você tem <span class="destaque">${atrasados.length} compromissos atrasados</span>. O mais antigo é <b>${nome(pior)}</b>, de ${dias} dias atrás.`;
     } else if (naSemana.length) {
       const prox = naSemana[0];
@@ -124,180 +115,223 @@
         : ` No mês, você gastou <span class="destaque">${fmt.moeda(Math.abs(atual.resultado))} a mais</span> do que recebeu.`;
     }
 
-    alvo.innerHTML = tempo + dinheiro;
+    const saud = Personalizacao.saudacao();
+    const abertura = saud !== "Visão geral" ? `<span class="saudacao">${fmt.escape(saud)}.</span> ` : "";
+    alvo.innerHTML = abertura + tempo + dinheiro;
   }
 
-  function renderAvisos() {
-    const box = document.getElementById("avisos");
-    box.innerHTML = "";
+  /** Os quatro números do dia: saldo, o mês, o próximo compromisso e o que falta pagar. */
+  function renderRazao(atual) {
+    // Saldo: soma das contas, ou o valor informado à mão enquanto não houver conta.
+    const comContas = Financas.temContas();
+    const nContas = Store.lista("financeiro.contas").length;
+    document.getElementById("hero-rotulo").textContent = comContas ? "Saldo nas contas" : "Saldo atual";
+    document.getElementById("hero-saldo").textContent = fmt.moeda(Financas.saldoTotal());
+    document.getElementById("hero-detalhe").innerHTML = comContas
+      ? `somando <a class="titulo-link" href="contas.html">${plural(nContas, "conta", "contas")}</a>`
+      : "informado à mão";
+    document.getElementById("btn-saldo").hidden = comContas;
 
-    const atrasados = UI.compromissos().filter((i) => (UI.diasAte(i.data) ?? 0) < 0);
-    if (atrasados.length) {
-      const el = document.createElement("div");
-      el.className = "notice critical";
-      el.innerHTML = `<span class="ic">!</span><span><strong>${atrasados.length} ${atrasados.length === 1 ? "compromisso atrasado" : "compromissos atrasados"}:</strong>
-        ${atrasados.slice(0, 3).map((i) => fmt.escape(i.titulo)).join(", ")}${atrasados.length > 3 ? ` e mais ${atrasados.length - 3}` : ""}</span>`;
-      box.appendChild(el);
+    // O mês corrente: sobra (ou falta) e o que entrou e saiu.
+    const nomeMes = new Date().toLocaleDateString("pt-BR", { month: "long" });
+    const mesValor = document.getElementById("mes-valor");
+    const mesDetalhe = document.getElementById("mes-detalhe");
+    document.getElementById("mes-rotulo").textContent = atual.resultado < 0 ? `Faltou em ${nomeMes}` : `Sobrou em ${nomeMes}`;
+    if (atual.quantidade === 0) {
+      mesValor.textContent = fmt.moeda(0);
+      mesValor.className = "stat-value num";
+      mesDetalhe.textContent = "Nenhum lançamento neste mês ainda.";
+    } else {
+      mesValor.textContent = fmt.moeda(Math.abs(atual.resultado));
+      mesValor.className = `stat-value num ${atual.resultado < 0 ? "valor-ruim" : ""}`;
+      mesDetalhe.textContent = `${fmt.moeda(atual.receita)} entrou, ${fmt.moeda(atual.despesa)} saiu`;
     }
 
-    UI.conflitos()
-      .filter((c) => c.multiplasAreas)
-      .slice(0, 2)
-      .forEach((c) => {
-        const el = document.createElement("div");
-        el.className = "notice warning";
-        el.innerHTML = `<span class="ic">▲</span><span><strong>Semana cheia (${fmt.dataCurta(c.semana)}):</strong>
-          ${c.itens.map((i) => `${fmt.escape(i.titulo)} <span class="muted">(${fmt.dataCurta(i.data)})</span>`).join(", ")}</span>`;
-        box.appendChild(el);
-      });
-  }
-
-  function renderProximo() {
+    // Próximo compromisso: o título é o valor, a data e a área vão embaixo.
     const box = document.getElementById("proximo");
     const proximos = UI.compromissos().filter((i) => (UI.diasAte(i.data) ?? -1) >= 0);
-
     if (!proximos.length) {
-      box.innerHTML = "";
-      box.appendChild(
-        UI.vazio({
-          icone: "◎",
-          titulo: "Nenhum compromisso à frente",
-          texto: "Cadastre provas, entregas e deadlines para o painel cruzar as datas e avisar sobre conflitos.",
-          rotuloAcao: "Cadastrar prazo",
-          aoAcionar: novoPrazo,
-        })
-      );
+      box.innerHTML = `<div class="stat-label">Próximo compromisso</div>
+        <div class="razao-titulo muted">Nada marcado</div>
+        <div class="stat-sub"><button class="link-mini" type="button" data-novo-prazo>Cadastrar um prazo</button></div>`;
+      box.querySelector("[data-novo-prazo]").addEventListener("click", novoPrazo);
+    } else {
+      const p = proximos[0];
+      const u = UI.urgencia(p.data);
+      const dia = new Date(p.data + "T00:00:00");
+      box.innerHTML = `<div class="stat-label">Próximo compromisso</div>
+        <a class="razao-titulo titulo-link" href="${destino(p)}">${fmt.escape(p.titulo)}</a>
+        <div class="stat-sub razao-quando">${marcaArea(p)}<span>${fmt.capitalizar(DIAS_LONGOS[dia.getDay()])}, ${fmt.dataPorExtenso(p.data)}, <span class="badge ${u.nivel}">${u.rotulo}</span></span></div>`;
+    }
+
+    // A pagar: despesas pendentes de qualquer mês.
+    const pend = Financas.pendentes();
+    const soma = pend.reduce((s, t) => s + (Number(t.valor) || 0), 0);
+    const pagarValor = document.getElementById("pagar-valor");
+    const pagarDetalhe = document.getElementById("pagar-detalhe");
+    pagarValor.textContent = fmt.moeda(soma);
+    if (!pend.length) {
+      pagarDetalhe.textContent = "Nada pendente";
+    } else {
+      const prox = pend[0];
+      const u = UI.urgencia(prox.data);
+      pagarDetalhe.innerHTML = `${plural(pend.length, "conta", "contas")}; a próxima, ${fmt.escape(prox.descricao || "sem nome")}, <span class="badge ${u.nivel}">${u.rotulo}</span>`;
+    }
+  }
+
+  /**
+   * Agenda: o que está atrasado no alto, depois semana a semana até 30
+   * dias. A semana cheia de áreas diferentes ganha uma marca no próprio
+   * cabeçalho (antes, uma pilha de avisos no topo da página).
+   */
+  function renderAgenda() {
+    const box = document.getElementById("agenda");
+    const todos = UI.compromissos();
+    const atrasados = todos.filter((i) => (UI.diasAte(i.data) ?? 0) < 0);
+    const proximos = todos.filter((i) => {
+      const d = UI.diasAte(i.data);
+      return d !== null && d >= 0 && d <= 30;
+    });
+
+    document.getElementById("agenda-resumo").textContent = proximos.length
+      ? `${plural(proximos.length, "compromisso", "compromissos")} nos próximos 30 dias`
+      : "";
+
+    box.innerHTML = "";
+    if (!atrasados.length && !proximos.length) {
+      box.appendChild(UI.vazio({
+        icone: "relogio",
+        titulo: "Nada nos próximos 30 dias",
+        texto: "Provas, entregas, consultas e prazos de qualquer aba aparecem aqui, semana a semana.",
+        rotuloAcao: "Cadastrar prazo",
+        aoAcionar: novoPrazo,
+      }));
       return;
     }
 
-    const p = proximos[0];
-    const u = UI.urgencia(p.data);
-    const outros = proximos.length - 1;
-    box.innerHTML = `
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-        ${seloArea(p)}
-        <span class="badge ${u.nivel}">${u.rotulo}</span>
-      </div>
-      <div class="stat-value" style="font-size:19px;">${fmt.escape(p.titulo)}</div>
-      <div class="stat-sub">${fmt.data(p.data)}${outros > 0 ? `, e mais ${outros} ${outros === 1 ? "compromisso agendado" : "compromissos agendados"}` : ""}</div>`;
+    const semanaAtual = UI.chaveSemana(UI.hojeISO());
+    const semanaQueVem = UI.chaveSemana(UI.isoMaisDias(semanaAtual, 7));
+    const conflitos = Object.fromEntries(UI.conflitos().map((c) => [c.semana, c]));
+
+    const grupos = [];
+    if (atrasados.length) grupos.push({ titulo: "Atrasado", classe: "atrasado", itens: atrasados });
+    proximos.forEach((i) => {
+      const k = UI.chaveSemana(i.data);
+      let g = grupos.find((x) => x.chave === k);
+      if (!g) {
+        const titulo = k === semanaAtual ? "Esta semana" : k === semanaQueVem ? "Semana que vem" : `Semana de ${fmt.dataCurta(k)}`;
+        g = { chave: k, titulo, itens: [] };
+        grupos.push(g);
+      }
+      g.itens.push(i);
+    });
+
+    box.innerHTML = grupos.map((g) => {
+      const c = g.chave ? conflitos[g.chave] : null;
+      const nota = c && c.multiplasAreas
+        ? `<span class="agenda-nota">Semana cheia: ${fmt.escape(c.rotulos.join(", ").replace(/, ([^,]*)$/, " e $1"))}</span>`
+        : c && c.itens.length >= 3 ? `<span class="agenda-nota">Semana cheia</span>` : "";
+      return `<section class="agenda-grupo ${g.classe || ""}">
+          <h3 class="agenda-cab"><span>${g.titulo}</span>${nota}</h3>
+          <ol class="agenda-lista">${g.itens.map(linhaAgenda).join("")}</ol>
+        </section>`;
+    }).join("");
   }
 
+  function linhaAgenda(i) {
+    const d = new Date(i.data + "T00:00:00");
+    const dias = UI.diasAte(i.data);
+    const u = UI.urgencia(i.data);
+    const quando = dias < 0
+      ? `venceu há ${plural(Math.abs(dias), "dia", "dias")}`
+      : dias === 0 ? "hoje" : dias === 1 ? "amanhã" : `em ${dias} dias`;
+    return `<li>
+        <a class="agenda-linha" href="${destino(i)}">
+          <span class="agenda-dia${dias === 0 ? " hoje" : ""}"><b>${d.getDate()}</b><small>${dias === 0 ? "hoje" : DIAS_SEMANA[d.getDay()]}</small></span>
+          <span class="agenda-texto">
+            <span class="t">${fmt.escape(i.titulo)}</span>
+            <span class="m">${marcaArea(i)}${fmt.escape(fmt.capitalizar(i.areaRotulo || ""))}${i.tipo ? `, ${fmt.escape(i.tipo)}` : ""}</span>
+          </span>
+          <span class="badge ${u.nivel}">${quando}</span>
+        </a>
+      </li>`;
+  }
+
+  /** Índice das abas: o nome, uma linha do que há nela e o número que importa. */
   function renderPilares(atual) {
     const e = Store.estado();
     const grid = document.getElementById("pilares");
     const urgentes = (area) =>
       UI.compromissos().filter((i) => i.area === area && (UI.diasAte(i.data) ?? 99) <= 7).length;
 
-    const cartoes = [
+    const linhas = [
       {
         id: "financeiro", href: "financeiro.html", cor: "financeiro",
-        valor: fmt.moedaCurta(atual.resultado),
-        sub: `${atual.quantidade} ${atual.quantidade === 1 ? "lançamento" : "lançamentos"} no mês, ${e.financeiro.metas.length} ${e.financeiro.metas.length === 1 ? "meta" : "metas"}`,
+        valor: fmt.moeda(atual.resultado), rotuloValor: atual.resultado < 0 ? "faltou no mês" : "sobrou no mês",
+        sub: `${plural(atual.quantidade, "lançamento", "lançamentos")} no mês, ${plural(e.financeiro.metas.length, "meta", "metas")}`,
       },
       {
         id: "faculdade", href: "faculdade.html", cor: "faculdade",
-        valor: `${e.faculdade.disciplinas.length}`,
-        sub: `${e.faculdade.disciplinas.length === 1 ? "disciplina" : "disciplinas"}, ${urgentes("faculdade")} ${urgentes("faculdade") === 1 ? "prazo" : "prazos"} nesta semana`,
+        valor: `${urgentes("faculdade")}`, rotuloValor: urgentes("faculdade") === 1 ? "prazo na semana" : "prazos na semana",
+        sub: plural(e.faculdade.disciplinas.length, "disciplina", "disciplinas"),
       },
       (() => {
         const ativos = e.projetos.filter((p) => p.status !== "concluído" && p.status !== "arquivado");
         const renda = ativos.reduce((s, p) => s + (Number(p.rendaEstimada) || 0), 0);
         return {
           id: "projetos", href: "projetos.html", cor: "projetos",
-          valor: `${ativos.length}`,
-          sub: renda
-            ? `${ativos.length === 1 ? "projeto ativo" : "projetos ativos"}, ${fmt.moedaCurta(renda)} por mês estimados`
-            : `${ativos.length === 1 ? "projeto ativo" : "projetos ativos"}, ${e.oportunidades.length} ${e.oportunidades.length === 1 ? "oportunidade" : "oportunidades"}`,
+          valor: `${ativos.length}`, rotuloValor: ativos.length === 1 ? "projeto ativo" : "projetos ativos",
+          sub: renda ? `${fmt.moeda(renda)} por mês estimados` : plural(e.oportunidades.length, "oportunidade", "oportunidades"),
         };
       })(),
       (() => {
         const abertos = (e.pessoal?.compromissos || []).filter((c) => !c.concluido);
         return {
           id: "pessoal", href: "pessoal.html", cor: "pessoal",
-          valor: `${abertos.length}`,
-          sub: `${abertos.length === 1 ? "compromisso em aberto" : "compromissos em aberto"}, ${urgentes("pessoal")} nesta semana`,
+          valor: `${abertos.length}`, rotuloValor: "em aberto",
+          sub: `${urgentes("pessoal")} nesta semana`,
         };
       })(),
     ]
-      // Aba fixa desligada: some do painel de resumo, sem apagar nada.
+      // Aba fixa desligada: some do índice, sem apagar nada.
       .filter((c) => Personalizacao.abaAtiva(c.id))
       .map((c) => ({ ...c, titulo: Personalizacao.rotuloAba(c.id) }));
 
-    // As abas criadas pelo usuário entram na mesma grade, com a cor delas.
+    // As abas criadas pelo usuário entram no mesmo índice, com a cor delas.
     (e.pilares || []).forEach((p) => {
       const abertos = (p.itens || []).filter((i) => !i.concluido);
-      const naSemana = urgentes(`pilar:${p.id}`);
-      cartoes.push({
+      linhas.push({
         href: `pilar.html?id=${encodeURIComponent(p.id)}`, cor: "", corHex: p.cor, glifo: p.icone,
         titulo: p.nome,
-        valor: `${abertos.length}`,
-        sub: `${abertos.length === 1 ? "item em aberto" : "itens em aberto"}, ${naSemana} nesta semana`,
+        valor: `${abertos.length}`, rotuloValor: "em aberto",
+        sub: p.descricao || `${urgentes(`pilar:${p.id}`)} nesta semana`,
       });
     });
 
-    grid.innerHTML = cartoes
+    grid.innerHTML = linhas
       .map((c) => `
-        <a class="card pillar ${c.cor}" href="${c.href}"${c.corHex ? ` style="--tint:${fmt.escape(c.corHex)}"` : ""}>
-          <span class="pillar-ic">${c.corHex ? UI.iconeAba(c.glifo) : UI.icone(c.id)}</span>
-          <div class="stat-label">${fmt.escape(c.titulo)}</div>
-          <div class="stat-value num">${c.valor}</div>
-          <div class="stat-sub">${c.sub}</div>
-          <div class="arrow">Ver detalhes</div>
+        <a class="pillar indice-linha ${c.cor}" href="${c.href}"${c.corHex ? ` style="--tint:${fmt.escape(c.corHex)}"` : ""}>
+          <span class="pillar-ic" aria-hidden="true">${c.corHex ? UI.iconeAba(c.glifo, true) : UI.iconeDuo(c.id)}</span>
+          <span class="indice-nome">${fmt.escape(c.titulo)}<small>${fmt.escape(c.sub)}</small></span>
+          <span class="indice-valor num">${fmt.escape(c.valor)}<small>${fmt.escape(c.rotuloValor)}</small></span>
+          <span class="indice-seta">${UI.icone("direita")}</span>
         </a>`)
       .join("");
   }
 
-  function renderAgenda() {
-    const box = document.getElementById("agenda");
-    const itens = UI.compromissos().filter((i) => {
-      const d = UI.diasAte(i.data);
-      return d !== null && d >= 0 && d <= 30;
-    });
-
-    document.getElementById("agenda-resumo").textContent =
-      itens.length ? `${itens.length} ${itens.length === 1 ? "compromisso" : "compromissos"}` : "";
-
-    box.innerHTML = "";
-    if (!itens.length) {
-      box.appendChild(
-        UI.vazio({
-          icone: "◷",
-          titulo: "Nada nos próximos 30 dias",
-          texto: "Quando você cadastrar provas, entregas e deadlines, eles aparecem aqui em ordem de data.",
-        })
-      );
-      return;
-    }
-
-    const ul = document.createElement("ul");
-    ul.className = "list";
-    itens.forEach((i) => {
-      const u = UI.urgencia(i.data);
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <span class="swatch" style="background:${i.cor}"></span>
-        <span class="grow">
-          <span class="title">${fmt.escape(i.titulo)}</span>
-          <span class="meta">${fmt.escape(fmt.capitalizar(i.tipo))} em ${fmt.dataPorExtenso(i.data)}</span>
-        </span>
-        <span class="badge ${u.nivel}">${u.rotulo}</span>`;
-      ul.appendChild(li);
-    });
-    box.appendChild(ul);
-  }
-
+  /** Em números: comparações e projeções, em linhas de rótulo e valor. */
   function renderInsights(atual, anterior, mes) {
     const e = Store.estado();
     const box = document.getElementById("insights");
-    const cards = [];
+    const linhas = [];
 
     // 1. Comparação com o mês anterior
     if (anterior.quantidade > 0) {
       const dif = atual.despesa - anterior.despesa;
       const pct = anterior.despesa > 0 ? Math.round((dif / anterior.despesa) * 100) : 0;
       const piorou = dif > 0;
-      cards.push({
-        titulo: "Gastos vs. mês anterior", cor: "financeiro",
+      linhas.push({
+        titulo: "Gastos sobre o mês anterior",
         valor: `${dif >= 0 ? "+" : "−"}${fmt.moeda(Math.abs(dif))}`,
         classe: piorou ? "down" : "up",
         sub: anterior.despesa > 0
@@ -310,100 +344,65 @@
     const diaDoMes = new Date().getDate();
     if (atual.despesa > 0 && diaDoMes >= 3) {
       const media = atual.despesa / diaDoMes;
-      const projecao = media * diasNoMes(mes);
-      cards.push({
-        titulo: "Projeção de gastos do mês", cor: "financeiro",
-        valor: fmt.moeda(projecao),
-        classe: "flat",
+      linhas.push({
+        titulo: "Projeção de gastos do mês",
+        valor: fmt.moeda(media * diasNoMes(mes)),
+        classe: "",
         sub: `No ritmo de ${fmt.moeda(media)} por dia até agora`,
       });
     }
 
-    // 3. Pendências financeiras
-    const pendentes = e.financeiro.transacoes.filter((t) => t.status === "pendente");
-    if (pendentes.length) {
-      const soma = pendentes.filter((t) => t.tipo === "despesa").reduce((s, t) => s + (Number(t.valor) || 0), 0);
-      cards.push({
-        titulo: "Contas pendentes", cor: "financeiro",
-        valor: fmt.moeda(soma),
-        classe: "down",
-        sub: `${pendentes.length} ${pendentes.length === 1 ? "lançamento marcado" : "lançamentos marcados"} como pendente`,
-      });
-    }
-
-    // 4. Semana mais carregada à frente
+    // 3. Semana mais carregada à frente
     const conflitos = UI.conflitos();
     if (conflitos.length) {
       const pior = conflitos.reduce((a, b) => (b.itens.length > a.itens.length ? b : a));
-      cards.push({
-        titulo: "Semana mais carregada", cor: "faculdade",
-        valor: `${pior.itens.length} compromissos`,
-        classe: pior.multiplasAreas ? "down" : "flat",
-        sub: `Semana de ${fmt.data(pior.semana)}${pior.multiplasAreas ? `, entre ${pior.rotulos.join(" e ")}` : ""}`,
+      linhas.push({
+        titulo: "Semana mais carregada",
+        valor: plural(pior.itens.length, "compromisso", "compromissos"),
+        classe: pior.multiplasAreas ? "down" : "",
+        sub: `Semana de ${fmt.dataPorExtenso(pior.semana)}${pior.multiplasAreas ? `, entre ${pior.rotulos.join(" e ")}` : ""}`,
       });
     }
 
-    // 5. Progresso dos projetos ativos
+    // 4. Progresso dos projetos ativos
     const ativos = e.projetos.filter((p) => p.status !== "concluído");
     if (ativos.length) {
       const passos = ativos.flatMap((p) => p.passos || []);
       if (passos.length) {
         const feitos = passos.filter((s) => s.feito).length;
-        cards.push({
-          titulo: "Progresso dos projetos", cor: "projetos",
+        linhas.push({
+          titulo: "Etapas dos projetos",
           valor: `${Math.round((feitos / passos.length) * 100)}%`,
-          classe: "flat",
-          sub: `${feitos} de ${passos.length} etapas concluídas em ${ativos.length} ${ativos.length === 1 ? "projeto" : "projetos"}`,
+          classe: "",
+          sub: `${feitos} de ${passos.length} concluídas em ${plural(ativos.length, "projeto", "projetos")}`,
         });
       }
     }
 
-    if (!cards.length) {
+    if (!linhas.length) {
       box.innerHTML = "";
-      const card = document.createElement("div");
-      card.className = "card";
-      card.appendChild(
-        UI.vazio({
-          icone: "◔",
-          titulo: "Ainda sem dados suficientes",
-          texto: "Conforme você registra lançamentos, prazos e projetos, aparecem aqui comparações, projeções e alertas automáticos.",
-          rotuloAcao: "Registrar lançamento",
-          aoAcionar: novoLancamento,
-        })
-      );
-      box.appendChild(card);
+      box.appendChild(UI.vazio({
+        icone: "investimentos",
+        titulo: "Ainda sem dados suficientes",
+        texto: "Conforme você registra lançamentos, prazos e projetos, aparecem aqui comparações e projeções.",
+        rotuloAcao: "Registrar lançamento",
+        aoAcionar: novoLancamento,
+      }));
       return;
     }
 
-    box.innerHTML = cards
-      .map((c) => `
-        <div class="card tinted ${c.cor || ""}">
-          <div class="stat-label">${fmt.escape(c.titulo)}</div>
-          <div class="stat-value num delta ${c.classe}" style="font-size:23px;">${c.valor}</div>
-          <div class="stat-sub">${fmt.escape(c.sub)}</div>
+    box.innerHTML = linhas
+      .map((c) => `<div>
+          <dt>${fmt.escape(c.titulo)}<small>${fmt.escape(c.sub)}</small></dt>
+          <dd class="num ${c.classe === "down" ? "valor-ruim" : c.classe === "up" ? "valor-bom" : ""}">${fmt.escape(c.valor)}</dd>
         </div>`)
       .join("");
   }
 
   /* --------------------------------- Ações --------------------------------- */
 
-  async function novoLancamento() {
-    const e = Store.estado();
-    const v = await UI.formulario({
-      titulo: "Novo lançamento",
-      descricao: "Registre uma entrada ou saída de dinheiro.",
-      campos: [
-        { nome: "tipo", rotulo: "Tipo", tipo: "segmento", opcoes: [{ valor: "despesa", rotulo: "Despesa" }, { valor: "receita", rotulo: "Receita" }] },
-        { nome: "descricao", rotulo: "Descrição", tipo: "text", obrigatorio: true, placeholder: "Ex.: Almoço no RU" },
-        { nome: "valor", rotulo: "Valor (R$)", tipo: "dinheiro", obrigatorio: true, placeholder: "0,00" },
-        { nome: "categoria", rotulo: "Categoria", tipo: "select", opcoes: e.financeiro.categorias },
-        { nome: "data", rotulo: "Data", tipo: "date", valorPadrao: UI.hojeISO() },
-      ],
-    });
-    if (!v) return;
-    Store.inserir("financeiro.transacoes", { ...v, forma: "", status: "pago" });
-    UI.toast("Lançamento salvo.");
-    render();
+  function novoLancamento() {
+    Lancamento.abrir({ aoSalvar: render });
   }
 
   async function novoPrazo() {

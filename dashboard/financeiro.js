@@ -61,7 +61,10 @@
     renderLeitura(a);
     renderFaixa(a);
     renderCategorias(a);
-    renderRitmo(a);
+    // O gráfico mede a largura do cartão: no próximo quadro, depois que o
+    // resto foi desenhado, a medida não obriga o navegador a montar a página
+    // duas vezes (era o maior custo do Financeiro num computador fraco).
+    requestAnimationFrame(() => renderRitmo(a));
     renderPerguntas(a);
     renderNotas(a);
     renderAPagar();
@@ -406,7 +409,7 @@
       q.push({
         id: `fixo:${r.chave}`,
         texto: `“${r.descricao}” apareceu em ${r.meses} meses, sempre perto de ${moeda(r.valor)}. É um gasto fixo?`,
-        apoio: "Gasto fixo é o que já está comprometido todo mês — assinatura, aluguel, mensalidade.",
+        apoio: "Gasto fixo é o que já está comprometido todo mês: assinatura, aluguel, mensalidade.",
         controle: () => botoes([
           ["Sim, é fixo", () => { salvarPrefs({ fixos: { ...prefs().fixos, [r.chave]: true } }); feito("Anotado como gasto fixo."); }, true],
           ["Não é", () => { salvarPrefs({ fixos: { ...prefs().fixos, [r.chave]: false } }); feito("Anotado."); }],
@@ -1007,7 +1010,7 @@
           <span class="meta so-celular">${esc([fmt.dataCurta(item.data), item.categoria || "Outros", origem].filter(Boolean).join(", "))}</span>
         </td>
         <td><span class="badge">${esc(item.categoria || "Outros")}</span></td>
-        <td class="muted">${esc(origem || "—")}</td>
+        <td class="muted">${esc(origem || "-")}</td>
         <td>${pendente
           ? `<button class="badge urgente" type="button" data-pagar title="Marcar como pago" style="border:none; cursor:pointer; font:inherit; font-size:12.5px;">pendente</button>`
           : `<span class="muted" style="font-size:13.5px;">${receita ? "recebido" : "pago"}</span>`}</td>
@@ -1033,43 +1036,18 @@
 
   /* --------------------------------- Ações ---------------------------------- */
 
-  function camposLancamento() {
-    return [
-      { nome: "tipo", rotulo: "Tipo", tipo: "segmento", opcoes: [{ valor: "despesa", rotulo: "Saída" }, { valor: "receita", rotulo: "Entrada" }] },
-      { nome: "descricao", rotulo: "Descrição", tipo: "text", obrigatorio: true, placeholder: "Ex.: Livro de farmacologia" },
-      { nome: "valor", rotulo: "Valor (R$)", tipo: "dinheiro", obrigatorio: true, placeholder: "0,00" },
-      { nome: "categoria", rotulo: "Categoria", tipo: "select", opcoes: Store.estado().financeiro.categorias },
-      { nome: "data", rotulo: "Data", tipo: "date", obrigatorio: true, valorPadrao: hoje },
-      {
-        nome: "origem", rotulo: "Pago com", tipo: "select", opcoes: Financas.opcoesOrigem(),
-        dica: Financas.opcoesOrigem().length > 1
-          ? "De qual conta ou cartão o valor sai (ou em qual entra)."
-          : "Cadastre contas e cartões para acompanhar o saldo de cada um.",
+  function novoLancamento() {
+    Lancamento.abrir({
+      aoSalvar: () => {
+        const ultimo = Store.lista("financeiro.transacoes").at(-1);
+        if (ultimo && !filtros.todosMeses && ultimo.data && !ultimo.data.startsWith(estado.mes)) estado.mes = ultimo.data.slice(0, 7);
+        render();
       },
-      { nome: "forma", rotulo: "Observação", tipo: "text", placeholder: "Pix, débito, parcelado…" },
-      { nome: "status", rotulo: "Situação", tipo: "segmento", opcoes: [{ valor: "pago", rotulo: "Pago" }, { valor: "pendente", rotulo: "A pagar" }] },
-    ];
-  }
-
-  async function novoLancamento() {
-    const v = await UI.formulario({
-      titulo: "Novo lançamento",
-      descricao: "Uma entrada ou saída de dinheiro.",
-      campos: camposLancamento(),
     });
-    if (!v) return;
-    Store.inserir("financeiro.transacoes", v);
-    if (!filtros.todosMeses && !v.data.startsWith(estado.mes)) estado.mes = v.data.slice(0, 7);
-    UI.toast("Lançamento salvo.");
-    render();
   }
 
-  async function editarLancamento(item) {
-    const v = await UI.formulario({ titulo: "Editar lançamento", campos: camposLancamento(), valores: item });
-    if (!v) return;
-    Store.atualizar("financeiro.transacoes", item.id, v);
-    UI.toast("Lançamento atualizado.");
-    render();
+  function editarLancamento(item) {
+    Lancamento.abrir({ item, aoSalvar: render });
   }
 
   function repetirHoje(item) {

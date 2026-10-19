@@ -58,7 +58,7 @@
         UI.vazio({
           icone: "◈",
           titulo: "Sua carteira está vazia",
-          texto: "Cadastre renda fixa, ações, fundos, cripto ou previdência — o que já aplicou e quanto vale hoje.",
+          texto: "Cadastre renda fixa, ações, fundos, cripto ou previdência: o que já aplicou e quanto vale hoje.",
           rotuloAcao: "Cadastrar investimento",
           aoAcionar: novoInvestimento,
         })
@@ -89,7 +89,7 @@
           </div>
           <div class="stat-value num" style="font-size:22px;">${fmt.moeda(Number(inv.valorAtual ?? inv.valorAplicado) || 0)}</div>
           <div class="stat-sub delta ${r.ganho >= 0 ? "up" : "down"}">
-            ${r.ganho >= 0 ? "▲" : "▼"} ${fmt.moeda(Math.abs(r.ganho))} (${r.percentual >= 0 ? "+" : ""}${UI.fmt.decimal(r.percentual)}%)
+            ${UI.icone(r.ganho >= 0 ? "subiu" : "desceu", "delta-ic")} ${fmt.moeda(Math.abs(r.ganho))} (${r.percentual >= 0 ? "+" : ""}${UI.fmt.decimal(r.percentual)}%)
           </div>
           <div class="stat-sub">aplicado ${fmt.moeda(Number(inv.valorAplicado) || 0)}${inv.dataAplicacao ? ` em ${fmt.data(inv.dataAplicacao)}` : ""}</div>
           ${inv.observacoes ? `<div class="stat-sub" style="margin-top:8px;">${fmt.escape(inv.observacoes)}</div>` : ""}`;

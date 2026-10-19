@@ -2,12 +2,14 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Pessoal · Delfos</title>
+  <meta name="theme-color" content="#111110" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
   <link rel="stylesheet" href="theme.css" />
 </head>
 <body>
@@ -21,6 +23,7 @@
             <p class="sub">Consultas, tarefas e recados que não são nem financeiro, nem faculdade, nem projeto.</p>
           </div>
           <div class="topbar-actions">
+            <button class="btn" id="btn-importar-cal">Importar calendário</button>
             <button class="btn primary" id="btn-compromisso">+ Compromisso</button>
           </div>
         </header>
@@ -30,23 +33,38 @@
         <div class="grid g3" style="margin-bottom:14px;">
           <div class="card tinted pessoal">
             <div class="stat-label">Em aberto</div>
-            <div class="stat-value num" id="s-abertos">—</div>
+            <div class="stat-value num" id="s-abertos">-</div>
             <div class="stat-sub" id="s-abertos-d"></div>
           </div>
           <div class="card tinted pessoal">
             <div class="stat-label">Nesta semana</div>
-            <div class="stat-value num" id="s-semana">—</div>
+            <div class="stat-value num" id="s-semana">-</div>
             <div class="stat-sub" id="s-semana-d"></div>
           </div>
           <div class="card tinted pessoal">
             <div class="stat-label">Atrasados</div>
-            <div class="stat-value num" id="s-atrasados">—</div>
+            <div class="stat-value num" id="s-atrasados">-</div>
             <div class="stat-sub" id="s-atrasados-d"></div>
           </div>
         </div>
 
+        <nav class="abas" role="tablist" aria-label="Como ver os compromissos">
+          <button type="button" role="tab" data-vista="calendario">Calendário</button>
+          <button type="button" role="tab" data-vista="lista">Lista</button>
+        </nav>
+
+        <section class="card calendario" id="calendario" data-na-vista="calendario"></section>
+
         <div class="fin-duas section">
-          <section class="card">
+          <section class="card" data-na-vista="calendario">
+            <div class="card-head">
+              <h2 class="card-title"><span class="swatch pessoal"></span>O que se aproxima</h2>
+              <span class="card-note">próximas duas semanas, de todas as abas</span>
+            </div>
+            <div id="proximos"></div>
+            <div class="lembrete-rodape" id="lembrete-config"></div>
+          </section>
+          <section class="card" data-na-vista="lista">
             <div class="card-head">
               <h2 class="card-title"><span class="swatch pessoal"></span>Compromissos</h2>
               <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" class="check" id="f-concluidos" /> ver concluídos</label>
@@ -90,7 +108,9 @@
   <script src="nuvem.js"></script>
   <script src="financas.js"></script>
   <script src="leituras.js"></script>
-  <script src="abas.js"></script>
+  <script src="config.js"></script>
+  <script src="google-integration.js"></script>
+  <script src="calendario.js"></script>
   <script src="pessoal.js"></script>
 </body>
 </html>

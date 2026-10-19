@@ -312,7 +312,7 @@ const Leituras = (() => {
         const antes = itens.filter((i) => dataDoItem(i).startsWith(Financas.deslocarMes(mes, -1))).reduce((s, i) => s + (Number(valorCampo(i, c)) || 0), 0);
         return { campo: c, tipo: "dinheiro", noMes, antes, total: vals.reduce((s, v) => s + (Number(v) || 0), 0) };
       }
-      if (c.tipo === "number") {
+      if (c.tipo === "number" || c.tipo === "estrelas") {
         const nums = vals.map(Number).filter((v) => !Number.isNaN(v));
         if (!nums.length) return null;
         return { campo: c, tipo: "numero", media: nums.reduce((s, v) => s + v, 0) / nums.length, total: nums.reduce((s, v) => s + v, 0), n: nums.length, max: Math.max(...nums) };

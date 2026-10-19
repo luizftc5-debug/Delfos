@@ -238,7 +238,7 @@ const Nuvem = (() => {
         aplicarRemoto(remoto);
         recarregarPagina();
       } else {
-        gravar({ ultimoErro: "Conflito aguardando decisão — ele volta a aparecer na próxima página aberta." });
+        gravar({ ultimoErro: "Conflito aguardando decisão. Ele volta a aparecer na próxima página aberta." });
       }
     } catch (e) {
       gravar({ ultimoErro: e.message });
@@ -387,10 +387,10 @@ const Nuvem = (() => {
 
   function situacao() {
     if (!Sessao.ativo()) {
-      return { texto: "Contas desligadas até o servidor ser publicado — os dados ficam só neste navegador." };
+      return { texto: "Contas desligadas até o servidor ser publicado; os dados ficam só neste navegador." };
     }
     const u = Sessao.usuario();
-    if (!Sessao.logado()) return { texto: "Sessão encerrada — entre de novo para sincronizar.", erro: true };
+    if (!Sessao.logado()) return { texto: "Sessão encerrada. Entre de novo para sincronizar.", erro: true };
     const c = ler();
     const quem = u?.email || "";
     if (c.ultimoErro) return { texto: `${quem}: ${c.ultimoErro}`, erro: true };
@@ -463,7 +463,7 @@ const Nuvem = (() => {
             <button class="btn block" data-acao="copiar" type="button">Copiar</button>
             <button class="btn block" data-acao="baixar" type="button">Baixar como arquivo</button>
           </div>
-          <span class="hint">Guarde fora deste aparelho: num gerenciador de senhas, anotado em papel, numa foto no celular. Ele não aparece de novo, e o servidor não tem como mostrá-lo — guarda só uma impressão dele. Quem tiver o código e o seu e-mail consegue trocar sua senha, então trate-o como uma senha.</span>
+          <span class="hint">Guarde fora deste aparelho: num gerenciador de senhas, anotado em papel, numa foto no celular. Ele não aparece de novo, e o servidor não tem como mostrá-lo: guarda só uma impressão dele. Quem tiver o código e o seu e-mail consegue trocar sua senha, então trate-o como uma senha.</span>
           <label class="entrada-manter"><input type="checkbox" class="check" data-guardei /> <span>Guardei o código em lugar seguro</span></label>
         </div>
         <div class="modal-foot"><button class="btn primary" data-acao="ok" type="button" disabled>Continuar</button></div>`, {
@@ -473,11 +473,11 @@ const Nuvem = (() => {
           ok.addEventListener("click", () => fechar(true));
           modal.querySelector('[data-acao="copiar"]').addEventListener("click", async (ev) => {
             try { await navigator.clipboard.writeText(codigo); ev.target.textContent = "Copiado"; }
-            catch { UI.toast("Não deu para copiar sozinho — selecione o código e copie."); }
+            catch { UI.toast("Não deu para copiar sozinho. Selecione o código e copie."); }
           });
           modal.querySelector('[data-acao="baixar"]').addEventListener("click", () => {
             const email = Sessao.usuario()?.email || "";
-            const texto = `Delfos — código de recuperação\n\nConta: ${email}\nCódigo: ${codigo}\nGerado em: ${new Date().toLocaleString("pt-BR")}\n\nUse em "Esqueci minha senha" na tela de entrada. Vale uma vez: ao usar, um código novo é gerado.\n`;
+            const texto = `Delfos: código de recuperação\n\nConta: ${email}\nCódigo: ${codigo}\nGerado em: ${new Date().toLocaleString("pt-BR")}\n\nUse em "Esqueci minha senha" na tela de entrada. Vale uma vez: ao usar, um código novo é gerado.\n`;
             const url = URL.createObjectURL(new Blob([texto], { type: "text/plain" }));
             const a = document.createElement("a");
             a.href = url;
@@ -532,7 +532,7 @@ const Nuvem = (() => {
         <button class="btn block" data-acao="codigo" type="button">Gerar novo código de recuperação</button>
         <button class="btn block" data-acao="outros" type="button">Sair dos outros aparelhos</button>
         <button class="btn block" data-acao="sair" type="button">Sair da conta</button>
-        <span class="hint">Sair apaga os dados deste navegador — eles continuam na sua conta e voltam quando você entrar.</span>
+        <span class="hint">Sair apaga os dados deste navegador; eles continuam na sua conta e voltam quando você entrar.</span>
         <button class="btn ghost danger block" data-acao="excluir" type="button">Excluir minha conta</button>
       </div>
       <div class="modal-foot"><button class="btn" data-acao="fechar" type="button">Fechar</button></div>`, {
@@ -547,12 +547,12 @@ const Nuvem = (() => {
           const gerado = c.usuario.codigoRecuperacaoGeradoEm;
           modal.querySelector("[data-recuperacao]").textContent = gerado
             ? `gerado em ${new Date(gerado).toLocaleDateString("pt-BR")}`
-            : "nenhum — gere um";
+            : "nenhum, gere um";
           if (Sessao.mantido() && c.sessao?.expiraEm) {
             modal.querySelector("[data-validade]").textContent = `até ${new Date(c.sessao.expiraEm).toLocaleDateString("pt-BR")}`;
           }
         }).catch(() => {
-          modal.querySelectorAll("[data-cota], [data-recuperacao]").forEach((el) => { el.textContent = "—"; });
+          modal.querySelectorAll("[data-cota], [data-recuperacao]").forEach((el) => { el.textContent = "-"; });
         });
 
         acao("codigo", () => {
@@ -619,7 +619,7 @@ const Nuvem = (() => {
           fechar(null);
           formularioSenha({
             titulo: "Excluir sua conta?",
-            descricao: "Apaga para sempre a conta e tudo nela — dados, anexos e versões anteriores — do servidor e deste navegador. Não dá para desfazer. Se quiser guardar algo, exporte um backup antes (Perfil → Backup e dados).",
+            descricao: "Apaga para sempre a conta e tudo nela (dados, anexos e versões anteriores) do servidor e deste navegador. Não dá para desfazer. Se quiser guardar algo, exporte um backup antes (Perfil → Backup e dados).",
             rotuloConfirmar: "Excluir para sempre",
             perigo: true,
             campos: [{ id: "senha", rotulo: "Sua senha, para confirmar", autocomplete: "current-password" }],
@@ -650,7 +650,7 @@ const Nuvem = (() => {
           <li>
             <span class="grow">
               <span class="title">${esc(quandoLegivel(v.salvoEm))}</span>
-              <span class="meta">${esc([v.dispositivo, v.motivo || "Cópia automática", `${Math.max(1, Math.round(v.tamanho / 1024))} KB`].filter(Boolean).join(" — "))}</span>
+              <span class="meta">${esc([v.dispositivo, v.motivo || "Cópia automática", `${Math.max(1, Math.round(v.tamanho / 1024))} KB`].filter(Boolean).join(", "))}</span>
             </span>
             <button class="btn sm" data-restaurar="${v.id}" data-quando="${esc(quandoLegivel(v.salvoEm))}" type="button">Restaurar</button>
           </li>`).join("")}</ul>`

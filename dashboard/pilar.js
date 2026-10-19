@@ -15,7 +15,7 @@
       UI.vazio({
         icone: "◌",
         titulo: "Aba não encontrada",
-        texto: "Pode ter sido excluída, ou este link é de outro navegador — os dados ficam salvos em cada navegador.",
+        texto: "Pode ter sido excluída, ou este link é de outro navegador: os dados ficam salvos em cada navegador.",
         rotuloAcao: "Voltar à visão geral",
         aoAcionar: () => (location.href = "index.html"),
       })
@@ -47,7 +47,7 @@
 
     const etiqueta = $("etiqueta");
     // O ponto do eyebrow leva a cor da aba; o texto fica na tinta normal.
-    etiqueta.textContent = pilar.sugeridoPor === "ia" ? "Aba criada por você, montada com IA" : "Aba criada por você";
+    etiqueta.textContent = pilar.sugeridoPor === "delfos" ? "Aba criada por você, montada pelo Delfos" : pilar.sugeridoPor === "ia" ? "Aba criada por você, montada com IA" : "Aba criada por você";
     etiqueta.style.setProperty("--marca", pilar.cor);
     $("swatch-lista").style.background = pilar.cor;
 
@@ -72,7 +72,10 @@
     $("btn-dia").classList.toggle("hidden", !(academia && pilar.academia?.configuradoEm));
     $("nota-ajustes").textContent = academia
       ? "Esta aba foi criada por você. Renomeá-la, trocar ícone e cor, ou refazer o questionário não mexe nos dias já montados; excluí-la apaga também os dias e exercícios cadastrados."
-      : "Esta aba foi criada por você. Personalizar (ícone, cor, meta, agrupamento, campos sugeridos pela IA) não mexe no que já está cadastrado; excluí-la apaga também todos os registros dela.";
+      : "Esta aba foi criada por você. Personalizar (propósito, ícone, cor, meta, agrupamento, campos sugeridos pelo Delfos) não mexe no que já está cadastrado; excluí-la apaga também todos os registros dela.";
+    const prop = $("proposito-aba");
+    prop.hidden = !pilar.proposito;
+    prop.querySelector("span").textContent = pilar.proposito || "";
 
     if (academia) {
       $("swatch-academia").style.background = pilar.cor;
@@ -92,6 +95,10 @@
       ? "Nada fora do comum por aqui."
       : `Quando houver registros, o Delfos aponta aqui ${pilar.checkin ? "as sequências e o que ficou sem marcar" : pilar.meta ? "o ritmo da meta" : "o que merece atenção"}.`);
     UI.renderPerguntas($("sec-perguntas"), $("perguntas"), `pilar:${pilar.id}`, perguntas(L), render);
+    const v = visual();
+    $("leitura").classList.toggle("hidden", !v.leitura);
+    $("bloco-stats").classList.toggle("hidden", !v.numeros);
+    if (!v.perguntas) $("sec-perguntas").hidden = true;
     UI.montarLayout("pilar", { idAtivo: id });
   }
 
@@ -106,7 +113,7 @@
       const hoje = L.checkin.filter((x) => x.hoje).length;
       t.push({ l: "Marcados hoje", v: `${hoje} de ${L.checkin.length}`, s: hoje === L.checkin.length && L.checkin.length ? "tudo em dia" : "toque em Hoje em cada um" });
       const melhor = [...L.checkin].sort((a, b) => b.seq - a.seq)[0];
-      t.push({ l: "Maior sequência", v: melhor ? `${melhor.seq} ${melhor.seq === 1 ? "dia" : "dias"}` : "—", s: melhor?.seq ? fmt.escape(melhor.i.descricao) : "comece hoje" });
+      t.push({ l: "Maior sequência", v: melhor ? `${melhor.seq} ${melhor.seq === 1 ? "dia" : "dias"}` : "-", s: melhor?.seq ? fmt.escape(melhor.i.descricao) : "comece hoje" });
     } else if (pilar.naAgenda) {
       t.push({ l: "Próximos 7 dias", v: L.semana.length, s: L.semana[0] ? `próximo: ${fmt.escape(L.semana[0].descricao)}` : "nada marcado" });
       t.push({ l: "Atrasados", v: L.atrasados.length, s: L.atrasados.length ? "vale concluir ou remarcar" : "nada atrasado", classe: L.atrasados.length ? "delta down" : "" });
@@ -146,17 +153,89 @@
       .map(([v, r]) => `<button type="button" class="chip" data-grupo="${fmt.escape(v)}" aria-pressed="${v === filtros.grupo}">${fmt.escape(r)}</button>`).join("");
   }
 
+  /* ------------------------------ Vistas da lista ---------------------------
+     Cada aba escolhe como mostra os registros: lista, cartões, quadro (colunas
+     pelo campo de agrupar, com arrastar), tabela (todos os campos, ordenável)
+     ou calendário do mês. A escolha e o resto do layout ficam em
+     `pilar.visual` — opcional: aba sem `visual` segue como sempre foi. */
+
+  const VISTAS = [["lista", "Lista", "lista"], ["cartoes", "Cartões", "grade"], ["quadro", "Quadro", "quadro"], ["tabela", "Tabela", "tabela"], ["calendario", "Calendário", "calendario"]];
+  const VISUAL_PADRAO = { vista: "lista", ordem: "auto", leitura: true, numeros: true, lateral: true, perguntas: true };
+  const visual = () => ({ ...VISUAL_PADRAO, ...(pilar.visual || {}) });
+  const vistasDaAba = () => (pilar.checkin ? VISTAS.filter(([v]) => v === "lista" || v === "cartoes") : VISTAS);
+  const vistaAtual = () => (vistasDaAba().some(([v]) => v === visual().vista) ? visual().vista : "lista");
+  const salvarVisual = (patch) => Store.atualizar(CAMINHO, id, { visual: { ...visual(), ...patch } });
+  const camposOrdenaveis = () => (pilar.campos || []).filter((c) => ["number", "dinheiro", "estrelas", "date"].includes(c.tipo));
+  let tabelaOrdem = null; // { chave, asc } — clique no cabeçalho, só nesta visita
+  let mesCal = null;
+
+  function opcoesOrdem() {
+    return [
+      ["auto", "Ordem padrão"], ...(pilar.checkin ? [] : [["data", "Por data"]]), ["recentes", "Mais recentes"], ["az", "De A a Z"],
+      ...camposOrdenaveis().map((c) => [`campo:${c.id}`, c.tipo === "date" ? `Por ${c.rotulo.toLowerCase()}` : `Maior ${c.rotulo.toLowerCase()}`]),
+    ];
+  }
+
+  function renderControlesVista() {
+    const vistas = vistasDaAba();
+    const seg = $("f-vista");
+    seg.hidden = vistas.length < 2;
+    seg.innerHTML = vistas.map(([v, r, ic]) => `<button type="button" data-vista="${v}" aria-pressed="${v === vistaAtual()}" title="${r}">${UI.icone(ic)}<span>${r}</span></button>`).join("");
+    const ordem = $("f-ordem");
+    const ops = opcoesOrdem();
+    const atual = ops.some(([v]) => v === visual().ordem) ? visual().ordem : "auto";
+    ordem.innerHTML = ops.map(([v, r]) => `<option value="${fmt.escape(v)}" ${v === atual ? "selected" : ""}>${fmt.escape(r)}</option>`).join("");
+    ordem.hidden = vistaAtual() === "calendario" || vistaAtual() === "tabela";
+  }
+
+  const valorOrdem = (c, chave) => (chave === "descricao" ? c.descricao : chave === "data" ? c.data : (c.extras || {})[chave]);
+
+  function comparar(a, b, chave, asc = true) {
+    const va = valorOrdem(a, chave), vb = valorOrdem(b, chave);
+    const vazioA = va === undefined || va === null || va === "", vazioB = vb === undefined || vb === null || vb === "";
+    if (vazioA || vazioB) return vazioA - vazioB; // vazio sempre no fim
+    const r = typeof va === "number" || typeof vb === "number" ? Number(va) - Number(vb)
+      : typeof va === "boolean" ? Number(va) - Number(vb)
+      : String(va).localeCompare(String(vb), "pt-BR", { numeric: true, sensitivity: "base" });
+    return asc ? r : -r;
+  }
+
+  function ordenar(lista) {
+    const o = visual().ordem;
+    const l = [...lista];
+    if (o === "data") return l.sort((a, b) => comparar(a, b, "data"));
+    if (o === "recentes") return l.sort((a, b) => (b.criadoEm || "").localeCompare(a.criadoEm || ""));
+    if (o === "az") return l.sort((a, b) => comparar(a, b, "descricao"));
+    if (o.startsWith("campo:")) {
+      const campo = (pilar.campos || []).find((c) => c.id === o.slice(6));
+      if (campo) return l.sort((a, b) => comparar(a, b, campo.id, campo.tipo === "date"));
+    }
+    return l.sort((a, b) => (pilar.naAgenda ? (a.data || "9999").localeCompare(b.data || "9999") : (b.criadoEm || "").localeCompare(a.criadoEm || "")));
+  }
+
   function renderLista(L) {
     const box = $("lista");
     box.innerHTML = "";
     $("titulo-lista").lastChild.textContent = fmt.capitalizar(Leituras.pluralizar(rotulo()));
+    renderControlesVista();
+    const vista = vistaAtual();
+    box.dataset.vista = vista;
+    const v = visual();
+    // Quadro, tabela e calendário pedem a largura toda; a coluna lateral desce.
+    $("secao-itens").classList.toggle("so-lista", !v.lateral || ["quadro", "tabela", "calendario"].includes(vista));
+    $("coluna-lado").hidden = !v.lateral;
+
     const cg = campoGrupo();
     const busca = filtros.busca.trim().toLowerCase();
-    const visiveis = L.itens
-      .filter((c) => verConcluidos || pilar.checkin || !c.concluido)
+    // No quadro sem campo de agrupar, as colunas são "em aberto" e "concluídos":
+    // os concluídos precisam estar lá. No calendário, também.
+    const incluiConcluidos = verConcluidos || pilar.checkin || vista === "calendario" || (vista === "quadro" && !cg);
+    const visiveis = ordenar(L.itens
+      .filter((c) => incluiConcluidos || !c.concluido)
       .filter((c) => filtros.grupo === "todos" || (c.extras || {})[cg?.id] === filtros.grupo)
-      .filter((c) => !busca || (c.descricao || "").toLowerCase().includes(busca) || Object.values(c.extras || {}).some((v) => String(v).toLowerCase().includes(busca)))
-      .sort((a, b) => (pilar.naAgenda ? (a.data || "9999").localeCompare(b.data || "9999") : (b.criadoEm || "").localeCompare(a.criadoEm || "")));
+      .filter((c) => !busca || (c.descricao || "").toLowerCase().includes(busca) || Object.values(c.extras || {}).some((x) => String(x).toLowerCase().includes(busca))));
+
+    if (vista === "calendario") return renderCalendario(box, visiveis);
 
     if (!visiveis.length) {
       box.appendChild(UI.vazio({
@@ -171,20 +250,285 @@
       return;
     }
 
-    // Agrupado pelo campo escolhido quando o filtro está em "Tudo".
+    if (vista === "quadro") return renderQuadro(box, visiveis);
+    if (vista === "tabela") return renderTabela(box, visiveis);
+
+    // Lista e cartões: agrupados pelo campo escolhido quando o filtro está em "Tudo".
     const grupos = cg && filtros.grupo === "todos"
-      ? [...cg.opcoes, ""].map((v) => [v, visiveis.filter((c) => ((c.extras || {})[cg.id] || "") === v)]).filter(([, l]) => l.length)
+      ? [...cg.opcoes, ""].map((val) => [val, visiveis.filter((c) => ((c.extras || {})[cg.id] || "") === val)]).filter(([, l]) => l.length)
       : [[null, visiveis]];
     grupos.forEach(([valor, lista]) => {
       const g = document.createElement("div");
       g.className = "grupo-tempo";
       if (valor !== null) g.innerHTML = `<h3 class="grupo-tempo-titulo">${fmt.escape(valor ? fmt.capitalizar(valor) : `Sem ${cg.rotulo.toLowerCase()}`)} <span>${lista.length}</span></h3>`;
-      const ul = document.createElement("ul");
-      ul.className = "list";
-      lista.forEach((c) => ul.appendChild(linhaItem(c)));
-      g.appendChild(ul);
+      const cont = document.createElement(vista === "cartoes" ? "div" : "ul");
+      cont.className = vista === "cartoes" ? "pilar-cartoes" : "list";
+      lista.forEach((c) => cont.appendChild(vista === "cartoes" ? cartaoItem(c) : linhaItem(c)));
+      g.appendChild(cont);
       box.appendChild(g);
     });
+  }
+
+  /** Um campo formatado para ler (cartão, quadro, tabela); "" quando vazio. */
+  function valorLegivel(campo, v) {
+    if (v === undefined || v === null || v === "") return "";
+    if (campo.tipo === "simNao") return v ? "sim" : "não";
+    if (campo.tipo === "dinheiro") return fmt.moeda(v);
+    if (campo.tipo === "number") return fmt.decimal(v, Number.isInteger(Number(v)) ? 0 : 1);
+    if (campo.tipo === "date") return fmt.dataPorExtenso(v);
+    if (campo.tipo === "estrelas") return `${"★".repeat(Number(v))}${"☆".repeat(5 - Number(v))}`;
+    if (campo.tipo === "link") { try { return new URL(v).hostname.replace(/^www\./, ""); } catch { return ""; } }
+    if (campo.tipo === "select") return fmt.capitalizar(String(v));
+    return String(v);
+  }
+
+  /** Link de um campo "link", só http(s) — o resto vira texto. */
+  function linkDe(campo, v) {
+    if (campo.tipo !== "link" || !/^https?:\/\//i.test(String(v || ""))) return "";
+    return `<a href="${fmt.escape(v)}" target="_blank" rel="noopener noreferrer">${fmt.escape(valorLegivel(campo, v))}</a>`;
+  }
+
+  function cartaoItem(c) {
+    const el = document.createElement("article");
+    el.className = `pilar-cartao ${c.concluido ? "feito" : ""}`;
+    const u = UI.urgencia(c.data);
+    const linhas = (pilar.campos || []).map((campo) => {
+      const v = (c.extras || {})[campo.id];
+      const txt = linkDe(campo, v) || fmt.escape(valorLegivel(campo, v));
+      if (!txt || campo.tipo === "textarea") return "";
+      return `<div><dt>${fmt.escape(campo.rotulo)}</dt><dd class="${campo.tipo === "estrelas" ? "estrelas-txt" : ""}">${txt}</dd></div>`;
+    }).filter(Boolean).join("");
+    const nota = (pilar.campos || []).find((campo) => campo.tipo === "textarea" && (c.extras || {})[campo.id]);
+    el.innerHTML = `
+      <header>
+        ${pilar.checkin ? "" : `<input type="checkbox" class="check" ${c.concluido ? "checked" : ""} aria-label="Marcar como concluído" />`}
+        <h4 class="${c.concluido ? "strike" : ""}">${fmt.escape(c.descricao)}</h4>
+        <span class="row-actions">
+          <button class="btn ghost sm icon" data-editar title="Editar" aria-label="Editar">${UI.icone("editar")}</button>
+          <button class="btn ghost sm icon" data-excluir title="Excluir" aria-label="Excluir">${UI.icone("lixeira")}</button>
+        </span>
+      </header>
+      ${linhas ? `<dl>${linhas}</dl>` : ""}
+      ${nota ? `<p class="pilar-cartao-nota">${fmt.escape(String(nota && c.extras[nota.id]).slice(0, 220))}</p>` : ""}
+      <footer>
+        ${c.data ? `<span class="badge ${c.concluido ? "feito" : pilar.naAgenda ? u.nivel : "futuro"}">${c.concluido ? "concluído" : pilar.naAgenda ? u.rotulo : fmt.dataPorExtenso(c.data)}</span>` : c.concluido ? `<span class="badge feito">concluído</span>` : ""}
+        ${pilar.checkin ? `<span class="card-note">${Leituras.sequencia(c.feitos) || 0} ${Leituras.sequencia(c.feitos) === 1 ? "dia seguido" : "dias seguidos"}</span><button class="btn sm ${(c.feitos || []).includes(UI.hojeISO()) ? "marcado" : ""}" type="button" data-hoje>${(c.feitos || []).includes(UI.hojeISO()) ? "Feito hoje" : "Hoje"}</button>` : ""}
+      </footer>`;
+    el.querySelector("input.check")?.addEventListener("change", (ev) => {
+      Store.subAtualizar(CAMINHO, id, "itens", c.id, { concluido: ev.target.checked, concluidoEm: ev.target.checked ? UI.hojeISO() : "" });
+      render();
+    });
+    el.querySelector("[data-hoje]")?.addEventListener("click", () => marcarHoje(c));
+    el.querySelector("[data-editar]").addEventListener("click", () => editarItem(c));
+    el.querySelector("[data-excluir]").addEventListener("click", () => excluirItem(c));
+    return el;
+  }
+
+  /**
+   * Quadro: uma coluna por opção do campo de agrupar (ou "em aberto" e
+   * "concluídos"). Arrastar muda o valor; no toque, o "Mover para" faz o mesmo.
+   */
+  function renderQuadro(box, visiveis) {
+    const cg = campoGrupo();
+    const colunas = cg
+      ? [...cg.opcoes.map((o) => [o, fmt.capitalizar(o)]), ["", `Sem ${cg.rotulo.toLowerCase()}`]]
+      : [["aberto", "Em aberto"], ["feito", "Concluídos"]];
+    const colunaDe = (c) => (cg ? ((c.extras || {})[cg.id] || "") : c.concluido ? "feito" : "aberto");
+    const mover = (c, destino) => {
+      if (colunaDe(c) === destino) return;
+      const patch = cg ? { extras: { ...(c.extras || {}), [cg.id]: destino } } : { concluido: destino === "feito", concluidoEm: destino === "feito" ? UI.hojeISO() : "" };
+      Store.subAtualizar(CAMINHO, id, "itens", c.id, patch);
+      render();
+    };
+    const quadro = document.createElement("div");
+    quadro.className = "quadro";
+    colunas.forEach(([valor, titulo]) => {
+      const doGrupo = visiveis.filter((c) => colunaDe(c) === valor);
+      if (valor === "" && !doGrupo.length) return; // "Sem …" só aparece se houver
+      const col = document.createElement("section");
+      col.className = "quadro-coluna";
+      col.dataset.coluna = valor;
+      col.innerHTML = `<h3>${fmt.escape(titulo)} <span>${doGrupo.length}</span></h3><div class="quadro-cartoes"></div>`;
+      const lista = col.querySelector(".quadro-cartoes");
+      doGrupo.forEach((c) => {
+        const k = document.createElement("article");
+        k.className = `quadro-cartao ${c.concluido ? "feito" : ""}`;
+        k.draggable = true;
+        k.dataset.item = c.id;
+        const meta = metaLista(c);
+        k.innerHTML = `
+          <button type="button" class="quadro-titulo" data-editar>${fmt.escape(c.descricao)}</button>
+          ${meta !== "sem detalhes" ? `<span class="meta">${meta}</span>` : ""}
+          <label class="quadro-mover"><span class="hidden">Mover para</span>
+            <select aria-label="Mover para">${colunas.map(([v, t]) => `<option value="${fmt.escape(v)}" ${v === valor ? "selected" : ""}>${fmt.escape(t)}</option>`).join("")}</select>
+          </label>`;
+        k.querySelector("[data-editar]").addEventListener("click", () => editarItem(c));
+        k.querySelector("select").addEventListener("change", (ev) => mover(c, ev.target.value));
+        k.addEventListener("dragstart", (ev) => { ev.dataTransfer.setData("text/plain", c.id); ev.dataTransfer.effectAllowed = "move"; k.classList.add("arrastando"); });
+        k.addEventListener("dragend", () => k.classList.remove("arrastando"));
+        lista.appendChild(k);
+      });
+      col.addEventListener("dragover", (ev) => { ev.preventDefault(); col.classList.add("alvo"); });
+      col.addEventListener("dragleave", (ev) => { if (!col.contains(ev.relatedTarget)) col.classList.remove("alvo"); });
+      col.addEventListener("drop", (ev) => {
+        ev.preventDefault();
+        col.classList.remove("alvo");
+        const c = visiveis.find((x) => x.id === ev.dataTransfer.getData("text/plain"));
+        if (c) mover(c, valor);
+      });
+      quadro.appendChild(col);
+    });
+    box.appendChild(quadro);
+    if (!cg && (pilar.campos || []).some((c) => c.tipo === "select")) {
+      const dica = document.createElement("p");
+      dica.className = "card-note";
+      dica.style.marginTop = "12px";
+      dica.textContent = "Escolha um campo para agrupar (em Personalizar) e o quadro ganha uma coluna por opção.";
+      box.appendChild(dica);
+    }
+  }
+
+  /** Tabela: todos os campos lado a lado; o cabeçalho ordena. */
+  function renderTabela(box, visiveis) {
+    const cols = [
+      { chave: "descricao", rotulo: fmt.capitalizar(rotulo()) },
+      ...(pilar.checkin ? [] : [{ chave: "data", rotulo: "Data", tipo: "date" }]),
+      ...(pilar.campos || []).filter((c) => c.tipo !== "textarea").map((c) => ({ chave: c.id, rotulo: c.rotulo, tipo: c.tipo, campo: c })),
+    ];
+    const linhas = tabelaOrdem ? [...visiveis].sort((a, b) => comparar(a, b, tabelaOrdem.chave, tabelaOrdem.asc)) : visiveis;
+    const numerico = (t) => ["number", "dinheiro", "estrelas"].includes(t);
+    box.innerHTML = `
+      <div class="tabela-rolagem">
+        <table class="tabela-pilar">
+          <thead><tr>
+            <th class="col-check"><span class="hidden">Concluído</span></th>
+            ${cols.map((c) => `<th class="${numerico(c.tipo) ? "num" : ""}"><button type="button" data-ordenar="${fmt.escape(c.chave)}" aria-sort="${tabelaOrdem?.chave === c.chave ? (tabelaOrdem.asc ? "ascending" : "descending") : "none"}">${fmt.escape(c.rotulo)}${tabelaOrdem?.chave === c.chave ? (tabelaOrdem.asc ? " ↑" : " ↓") : ""}</button></th>`).join("")}
+          </tr></thead>
+          <tbody>${linhas.map((c) => `<tr data-item="${fmt.escape(c.id)}" class="${c.concluido ? "feito" : ""}">
+            <td class="col-check"><input type="checkbox" class="check" ${c.concluido ? "checked" : ""} aria-label="Marcar como concluído" /></td>
+            ${cols.map((col) => {
+              if (col.chave === "descricao") return `<td><button type="button" class="tabela-nome" data-editar>${fmt.escape(c.descricao)}</button></td>`;
+              if (col.chave === "data") return `<td class="num">${c.data ? fmt.escape(fmt.data(c.data)) : ""}</td>`;
+              const v = (c.extras || {})[col.chave];
+              return `<td class="${numerico(col.tipo) ? "num" : ""}">${linkDe(col.campo, v) || fmt.escape(valorLegivel(col.campo, v))}</td>`;
+            }).join("")}
+          </tr>`).join("")}</tbody>
+        </table>
+      </div>`;
+    box.querySelectorAll("[data-ordenar]").forEach((b) => b.addEventListener("click", () => {
+      const chave = b.dataset.ordenar;
+      tabelaOrdem = tabelaOrdem?.chave === chave ? (tabelaOrdem.asc ? { chave, asc: false } : null) : { chave, asc: true };
+      renderTabela(box, visiveis);
+    }));
+    box.querySelectorAll("tbody tr").forEach((tr) => {
+      const c = visiveis.find((x) => x.id === tr.dataset.item);
+      tr.querySelector("[data-editar]").addEventListener("click", () => editarItem(c));
+      tr.querySelector("input.check").addEventListener("change", (ev) => {
+        Store.subAtualizar(CAMINHO, id, "itens", c.id, { concluido: ev.target.checked, concluidoEm: ev.target.checked ? UI.hojeISO() : "" });
+        render();
+      });
+    });
+  }
+
+  /** Calendário do mês só com os registros desta aba; tocar num dia vazio cria um nele. */
+  function renderCalendario(box, visiveis) {
+    if (!mesCal) { const h = new Date(); mesCal = { ano: h.getFullYear(), mes: h.getMonth() }; }
+    const { ano, mes } = mesCal;
+    const semanaComeca = Number(UI.experiencia().semanaComeca ?? 1);
+    const dias = Calendario.gradeDoMes(ano, mes, semanaComeca);
+    const porDia = {};
+    visiveis.forEach((c) => { if (c.data) (porDia[c.data] = porDia[c.data] || []).push(c); });
+    const semData = visiveis.filter((c) => !c.data && !c.concluido).length;
+    const hoje = UI.hojeISO();
+    const nomes = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+    const nomeMes = new Date(ano, mes, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+    box.innerHTML = `
+      <div class="cal-topo">
+        <div class="mes-nav cal-nav">
+          <button type="button" class="btn ghost sm icon" data-cal="-1" aria-label="Mês anterior">‹</button>
+          <strong class="cal-mes">${fmt.escape(fmt.capitalizar(nomeMes))}</strong>
+          <button type="button" class="btn ghost sm icon" data-cal="1" aria-label="Próximo mês">›</button>
+          <button type="button" class="btn ghost sm" data-cal="hoje">Hoje</button>
+        </div>
+        ${semData ? `<span class="card-note">${semData} sem data (aparecem nas outras vistas)</span>` : ""}
+      </div>
+      <div class="cal-grade compacta">
+        ${Array.from({ length: 7 }, (_, i) => `<div class="cal-semana">${nomes[(semanaComeca + i) % 7]}</div>`).join("")}
+        ${dias.map((d) => {
+          const l = porDia[d.iso] || [];
+          return `<div class="cal-dia ${d.doMes ? "" : "fora"} ${d.iso === hoje ? "hoje" : ""} ${d.semana === 0 || d.semana === 6 ? "fds" : ""}" data-dia="${d.iso}" role="button" tabindex="0" aria-label="${fmt.escape(fmt.dataPorExtenso(d.iso))}${l.length ? `, ${l.length}` : ""}">
+            <span class="cal-num">${d.dia}</span>
+            <span class="cal-itens">${l.slice(0, 3).map((c) => `<span class="cal-item ${c.concluido ? "feito" : ""}" data-item="${fmt.escape(c.id)}" style="--c:${fmt.escape(pilar.cor)}">${fmt.escape(c.descricao)}</span>`).join("")}${l.length > 3 ? `<span class="cal-mais">+${l.length - 3}</span>` : ""}</span>
+            ${l.length ? `<span class="cal-pontos">${l.slice(0, 4).map(() => `<i style="--c:${fmt.escape(pilar.cor)}"></i>`).join("")}</span>` : ""}
+          </div>`;
+        }).join("")}
+      </div>`;
+    box.querySelectorAll("[data-cal]").forEach((b) => b.addEventListener("click", () => {
+      const v = b.dataset.cal;
+      if (v === "hoje") mesCal = null;
+      else { const d = new Date(ano, mes + Number(v), 1); mesCal = { ano: d.getFullYear(), mes: d.getMonth() }; }
+      renderCalendario(box, visiveis);
+    }));
+    box.querySelectorAll(".cal-dia").forEach((cel) => {
+      const abrir = (ev) => {
+        const alvo = ev.target.closest("[data-item]");
+        const l = porDia[cel.dataset.dia] || [];
+        if (alvo) return editarItem(l.find((c) => c.id === alvo.dataset.item));
+        if (l.length === 1 && !mob()) return editarItem(l[0]);
+        if (l.length) return escolherNoDia(cel.dataset.dia, l);
+        novoItem(cel.dataset.dia);
+      };
+      cel.addEventListener("click", abrir);
+      cel.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); abrir(ev); } });
+    });
+  }
+  const mob = () => window.matchMedia("(max-width: 700px)").matches;
+
+  function escolherNoDia(iso, lista) {
+    UI.abrirModal(`
+      <div class="modal-head"><h2 class="modal-title">${fmt.escape(fmt.capitalizar(UI.dataPorExtensoCurta(iso)))}</h2></div>
+      <div class="modal-body"><ul class="lembretes">${lista.map((c, n) => `<li><span class="lembrete-selo" style="--c:${fmt.escape(pilar.cor)}"></span>
+        <span class="grow"><span class="t ${c.concluido ? "strike" : ""}">${fmt.escape(c.descricao)}</span><span class="m">${metaLista(c)}</span></span>
+        <button type="button" class="btn ghost sm" data-n="${n}">Abrir</button></li>`).join("")}</ul></div>
+      <div class="modal-foot"><span class="modal-foot-espaco"></span><button class="btn" type="button" data-acao="fechar">Fechar</button><button class="btn primary" type="button" data-acao="novo">+ ${fmt.escape(fmt.capitalizar(rotulo()))} neste dia</button></div>`, {
+      classe: "formulario",
+      aoMontar(modal, fechar) {
+        modal.querySelector('[data-acao="fechar"]').addEventListener("click", () => fechar(null));
+        modal.querySelector('[data-acao="novo"]').addEventListener("click", () => { fechar(null); novoItem(iso); });
+        modal.querySelectorAll("[data-n]").forEach((b) => b.addEventListener("click", () => { fechar(null); editarItem(lista[Number(b.dataset.n)]); }));
+      },
+    });
+  }
+
+  /** "Layout e exibição": vista ao abrir, ordem e o que a página mostra. */
+  async function abrirLayout() {
+    const v = visual();
+    const r = await UI.formulario({
+      titulo: "Layout e exibição",
+      descricao: `Como ${pilar.nome} aparece. Nada do que está cadastrado muda.`,
+      icone: UI.icone("ajustes"),
+      cor: pilar.cor,
+      campos: [
+        { nome: "vista", rotulo: "Ver os registros como", tipo: "select", chips: true, opcoes: vistasDaAba().map(([valor, rot]) => ({ valor, rotulo: rot })) },
+        { nome: "ordem", rotulo: "Ordenar", tipo: "select", opcoes: opcoesOrdem().map(([valor, rot]) => ({ valor, rotulo: rot })) },
+        { nome: "_s", rotulo: "O que a página mostra", tipo: "secao" },
+        { nome: "leitura", rotulo: "Leitura", tipo: "simNao", rotuloMarcado: "A frase do Delfos no alto" },
+        { nome: "numeros", rotulo: "Números", tipo: "simNao", rotuloMarcado: "A faixa de números" },
+        { nome: "lateral", rotulo: "Coluna lateral", tipo: "simNao", rotuloMarcado: "O que o Delfos notou e os resumos por campo" },
+        { nome: "perguntas", rotulo: "Perguntas", tipo: "simNao", rotuloMarcado: "Perguntas do Delfos" },
+        ...(pilar.checkin ? [] : [
+          { nome: "_s2", rotulo: "Agenda", tipo: "secao" },
+          { nome: "naAgenda", rotulo: "Agenda e lembretes", tipo: "simNao", rotuloMarcado: "Os registros com data entram na agenda, no calendário da aba Pessoal e nos lembretes" },
+        ]),
+      ],
+      valores: { ...v, naAgenda: !!pilar.naAgenda },
+      rotuloConfirmar: "Aplicar",
+    });
+    if (!r) return;
+    const { naAgenda, _s, _s2, ...resto } = r;
+    Store.atualizar(CAMINHO, id, { visual: { ...v, ...resto }, ...(pilar.checkin ? {} : { naAgenda: !!naAgenda }) });
+    UI.toast("Layout aplicado.");
+    render();
   }
 
   function linhaItem(c) {
@@ -256,6 +600,9 @@
         if (campo.tipo === "dinheiro") return fmt.moeda(v);
         if (campo.tipo === "number") return `${campo.rotulo.replace(/\s*\(.*\)$/, "")}: ${fmt.decimal(v, Number.isInteger(Number(v)) ? 0 : 1)}${/\((.*)\)$/.test(campo.rotulo) ? ` ${campo.rotulo.match(/\((.*)\)$/)[1]}` : ""}`;
         if (campo.tipo === "date") return fmt.dataPorExtenso(v);
+        if (campo.tipo === "estrelas") return `${"★".repeat(Number(v))}${"☆".repeat(5 - Number(v))}`;
+        if (campo.tipo === "link") { try { return new URL(v).hostname.replace(/^www\./, ""); } catch { return ""; } }
+        if (campo.tipo === "time") return `às ${v}`;
         return String(v);
       })
       .filter(Boolean)
@@ -308,7 +655,7 @@
   }
 
   async function abrirPersonalizar() {
-    await Abas.abrir({ pilar });
+    await UI.abrirCriadorDeAbas({ pilar });
     render();
   }
 
@@ -326,7 +673,7 @@
   const catalogoOpcoes = () =>
     [...EXERCICIOS]
       .sort((a, b) => a.grupo.localeCompare(b.grupo, "pt-BR") || a.nome.localeCompare(b.nome, "pt-BR"))
-      .map((e) => ({ valor: e.id, rotulo: `${e.grupo} — ${e.nome}` }));
+      .map((e) => ({ valor: e.id, rotulo: `${e.grupo}: ${e.nome}` }));
 
   const nomeExercicio = (exercicioId) => EXERCICIOS.find((e) => e.id === exercicioId)?.nome || "Exercício removido do catálogo";
   const grupoExercicio = (exercicioId) => EXERCICIOS.find((e) => e.id === exercicioId)?.grupo || "";
@@ -364,7 +711,7 @@
     card.innerHTML = `
       <h3 class="card-title" style="margin-bottom:10px;">Séries por grupo muscular</h3>
       <p class="card-note" style="margin:0 0 10px;">
-        Soma das séries de cada exercício cadastrado nos dias abaixo — não é meta nem recomendação,
+        Soma das séries de cada exercício cadastrado nos dias abaixo. Não é meta nem recomendação,
         só o que já está anotado.
       </p>
       <div class="assistente-resumo"><dl>${grupos
@@ -382,7 +729,7 @@
         UI.vazio({
           icone: pilar.icone,
           titulo: "Antes de começar",
-          texto: "Um questionário rápido — objetivo, experiência e frequência semanal — só para sugerir como organizar seus dias de treino. Você monta o que entra em cada um, escolhendo do catálogo de exercícios.",
+          texto: "Um questionário rápido (objetivo, experiência e frequência semanal) só para sugerir como organizar seus dias de treino. Você monta o que entra em cada um, escolhendo do catálogo de exercícios.",
           rotuloAcao: "Começar",
           aoAcionar: () => abrirQuestionario({ primeiraVez: true }),
         })
@@ -431,7 +778,7 @@
           const li = document.createElement("li");
           const partes = [];
           if (ex.seriesAtual || ex.repeticoesAtual) {
-            partes.push(`${ex.seriesAtual || "—"}x${ex.repeticoesAtual || "—"}`);
+            partes.push(`${ex.seriesAtual || "-"}x${ex.repeticoesAtual || "-"}`);
           }
           if (ex.cargaAtual !== null && ex.cargaAtual !== undefined) partes.push(`carga atual: ${ex.cargaAtual}${ex.unidade}`);
           if (ex.recorde !== null && ex.recorde !== undefined) partes.push(`recorde: ${ex.recorde}${ex.unidade}`);
@@ -471,7 +818,7 @@
     const atual = pilar.academia || {};
     const passo1 = await UI.formulario({
       titulo: primeiraVez ? "Antes de começar" : "Refazer o questionário",
-      descricao: "Isso não prescreve treino nenhum — só ajuda a sugerir como organizar seus dias. O que entra em cada um é você quem escolhe, do catálogo de exercícios.",
+      descricao: "Isso não prescreve treino nenhum; só ajuda a sugerir como organizar seus dias. O que entra em cada um é você quem escolhe, do catálogo de exercícios.",
       campos: [
         { nome: "objetivo", rotulo: "Objetivo principal", tipo: "select", opcoes: Store.ACADEMIA_OBJETIVOS, obrigatorio: true },
         { nome: "experiencia", rotulo: "Experiência com treino", tipo: "select", opcoes: Store.ACADEMIA_EXPERIENCIAS, obrigatorio: true },
@@ -490,7 +837,7 @@
 
     const passo2 = await UI.formulario({
       titulo: "Como você organiza o treino",
-      descricao: "Treinar cada grupo muscular umas duas vezes por semana costuma render mais do que uma vez só, com o mesmo volume total — por isso a sugestão abaixo. Mas a divisão que você já usa e gosta também é uma escolha válida.",
+      descricao: "Treinar cada grupo muscular umas duas vezes por semana costuma render mais do que uma vez só, com o mesmo volume total. Por isso a sugestão abaixo. Mas a divisão que você já usa e gosta também é uma escolha válida.",
       campos: [
         { nome: "divisao", rotulo: "Divisão de treino", tipo: "select", opcoes: Store.ACADEMIA_DIVISOES, valorPadrao: sugestao, obrigatorio: true },
       ],
@@ -512,7 +859,7 @@
         .map((nome) => ({ id: Store.uid("dia"), nome, exercicios: [] }));
     }
     Store.atualizar(CAMINHO, id, patch);
-    UI.toast(primeiraVez ? "Pronto — agora monte seus dias com exercícios do catálogo." : "Questionário atualizado.");
+    UI.toast(primeiraVez ? "Pronto. Agora monte seus dias com exercícios do catálogo." : "Questionário atualizado.");
     render();
   }
 
@@ -615,8 +962,7 @@
   ];
 
   function exemploPara() {
-    const s = typeof Abas !== "undefined" ? Abas.sugerirLocal(pilar.nome) : null;
-    return s?.exemplos?.[0] || `um ${rotulo()} de ${pilar.nome}`;
+    return pilar.exemploItem || `um ${rotulo()} de ${pilar.nome}`;
   }
 
   // Separa descricao/data (sistema) do resto (extras), nos dois sentidos.
@@ -626,8 +972,11 @@
   };
   const deExtras = (c) => ({ descricao: c.descricao, data: c.data, ...(c.extras || {}) });
 
-  async function novoItem() {
-    const v = await UI.formulario({ titulo: `Adicionar ${rotulo()}`, descricao: pilar.nome, campos: camposItem() });
+  async function novoItem(dataInicial) {
+    const v = await UI.formulario({
+      titulo: `Adicionar ${rotulo()}`, descricao: pilar.nome, campos: camposItem(), icone: UI.iconeAba ? UI.iconeAba(pilar.icone) : null, cor: pilar.cor,
+      valores: typeof dataInicial === "string" ? { data: dataInicial } : {},
+    });
     if (!v) return;
     Store.subInserir(CAMINHO, id, "itens", { ...paraExtras(v), concluido: false, criadoEm: new Date().toISOString(), ...(pilar.checkin ? { feitos: [] } : {}) });
     UI.toast(`${fmt.capitalizar(rotulo())} cadastrado.`);
@@ -635,7 +984,7 @@
   }
 
   async function editarItem(c) {
-    const v = await UI.formulario({ titulo: `Editar ${rotulo()}`, campos: camposItem(), valores: deExtras(c) });
+    const v = await UI.formulario({ titulo: `Editar ${rotulo()}`, campos: camposItem(), valores: deExtras(c), icone: UI.iconeAba ? UI.iconeAba(pilar.icone) : null, cor: pilar.cor, rotuloExcluir: "Excluir", aoExcluir: () => excluirItem(c) });
     if (!v) return;
     Store.subAtualizar(CAMINHO, id, "itens", c.id, paraExtras(v));
     UI.toast("Atualizado.");
@@ -653,7 +1002,14 @@
   }
 
   async function editarAba() {
-    if (typeof Abas !== "undefined") return abrirPersonalizar();
+    // O editor com o Delfos é baixado na hora; sem rede, cai no formulário simples.
+    try {
+      await UI.carregarScript("delfos.js");
+      await UI.carregarScript("abas.js");
+      return abrirPersonalizar();
+    } catch {
+      // segue para o formulário simples
+    }
     const v = await UI.formulario({ titulo: "Editar aba", campos: UI.camposPilar(), valores: pilar });
     if (!v) return;
     Store.atualizar(CAMINHO, id, v);
@@ -679,8 +1035,18 @@
     location.href = "index.html";
   }
 
-  document.getElementById("btn-item").addEventListener("click", novoItem);
+  document.getElementById("btn-item").addEventListener("click", () => novoItem());
+  document.getElementById("btn-layout").addEventListener("click", abrirLayout);
+  document.getElementById("f-vista").addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-vista]");
+    if (!b) return;
+    salvarVisual({ vista: b.dataset.vista });
+    render();
+  });
+  document.getElementById("f-ordem").addEventListener("change", (ev) => { salvarVisual({ ordem: ev.target.value }); render(); });
   document.getElementById("btn-editar-aba").addEventListener("click", editarAba);
+  UI.prepararCriador(document.getElementById("btn-editar-aba"));
+  UI.prepararCriador(document.getElementById("btn-editar-aba-2"));
   document.getElementById("btn-editar-aba-2").addEventListener("click", editarAba);
   document.getElementById("btn-campos").addEventListener("click", async () => {
     await UI.editorCampos(pilar.id);

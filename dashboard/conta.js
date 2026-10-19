@@ -16,7 +16,7 @@
       UI.vazio({
         icone: "◌",
         titulo: tipo === "cartao" ? "Cartão não encontrado" : "Conta não encontrada",
-        texto: "Pode ter sido excluída, ou este link é de outro navegador — os dados ficam salvos em cada navegador.",
+        texto: "Pode ter sido excluída, ou este link é de outro navegador: os dados ficam salvos em cada navegador.",
         rotuloAcao: "Ver contas e cartões",
         aoAcionar: () => (location.href = "contas.html"),
       })
@@ -32,7 +32,7 @@
     recarregar();
     document.title = `${item.nome} · ${UI.NOME}`;
     document.getElementById("etiqueta").textContent = tipo === "cartao" ? "Cartão de crédito" : "Conta";
-    document.getElementById("swatch-categorias").className = `swatch ${tipo === "cartao" ? "projetos" : "financeiro"}`;
+    document.getElementById("swatch-categorias").className = `swatch ${tipo === "cartao" ? "cartao" : "financeiro"}`;
     document.getElementById("titulo").textContent = item.nome;
     document.getElementById("subtitulo").textContent =
       tipo === "cartao"
@@ -82,7 +82,7 @@
       </div>
       <div class="card tinted projetos">
         <div class="stat-label">Ciclo atual</div>
-        <div class="stat-value" style="font-size:15px;">${fmt.dataCurta(r.ciclo.inicio)} – ${fmt.dataCurta(r.ciclo.fim)}</div>
+        <div class="stat-value" style="font-size:15px;">${fmt.dataCurta(r.ciclo.inicio)} a ${fmt.dataCurta(r.ciclo.fim)}</div>
         <div class="stat-sub">${(() => { const n = r.itens.filter((t) => t.data >= r.ciclo.inicio && t.data <= r.ciclo.fim).length; return `${n} ${n === 1 ? "compra" : "compras"} no ciclo`; })()}</div>
       </div>
       <div class="card tinted projetos">
@@ -92,7 +92,7 @@
       </div>
       <div class="card tinted projetos">
         <div class="stat-label">Limite</div>
-        <div class="stat-value num">${item.limite ? fmt.moeda(item.limite) : "—"}</div>
+        <div class="stat-value num">${item.limite ? fmt.moeda(item.limite) : "-"}</div>
         <div class="stat-sub">${item.limite ? `${Math.round(r.usoPercentual)}% usado` : "não informado"}</div>
       </div>`;
 
@@ -160,35 +160,12 @@
 
   /* --------------------------------- Ações ---------------------------------- */
 
-  function camposLancamento() {
-    return [
-      { nome: "tipo", rotulo: "Tipo", tipo: "segmento", opcoes: [{ valor: "despesa", rotulo: "Despesa" }, { valor: "receita", rotulo: "Receita" }] },
-      { nome: "descricao", rotulo: "Descrição", tipo: "text", obrigatorio: true, placeholder: "Ex.: Mercado" },
-      { nome: "valor", rotulo: "Valor (R$)", tipo: "dinheiro", obrigatorio: true, placeholder: "0,00" },
-      { nome: "categoria", rotulo: "Categoria", tipo: "select", opcoes: Store.estado().financeiro.categorias },
-      { nome: "data", rotulo: "Data", tipo: "date", obrigatorio: true, valorPadrao: UI.hojeISO() },
-      { nome: "status", rotulo: "Situação", tipo: "segmento", opcoes: [{ valor: "pago", rotulo: "Pago" }, { valor: "pendente", rotulo: "Pendente" }] },
-    ];
+  function novoLancamento() {
+    Lancamento.abrir({ origemFixa: ORIGEM, aoSalvar: render });
   }
 
-  async function novoLancamento() {
-    const v = await UI.formulario({
-      titulo: "Novo lançamento",
-      descricao: `Registrado com "Pago com": ${item.nome}.`,
-      campos: camposLancamento(),
-    });
-    if (!v) return;
-    Store.inserir("financeiro.transacoes", { ...v, origem: ORIGEM, forma: "" });
-    UI.toast("Lançamento salvo.");
-    render();
-  }
-
-  async function editarLancamento(t) {
-    const v = await UI.formulario({ titulo: "Editar lançamento", campos: camposLancamento(), valores: t });
-    if (!v) return;
-    Store.atualizar("financeiro.transacoes", t.id, v);
-    UI.toast("Lançamento atualizado.");
-    render();
+  function editarLancamento(t) {
+    Lancamento.abrir({ item: t, origemFixa: t.origem || ORIGEM, aoSalvar: render });
   }
 
   function excluirLancamento(t) {

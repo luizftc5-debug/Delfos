@@ -10,7 +10,7 @@
     "Antes de começar, me conta: quem é você?",
     "E o que ocupa os seus dias?",
     "Agora escolha o que vale a pena acompanhar aqui.",
-    "Quase lá — só os últimos ajustes.",
+    "Quase lá. Só os últimos ajustes.",
   ];
 
   const primeiraVez = !Store.estado().perfil.configuradoEm;
@@ -68,7 +68,7 @@
   function atualizarAvatar() {
     const el = document.getElementById("avatar-preview");
     if (fotoAtual) {
-      el.innerHTML = `<img src="${fmt.escape(fotoAtual)}" alt="Foto de perfil" />`;
+      el.innerHTML = `<img src="${fmt.escape(fotoAtual)}" width="256" height="256" alt="Foto de perfil" />`;
     } else {
       el.textContent = UI.iniciais(document.getElementById("f-nome").value) || "•";
     }
@@ -160,9 +160,9 @@
   }
 
   function renderResumo() {
-    const nome = document.getElementById("f-nome").value.trim() || "—";
+    const nome = document.getElementById("f-nome").value.trim() || "-";
     const ocupacao = document.getElementById("f-ocupacao").value.trim();
-    const ativos = Object.values(abas).filter((a) => a.ativo).map((a) => a.rotulo || "—");
+    const ativos = Object.values(abas).filter((a) => a.ativo).map((a) => a.rotulo || "-");
     const novasAbas = SUGESTOES_PILAR.filter((s) => sugestoes[s.id].ativo).map((s) => sugestoes[s.id].nome.trim() || s.nome);
 
     document.getElementById("resumo").innerHTML = `

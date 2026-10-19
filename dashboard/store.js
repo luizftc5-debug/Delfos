@@ -77,6 +77,22 @@ const Store = (() => {
       metaMensal: null, // quanto quer ganhar por mês com projetos, em R$
       horasDisponiveis: null, // horas por semana que sobram para projetos
     },
+    // Como o painel se apresenta e se comporta (v13), editável no perfil.
+    // Acompanha a conta — por isso mora aqui, e não no localStorage como o tema.
+    experiencia: {
+      tamanho: "normal", // compacto | normal | grande
+      densidade: "confortavel", // confortavel | compacta
+      destaque: "osso", // osso (marfim) | louro | anil | cobre | ameixa (cor do botão principal e do que está escolhido)
+      movimento: "completo", // completo | reduzido
+      desempenho: "auto", // auto | leve | completo (leve: sem desfoque, sombras grandes, animações; Google só sob demanda)
+      voz: "serifa", // serifa = Noto Serif Display (a voz, como o logotipo) | sans = Funnel Sans em tudo
+      contadores: true, // números ao lado das abas na barra
+      paginaInicial: "home", // qual aba abre primeiro em cada visita
+      semanaComeca: 1, // 0 domingo, 1 segunda (calendário)
+      ordemAbas: [], // ids da barra ("financeiro", "pilar:<id>"), na ordem escolhida
+      home: { topo: true, pilares: true, notas: true, agenda: true, insights: true },
+      lembretes: { antecedencia: 2, navegador: false, resumoDoDia: true },
+    },
     // "Agora não" das perguntas de todas as abas menos o Financeiro (que
     // guarda as dele em financeiro.dispensadas): "<escopo>:<pergunta>" → data ou "sempre".
     dispensadas: {},
@@ -98,6 +114,9 @@ const Store = (() => {
     { valor: "dinheiro", rotulo: "Valor em R$" },
     { valor: "select", rotulo: "Lista de opções" },
     { valor: "simNao", rotulo: "Sim/Não" },
+    { valor: "estrelas", rotulo: "Nota (1 a 5 estrelas)" },
+    { valor: "link", rotulo: "Link" },
+    { valor: "time", rotulo: "Hora" },
   ];
 
   /**
@@ -110,7 +129,7 @@ const Store = (() => {
     {
       id: "compromissos",
       rotulo: "Compromissos",
-      descricao: "Data, tipo e local — o formato da aba Pessoal.",
+      descricao: "Data, tipo e local, no formato da aba Pessoal.",
       naAgenda: true,
       campos: [
         { id: "tipo", rotulo: "Tipo", tipo: "select", opcoes: ["compromisso", "tarefa", "lembrete", "meta", "outro"], naLista: true },
@@ -141,7 +160,7 @@ const Store = (() => {
     {
       id: "colecao",
       rotulo: "Coleção",
-      descricao: "Livros, filmes, cursos — algo que se acompanha, não agenda.",
+      descricao: "Livros, filmes, cursos: algo que se acompanha, não agenda.",
       naAgenda: false,
       campos: [
         { id: "situacao", rotulo: "Situação", tipo: "select", opcoes: ["quero", "em andamento", "concluído", "abandonado"], naLista: true },
@@ -154,7 +173,7 @@ const Store = (() => {
     {
       id: "registros",
       rotulo: "Registros com valor",
-      descricao: "Algo com valor — treinos pagos, freelas, gastos de um hobby.",
+      descricao: "Algo com valor: treinos pagos, freelas, gastos de um hobby.",
       naAgenda: true,
       campos: [
         { id: "valor", rotulo: "Valor (R$)", tipo: "dinheiro", naLista: true },
@@ -165,14 +184,14 @@ const Store = (() => {
     {
       id: "livre",
       rotulo: "Do zero",
-      descricao: "Sem campos prontos — monte em Ajustes da aba.",
+      descricao: "Sem campos prontos. Monte em Ajustes da aba.",
       naAgenda: true,
       campos: [],
     },
     {
       id: "academia",
       rotulo: "Academia (treino)",
-      descricao: "Dias de treino com exercícios do catálogo — carga, repetições e recorde de cada um.",
+      descricao: "Dias de treino com exercícios do catálogo: carga, repetições e recorde de cada um.",
       naAgenda: false,
       campos: [],
       // Marca que troca a interface genérica (itens com campos) pela tela
@@ -208,7 +227,7 @@ const Store = (() => {
     { valor: "upperlower", rotulo: "Superior / Inferior (upper/lower)" },
     { valor: "ppl", rotulo: "Empurrar / Puxar / Pernas (push/pull/legs)" },
     { valor: "grupomuscular", rotulo: "Um ou dois grupos musculares por dia" },
-    { valor: "livre", rotulo: "Prefiro nomear meus próprios dias (cria \"Dia 1\", \"Dia 2\"... pra eu renomear)" },
+    { valor: "livre", rotulo: "Prefiro nomear meus próprios dias (cria “Dia 1”, “Dia 2”… pra eu renomear)" },
   ];
 
   /**
@@ -309,7 +328,7 @@ const Store = (() => {
 
   function estadoVazio() {
     return {
-      versao: 12,
+      versao: 13,
       atualizadoEm: new Date().toISOString(),
       perfil: { ...PERFIL_PADRAO },
       preferencias: preferenciasPadrao(),
@@ -475,6 +494,15 @@ const Store = (() => {
     // v10 → v11: perguntas das abas Faculdade e Projetos, e as dispensadas de todas.
     out.preferencias.faculdade = { ...out.preferencias.faculdade, ...(e.preferencias?.faculdade || {}) };
     out.preferencias.projetos = { ...out.preferencias.projetos, ...(e.preferencias?.projetos || {}) };
+    // v12 → v13: preferências de experiência (aparência, rotina, avisos).
+    const xp = e.preferencias?.experiencia || {};
+    const xpPadrao = out.preferencias.experiencia;
+    out.preferencias.experiencia = {
+      ...xpPadrao, ...xp,
+      home: { ...xpPadrao.home, ...(xp.home || {}) },
+      lembretes: { ...xpPadrao.lembretes, ...(xp.lembretes || {}) },
+      ordemAbas: Array.isArray(xp.ordemAbas) ? xp.ordemAbas.filter((x) => typeof x === "string") : [],
+    };
     const disp = e.preferencias?.dispensadas;
     out.preferencias.dispensadas = disp && typeof disp === "object" && !Array.isArray(disp) ? { ...disp } : {};
 
@@ -604,7 +632,7 @@ const Store = (() => {
       return pil;
     });
 
-    out.versao = 12;
+    out.versao = 13;
     return out;
   }
 
@@ -719,6 +747,18 @@ const Store = (() => {
       persistir();
     },
 
+    /** Acrescenta uma categoria de lançamento (sem repetir, ignorando maiúsculas). */
+    adicionarCategoria(nome) {
+      const limpo = String(nome || "").trim().slice(0, 40);
+      if (!limpo) return null;
+      const lista = carregar().financeiro.categorias;
+      const ja = lista.find((c) => c.toLowerCase() === limpo.toLowerCase());
+      if (ja) return ja;
+      lista.push(limpo);
+      persistir();
+      return limpo;
+    },
+
     definirPerfil(patch) {
       const e = carregar();
       e.perfil = { ...e.perfil, ...patch };
@@ -731,8 +771,15 @@ const Store = (() => {
     // rótulo que já tinha sido escolhido para ela.
     definirPreferencias(patch) {
       const e = carregar();
-      const { abasFixas, financeiro, faculdade, projetos, ...resto } = patch;
+      const { abasFixas, financeiro, faculdade, projetos, experiencia, ...resto } = patch;
       e.preferencias = { ...e.preferencias, ...resto };
+      if (experiencia) {
+        const atual = e.preferencias.experiencia;
+        const { home, lembretes, ...xs } = experiencia;
+        e.preferencias.experiencia = { ...atual, ...xs };
+        if (home) e.preferencias.experiencia.home = { ...atual.home, ...home };
+        if (lembretes) e.preferencias.experiencia.lembretes = { ...atual.lembretes, ...lembretes };
+      }
       if (financeiro) e.preferencias.financeiro = { ...e.preferencias.financeiro, ...financeiro };
       if (faculdade) e.preferencias.faculdade = { ...e.preferencias.faculdade, ...faculdade };
       if (projetos) e.preferencias.projetos = { ...e.preferencias.projetos, ...projetos };

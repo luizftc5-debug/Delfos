@@ -82,9 +82,10 @@ const Store = (() => {
     experiencia: {
       tamanho: "normal", // compacto | normal | grande
       densidade: "confortavel", // confortavel | compacta
-      destaque: "osso", // osso | louro | anil | cobre | ameixa (cor do botão principal e do que está escolhido)
+      destaque: "osso", // osso (marfim) | louro | anil | cobre | ameixa (cor do botão principal e do que está escolhido)
       movimento: "completo", // completo | reduzido
-      voz: "serifa", // serifa = Funnel Display (a voz) | sans = Funnel Sans em tudo; o nome do valor ficou da 1.6
+      desempenho: "auto", // auto | leve | completo (leve: sem desfoque, sombras grandes, animações; Google só sob demanda)
+      voz: "serifa", // serifa = Noto Serif Display (a voz, como o logotipo) | sans = Funnel Sans em tudo
       contadores: true, // números ao lado das abas na barra
       paginaInicial: "home", // qual aba abre primeiro em cada visita
       semanaComeca: 1, // 0 domingo, 1 segunda (calendário)
@@ -226,7 +227,7 @@ const Store = (() => {
     { valor: "upperlower", rotulo: "Superior / Inferior (upper/lower)" },
     { valor: "ppl", rotulo: "Empurrar / Puxar / Pernas (push/pull/legs)" },
     { valor: "grupomuscular", rotulo: "Um ou dois grupos musculares por dia" },
-    { valor: "livre", rotulo: "Prefiro nomear meus próprios dias (cria \"Dia 1\", \"Dia 2\"... pra eu renomear)" },
+    { valor: "livre", rotulo: "Prefiro nomear meus próprios dias (cria “Dia 1”, “Dia 2”… pra eu renomear)" },
   ];
 
   /**

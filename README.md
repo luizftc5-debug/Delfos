@@ -46,18 +46,40 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 | **Faculdade** | Leitura do semestre, **próximas quatro semanas** lado a lado, médias por disciplina com a média mínima marcada, avisos (prova sem resumo, semana cheia) e perguntas (média para passar, horas de estudo). Disciplinas, prazos e entregas. Cada disciplina abre em **página própria**, com avaliações e notas, prazos, materiais e resumos — em materiais e resumos dá para **anexar documentos** (PDF, slides, fotos) ou **importar do Google Drive** |
 | **Projetos** | Leitura do mês, **recebido × estimado** por projeto, **quanto cada um paga por hora**, últimos seis meses, meta mensal. Só iniciativas pessoais que geram renda. Cada projeto abre em **página própria**, com ficha completa, etapas, recebimentos, custos, documentos e anotações |
 | **Pessoal** | Consultas, tarefas e recados que não são financeiro, faculdade nem projeto — ex.: consulta médica, levar o carro à revisão. Linha do tempo (atrasados, hoje, esta semana…), filtro por tipo e aviso quando cai no mesmo dia de uma prova |
-| **Suas abas** | Abas que você mesmo cria: digite o nome e o Delfos (com IA, quando ligada) monta ícone, cor, campos, meta e agrupamento para aquele assunto — ex.: Plantões, Leituras, Corrida, Oração. Cada uma ganha leitura, números, resumo dos campos, meta do período e, para hábitos, marcação diária com sequência |
+| **Suas abas** | Abas que você mesmo cria: escreva o nome e o propósito, e o Delfos, a IA do painel (roda no seu computador, sem internet), monta a página: campos, meta, vista, agenda ou marcação por dia. Ex.: Plantões, Leituras, Corrida, Oração. Cada uma ganha leitura, números, resumo dos campos, meta do período e, para hábitos, marcação diária com sequência |
 
 > Trabalhos da faculdade e o TCC ficam em **Faculdade**, não em Projetos.
 
-### O visual (versão 1.7)
+### O visual (versão 1.8)
 
+- **A marca**: o logotipo "Delfos" no alto da barra lateral, na entrada e no ícone da aba do
+  navegador; as cores são as da identidade (preto, carvão, grafite, marfim e cinza quente). Para
+  ter o Delfos na tela inicial do celular, abra o painel no navegador e use **Adicionar à tela de
+  início**: o ícone é o logotipo em marfim sobre preto.
 - Em cada aba, **a frase do alto é o título**: o Delfos diz o que está acontecendo, em letra grande,
-  e os números vêm logo embaixo, em colunas.
+  na mesma serifa do logotipo, e os números vêm logo embaixo, em colunas.
+- **Tema claro**: o fundo vira marfim e o texto, preto. Troque em **Perfil → Aparência → Tema**.
 - **No celular**, as abas ficam numa barra embaixo da tela, ao alcance do polegar. As quatro
   primeiras aparecem direto; **Mais** abre a lista com todas, o botão de criar aba e o seu perfil.
 - Se preferir a frase do alto na mesma letra do resto, troque em **Perfil → Aparência → Fonte da
-  leitura e dos títulos** (Display ou Texto).
+  leitura e dos títulos** (Serifa ou Sem serifa).
+
+### Computador mais simples (modo leve)
+
+Em **Perfil → Aparência → Desempenho** há três escolhas:
+
+- **Automático** (padrão): liga o modo leve sozinho em computador com até 4 núcleos ou até 4 GB de
+  memória, ou com "economia de dados" ligada.
+- **Leve**: tira o desfoque atrás das janelas, as sombras grandes, as animações e a luz que segue o
+  mouse, e só baixa as bibliotecas do Google quando você clica em conectar. O painel mostra
+  exatamente as mesmas coisas.
+- **Completo**: todos os efeitos, sempre.
+
+Em qualquer modo, o painel ficou mais leve para abrir: as bibliotecas do Google não vêm mais com a
+página (Pessoal, Financeiro, Faculdade e Disciplina abriam esperando por elas), o criador de abas e
+o Delfos só são baixados quando você abre **Nova aba**, e o gráfico e os efeitos medem a tela sem
+obrigar o navegador a montar a página duas vezes. Medido com o processador 6 vezes mais lento, o
+texto principal dessas páginas aparece de 19% a 24% mais cedo.
 
 ### Como funcionam o saldo e a fatura
 
@@ -204,20 +226,42 @@ há algo não salvo. `Ctrl + S` (ou `Cmd + S`) salva na hora.
 
 ### Criar suas próprias abas
 
-O botão **＋ Nova aba**, embaixo da lista da barra lateral, abre o criador. **Só digite o nome** —
-"Plantões", "Leituras", "Corrida", "Remédios", "Viagem a Lisboa" — e o Delfos monta a aba para
-esse assunto enquanto você digita: ícone, cor, o que cada registro é ("plantão", "livro"), os campos
-que valem a pena (setor e preceptor num plantão; autor e situação num livro), uma meta, como agrupar
-a lista e alguns exemplos para começar. À direita aparece a prévia de como a aba vai ficar. Tudo dá
-para mudar antes de criar: desligue um campo, troque a cor, marque só os exemplos que quiser.
+O botão **＋ Nova aba**, embaixo da lista da barra lateral, abre o criador. Escreva o **nome** e,
+na caixa **Propósito da aba**, conte do seu jeito para que ela serve. O **Delfos**, a IA do painel,
+lê os dois e monta a página:
 
-- **Com IA**: se as contas estiverem ligadas e o servidor tiver a chave da IA (ver
-  [backend/README.md](backend/README.md), "Como ligo a IA"), um segundo depois de você parar de
-  digitar o Claude refaz a sugestão sob medida para aquele nome, levando em conta seu curso e sua
-  cidade. Se você já tinha mexido em algo, ele não passa por cima: aparece o botão **Usar sugestão
-  da IA**. Só o nome da aba, sua ocupação e sua cidade vão para a IA — nada do que está cadastrado.
-- **Sem IA**: a sugestão rápida funciona no próprio aparelho, sem internet, para uns 30 assuntos
-  comuns; para um nome desconhecido, monta uma lista de tarefas com prioridade.
+> Plantões. *Quero anotar cada plantão com local, horário, quanto vou receber e se já recebi. Ver
+> no calendário. Meta de R$ 2.000 por mês.*
+
+vira uma aba de plantões com os campos Local, Horário (hora), Valor recebido (R$) e Recebido
+(sim/não), que abre no calendário, entra na agenda e acompanha a meta de R$ 2.000 por mês.
+
+Logo abaixo da caixa aparece **O que o Delfos entendeu**, frase por frase (o assunto, o que é cada
+registro, se tem data ou é de marcar todo dia, os campos, a meta, a vista), dizendo de onde tirou
+cada coisa. À direita fica a prévia da página. Tudo dá para mudar antes de criar: desligue um
+campo, troque a vista, abra **Aparência e detalhes** para ícone, cor e descrição.
+
+O que o Delfos entende no propósito:
+
+- **Campos**: "com local, horário e valor" vira esses campos, com o tipo certo ("quanto recebi" é
+  valor em R$, "horário" é hora, "se já paguei" é sim/não, "nota de 1 a 5" são estrelas, "link" é
+  link). Sem lista, ele usa os campos típicos do assunto (uns 40 assuntos: plantões, leitura,
+  corrida, idiomas, questões, gastos, contas a pagar, monitoria, freelas, conteúdo para redes…).
+- **Opções**: "situação (quero ler, lendo, lido)" ou "status: ideia, testando, descartada" viram
+  uma lista com essas opções.
+- **O que você não quer**: "sem horário", "não precisa de data", "sem meta", "só distância".
+- **Data ou todo dia**: "prazo", "vencimento", "quando" põem na agenda; "todo dia", "todos os dias",
+  "3 vezes por semana" fazem uma aba de marcar por dia, com sequência.
+- **Meta**: "12 livros por ano", "40 km por mês", "R$ 800 por mês", "20 páginas por dia".
+- **Como ver**: "no calendário", "em quadro", "em tabela", "cartões"; e a ordem: "mais recentes",
+  "por data", "de A a Z", "mais caros primeiro".
+- **Registros para começar**: "beber água, meditar e dormir cedo todos os dias" sugere esses três
+  como os primeiros itens.
+
+O Delfos roda **no seu próprio computador**: não precisa de internet nem de conta, responde na hora
+mesmo em computador fraco, e nada do que você escreve sai do aparelho. Não é um chat: ele só lê o
+nome e o propósito e monta a aba. Se você já tinha mexido em algo, uma leitura nova não passa por
+cima: aparece o botão **Aplicar o que o Delfos entendeu**.
 
 Abas **com data** entram na agenda dos próximos 30 dias e nos alertas de semana cheia da visão
 geral. Abas de **hábito** (oração, idioma, remédio diário) ganham um botão **Hoje** por item, os
@@ -228,8 +272,9 @@ Na página da aba:
 - A **leitura** no alto diz como está a aba; os números, a **meta do período** e o resumo de cada
   campo (quantos em cada situação, soma de km, média de nota) vêm logo abaixo.
 - **Perguntas do Delfos** oferecem o que falta: definir uma meta, agrupar a lista por um campo.
-- **Personalizar**: muda nome, ícone, cor, descrição, meta e agrupamento, e sugere campos novos (com
-  IA, se ligada) — só acrescenta, nunca apaga o que já existe.
+- **Personalizar**: muda o propósito, nome, ícone, cor, descrição, meta e agrupamento; o Delfos lê
+  o propósito novo e sugere só os campos que ainda faltam. Acrescenta, nunca apaga o que já existe.
+  O propósito fica guardado e aparece em **Ajustes da aba**.
 - **Campos desta aba**: adicionar, editar, excluir e reordenar os campos um a um. Além de texto,
   data, número, valor em R$, lista de opções e sim/não, há **nota em estrelas** (1 a 5), **link** e
   **hora**.
@@ -374,7 +419,8 @@ dashboard/
   calendario.js                          grade do mês e importação de calendário (.ics, Drive, Google Agenda)
   lancamento.js                          janela de novo lançamento (usada no Financeiro, visão geral e contas)
   pilar.html           pilar.js          página de uma aba criada por você (lista, cartões, quadro, tabela, calendário)
-  abas.js                                criador/editor de abas (sugestão local e IA)
+  delfos.js                              o Delfos, a IA do painel: lê nome e propósito e monta a aba (roda no aparelho)
+  abas.js                                criador/editor de abas (baixados só ao abrir "Nova aba")
   leituras.js                            leitura e notas de Faculdade, Projetos, Pessoal e abas próprias
   resumo.html          resumo.js         editor de texto dos resumos
   store.js                               dados: localStorage, CRUD e backup

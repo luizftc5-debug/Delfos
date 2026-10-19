@@ -61,7 +61,10 @@
     renderLeitura(a);
     renderFaixa(a);
     renderCategorias(a);
-    renderRitmo(a);
+    // O gráfico mede a largura do cartão: no próximo quadro, depois que o
+    // resto foi desenhado, a medida não obriga o navegador a montar a página
+    // duas vezes (era o maior custo do Financeiro num computador fraco).
+    requestAnimationFrame(() => renderRitmo(a));
     renderPerguntas(a);
     renderNotas(a);
     renderAPagar();

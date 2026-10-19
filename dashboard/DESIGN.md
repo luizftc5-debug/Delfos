@@ -197,13 +197,10 @@ de largura seriam 76 KB).
 - **Barras**: comparação sem trilho (o valor escrito ao lado dá a escala);
   progresso de meta com trilho (o trilho é o que falta).
 - **Retrato**: quadrado de cantos suaves, nunca círculo.
-- **Criador de abas** (1.8, refeito na 1.9): nome, uma caixa de **Propósito** e, logo
-  abaixo, "O que o Delfos entendeu": uma lista curta (assunto, o que foi
-  corrigido, cada registro, campos, jeito de anotar, meta, vista), cada linha
-  com o porquê em tom mais baixo e em frase completa ("Você falou em metas;
-  deixei um valor inicial para você ajustar."). É texto, não cartão. Na prévia,
-  o campo que o Delfos acrescentou leva o selo "sugestão" (texto cinza, não
-  pílula) e as ideias a mais vêm desligadas. Aparência (ícone e
+- **Criador de abas** (1.8): nome, uma caixa de **Propósito** e, logo
+  abaixo, "O que o Delfos entendeu": uma lista curta (assunto, cada registro,
+  jeito de anotar, campos, meta, vista), cada linha com o trecho do texto que
+  a justificou em tom mais baixo. É texto, não cartão. Aparência (ícone e
   cor) fica num `details` fechado: a grade de ícones só é desenhada ao abrir.
   A prévia mostra os campos em linhas (nome à esquerda, tipo à direita) e a
   vista em pílulas.

@@ -237,16 +237,38 @@ vira uma aba de plantões com os campos Local, Horário (hora), Valor recebido (
 (sim/não), que abre no calendário, entra na agenda e acompanha a meta de R$ 2.000 por mês.
 
 Logo abaixo da caixa aparece **O que o Delfos entendeu**, frase por frase (o assunto, o que é cada
-registro, se tem data ou é de marcar todo dia, os campos, a meta, a vista), dizendo de onde tirou
-cada coisa. À direita fica a prévia da página. Tudo dá para mudar antes de criar: desligue um
-campo, troque a vista, abra **Aparência e detalhes** para ícone, cor e descrição.
+registro, se tem data ou é de marcar todo dia, os campos, a meta, a vista), com o **porquê** de cada
+escolha em português simples ("Você falou em metas; deixei um valor inicial para você ajustar").
+À direita fica a prévia da página. Tudo dá para mudar antes de criar: desligue um campo, troque a
+vista, abra **Aparência e detalhes** para ícone, cor e descrição.
+
+**O Delfos interpreta, não copia.** Você escreve do seu jeito e ele traduz:
+
+> Leitura. *Aba para anotar os livros que estou lendo, metas, anotações sobre as leituras*
+
+vira uma aba de livros com **Autor**, **Situação** (quero ler, lendo, lido, abandonado),
+**Avaliação** (estrelas) e **Anotações**, em cartões, com uma meta inicial de 12 livros por ano. A
+frase "livros que estou lendo" não vira campo: é o próprio livro, e mostra que existe uma situação.
+O que você pediu vem ligado; o que o Delfos acrescentou por conhecer o assunto vem com o selo
+**sugestão**, e outras ideias (Gênero, Páginas) ficam desligadas, prontas para você ligar. A
+descrição da página ("Seus livros, com autor, situação, avaliação e anotações.") é escrita por ele.
+
+**Erro de digitação não atrapalha.** "livors q estou lendo, metaz, anotaçoes" é entendido como
+"livros que estou lendo, metas, anotações"; o Delfos diz o que corrigiu e a aba nunca leva o erro.
+Abreviações de quem escreve rápido (q, pq, vc, tb, obs) também valem.
+
+**Ele raciocina sobre o que você quer**, mesmo sem você pedir o campo: "para não esquecer" coloca
+data e lembrete; "por prioridade" cria o campo e separa a lista por ele; "acompanhar a evolução"
+abre em tabela, por data; "quem indicou" e "onde assistir" viram campos; "simples" ou "só quero
+marcar os dias" pede o mínimo.
 
 O que o Delfos entende no propósito:
 
 - **Campos**: "com local, horário e valor" vira esses campos, com o tipo certo ("quanto recebi" é
   valor em R$, "horário" é hora, "se já paguei" é sim/não, "nota de 1 a 5" são estrelas, "link" é
-  link). Sem lista, ele usa os campos típicos do assunto (uns 40 assuntos: plantões, leitura,
-  corrida, idiomas, questões, gastos, contas a pagar, monitoria, freelas, conteúdo para redes…).
+  link). Ele completa com o que costuma ajudar no assunto (uns 45 assuntos: plantões, leitura,
+  corrida, idiomas, questões, gastos, contas a pagar, monitoria, freelas, conteúdo para redes,
+  reuniões, vagas, medidas do corpo…).
 - **Opções**: "situação (quero ler, lendo, lido)" ou "status: ideia, testando, descartada" viram
   uma lista com essas opções.
 - **O que você não quer**: "sem horário", "não precisa de data", "sem meta", "só distância".

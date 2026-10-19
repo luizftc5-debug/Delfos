@@ -59,7 +59,7 @@ const Abas = (() => {
       while (ids.has(id)) id = `${id}_`;
       ids.add(id);
       const opcoes = tipo === "select" ? [...new Set((Array.isArray(x?.opcoes) ? x.opcoes : []).map((o) => corta(o, 40)).filter(Boolean))].slice(0, 8) : [];
-      return { id, rotulo: corta(x?.rotulo, 40) || id, tipo: tipo === "select" && opcoes.length < 2 ? "text" : tipo, opcoes, naLista: !!x?.naLista, obrigatorio: !!x?.obrigatorio, sugerido: !!x?.sugerido, ativo: x?.ativo !== false };
+      return { id, rotulo: corta(x?.rotulo, 40) || id, tipo: tipo === "select" && opcoes.length < 2 ? "text" : tipo, opcoes, naLista: !!x?.naLista, obrigatorio: !!x?.obrigatorio };
     });
     const selects = out.campos.filter((x) => x.tipo === "select").map((x) => x.id);
     out.agruparPor = selects.includes(s?.agruparPor) ? s.agruparPor : "";
@@ -90,7 +90,8 @@ const Abas = (() => {
 
   const NOME_TIPO = Object.fromEntries(Store.TIPOS_CAMPO.map((t) => [t.valor, t.rotulo]));
   const PERIODOS = [["semana", "por semana"], ["mes", "por mês"], ["ano", "por ano"]];
-  const ICONE_ENTENDEU = { assunto: "alvo", registro: "lista", jeito: "calendario", campos: "tabela", meta: "bandeira", vista: "grade", fora: "fechar", dica: "info", corrigiu: "lapis" };
+  const ICONE_ENTENDEU = { assunto: "alvo", registro: "lista", jeito: "calendario", campos: "tabela", meta: "bandeira", vista: "grade", fora: "fechar", dica: "info" };
+  const DE_TXT = { nome: "do nome", "propósito": "do propósito", assunto: "do assunto", "padrão": "padrão" };
 
   /** Cores das abas que já existem, para o Delfos não repetir quando dá. */
   const coresUsadas = (exceto = "") => (Store.estado().pilares || []).filter((p) => p.id !== exceto).map((p) => p.cor);
@@ -119,9 +120,6 @@ const Abas = (() => {
     }
     const existentes = editando ? (pilar.campos || []) : [];
     let novosCampos = []; // no editor: campos sugeridos que ainda não existem
-    // O dicionário do Delfos (erros de digitação, acentos) é montado agora, num
-    // momento ocioso, para a primeira palavra digitada não esperar por ele.
-    (window.requestIdleCallback || ((fn) => setTimeout(fn, 60)))(() => Delfos.aquecer?.());
 
     const html = `
       <div class="modal-head">
@@ -267,7 +265,7 @@ const Abas = (() => {
             $("[data-hint-campos]").textContent = novosCampos.length ? "Marque os campos sugeridos que quer acrescentar. Os atuais se editam em Campos desta aba." : "Para renomear, reordenar ou excluir campos, use Campos desta aba.";
           } else {
             lista.innerHTML = s.campos.length ? s.campos.map((x) => linhaCampo(x, est.escolhidos.has(x.id), false)).join("") : `<li class="muted">Só nome e data. Dá para acrescentar campos depois.</li>`;
-            $("[data-hint-campos]").textContent = s.campos.some((x) => x.sugerido) ? "Nome e data já vêm em todo registro. Os marcados como sugestão são ideias do Delfos: ligue ou desligue como preferir." : "Nome e data já vêm em todo registro. Desmarque o que não quiser.";
+            $("[data-hint-campos]").textContent = "Nome e data já vêm em todo registro. Desmarque o que não quiser.";
           }
 
           // Meta
@@ -297,7 +295,7 @@ const Abas = (() => {
           return `
             <li class="${marcado ? "" : "desligada"}">
               <span class="campo-linha">
-                <span class="campo-nome">${esc(x.rotulo)}${travado ? ` <span class="badge">atual</span>` : x.sugerido ? ` <span class="badge sugestao">sugestão</span>` : ""}</span>
+                <span class="campo-nome">${esc(x.rotulo)}${travado ? ` <span class="badge">atual</span>` : ""}</span>
                 <span class="campo-tipo">${esc(detalhe)}</span>
               </span>
               ${travado ? "" : `<input type="checkbox" class="switch" data-campo="${esc(x.id)}" ${marcado ? "checked" : ""} aria-label="Incluir ${esc(x.rotulo)}" />`}
@@ -309,7 +307,7 @@ const Abas = (() => {
           $("[data-entendeu]").innerHTML = (r?.entendeu || []).map((e) => `
             <li class="delfos-item ${e.tipo}">
               ${icone(ICONE_ENTENDEU[e.tipo] || "info")}
-              <span>${esc(e.texto)}${e.por ? ` <span class="delfos-de">${esc(e.por)}</span>` : ""}</span>
+              <span>${esc(e.texto)}${e.de && e.tipo !== "dica" ? ` <span class="delfos-de">${esc(DE_TXT[e.de] || e.de)}</span>` : ""}</span>
             </li>`).join("");
         }
 
@@ -321,14 +319,14 @@ const Abas = (() => {
             novosCampos = sug.campos.map((x) => ({ ...x, id: idsJa.has(x.id) ? `${x.id}2` : x.id }));
             est.escolhidos = new Set();
             if (est.sug.meta.tipo === "nenhuma" && sug.meta.tipo !== "nenhuma" && sug.meta.tipo !== "soma") est.sug.meta = sug.meta;
-            const pediuVista = est.leitura?.entendeu.some((e) => e.tipo === "vista" && e.pedido);
+            const pediuVista = est.leitura?.entendeu.some((e) => e.tipo === "vista" && e.de === "propósito");
             if (pediuVista) est.sug.visual = { ...est.sug.visual, ...sug.visual };
             est.sug.proposito = sug.proposito;
             desenhar();
             return;
           }
           est.sug = sug;
-          est.escolhidos = new Set(sug.campos.filter((x) => x.ativo !== false).map((x) => x.id));
+          est.escolhidos = new Set(sug.campos.map((x) => x.id));
           est.exemplos = new Set();
           desenhar();
         }
@@ -447,13 +445,10 @@ const Abas = (() => {
     }));
   }
 
-  /** O campo como a aba o guarda: sem os selos do criador (sugerido, ativo), que só valem enquanto a janela está aberta. */
-  const paraGravar = ({ id, rotulo, tipo, opcoes, naLista, obrigatorio }) => ({ id, rotulo, tipo, opcoes, naLista, obrigatorio });
-
   /** Cria a aba a partir da leitura escolhida e abre a página dela. */
   function criar(nome, s, escolhidos, exemplos) {
     const academia = s.especial === "academia";
-    const campos = academia ? [] : s.campos.filter((x) => escolhidos.has(x.id)).map(paraGravar);
+    const campos = academia ? [] : s.campos.filter((x) => escolhidos.has(x.id));
     const agora = UI.hojeISO();
     const itens = academia ? [] : [...exemplos].map((i) => ({
       id: Store.uid("it"), descricao: s.exemplos[i], data: s.naAgenda ? agora : "", concluido: false, extras: {}, criadoEm: new Date().toISOString(), ...(s.checkin ? { feitos: [] } : {}),
@@ -477,7 +472,7 @@ const Abas = (() => {
   }
 
   function salvarEdicao(pilar, nome, s, acrescentar) {
-    const campos = [...(pilar.campos || []), ...acrescentar.map(paraGravar)];
+    const campos = [...(pilar.campos || []), ...acrescentar.map((x) => ({ ...x, id: x.id }))];
     const academia = pilar.modelo === "academia";
     const dados = {
       nome, icone: s.icone, cor: s.cor, descricao: s.descricao, rotuloItem: s.rotuloItem,

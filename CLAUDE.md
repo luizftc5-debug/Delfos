@@ -1,6 +1,6 @@
 # Delfos — agente de organização pessoal do Luiz
 
-O painel se chama **Delfos** (versão atual: **1.9**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
+O painel se chama **Delfos** (versão atual: **1.8**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
 em `ui.js`) aparecem no alto da barra lateral (o logotipo, com a versão ao lado), nos títulos das
 abas do navegador e no nome do arquivo de backup exportado. Desde a 1.8 o nome tem **logotipo**
 (desenho vetorizado do quadro da marca, `UI.logotipo()`) e assinatura, "Organização para o que
@@ -731,8 +731,9 @@ checkin, especial, campos, agruparPor, meta, exemplos, visual `{ vista, ordem }`
   agenda, vistas, ordens), **meta** (`acharMeta`: número, unidade e período; "por dia" vira ×7 por
   semana), **rótulo do registro** ("cada plantão"), ícone por radical quando não há assunto, cor que
   evita as das outras abas.
-- Os campos vêm do pedido da pessoa **e** do molde do assunto (ver "Delfos 1.9"). Academia só abre a
-  tela de treinos se a pessoa não descreveu outra coisa.
+- Com lista de campos escrita, valem esses campos (mais os ditos com todas as letras em outro trecho,
+  `forte`); sem lista, os do molde do assunto mais os citados. Academia só abre a tela de treinos se a
+  pessoa não descreveu outra coisa.
 - Testes: `node` com o arquivo direto (`module.exports` no fim). Os de regressão ficaram fora do
   repositório (não há pasta de testes do painel); ao mudar o motor, rode frases reais de antes e de
   depois e compare.
@@ -765,59 +766,6 @@ o criador) e `sugeridoPor: "delfos"`. A página da aba mostra o propósito em "A
   sem `backdrop-filter`, sem sombras grandes, sem a luz fixa do alto, animações e transições a
   0,01 ms (não zero, para os eventos de fim seguirem chegando). No JS, `semMovimento()` inclui o
   modo leve (sem luz do mouse, sem destaques deslizantes) e o Google não vem sozinho.
-
-### Delfos 1.9: o Delfos interpreta
-
-Pedido do Luiz: a IA do criador de abas não pode "cuspir o que ele falou para dentro da aba" (a aba
-saía com os campos "Livros que estou lendo" e "Anotações sobre as leituras"); tem de interpretar,
-raciocinar, entender erro de digitação e montar a organização mais útil, para um usuário que não sabe
-nada de tecnologia. Continua sendo PLN clássico em português, no navegador, sem rede (não é modelo de
-linguagem: a "inteligência" é vocabulário, regras e conhecimento de cada assunto).
-
-- **Erros de digitação** (`corrigirPalavra`/`corrigirTexto`): palavra de 4+ letras que não é do
-  vocabulário vira a candidata mais parecida (distância de edição com troca de letras vizinhas, ≤ 1
-  em palavra até 7 letras, ≤ 2 em 8+; a primeira letra tem de bater; palavra curta só aceita troca ou
-  inversão; empate entre assuntos diferentes não corrige; `PROTEGIDAS` e o radical conhecido, como
-  "leiturs", nunca são mexidos). O vocabulário (`vocabulario()`) sai dos assuntos, conceitos e sinais,
-  montado uma vez (`Delfos.aquecer()`, chamado em tempo ocioso por `abas.js`). O texto corrigido só
-  serve para entender; nome de campo vem do Delfos, então o erro nunca chega à página. Abreviações
-  (`ABREVIACOES`: q, pq, vc, tb, obs…) viram a palavra inteira sem contar como erro. Acentos dos
-  rótulos: `acentuadas()` aprende a grafia certa das palavras dos moldes ("situacao" vira "situação");
-  `dicionario` só guarda o que a pessoa acentuou.
-- **Interpretar um item** (`interpretarItem`): item com conceito vira o campo do Delfos (nome dele,
-  não o da pessoa; só pergunta curta, "onde conheci", mantém a frase); item que é o próprio registro
-  ("livros que estou lendo") some e, se diz um estado (estou/quero/já li…), pede a **Situação**; "se
-  já terminei" também é a situação; palavra solta de enumeração sem abertura clara ("de freela") não
-  vira campo (`aceitaProprio`); o resto vira só o substantivo principal (corta em "que", "sobre",
-  "de"…). Lista com dois-pontos depois de verbo de organizar ("planejar a viagem: …") é de campos.
-- **Mesclar pedido e molde** (em `entender`, seção 4): `pedidos` (lista, falas com todas as letras,
-  situação implícita, intenções) + `base` (campos do molde, ou um molde genérico: Situação e
-  Observações, só Observações em aba de marcar por dia). `doMolde` troca o campo solto pelo do molde
-  quando o molde diz melhor (mesmo tipo, ou texto → lista/caixa de texto: "Cômodo" ganha a lista de
-  cômodos; "valor" vira "Orçamento" numa viagem), exceto o que foi dito com todas as letras ou com
-  outro tipo. Entram ligados, como `sugerido: true`, os campos do molde até 4 no total (8 com
-  "completa"), na ordem de utilidade (o que organiza a página, o que aparece na lista, anotações, o
-  resto); quem já pediu 4+ campos só recebe sugestões desligadas (`ativo: false`, até 3); "simples" e
-  "só quero…" pedem o mínimo e nenhuma sugestão. Campo desligado nunca é alvo de meta nem de
-  agrupamento (o motor liga o de que a meta precisa). `sanear` e o criador carregam `sugerido`/`ativo`;
-  `paraGravar` tira os dois antes de gravar a aba.
-- **Intenções** (sem a pessoa pedir o campo): prioridade (campo + separar por ele + quadro), "quem
-  indicou", favorito, "terminar" (situação), "onde assistir/ler/comprar", "lembrar/esquecer/avisar"
-  (agenda), "evolução/histórico/comparar" com número (tabela por data), "metas" sem número (meta
-  inicial do assunto, ou 4 por mês, ou 5 por semana em aba de dia), "só/simples" (mínimo).
-- **Descrição escrita pelo Delfos** (`comporDescricao`): "Seus livros, com autor, situação,
-  avaliação e anotações." (gênero pelo substantivo: `feminino`). Nunca a frase da pessoa.
-- **Explicação** (`entendeu`): cada item tem `texto` e `por` (frase curta, em português simples),
-  mais `pedido` na vista. Tipos: assunto, corrigiu, registro, campos, dica (o que ficou desligado),
-  jeito, fora, meta, vista. O criador mostra o `por` em tom mais baixo; o antigo `de` ("do nome") saiu.
-- **Novos assuntos**: medidas do corpo (peso, pressão, glicemia), reuniões, vagas e candidaturas; e
-  conceitos: indicado por, favorito, loja, hospedagem, transporte, roteiro, opinião.
-- **Testes** (fora do repositório, como os de 1.8): 70 verificações do motor (o caso da tela do Luiz,
-  digitação errada, frases de leigo, "nada de eco") e um fuzz de 4 mil entradas bagunçadas e
-  extremas que valida a aba devolvida (tipos, ids, meta, agrupamento, vista, descrição, travessão);
-  1,5 ms por leitura. O validador do fuzz foi conferido injetando defeitos de propósito.
-- Também corrigido: o estado vazio de "Em números" (`.figuras > .empty`) estourava a largura do
-  celular; o botão de registrar ficava em linha com o título.
 
 ### Delfos 1.8: a marca
 

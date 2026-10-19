@@ -84,6 +84,7 @@ const Store = (() => {
       densidade: "confortavel", // confortavel | compacta
       destaque: "osso", // osso | louro | anil | cobre | ameixa (cor do botão principal e do que está escolhido)
       movimento: "completo", // completo | reduzido
+      desempenho: "auto", // auto | leve | completo (leve: sem desfoque, sombras grandes, animações; Google só sob demanda)
       voz: "serifa", // serifa = Funnel Display (a voz) | sans = Funnel Sans em tudo; o nome do valor ficou da 1.6
       contadores: true, // números ao lado das abas na barra
       paginaInicial: "home", // qual aba abre primeiro em cada visita

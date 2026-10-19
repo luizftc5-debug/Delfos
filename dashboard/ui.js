@@ -6,7 +6,7 @@
 const UI = (() => {
   /** Nome e versão do painel — aparecem na marca do alto da barra lateral. */
   const NOME = "Delfos";
-  const VERSAO = "1.7";
+  const VERSAO = "1.8";
 
   /* -------------------------------- Ícones -------------------------------- */
 
@@ -164,7 +164,7 @@ const UI = (() => {
   /** Ícones desenhados oferecidos às abas criadas pelo usuário. */
   const ICONES_ABA = ["haltere", "livro", "estetoscopio", "pilula", "coracao", "cruz", "folha", "pata", "carro", "aviao",
     "prato", "gota", "cafe", "estrela", "bandeira", "casa", "carrinho", "pincel", "musica", "controle", "bola", "tenis",
-    "grupo", "maleta", "presente", "globo", "microscopio", "lapis", "calendario", "alvo", "cofre", "lampada", "relogio", "sol", "lua", "camera"];
+    "grupo", "maleta", "presente", "globo", "microscopio", "lapis", "calendario", "alvo", "cofre", "lampada", "relogio", "sol", "lua", "camera", "check", "repetir"];
 
   /**
    * Ícone de uma aba do usuário: "svg:<nome>" é desenho; qualquer outra coisa
@@ -216,6 +216,8 @@ const UI = (() => {
 
   const DATA_CURTA = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 
+  const FORMATOS = { codigo: "", moeda: null, decimal: new Map() };
+
   const fmt = {
     /**
      * Dinheiro no formato brasileiro. O negativo sai com o sinal de menos de
@@ -224,15 +226,20 @@ const UI = (() => {
      * "R$ 49,90" na outra). Com o menos, o valor nunca se separa do sinal.
      */
     moeda(v) {
-      return (Number(v) || 0).toLocaleString("pt-BR", {
-        style: "currency",
-        currency: Store.estado().financeiro.moeda || "BRL",
-        maximumFractionDigits: 2,
-      }).replace(/^-/, "\u2212");
+      // O formatador é criado uma vez por moeda: criar um Intl a cada valor
+      // custava dezenas de milissegundos por página num computador fraco.
+      const cod = Store.estado().financeiro.moeda || "BRL";
+      if (cod !== FORMATOS.codigo) {
+        FORMATOS.codigo = cod;
+        FORMATOS.moeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: cod, maximumFractionDigits: 2 });
+      }
+      return FORMATOS.moeda.format(Number(v) || 0).replace(/^-/, "\u2212");
     },
     /** Número decimal no formato brasileiro (8,2 — não 8.2). */
     decimal(v, casas = 1) {
-      return (Number(v) || 0).toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
+      let f = FORMATOS.decimal.get(casas);
+      if (!f) { f = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas }); FORMATOS.decimal.set(casas, f); }
+      return f.format(Number(v) || 0);
     },
     /** "6" ou "6º" viram "6º" — o ordinal nunca sai dobrado. */
     ordinal(v) {
@@ -734,8 +741,10 @@ const UI = (() => {
         </button>
       </div>`;
 
+    document.documentElement.dataset.barra = "sim";
     document.getElementById("btn-perfil").addEventListener("click", () => abrirPerfil());
     document.getElementById("btn-nova-aba").addEventListener("click", novaAba);
+    prepararCriador(document.getElementById("btn-nova-aba"));
     document.getElementById("btn-mais-abas").addEventListener("click", () => abrirMaisAbas(grupoAtivo, c));
 
     marcarCabeca();
@@ -796,13 +805,60 @@ const UI = (() => {
     }] : []),
   ];
 
+  /* ------------------------- Scripts sob demanda ---------------------------
+     O que só serve a uma ação (o criador de abas, o motor do Delfos) não vem
+     em toda página: é baixado na primeira vez que a ação é usada e fica na
+     memória da aba. Em computador fraco, cada script a menos na abertura é
+     página pronta mais cedo. */
+
+  const scriptsCarregados = new Map();
+
+  function carregarScript(src) {
+    if (scriptsCarregados.has(src)) return scriptsCarregados.get(src);
+    const p = new Promise((ok, falha) => {
+      const s = document.createElement("script");
+      s.src = src;
+      s.onload = () => ok();
+      s.onerror = () => { scriptsCarregados.delete(src); falha(new Error(`Não foi possível carregar ${src}.`)); };
+      document.head.appendChild(s);
+    });
+    scriptsCarregados.set(src, p);
+    return p;
+  }
+
+  /** O Delfos (a IA do painel) e o criador de abas, nessa ordem. */
+  const carregarCriador = () => carregarScript("delfos.js").then(() => carregarScript("abas.js"));
+
+  /** Baixa o criador antes do clique (ao passar o mouse ou focar o botão), para a janela abrir na hora. */
+  function prepararCriador(botao) {
+    if (!botao) return;
+    const ja = () => { carregarCriador().catch(() => {}); };
+    botao.addEventListener("pointerenter", ja, { once: true });
+    botao.addEventListener("focus", ja, { once: true });
+  }
+
+  /** Abre o criador (sem `pilar`) ou o editor (com `pilar`) de uma aba, montados pelo Delfos. */
+  async function abrirCriadorDeAbas(opcoes = {}) {
+    try {
+      await carregarCriador();
+    } catch (err) {
+      toast(`${err.message} Confira a conexão e tente de novo.`);
+      return null;
+    }
+    return Abas.abrir(opcoes);
+  }
+
   /**
-   * Abre o criador de aba (abas.js): nome, sugestão local instantânea e, com
-   * as contas ligadas, a personalização pela IA. Sem abas.js carregado (não
-   * deve acontecer em página com barra), cai no formulário simples de antes.
+   * "Nova aba": o criador com o Delfos. Se os scripts não vierem (sem rede
+   * na primeira vez), cai no formulário simples de modelos, que já está aqui.
    */
   async function novaAba() {
-    if (typeof Abas !== "undefined") return Abas.abrir();
+    try {
+      await carregarCriador();
+      return Abas.abrir();
+    } catch {
+      // segue para o formulário simples
+    }
     const v = await formulario({ titulo: "Nova aba", campos: camposPilar({ comModelo: true }), rotuloConfirmar: "Criar aba" });
     if (!v) return;
     const modelo = Store.MODELOS_PILAR.find((m) => m.id === v.modelo) || Store.MODELOS_PILAR[0];
@@ -1173,6 +1229,7 @@ const UI = (() => {
           ${linhaAjuste("Densidade", "Compacta mostra mais coisa por tela, com menos respiro.", segPref("densidade", [["confortavel", "Confortável"], ["compacta", "Compacta"]], xp.densidade || "confortavel"))}
           ${linhaAjuste("Fonte da leitura e dos títulos", "Display é a voz do Delfos, leve e aberta; Texto deixa tudo na mesma letra da interface.", segPref("voz", [["serifa", "Display"], ["sans", "Texto"]], xp.voz || "serifa"))}
           ${linhaAjuste("Movimento", "Luz que segue o mouse, destaques que deslizam e a entrada das páginas.", switchPref("movimento", (xp.movimento || "completo") !== "reduzido"))}
+          ${linhaAjuste("Desempenho", `Leve tira o desfoque atrás das janelas, as sombras grandes e as animações, e só baixa o Google quando você pede. Automático liga o leve sozinho em computador mais simples${aparelhoFraco() ? " (é o caso deste)" : ""}.`, segPref("desempenho", [["auto", "Automático"], ["leve", "Leve"], ["completo", "Completo"]], xp.desempenho || "auto"))}
         </div>
       </div>
 
@@ -1562,6 +1619,17 @@ const UI = (() => {
   function experiencia() {
     try { return Store.estado().preferencias?.experiencia || {}; } catch { return {}; }
   }
+  /**
+   * Computador mais simples: até 4 núcleos, até 4 GB de memória (quando o
+   * navegador conta) ou "economia de dados" ligada. É a régua do modo leve
+   * automático; a pessoa sempre pode escolher Leve ou Completo no perfil.
+   */
+  function aparelhoFraco() {
+    const nav = typeof navigator !== "undefined" ? navigator : {};
+    return (nav.hardwareConcurrency || 8) <= 4 || (nav.deviceMemory || 8) <= 4 || !!nav.connection?.saveData;
+  }
+  const modoLeve = (escolha) => (escolha === "leve" ? true : escolha === "completo" ? false : aparelhoFraco());
+
   function aplicarAparencia() {
     const xp = experiencia();
     const h = document.documentElement;
@@ -1569,6 +1637,7 @@ const UI = (() => {
     h.dataset.densidade = xp.densidade || "confortavel";
     h.dataset.destaque = xp.destaque || "osso";
     h.dataset.movimento = xp.movimento || "completo";
+    h.dataset.leve = modoLeve(xp.desempenho) ? "sim" : "nao";
     h.dataset.voz = xp.voz || "serifa";
     h.dataset.contadores = xp.contadores === false ? "nao" : "sim";
   }
@@ -2553,7 +2622,7 @@ const UI = (() => {
    * Tudo é enfeite de ponteiro: sem mouse ou com "reduzir movimento" no
    * sistema, nada disso é criado e o painel continua igual.
    */
-  const semMovimento = () => document.documentElement.dataset.movimento === "reduzido"
+  const semMovimento = () => document.documentElement.dataset.movimento === "reduzido" || document.documentElement.dataset.leve === "sim"
     || (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches);
   const temPonteiro = () => typeof matchMedia === "function" && matchMedia("(hover: hover) and (pointer: fine)").matches;
 
@@ -2646,14 +2715,18 @@ const UI = (() => {
       ind.style.opacity = "1";
       abas.classList.toggle("provando", provando);
     };
-    ir(ativa(), false, false);
+    // A primeira medida vai para o próximo quadro: medir agora forçaria o
+    // navegador a montar a página no meio do desenho dela.
+    requestAnimationFrame(() => ir(ativa(), false, false));
     abas.addEventListener("pointerover", (e) => {
       const el = e.target instanceof Element ? e.target.closest("a, button") : null;
       if (el && el.parentElement === abas) ir(el, el !== ativa());
     });
     abas.addEventListener("pointerleave", () => ir(ativa()));
-    new MutationObserver(() => ir(ativa())).observe(abas, { attributes: true, subtree: true, attributeFilter: ["aria-selected", "aria-current"] });
-    if (typeof ResizeObserver === "function") new ResizeObserver(() => ir(ativa(), false, false)).observe(abas);
+    let marcado = false;
+    const depois = (fn) => () => { if (marcado) return; marcado = true; requestAnimationFrame(() => { marcado = false; fn(); }); };
+    new MutationObserver(depois(() => ir(ativa()))).observe(abas, { attributes: true, subtree: true, attributeFilter: ["aria-selected", "aria-current"] });
+    if (typeof ResizeObserver === "function") new ResizeObserver(depois(() => ir(ativa(), false, false))).observe(abas);
   }
 
   function trilhoSeg(seg) {
@@ -2675,9 +2748,11 @@ const UI = (() => {
       if (animar && trilho.style.opacity === "1") aplicar(); else semTransicao(trilho, aplicar);
       trilho.style.opacity = "1";
     };
-    ir(false);
-    new MutationObserver(() => ir()).observe(seg, { attributes: true, subtree: true, attributeFilter: ["aria-pressed"] });
-    if (typeof ResizeObserver === "function") new ResizeObserver(() => ir(false)).observe(seg);
+    let marcado = false;
+    const depois = (fn) => () => { if (marcado) return; marcado = true; requestAnimationFrame(() => { marcado = false; fn(); }); };
+    requestAnimationFrame(() => ir(false));
+    new MutationObserver(depois(() => ir())).observe(seg, { attributes: true, subtree: true, attributeFilter: ["aria-pressed"] });
+    if (typeof ResizeObserver === "function") new ResizeObserver(depois(() => ir(false))).observe(seg);
   }
 
   /** Liga o movimento em tudo que houver dentro de `raiz` (a página ou o que acabou de ser desenhado). */
@@ -3062,14 +3137,14 @@ const UI = (() => {
   }
 
   return {
-    NOME, VERSAO, ICONES, ICONES_ABA, icone, iconeAba, iconeDuo, seloAba, movimento, aplicarAparencia, experiencia, abrirAtalhos, realcarBotoes,
+    NOME, VERSAO, aparelhoFraco, ICONES, ICONES_ABA, icone, iconeAba, iconeDuo, seloAba, movimento, aplicarAparencia, experiencia, abrirAtalhos, realcarBotoes,
     REPETICOES, somarPeriodo, ocorrenciasEntre, lembretesAgora, abrirResumoDoDia, textoQuando,
     lerDinheiro, avaliarDinheiro, formatarDinheiroCampo, dataPorExtensoCurta, isoMaisDias, marcaDaPagina,
     fmt, htmlSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
     compromissos, conflitos, contagens, mediaDisciplina, notaNecessaria, proximaAvaliacao, resumoProjeto,
     iniciarPagina, montarLayout, tema, toast, formulario, confirmar, abrirModal,
     abrirBackup, abrirPerfil, avatarHTML, iniciais, vazio, barras, colunasMensais, medidor,
-    novaAba, camposPilar, redimensionarFoto, camposItemPilar, editorCampos,
+    novaAba, abrirCriadorDeAbas, prepararCriador, carregarScript, camposPilar, redimensionarFoto, camposItemPilar, editorCampos,
     perguntaDispensada, dispensarPergunta, resposta, renderPerguntas, renderNotas, ordenarNotas, barrasComMeta,
   };
 })();

@@ -987,6 +987,29 @@ table.sheet tbody tr:focus-within .row-actions { opacity: 1; }
 :root[data-theme="light"] .backdrop { background: rgba(21, 25, 22, 0.28); }
 
 @keyframes fade { from { opacity: 0; } }
+
+/* ------------------------------ Modo leve ---------------------------------
+   Para computador mais simples (UI.aparelhoFraco, ou escolhido no perfil em
+   Aparência → Desempenho). Tira o que custa à placa de vídeo e ao processador
+   sem mudar o que a página mostra: o desfoque atrás das janelas (refeito a
+   cada quadro), as sombras grandes, as animações e transições. Durações vão
+   a quase zero, e não a zero, para os eventos de fim de animação seguirem
+   chegando. */
+:root[data-leve="sim"] {
+  --shadow-pop: 0 0 0 1px var(--linha-forte);
+  --shadow-lift: 0 0 0 1px var(--linha);
+}
+:root[data-leve="sim"] .main::before { display: none; }
+:root[data-leve="sim"] .backdrop { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(6, 8, 7, 0.78); }
+:root[data-leve="sim"][data-theme="light"] .backdrop { background: rgba(21, 25, 22, 0.45); }
+:root[data-leve="sim"] *, :root[data-leve="sim"] *::before, :root[data-leve="sim"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}
 @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(0.99); } }
 
 .modal {
@@ -2276,12 +2299,46 @@ a.semana-item:hover .t { text-decoration: underline; text-underline-offset: 3px;
   padding: 10px 14px;
   line-height: 1.2;
 }
-.criador-estado { font-size: 13.5px; color: var(--texto-3); min-height: 22px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.criador-estado .ico { width: 16px; height: 16px; }
-.criador-estado.ia { color: var(--texto-2); }
-.criador-estado.pensando { color: var(--texto-2); }
-.pontinhos { display: inline-block; width: 22px; height: 8px; background: radial-gradient(circle, currentColor 2.2px, transparent 2.6px) 0 50% / 7px 8px repeat-x; animation: pontinhos 1s linear infinite; opacity: .8; }
-@keyframes pontinhos { 50% { opacity: .3; } }
+.field .label { font-size: 13.5px; font-weight: 500; color: var(--texto-2); }
+.field .label .muted { font-weight: 400; }
+
+/* Propósito: a caixa que o Delfos lê. Cresce com o texto onde o navegador sabe. */
+.field textarea.criador-proposito { min-height: 6.5em; max-height: 14em; resize: vertical; field-sizing: content; line-height: 1.5; }
+
+/* O que o Delfos entendeu: frases curtas, cada uma com o ícone do que decide.
+   Sem caixa: um fio no alto separa a leitura do que a pessoa escreveu. */
+.delfos-leu { border-top: 1px solid var(--linha); padding-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+.delfos-titulo { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--font-voz); font-size: 16px; font-weight: 500; letter-spacing: -0.01em; color: var(--texto); }
+.delfos-titulo .ico { width: 18px; height: 18px; color: var(--texto-2); }
+.delfos-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.delfos-item { display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; line-height: 1.45; color: var(--texto-2); }
+.delfos-item .ico { width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; color: var(--texto-3); }
+.delfos-item.assunto, .delfos-item.campos { color: var(--texto); }
+.delfos-item.fora .ico { color: var(--critical-text); }
+.delfos-item.dica { color: var(--texto-3); }
+.delfos-de { color: var(--texto-3); font-size: 12.5px; white-space: nowrap; }
+.delfos-aplicar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 13px; color: var(--texto-3); }
+
+.criador-ajustes { border-top: 1px solid var(--linha); padding-top: 4px; }
+.criador-ajustes summary {
+  list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13.5px; font-weight: 500; color: var(--texto-2); padding: 8px 0;
+}
+.criador-ajustes summary::-webkit-details-marker { display: none; }
+.criador-ajustes summary .ico { width: 16px; height: 16px; transition: transform var(--t-medio, 0.28s) var(--ease-saida, ease); }
+.criador-ajustes[open] summary .ico { transform: rotate(90deg); }
+.criador-ajustes summary:hover { color: var(--texto); }
+.criador-ajustes-corpo { display: flex; flex-direction: column; gap: 16px; padding: 6px 0 2px; }
+.campo-linha { flex: 1; min-width: 0; }
+.campo-nome { display: block; font-weight: 550; }
+.campo-nome .badge { margin-left: 6px; }
+.campo-tipo { display: block; font-size: 13px; color: var(--texto-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.previa [data-vistas] .chip { display: inline-flex; align-items: center; gap: 6px; }
+.previa [data-vistas] .chip .ico { width: 15px; height: 15px; }
+
+/* Propósito guardado, na página da aba (Ajustes da aba). */
+.proposito-aba { margin: 0 0 12px; font-size: 14px; line-height: 1.55; color: var(--texto-2); max-width: 70ch; }
+.proposito-aba b { display: block; font-size: 12.5px; font-weight: 600; color: var(--texto-3); margin-bottom: 2px; }
 
 .icones-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 4px; max-height: 128px; overflow-y: auto; padding: 2px; }
 .icone-opcao { width: 36px; height: 36px; border-radius: 9px; border: 1px solid transparent; background: var(--fundo); color: var(--texto-2); display: grid; place-items: center; cursor: pointer; font-size: 14px; }
@@ -2853,8 +2910,10 @@ body.entrando .main .wrap > .leitura { animation: chegar 620ms var(--ease-saida)
     font-variant-numeric: tabular-nums;
   }
   .tab-conta.alert { background: var(--st-critical); color: #fff; }
-  body:has(.tabbar) { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
-  html:has(.tabbar) { scroll-padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+  /* `data-barra` vem de UI.montarLayout: um :has() no html/body seria
+     reavaliado a cada mudança em qualquer ponto da página. */
+  :root[data-barra="sim"] body { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
+  :root[data-barra="sim"] { scroll-padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
   .toasts { bottom: calc(84px + env(safe-area-inset-bottom)); }
 
   .main { padding: 18px 16px 48px; }

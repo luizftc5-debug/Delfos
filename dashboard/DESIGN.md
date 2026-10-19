@@ -144,6 +144,13 @@ algarismos), e casa sem esforço com o dado. Geist ficou de fora de propósito:
 - **Barras**: comparação sem trilho (o valor escrito ao lado dá a escala);
   progresso de meta com trilho (o trilho é o que falta).
 - **Retrato**: quadrado de cantos suaves, nunca círculo.
+- **Criador de abas** (1.8): nome, uma caixa de **Propósito** e, logo
+  abaixo, "O que o Delfos entendeu": uma lista curta (assunto, cada registro,
+  jeito de anotar, campos, meta, vista), cada linha com o trecho do texto que
+  a justificou em tom mais baixo. É texto, não cartão. Aparência (ícone e
+  cor) fica num `details` fechado: a grade de ícones só é desenhada ao abrir.
+  A prévia mostra os campos em linhas (nome à esquerda, tipo à direita) e a
+  vista em pílulas.
 
 **Raio por hierarquia** (vale em todo lugar): janela 22, superfície 16,
 controle 10, miúdo 6, pílula só para escolha (chips, segmentos, interruptor).
@@ -199,6 +206,11 @@ controle 10, miúdo 6, pílula só para escolha (chips, segmentos, interruptor).
 - Barras aparecem sem animar largura (só propriedades de compositor).
 - Tudo de ponteiro fica em `(hover: hover) and (pointer: fine)`; com
   "reduzir movimento" (sistema ou perfil) nada disso acontece.
+- **Modo leve** (1.8, `data-leve="sim"`): o mesmo desenho sem o que pesa na
+  placa de vídeo. Sem sombras, sem a luz radial do fundo, sem desfoque atrás
+  das janelas (fundo mais opaco no lugar), sem destaque deslizante e com
+  transições a quase zero. Liga sozinho em aparelho fraco (até 4 núcleos ou
+  4 GB, ou economia de dados) e pode ser escolhido no perfil.
 
 ## 7. Proibições
 

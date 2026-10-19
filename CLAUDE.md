@@ -1,6 +1,6 @@
 # Delfos — agente de organização pessoal do Luiz
 
-O painel se chama **Delfos** (versão atual: **1.7**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
+O painel se chama **Delfos** (versão atual: **1.8**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
 em `ui.js`) aparecem como marca no alto da barra lateral, ao lado do ônfalo, nos títulos das abas do
 navegador e no nome do arquivo de backup exportado.
 
@@ -31,7 +31,7 @@ Você é um assistente de IA especializado em organizar e gerenciar os quatro pi
 
 ## Arquitetura do dashboard
 
-Aplicação estática multi-página em `dashboard/`, sem build. Dependências externas: a tipografia (Google Fonts) e, só ao criar ou trocar senha, a consulta k-anônima ao Have I Been Pwned (`sessao.js`). O pdf.js (Mozilla, Apache 2.0) vem **copiado** em `dashboard/vendor/pdfjs/` — não de CDN — e só é baixado quando alguém importa um extrato em PDF. Os ícones são Phosphor (MIT), também **copiados**: o miolo de cada SVG mora em `ui.js` e `resumo.js`, a licença em `dashboard/vendor/phosphor/`.
+Aplicação estática multi-página em `dashboard/`, sem build. Dependências externas: a tipografia (Google Fonts), as bibliotecas do Google (só quando a pessoa vai conectar, ver "Delfos 1.8") e, só ao criar ou trocar senha, a consulta k-anônima ao Have I Been Pwned (`sessao.js`). O pdf.js (Mozilla, Apache 2.0) vem **copiado** em `dashboard/vendor/pdfjs/` — não de CDN — e só é baixado quando alguém importa um extrato em PDF. Os ícones são Phosphor (MIT), também **copiados**: o miolo de cada SVG mora em `ui.js` e `resumo.js`, a licença em `dashboard/vendor/phosphor/`.
 
 | Arquivo | Papel |
 |---|---|
@@ -58,11 +58,12 @@ Aplicação estática multi-página em `dashboard/`, sem build. Dependências ex
 | `sessao.js` | Conta do usuário: endereço da API, login, cadastro, derivação da senha, porta de entrada das páginas |
 | `nuvem.js` | Sincronização com a conta (`backend/`): envio, conferência, conflito, versões, anexos, sair |
 | `leituras.js` | Leitura das outras abas, no molde do Financeiro: `Leituras.faculdade()`, `projetos()`, `pessoal()`, `pilar(p)` devolvem números, a frase da leitura e as notas; `todasNotas()` alimenta a visão geral |
-| `abas.js` | Criador/editor de abas próprias (`Abas.abrir`): sugestão local por assunto (`sugerirLocal`, catálogo de ~30 domínios) e a do Claude pelo servidor (`pedirIA`), sempre passada por `sanear` |
+| `delfos.js` | **O Delfos, a IA do painel** (`Delfos.entender`): lê nome e propósito de uma aba e devolve a aba montada e a explicação do que entendeu. Funções puras, roda no navegador e no Node |
+| `abas.js` | Criador/editor de abas próprias (`Abas.abrir`) com a caixa de propósito e "O que o Delfos entendeu"; tudo passa por `sanear`. Baixado só ao abrir "Nova aba" (`UI.abrirCriadorDeAbas`) |
 | `financas.js` | Cálculos derivados: saldo por conta, ciclo e fatura de cartão, balanço, investimentos, e a análise do mês (`analisarMes`, `recorrentes`, `acumuladoDiario`) |
 | `ui.js` | Componentes: layout (barra lateral, barra de abas do celular), ícones Phosphor (`UI.icone`), perfil, modais de formulário, avisos, gráficos, datas/urgência |
 | `theme.css` | Design system (tema claro/escuro) |
-| `config.js` + `google-integration.js` | Integração OAuth com Google Calendar e Drive (inclui busca/exportação de arquivos, usada pela importação em disciplina.js) |
+| `config.js` + `google-integration.js` | Integração OAuth com Google Calendar e Drive (inclui busca/exportação de arquivos, usada pela importação em disciplina.js); as bibliotecas do Google são baixadas sob demanda (`carregarGoogle`) |
 | `data.js` | Conteúdo inicial (seed), lido só na primeira abertura |
 | `exercicios.js` | Catálogo de exercícios da aba Academia (`const EXERCICIOS`), carregado só por `pilar.html` |
 
@@ -116,6 +117,8 @@ contas e os dados de cada uma. O localStorage continua sendo a cópia de trabalh
   pedidos por conta por hora (tabela `tentativas`, chave `ia:<id>`). **A chave `ANTHROPIC_API_KEY`
   é segredo do Worker (workflow a publica a partir do segredo do GitHub) e nunca vai ao navegador.**
   Sem chave: `/api/saude` devolve `ia: false`, a rota dá 503 e o painel usa só a sugestão local.
+  **Desde a 1.8 o painel não chama mais esta rota**: quem monta as abas é o Delfos (`delfos.js`), no
+  navegador. A rota e os testes dela continuam no back end, sem uso; dá para tirar quando quiser.
 - Migrações só se acrescentam (`0002_contas.sql` renomeou as tabelas da versão de senha única para
   `legado_*` em vez de apagar). Módulo Worker só exporta `default`. Testes: `cd backend && npm test`.
 
@@ -394,16 +397,14 @@ Cada item guarda `descricao`, `data` e `concluido` como campos de sistema — s�
 entende; `pilar.js` junta esses campos com `descricao`/`data` e depois separa o resultado em
 `extras` (`paraExtras`/`deExtras`). Só os campos marcados `naLista` aparecem na linha da listagem.
 
-**Criador com IA (v1.5).** "Nova aba" abre `Abas.abrir()`: a pessoa digita o nome e, a cada letra,
-a sugestão local (`Abas.sugerirLocal`, catálogo por assunto — corrida, leitura, plantões, remédios,
-viagem…) monta ícone, cor, descrição, `rotuloItem`, campos, meta, agrupamento e exemplos. Parando de
-digitar (900 ms), se as contas estiverem ligadas e o servidor tiver a chave, o Claude refaz tudo para
-aquele assunto específico. Resposta atrasada (nome mudou) é descartada; se a pessoa já mexeu em
-algo, a sugestão da IA vira um botão "Usar sugestão da IA" em vez de sobrescrever. Tudo o que vem
-da IA passa por `Abas.sanear` (só ícones, cores, tipos e ids válidos; texto escapado na tela). Os
-exemplos só viram registros se marcados. "Personalizar" na página da aba reabre o mesmo modal em
-modo edição: muda nome/ícone/cor/descrição/meta/agrupamento e só **acrescenta** campos sugeridos,
-nunca remove os existentes.
+**Criador com o Delfos (v1.8; na v1.5 era catálogo local + Claude pelo servidor).** "Nova aba" abre
+`Abas.abrir()`: nome e **propósito**; a cada pausa de 220 ms o Delfos (`delfos.js`) lê os dois e a
+janela mostra "O que o Delfos entendeu" e a prévia. Se a pessoa já mexeu em algo, a leitura nova vira
+o botão "Aplicar o que o Delfos entendeu" em vez de sobrescrever. Tudo passa por `Abas.sanear` (só
+ícones, cores, tipos, vistas e ids válidos; texto escapado na tela). Os exemplos só viram registros se
+marcados. "Personalizar" na página da aba reabre o mesmo modal em modo edição: o propósito volta
+editável, e o Delfos só **acrescenta** campos (os que ainda não existem), nunca remove os existentes.
+Ver "Delfos 1.8".
 
 Campos novos da aba (todos opcionais, abas antigas continuam funcionando): `rotuloItem` (o nome de
 cada registro: "livro", "plantão" — vira o botão "+ Livro"), `checkin` (hábito marcado por dia),
@@ -576,7 +577,7 @@ partir do histórico (`Lancamento.historico`), ordena categorias por uso (`categ
 lançamentos, "repetir todo mês" cria um `financeiro.fixos` e chama `Financas.gerarFixos`.
 
 **Perfil e `preferencias.experiencia` (estado v13).** Cinco abas no perfil (sobre, aparência,
-painel, rotina, conta). `experiencia` = `{ tamanho, densidade, destaque, movimento, voz, contadores,
+painel, rotina, conta). `experiencia` = `{ tamanho, densidade, destaque, movimento, desempenho (1.8), voz, contadores,
 paginaInicial, semanaComeca, ordemAbas, home: {topo, pilares, notas, agenda, insights}, lembretes:
 {antecedencia, navegador, resumoDoDia} }`; `Store.definirPreferencias({ experiencia })` mescla, e
 `home`/`lembretes` campo a campo. `UI.aplicarAparencia` põe cada escolha como `data-*` no `<html>`
@@ -614,9 +615,8 @@ perfil, "0".."7" dias, "nenhum") e `importante` (avisa também 7 dias antes).
   depois que algo foi importado.
 - `google-integration.js` ganhou `googleComConexao(fn)`, `driveListarCalendarios`,
   `driveBaixarTexto` e `agendaListarEventos` (escopos que já existiam: `calendar.readonly` e
-  `drive.readonly`). **Ordem dos scripts**: `google-integration.js` vem *antes* de `api.js` e
-  `gsi/client`, porque o `onload` deles chama `onGapiLoad`/`onGisLoad` — na ordem antiga essas
-  funções ainda não existiam e a conexão com o Google nunca iniciava.
+  `drive.readonly`). Desde a 1.8, `api.js` e `gsi/client` não estão mais no HTML: quem os baixa é
+  `carregarGoogle()` (ver "Delfos 1.8").
 - Preferências só deste navegador: `delfos.pessoal.vista` (calendário ou lista). Não são dados.
 
 **Abas próprias: vistas e layout.** `pilar.visual = { vista, ordem, leitura, numeros, lateral,
@@ -699,6 +699,70 @@ direção completa, com tokens e proibições, está em `dashboard/DESIGN.md`.
 - **Texto**: sem travessão no texto visível (ponto, dois-pontos, ponto e vírgula ou parênteses);
   valor vazio é "-". Títulos de avaliação na agenda são "Prova 1, Farmacologia"; metas,
   "Meta: …". `UI.urgencia` diz "atrasado há 3 dias".
+
+### Delfos 1.8: a IA própria e o modo leve
+
+Pedido do Luiz: uma IA própria, chamada Delfos, sem chat, que ao criar uma aba lê o que ele escreveu,
+entende o propósito e monta a página; e o painel o mais leve possível para computador fraco.
+
+**O Delfos (`delfos.js`).** Não é modelo de linguagem: é processamento de linguagem clássico para o
+português, feito para rodar em milissegundos no navegador, sem rede e sem mandar nada para fora.
+`Delfos.entender({ nome, proposito, usadas, existentes })` devolve `{ sugestao, entendeu, assunto,
+confianca }`; `sugestao` tem o formato do criador (icone, cor, descricao, rotuloItem, naAgenda,
+checkin, especial, campos, agruparPor, meta, exemplos, visual `{ vista, ordem }`, proposito).
+
+- **Texto**: `plano` (minúsculas sem acento, mesmo tamanho), `normal` e `radical` (plural e
+  terminações comuns, nunca menos de 4 letras). O acento dos rótulos volta pelo `dicionario` das
+  palavras que a pessoa escreveu.
+- **Assunto** (`ASSUNTOS`, ~40 domínios com molde de aba): cada radical conta uma vez por assunto, o
+  nome pesa o dobro do propósito e dá bônus; `soNome` marca palavras que só valem no nome ("meta" no
+  propósito é a meta da aba, não o assunto "metas").
+- **Conceitos de campo** (`CONCEITOS`): gatilhos indexados pela primeira palavra (`POR_PRIMEIRA`); o
+  gatilho mais longo ganha o trecho ("se já paguei" é sim/não, não valor); `naoDepois` evita "por
+  ano" virar campo Ano; `rotulos` trocam o nome pelo gatilho ("quanto recebi" vira "Valor recebido").
+- **Listas** (`acharListas`): entre parênteses e depois de dois-pontos (opções da palavra de antes,
+  ou campos se metade dos itens é campo), enumeração solta (campos se aberta por "com", "registrar",
+  "só"… ou se metade é campo; senão viram exemplos para começar). Data, prazo, vencimento numa lista
+  são a data do registro (`DE_SISTEMA`), não campo. Pedaços de sinal ("em tabela", "sem…") saem.
+- **Negação** ("sem horário", "não preciso de valor", "sem meta"), **jeito** (`SINAIS`: marcar por dia,
+  agenda, vistas, ordens), **meta** (`acharMeta`: número, unidade e período; "por dia" vira ×7 por
+  semana), **rótulo do registro** ("cada plantão"), ícone por radical quando não há assunto, cor que
+  evita as das outras abas.
+- Com lista de campos escrita, valem esses campos (mais os ditos com todas as letras em outro trecho,
+  `forte`); sem lista, os do molde do assunto mais os citados. Academia só abre a tela de treinos se a
+  pessoa não descreveu outra coisa.
+- Testes: `node` com o arquivo direto (`module.exports` no fim). Os de regressão ficaram fora do
+  repositório (não há pasta de testes do painel); ao mudar o motor, rode frases reais de antes e de
+  depois e compare.
+
+**Criador** (`abas.js`): ver "Criador com o Delfos". `criar` grava `proposito`, `visual`
+(`vista`, `ordem`), `exemploItem` (o placeholder do "+ Item" na página da aba, que não carrega mais
+o criador) e `sugeridoPor: "delfos"`. A página da aba mostra o propósito em "Ajustes da aba"
+(`#proposito-aba`) e diz "montada pelo Delfos".
+
+**Desempenho.** Medido com a CPU 6x mais lenta (Playwright + CDP), contra a `main`:
+- **Google sob demanda** (`google-integration.js`): `api.js` e `gsi/client` saíram do HTML. Vêm por
+  `carregarGoogle()`: ao passar o mouse/focar o botão de conectar, ou sozinhos 2,5 s depois do `load`
+  com a página quieta (`requestIdleCallback`), nunca no modo leve. As descrições das APIs (Agenda,
+  Drive) só depois da autorização (`carregarApis`). Clique antes de a biblioteca chegar: carrega e
+  pede o token; se o navegador barrar a janela (`popup_failed_to_open`), avisa para clicar de novo.
+  Resultado: texto da página pronto 19% a 24% mais cedo em Pessoal, Financeiro e Faculdade.
+- **Scripts sob demanda** (`UI.carregarScript`, `UI.abrirCriadorDeAbas`, `UI.prepararCriador`):
+  `delfos.js` e `abas.js` saíram das 11 páginas; vêm no primeiro "Nova aba"/"Personalizar" (ou ao
+  passar o mouse no botão). Sem rede, "Nova aba" cai no formulário simples de modelos.
+- **Formatadores** (`FORMATOS` em `ui.js`): `fmt.moeda`/`fmt.decimal` criam o `Intl.NumberFormat` uma
+  vez (era um por valor; no Financeiro, 52 ms → 14 ms na CPU lenta).
+- **Medidas fora do desenho**: o indicador das abas e o trilho da escolha única medem no próximo
+  quadro e juntam mudanças num quadro só; o gráfico de ritmo do Financeiro desenha num
+  `requestAnimationFrame` depois do resto (91 ms → 47 ms). `html:has(.tabbar)` virou
+  `:root[data-barra="sim"]` (posto por `montarLayout`).
+- **Modo leve** (`preferencias.experiencia.desempenho`: `auto` | `leve` | `completo`, no perfil em
+  Aparência → Desempenho; sem migração, o padrão `auto` entra pela mescla de `normalizar`).
+  `UI.aplicarAparencia` põe `data-leve` no `<html>`; `auto` liga com até 4 núcleos, até 4 GB
+  (`navigator.deviceMemory`) ou economia de dados (`UI.aparelhoFraco`). No CSS (seção "Modo leve"):
+  sem `backdrop-filter`, sem sombras grandes, sem a luz fixa do alto, animações e transições a
+  0,01 ms (não zero, para os eventos de fim seguirem chegando). No JS, `semMovimento()` inclui o
+  modo leve (sem luz do mouse, sem destaques deslizantes) e o Google não vem sozinho.
 
 ### Direção visual
 

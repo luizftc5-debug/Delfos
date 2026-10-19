@@ -47,7 +47,7 @@
 
     const etiqueta = $("etiqueta");
     // O ponto do eyebrow leva a cor da aba; o texto fica na tinta normal.
-    etiqueta.textContent = pilar.sugeridoPor === "ia" ? "Aba criada por você, montada com IA" : "Aba criada por você";
+    etiqueta.textContent = pilar.sugeridoPor === "delfos" ? "Aba criada por você, montada pelo Delfos" : pilar.sugeridoPor === "ia" ? "Aba criada por você, montada com IA" : "Aba criada por você";
     etiqueta.style.setProperty("--marca", pilar.cor);
     $("swatch-lista").style.background = pilar.cor;
 
@@ -72,7 +72,10 @@
     $("btn-dia").classList.toggle("hidden", !(academia && pilar.academia?.configuradoEm));
     $("nota-ajustes").textContent = academia
       ? "Esta aba foi criada por você. Renomeá-la, trocar ícone e cor, ou refazer o questionário não mexe nos dias já montados; excluí-la apaga também os dias e exercícios cadastrados."
-      : "Esta aba foi criada por você. Personalizar (ícone, cor, meta, agrupamento, campos sugeridos pela IA) não mexe no que já está cadastrado; excluí-la apaga também todos os registros dela.";
+      : "Esta aba foi criada por você. Personalizar (propósito, ícone, cor, meta, agrupamento, campos sugeridos pelo Delfos) não mexe no que já está cadastrado; excluí-la apaga também todos os registros dela.";
+    const prop = $("proposito-aba");
+    prop.hidden = !pilar.proposito;
+    prop.querySelector("span").textContent = pilar.proposito || "";
 
     if (academia) {
       $("swatch-academia").style.background = pilar.cor;
@@ -652,7 +655,7 @@
   }
 
   async function abrirPersonalizar() {
-    await Abas.abrir({ pilar });
+    await UI.abrirCriadorDeAbas({ pilar });
     render();
   }
 
@@ -959,8 +962,7 @@
   ];
 
   function exemploPara() {
-    const s = typeof Abas !== "undefined" ? Abas.sugerirLocal(pilar.nome) : null;
-    return s?.exemplos?.[0] || `um ${rotulo()} de ${pilar.nome}`;
+    return pilar.exemploItem || `um ${rotulo()} de ${pilar.nome}`;
   }
 
   // Separa descricao/data (sistema) do resto (extras), nos dois sentidos.
@@ -1000,7 +1002,14 @@
   }
 
   async function editarAba() {
-    if (typeof Abas !== "undefined") return abrirPersonalizar();
+    // O editor com o Delfos é baixado na hora; sem rede, cai no formulário simples.
+    try {
+      await UI.carregarScript("delfos.js");
+      await UI.carregarScript("abas.js");
+      return abrirPersonalizar();
+    } catch {
+      // segue para o formulário simples
+    }
     const v = await UI.formulario({ titulo: "Editar aba", campos: UI.camposPilar(), valores: pilar });
     if (!v) return;
     Store.atualizar(CAMINHO, id, v);
@@ -1036,6 +1045,8 @@
   });
   document.getElementById("f-ordem").addEventListener("change", (ev) => { salvarVisual({ ordem: ev.target.value }); render(); });
   document.getElementById("btn-editar-aba").addEventListener("click", editarAba);
+  UI.prepararCriador(document.getElementById("btn-editar-aba"));
+  UI.prepararCriador(document.getElementById("btn-editar-aba-2"));
   document.getElementById("btn-editar-aba-2").addEventListener("click", editarAba);
   document.getElementById("btn-campos").addEventListener("click", async () => {
     await UI.editorCampos(pilar.id);

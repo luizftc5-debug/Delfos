@@ -75,33 +75,30 @@
       return;
     }
 
-    const grid = document.createElement("div");
-    grid.className = "grid g3";
+    const ul = document.createElement("ul");
+    ul.className = "list cartoes";
     lista.forEach((c) => {
-      const card = document.createElement("div");
-      card.className = "card conta-card";
-      card.innerHTML = `
-        <div class="card-head" style="align-items:flex-start; margin-bottom:8px;">
-          <a class="linha-link" style="min-width:0;" href="conta.html?tipo=conta&id=${fmt.escape(c.id)}">
-            <h3 class="card-title" style="font-size:14px;"><span class="swatch financeiro"></span><span class="title">${fmt.escape(c.nome)}</span></h3>
-            <div class="card-note" style="margin-top:3px;">${fmt.escape(c.instituicao || c.tipo)}</div>
-          </a>
-          <span class="row-actions">
-            <button class="btn ghost sm" data-editar>Editar</button>
-            <button class="btn ghost sm" data-excluir>Excluir</button>
-          </span>
-        </div>
-        <a href="conta.html?tipo=conta&id=${fmt.escape(c.id)}" style="text-decoration:none; color:inherit; display:block;">
-          <div class="stat-value num" style="font-size:22px; color:${c.saldo < 0 ? "var(--st-critical)" : "var(--texto)"};">${fmt.moeda(c.saldo)}</div>
-          <div class="stat-sub">
-            abertura ${fmt.moeda(c.saldoInicial || 0)}, ${c.movimentos} ${c.movimentos === 1 ? "lançamento" : "lançamentos"}
-          </div>
-        </a>`;
-      card.querySelector("[data-editar]").addEventListener("click", () => editarConta(c));
-      card.querySelector("[data-excluir]").addEventListener("click", () => excluir("financeiro.contas", c, "Conta"));
-      grid.appendChild(card);
+      const li = document.createElement("li");
+      li.innerHTML = `
+        ${UI.marcaItem({ icone: "banco", classe: "grande" })}
+        <a class="linha-link cartao-nome" href="conta.html?tipo=conta&id=${fmt.escape(c.id)}">
+          <span class="title">${fmt.escape(c.nome)}</span>
+          <span class="meta">${fmt.escape(c.instituicao || c.tipo || "conta")}</span>
+        </a>
+        <span class="item-valor voz ${c.saldo < 0 ? "valor-ruim" : ""}">${fmt.moeda(c.saldo)}<small>saldo</small></span>
+        <span class="item-info">
+          ${UI.info("cofre", `abertura ${fmt.moeda(c.saldoInicial || 0)}`)}
+          ${UI.info("lista", `${c.movimentos} ${c.movimentos === 1 ? "lançamento" : "lançamentos"}`)}
+        </span>
+        <span class="row-actions">
+          <button class="btn ghost sm" data-editar type="button">Editar</button>
+          <button class="btn ghost sm" data-excluir type="button">Excluir</button>
+        </span>`;
+      li.querySelector("[data-editar]").addEventListener("click", () => editarConta(c));
+      li.querySelector("[data-excluir]").addEventListener("click", () => excluir("financeiro.contas", c, "Conta"));
+      ul.appendChild(li);
     });
-    box.appendChild(grid);
+    box.appendChild(ul);
   }
 
   function renderCartoes(lista) {
@@ -127,57 +124,35 @@
       return;
     }
 
-    const grid = document.createElement("div");
-    grid.className = "grid g2";
+    const ul = document.createElement("ul");
+    ul.className = "list cartoes";
     lista.forEach((c) => {
       const venc = UI.urgencia(c.ciclo.vencimento);
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <div class="card-head" style="align-items:flex-start; margin-bottom:10px;">
-          <a class="linha-link" style="min-width:0;" href="conta.html?tipo=cartao&id=${fmt.escape(c.id)}">
-            <h3 class="card-title" style="font-size:14px;"><span class="swatch cartao"></span><span class="title">${fmt.escape(c.nome)}</span></h3>
-            <div class="card-note" style="margin-top:3px;">${fmt.escape(c.bandeira || "cartão")}, fecha dia ${c.fechamento}, vence dia ${c.vencimento}</div>
-          </a>
-          <span class="row-actions">
-            <button class="btn ghost sm" data-editar>Editar</button>
-            <button class="btn ghost sm" data-excluir>Excluir</button>
-          </span>
-        </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:12px; margin-bottom:10px;">
-          <div>
-            <div class="stat-label">Fatura aberta</div>
-            <div class="stat-value num" style="font-size:22px;">${fmt.moeda(c.fatura)}</div>
-          </div>
-          <div style="text-align:right;">
-            <div class="stat-sub" style="margin:0;">vence ${fmt.data(c.ciclo.vencimento)}</div>
-            <span class="badge ${venc.nivel}">${venc.rotulo}</span>
-          </div>
-        </div>
-
-        <div data-limite></div>
-
-        <div class="stat-sub">
-          Ciclo de ${fmt.dataCurta(c.ciclo.inicio)} a ${fmt.dataCurta(c.ciclo.fim)}, ${c.movimentos} ${c.movimentos === 1 ? "compra" : "compras"}
-        </div>`;
-
-      if (c.limite) {
-        card.querySelector("[data-limite]").appendChild(
-          UI.medidor({
-            rotulo: `${Math.round(c.usoPercentual)}% do limite usado`,
-            atual: c.fatura,
-            alvo: c.limite,
-            cor: c.usoPercentual >= 80 ? "var(--st-critical)" : "var(--s-projetos)",
-          })
-        );
-      }
-
-      card.querySelector("[data-editar]").addEventListener("click", () => editarCartao(c));
-      card.querySelector("[data-excluir]").addEventListener("click", () => excluir("financeiro.cartoes", c, "Cartão"));
-      grid.appendChild(card);
+      const uso = c.limite ? Math.round(c.usoPercentual) : null;
+      const li = document.createElement("li");
+      li.innerHTML = `
+        ${UI.marcaItem({ icone: "cartao", cor: "var(--serie-saida)", classe: "grande" })}
+        <a class="linha-link cartao-nome" href="conta.html?tipo=cartao&id=${fmt.escape(c.id)}">
+          <span class="title">${fmt.escape(c.nome)}</span>
+          <span class="meta">${fmt.escape(c.bandeira || "cartão")}, fecha dia ${c.fechamento}, vence dia ${c.vencimento}</span>
+        </a>
+        <span class="item-valor voz">${fmt.moeda(c.fatura)}<small>fatura aberta</small></span>
+        <span class="item-info">
+          ${UI.info("relogio", `vence ${fmt.escape(fmt.dataCurta(c.ciclo.vencimento))}, ${fmt.escape(venc.rotulo)}`, venc.nivel === "atrasado" || venc.nivel === "hoje" ? "alerta" : venc.nivel === "urgente" ? "atencao" : "")}
+          ${UI.info("calendario", `ciclo de ${fmt.escape(fmt.dataCurta(c.ciclo.inicio))} a ${fmt.escape(fmt.dataCurta(c.ciclo.fim))}`)}
+          ${UI.info("carrinho", `${c.movimentos} ${c.movimentos === 1 ? "compra" : "compras"}`)}
+          ${uso !== null ? UI.info("alvo", `${uso}% de ${fmt.moeda(c.limite)}`, uso >= 80 ? "alerta" : "") : ""}
+        </span>
+        ${uso !== null ? `<span class="cartao-barra ${uso >= 80 ? "alerta" : uso >= 50 ? "atencao" : ""}"${uso < 50 ? ' style="--cor-barra:var(--serie-saida)"' : ""} title="${uso}% do limite usado"><i style="width:${Math.min(100, uso)}%"></i></span>` : ""}
+        <span class="row-actions">
+          <button class="btn ghost sm" data-editar type="button">Editar</button>
+          <button class="btn ghost sm" data-excluir type="button">Excluir</button>
+        </span>`;
+      li.querySelector("[data-editar]").addEventListener("click", () => editarCartao(c));
+      li.querySelector("[data-excluir]").addEventListener("click", () => excluir("financeiro.cartoes", c, "Cartão"));
+      ul.appendChild(li);
     });
-    box.appendChild(grid);
+    box.appendChild(ul);
   }
 
   // Quanto já saiu por cada conta e cartão — uma série só, com o valor escrito

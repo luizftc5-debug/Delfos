@@ -6,7 +6,7 @@
 const UI = (() => {
   /** Nome e versão do painel — aparecem na marca do alto da barra lateral. */
   const NOME = "Delfos";
-  const VERSAO = "2.0";
+  const VERSAO = "2.1";
 
   /* -------------------------------- Ícones -------------------------------- */
 
@@ -3036,6 +3036,47 @@ const UI = (() => {
     });
   }
 
+  /* ---------------------------- O item da gaveta ----------------------------
+     Dentro de uma gaveta, cada registro é um compartimento: à esquerda, a
+     marca (um quadrado na cor da aba que diz de relance o que o item é: a
+     data, um ícone ou as iniciais), no meio o nome e uma linha de
+     informações com ícone, à direita o número que importa. A marca é
+     enfeite (aria-hidden): o texto ao lado já diz tudo. */
+
+  const PALAVRAS_MENORES = new Set(["de", "da", "do", "das", "dos", "e", "a", "o", "em", "para", "com", "na", "no"]);
+  /** "Clínica Médica I" vira "CM"; "Farmacologia", "Fa". */
+  function monograma(nome) {
+    const partes = String(nome || "").trim().split(/\s+/)
+      .filter((p) => p && !PALAVRAS_MENORES.has(p.toLowerCase()) && !/^[IVXL]+$/.test(p) && /\p{L}/u.test(p));
+    if (!partes.length) return iniciais(nome);
+    if (partes.length === 1) return partes[0].slice(0, 2).replace(/^./, (l) => l.toUpperCase());
+    return (partes[0][0] + partes[1][0]).toUpperCase();
+  }
+
+  /**
+   * A marca à esquerda de um item. `data` (ISO) desenha o dia grande e o mês;
+   * `icone` (nome de ICONES), o ícone em duas camadas; `glifo`, o ícone de uma
+   * aba criada ("svg:livro" ou um glifo); `texto`, as iniciais. `cor` troca a
+   * cor da aba; `nivel` (o de UI.urgencia, ou alerta/atencao/bem) pinta pela
+   * urgência.
+   */
+  function marcaItem({ data, icone: nome, glifo, texto, cor, nivel = "", classe = "" } = {}) {
+    const estilo = cor ? ` style="--cor-item:${fmt.escape(cor)}"` : "";
+    const cls = ["item-marca", nivel, classe].filter(Boolean).join(" ");
+    if (data) {
+      const d = new Date(`${String(data).slice(0, 10)}T00:00:00`);
+      if (!Number.isNaN(d.getTime())) {
+        return `<span class="${cls} data"${estilo} aria-hidden="true"><b>${d.getDate()}</b><small>${MESES[d.getMonth()]}</small></span>`;
+      }
+    }
+    if (glifo) return `<span class="${cls}"${estilo} aria-hidden="true">${iconeAba(glifo, true)}</span>`;
+    if (nome && (ICONES[nome] || MARCA[nome])) return `<span class="${cls}"${estilo} aria-hidden="true">${iconeDuo(nome)}</span>`;
+    return `<span class="${cls} texto"${estilo} aria-hidden="true">${fmt.escape(texto || "•")}</span>`;
+  }
+
+  /** Uma informação com ícone para a linha de baixo do item. `html` já vem escapado por quem chama. */
+  const info = (nome, html, classe = "") => `<span class="info${classe ? ` ${classe}` : ""}">${icone(nome)}<span>${html}</span></span>`;
+
   /* ------------------------------- Registrar -------------------------------
      "+ Registrar" na visão geral: a pessoa diz o que quer guardar e o painel
      leva ao formulário certo, sem ela precisar saber em que aba cada coisa
@@ -3357,7 +3398,7 @@ const UI = (() => {
     abrirBackup, abrirPerfil, avatarHTML, iniciais, vazio, barras, colunasMensais, medidor,
     novaAba, abrirCriadorDeAbas, prepararCriador, carregarScript, camposPilar, redimensionarFoto, camposItemPilar, editorCampos,
     perguntaDispensada, dispensarPergunta, resposta, renderPerguntas, renderNotas, ordenarNotas, barrasComMeta,
-    gavetas, abrirGaveta, abrirGavetaDe, abrirRegistrar,
+    gavetas, abrirGaveta, abrirGavetaDe, abrirRegistrar, marcaItem, monograma, info,
   };
 })();
 

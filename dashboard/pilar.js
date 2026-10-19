@@ -307,6 +307,7 @@
     el.innerHTML = `
       <header>
         ${pilar.checkin ? "" : `<input type="checkbox" class="check" ${c.concluido ? "checked" : ""} aria-label="Marcar como concluído" />`}
+        ${UI.marcaItem({ glifo: pilar.icone, classe: "pequena", nivel: c.concluido ? "feito" : "" })}
         <h4 class="${c.concluido ? "strike" : ""}">${fmt.escape(c.descricao)}</h4>
         <span class="row-actions">
           <button class="btn ghost sm icon" data-editar title="Editar" aria-label="Editar">${UI.icone("editar")}</button>
@@ -549,6 +550,7 @@
       const seq = Leituras.sequencia(c.feitos);
       const hoje = (c.feitos || []).includes(UI.hojeISO());
       li.innerHTML = `
+        ${UI.marcaItem({ glifo: pilar.icone, nivel: hoje ? "feito" : "" })}
         <span class="grow">
           <span class="title">${fmt.escape(c.descricao)}</span>
           <span class="meta">${metaLista(c)}</span>
@@ -562,8 +564,13 @@
       const badge = pilar.naAgenda && c.data
         ? `<span class="badge ${c.concluido ? "feito" : u.nivel}">${c.concluido ? "concluído" : u.rotulo}</span>`
         : c.concluido ? `<span class="badge feito">concluído</span>` : "";
+      // A marca: a data, quando a aba é de agenda; senão, o ícone da aba.
+      const marca = pilar.naAgenda && c.data
+        ? UI.marcaItem({ data: c.data, nivel: c.concluido ? "feito" : ["atrasado", "hoje", "urgente"].includes(u.nivel) ? u.nivel : "" })
+        : UI.marcaItem({ glifo: pilar.icone, nivel: c.concluido ? "feito" : "" });
       li.innerHTML = `
         <input type="checkbox" class="check" ${c.concluido ? "checked" : ""} aria-label="Marcar como concluído" />
+        ${marca}
         <span class="grow">
           <span class="title ${c.concluido ? "strike" : ""}">${fmt.escape(c.descricao)}</span>
           <span class="meta">${metaLista(c)}</span>
@@ -778,8 +785,9 @@
       card.className = "card";
       card.style.marginBottom = "12px";
       card.innerHTML = `
-        <div class="card-head">
-          <h3 class="card-title">${fmt.escape(dia.nome)}</h3>
+        <div class="card-head dia-cab">
+          ${UI.marcaItem({ icone: "haltere" })}
+          <h3 class="card-title">${fmt.escape(dia.nome)}<small>${dia.exercicios.length} ${dia.exercicios.length === 1 ? "exercício" : "exercícios"}</small></h3>
           <span class="row-actions" style="opacity:1;">
             <button class="btn ghost sm" data-renomear>Renomear</button>
             <button class="btn ghost sm" data-excluir-dia>Excluir dia</button>
@@ -796,16 +804,15 @@
         ul.className = "list";
         dia.exercicios.forEach((ex) => {
           const li = document.createElement("li");
-          const partes = [];
-          if (ex.seriesAtual || ex.repeticoesAtual) {
-            partes.push(`${ex.seriesAtual || "-"}x${ex.repeticoesAtual || "-"}`);
-          }
-          if (ex.cargaAtual !== null && ex.cargaAtual !== undefined) partes.push(`carga atual: ${ex.cargaAtual}${ex.unidade}`);
-          if (ex.recorde !== null && ex.recorde !== undefined) partes.push(`recorde: ${ex.recorde}${ex.unidade}`);
           li.innerHTML = `
             <span class="grow">
               <span class="title">${fmt.escape(nomeExercicio(ex.exercicioId))}</span>
-              <span class="meta">${fmt.escape(grupoExercicio(ex.exercicioId))}${partes.length ? ", " + fmt.escape(partes.join(", ")) : ""}</span>
+              <span class="item-info">${[
+                UI.info("haltere", fmt.escape(grupoExercicio(ex.exercicioId))),
+                ex.seriesAtual || ex.repeticoesAtual ? UI.info("repetir", `${fmt.escape(String(ex.seriesAtual || "-"))}x${fmt.escape(String(ex.repeticoesAtual || "-"))}`) : "",
+                ex.cargaAtual !== null && ex.cargaAtual !== undefined ? UI.info("alvo", `carga ${fmt.escape(String(ex.cargaAtual))}${fmt.escape(ex.unidade || "")}`) : "",
+                ex.recorde !== null && ex.recorde !== undefined ? UI.info("estrela", `recorde ${fmt.escape(String(ex.recorde))}${fmt.escape(ex.unidade || "")}`, "bem") : "",
+              ].join("")}</span>
             </span>
             <span class="row-actions">
               <button class="btn ghost sm" data-editar-ex>Editar</button>

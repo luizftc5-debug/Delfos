@@ -1,4 +1,4 @@
-# Design System: Delfos 2.0, "marfim" em gavetas
+# Design System: Delfos 2.1, "marfim" em gavetas
 
 Delfos é o nome de um oráculo, e o painel faz o que um oráculo faz: lê a
 situação e diz o que ela é. Desde a 1.7, **em toda página, a leitura é o
@@ -190,6 +190,18 @@ de largura seriam 76 KB).
   conta, projeto, resumo de campo, ladrilho de aba) tem o tom
   `--superficie-2` a 62% sobre a superfície, raio 12, sem borda. Moldura de
   tabela, de grade de semanas e de cartão que só embrulhava o vazio somem.
+- **Item da gaveta** (2.1): todo registro de lista dentro de gaveta é um
+  compartimento (`--fundo-item`, raio 12, 6px entre eles), com a **marca** à
+  esquerda (`UI.marcaItem`, 40px, raio 11, fundo a 15% da cor da aba ou da
+  urgência: a data com o dia na voz e o mês embaixo, um ícone em duas
+  camadas ou as iniciais na voz), o nome em Funnel Sans 600, uma linha de
+  **informações com ícone** de 14px (`UI.info`) e o número à direita. A cor
+  da marca diz de onde é o item ou quão urgente ele está; nunca enfeite.
+- **Cartão destacado** (2.1, `.list.cartoes`): o item que é um objeto
+  inteiro (disciplina, conta, cartão, investimento, projeto) vira cartão em
+  grade: marca grande (46px), nome na voz, o número grande na voz, as
+  informações embaixo de um fio e uma barra fina com a referência marcada
+  (a média contra a mínima, o limite, as etapas). O cartão inteiro é o link.
 - **Superfície solta** (`.card`) fica para o que não está em gaveta: janela,
   o cartão de uma conta numa página sem gaveteiro.
 - **Estado vazio dentro da gaveta**: uma linha (ícone de 40px, título em
@@ -223,8 +235,10 @@ de largura seriam 76 KB).
 - **Janelas**: raio 22, fundo desfocado atrás, título na voz. Ganham nome
   (`aria-labelledby`), foco dentro, Tab circulando nelas e foco de volta a
   quem abriu. No celular, a folha "Mais" sobe de baixo.
-- **Barras**: comparação sem trilho (o valor escrito ao lado dá a escala);
-  progresso de meta com trilho (o trilho é o que falta).
+- **Barras**: fora de gaveta, comparação sem trilho (o valor escrito ao
+  lado dá a escala); dentro da gaveta, cada linha é um compartimento e a
+  barra ganha trilho (no compartimento, é o trilho que dá a medida).
+  Progresso de meta sempre com trilho (o trilho é o que falta).
 - **Retrato**: quadrado de cantos suaves, nunca círculo.
 - **Criador de abas** (1.8, refeito na 1.9): nome, uma caixa de **Propósito** e, logo
   abaixo, "O que o Delfos entendeu": uma lista curta (assunto, o que foi

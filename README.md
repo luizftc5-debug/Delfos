@@ -50,7 +50,7 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 
 > Trabalhos da faculdade e o TCC ficam em **Faculdade**, não em Projetos.
 
-### As gavetas (versão 2.0)
+### As gavetas (versões 2.0 e 2.1)
 
 Cada aba é um **gaveteiro**: a frase do alto, os números da aba num quadro só e, embaixo, as
 **gavetas**, uma para cada assunto (A pagar, Lançamentos, Metas, Prazos, Disciplinas...).
@@ -63,6 +63,11 @@ Cada aba é um **gaveteiro**: a frase do alto, os números da aba num quadro só
   em Cartões, "+ Disciplina" em Disciplinas. O registro principal de cada aba continua no alto.
 - O que é análise ou ajuste (Perguntas do Delfos, Ritmo do mês, Ajustes da aba...) começa fechado,
   para a página não ficar carregada. Abra quando quiser.
+- **Dentro da gaveta, cada coisa tem o seu quadro** (versão 2.1): à esquerda, um quadradinho colorido
+  diz de relance o que é (a data de um prazo, as iniciais de uma disciplina, o ícone de um material);
+  embaixo do nome vêm as informações com ícone; o número que importa fica à direita. Disciplinas,
+  contas, cartões, investimentos e projetos viram **cartões** com o número grande e uma barra (a
+  média contra a mínima, o limite usado, as etapas feitas); tocar no cartão abre a página dele.
 - Na **Visão geral**, o botão **+ Registrar** pergunta *o que você quer registrar* (um lançamento,
   um compromisso, um prazo, um projeto, um item de uma aba sua) e abre o formulário certo, sem você
   precisar lembrar em que aba cada coisa fica.

@@ -622,15 +622,19 @@
       const li = document.createElement("li");
       const u = UI.urgencia(i.data);
       const tarde = u.dias !== null && u.dias < 0;
+      const marca = UI.marcaItem({ data: i.data, nivel: ["atrasado", "hoje", "urgente"].includes(u.nivel) ? u.nivel : "" });
+      const quandoInfo = UI.info("relogio", esc(quando(i.data)), tarde ? "alerta" : u.nivel === "hoje" || u.nivel === "urgente" ? "atencao" : "");
       if (i.tipo === "fatura") {
         li.innerHTML = `
+          ${marca}
           <span class="grow"><a class="t titulo-link" href="conta.html?tipo=cartao&id=${encodeURIComponent(i.c.id)}">Fatura ${esc(i.c.nome)}</a>
-          <span class="m" ${tarde ? 'style="color:var(--critical-text)"' : ""}>${esc(quando(i.data))}</span></span>
+          <span class="item-info">${quandoInfo}${UI.info("cartao", "cartão de crédito")}</span></span>
           <span class="v">${moeda(i.valor)}</span>`;
       } else {
         li.innerHTML = `
+          ${marca}
           <span class="grow"><span class="t">${esc(i.t.descricao || "Sem descrição")}</span>
-          <span class="m" ${tarde ? 'style="color:var(--critical-text)"' : ""}>${esc(quando(i.data))}</span></span>
+          <span class="item-info">${quandoInfo}${i.t.categoria ? UI.info("lista", esc(i.t.categoria)) : ""}${i.t.fixoId ? UI.info("repetir", "gasto fixo") : ""}</span></span>
           <span class="v">${moeda(i.valor)}</span>
           <button class="btn sm" type="button" data-pagar>Pago</button>`;
         li.querySelector("[data-pagar]").addEventListener("click", () => marcarPago(i.t));
@@ -683,9 +687,17 @@
       const f = x.fixo;
       const li = document.createElement("li");
       const onde = f.origem ? Financas.nomeOrigem(f.origem) : "";
+      const sit = situacao(x);
+      const tomSit = f.ativo === false ? "" : x.pago ? "bem" : /venceu/.test(sit) ? "alerta" : /hoje/.test(sit) ? "atencao" : "";
       li.innerHTML = `
+        ${UI.marcaItem({ icone: "repetir", nivel: f.ativo === false ? "apagada" : "" })}
         <span class="grow"><span class="t">${esc(f.descricao)}</span>
-        <span class="m">${esc([`todo dia ${f.dia}`, f.categoria, onde].filter(Boolean).join(", "))}. ${esc(fmt.capitalizar(situacao(x)))}</span></span>
+        <span class="item-info">${[
+          UI.info("calendario", `todo dia ${esc(String(f.dia))}`),
+          f.categoria ? UI.info("lista", esc(f.categoria)) : "",
+          onde ? UI.info(f.origem?.startsWith("cartao:") ? "cartao" : "banco", esc(onde)) : "",
+          UI.info(x.pago ? "check" : "relogio", esc(sit), tomSit),
+        ].join("")}</span></span>
         <span class="v">${moeda(x.valor)}</span>
         <button class="btn ghost sm icon" type="button" data-editar title="Editar gasto fixo" aria-label="Editar ${esc(f.descricao)}">${icone("editar")}</button>`;
       if (f.ativo === false) li.style.opacity = ".6";
@@ -696,8 +708,13 @@
     detectados.forEach((r) => {
       const li = document.createElement("li");
       li.innerHTML = `
+        ${UI.marcaItem({ icone: "lampada", nivel: "atencao" })}
         <span class="grow"><span class="t">${esc(r.descricao)}</span>
-        <span class="m">${esc(r.confirmado ? `${r.categoria}, você disse que é fixo` : `${r.categoria}, apareceu em ${r.meses} dos últimos 4 meses`)}. Ainda não cadastrado.</span></span>
+        <span class="item-info">${[
+          r.categoria ? UI.info("lista", esc(r.categoria)) : "",
+          UI.info("repetir", esc(r.confirmado ? "você disse que é fixo" : `em ${r.meses} dos últimos 4 meses`)),
+          UI.info("info", "ainda não cadastrado", "atencao"),
+        ].join("")}</span></span>
         <span class="v">${moeda(r.valor)}</span>
         <button class="btn sm" type="button" data-cadastrar>Cadastrar</button>
         <button class="btn ghost sm icon" type="button" data-nao title="Não é gasto fixo" aria-label="${esc(r.descricao)} não é gasto fixo">${icone("fechar")}</button>`;
@@ -848,8 +865,9 @@
     }
     box.innerHTML = `<ul class="linhas-valor">${a.maiores.map((t) => `
       <li>
+        ${UI.marcaItem({ data: t.data })}
         <span class="grow"><span class="t">${esc(t.descricao || "Sem descrição")}</span>
-        <span class="m">${esc(`${fmt.dataPorExtenso(t.data)}, ${t.categoria || "Outros"}`)}</span></span>
+        <span class="item-info">${UI.info("lista", esc(t.categoria || "Outros"))}${t.origem ? UI.info(t.origem.startsWith("cartao:") ? "cartao" : "banco", esc(Financas.nomeOrigem(t.origem))) : ""}</span></span>
         <span class="v">${moeda(t.valor)}</span>
       </li>`).join("")}</ul>`;
   }
@@ -903,7 +921,8 @@
       card.className = "card meta-card";
       card.innerHTML = `
         <div class="meta-topo">
-          <div style="min-width:0;">
+          ${UI.marcaItem({ icone: prog >= 1 ? "check" : "alvo", nivel: prog >= 1 ? "bem" : "" })}
+          <div style="min-width:0; flex:1;">
             <div class="meta-nome">${esc(m.descricao)}</div>
             <div class="meta-prazo">${m.prazo ? `até ${esc(fmt.dataPorExtenso(m.prazo))}` : "sem prazo"}</div>
           </div>

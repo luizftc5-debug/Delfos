@@ -70,37 +70,41 @@
       return;
     }
 
-    const grid = document.createElement("div");
-    grid.className = "grid g3";
+    // O tipo do investimento vira o ícone da marca.
+    const iconeTipo = (t) => {
+      const x = String(t || "").toLowerCase();
+      return /cripto|bitcoin/.test(x) ? "globo" : /a[cç][aã]o|a[cç][oõ]es|fii|fundo/.test(x) ? "investimentos" : /previd/.test(x) ? "estrela" : "cofre";
+    };
+    const ul = document.createElement("ul");
+    ul.className = "list cartoes";
     lista
       .slice()
       .sort((a, b) => (Number(b.valorAtual ?? b.valorAplicado) || 0) - (Number(a.valorAtual ?? a.valorAplicado) || 0))
       .forEach((inv) => {
         const r = Financas.rentabilidade(inv);
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <div class="card-head" style="align-items:flex-start; margin-bottom:8px;">
-            <div style="min-width:0;">
-              <h3 class="card-title" style="font-size:14px;"><span class="swatch financeiro"></span>${fmt.escape(inv.nome)}</h3>
-              <div class="card-note" style="margin-top:3px;">${fmt.escape(inv.tipo || "Outro")}${inv.instituicao ? `, ${fmt.escape(inv.instituicao)}` : ""}</div>
-            </div>
-            <span class="row-actions">
-              <button class="btn ghost sm" data-editar>Editar</button>
-              <button class="btn ghost sm" data-excluir>Excluir</button>
-            </span>
-          </div>
-          <div class="stat-value num" style="font-size:22px;">${fmt.moeda(Number(inv.valorAtual ?? inv.valorAplicado) || 0)}</div>
-          <div class="stat-sub delta ${r.ganho >= 0 ? "up" : "down"}">
-            ${UI.icone(r.ganho >= 0 ? "subiu" : "desceu", "delta-ic")} ${fmt.moeda(Math.abs(r.ganho))} (${r.percentual >= 0 ? "+" : ""}${UI.fmt.decimal(r.percentual)}%)
-          </div>
-          <div class="stat-sub">aplicado ${fmt.moeda(Number(inv.valorAplicado) || 0)}${inv.dataAplicacao ? ` em ${fmt.data(inv.dataAplicacao)}` : ""}</div>
-          ${inv.observacoes ? `<div class="stat-sub" style="margin-top:8px;">${fmt.escape(inv.observacoes)}</div>` : ""}`;
-        card.querySelector("[data-editar]").addEventListener("click", () => editarInvestimento(inv));
-        card.querySelector("[data-excluir]").addEventListener("click", () => excluir(inv));
-        grid.appendChild(card);
+        const sobe = r.ganho >= 0;
+        const li = document.createElement("li");
+        li.innerHTML = `
+          ${UI.marcaItem({ icone: iconeTipo(inv.tipo), classe: "grande" })}
+          <span class="cartao-nome">
+            <span class="title">${fmt.escape(inv.nome)}</span>
+            <span class="meta">${fmt.escape(inv.tipo || "Outro")}${inv.instituicao ? `, ${fmt.escape(inv.instituicao)}` : ""}</span>
+          </span>
+          <span class="item-valor voz">${fmt.moeda(Number(inv.valorAtual ?? inv.valorAplicado) || 0)}<small>valor atual</small></span>
+          <span class="item-info">
+            ${UI.info(sobe ? "subiu" : "desceu", `${fmt.moeda(Math.abs(r.ganho))} (${r.percentual >= 0 ? "+" : "−"}${UI.fmt.decimal(Math.abs(r.percentual))}%)`, sobe ? "bem" : "alerta")}
+            ${UI.info("cofre", `aplicado ${fmt.moeda(Number(inv.valorAplicado) || 0)}${inv.dataAplicacao ? ` em ${fmt.escape(fmt.data(inv.dataAplicacao))}` : ""}`)}
+            ${inv.observacoes ? UI.info("lapis", fmt.escape(inv.observacoes)) : ""}
+          </span>
+          <span class="row-actions">
+            <button class="btn ghost sm" data-editar type="button">Editar</button>
+            <button class="btn ghost sm" data-excluir type="button">Excluir</button>
+          </span>`;
+        li.querySelector("[data-editar]").addEventListener("click", () => editarInvestimento(inv));
+        li.querySelector("[data-excluir]").addEventListener("click", () => excluir(inv));
+        ul.appendChild(li);
       });
-    box.appendChild(grid);
+    box.appendChild(ul);
   }
 
   /* --------------------------------- Ações ---------------------------------- */

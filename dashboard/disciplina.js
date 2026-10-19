@@ -126,12 +126,14 @@
       const u = a.data && !temNota ? UI.urgencia(a.data) : null;
       const li = document.createElement("li");
       li.innerHTML = `
+        ${a.data ? UI.marcaItem({ data: a.data, nivel: temNota ? "feito" : u && u.nivel !== "proximo" ? u.nivel : "" }) : UI.marcaItem({ icone: "alvo", nivel: "futuro" })}
         <span class="grow">
           <span class="title">${fmt.escape(a.nome || "Avaliação")}</span>
-          <span class="meta">${[
-            a.data ? fmt.data(a.data) : "sem data",
-            `peso ${a.peso || 1}`,
-          ].join(", ")}</span>
+          <span class="item-info">${[
+            a.data ? "" : UI.info("calendario", "sem data"),
+            UI.info("alvo", `peso ${fmt.escape(String(a.peso || 1))}`),
+            temNota ? UI.info("check", "nota lançada", "bem") : "",
+          ].join("")}</span>
         </span>
         ${temNota
           ? `<span class="nota-chip">${fmt.escape(Number(a.nota).toLocaleString("pt-BR", { maximumFractionDigits: 2 }))}</span>`
@@ -177,9 +179,10 @@
       const li = document.createElement("li");
       li.innerHTML = `
         <input type="checkbox" class="check" ${p.concluido ? "checked" : ""} aria-label="Marcar como concluído" />
+        ${UI.marcaItem({ data: p.data, nivel: p.concluido ? "feito" : u.nivel === "proximo" ? "" : u.nivel })}
         <span class="grow">
           <span class="title ${p.concluido ? "strike" : ""}">${fmt.escape(p.descricao)}</span>
-          <span class="meta">${fmt.escape(p.tipo || "entrega")}, ${fmt.data(p.data)}</span>
+          <span class="item-info">${UI.info(p.tipo === "prova" ? "alvo" : "lista", fmt.escape(p.tipo || "entrega"))}</span>
         </span>
         <span class="badge ${p.concluido ? "feito" : u.nivel}">${p.concluido ? "concluído" : u.rotulo}</span>
         <span class="row-actions"><button class="btn ghost sm" data-excluir>Excluir</button></span>`;
@@ -226,21 +229,22 @@
     ul.className = "list";
     lista.forEach((m) => {
       const li = document.createElement("li");
-      li.style.alignItems = "flex-start";
       const anexos = m.anexos || [];
       const titulo = m.url
         ? `<a class="title" href="${fmt.escape(m.url)}" target="_blank" rel="noopener">${fmt.escape(m.titulo)}</a>`
         : `<span class="title">${fmt.escape(m.titulo)}</span>`;
-      const detalhe = [
-        m.url ? fmt.escape(dominio(m.url)) : "",
-        anexos.length ? `${anexos.length} ${anexos.length === 1 ? "documento anexado" : "documentos anexados"}` : "",
-      ].filter(Boolean).join(", ");
 
+      const tipo = String(m.tipo || "link").toLowerCase();
+      const iconeTipo = /pdf|artigo|apostila|diretriz/.test(tipo) ? "arquivo" : /livro/.test(tipo) ? "livro" : /v[ií]deo|aula/.test(tipo) ? "camera" : /slide/.test(tipo) ? "quadro" : m.url ? "globo" : "arquivo";
       li.innerHTML = `
-        <span class="badge faculdade" style="margin-top:2px;">${fmt.escape(m.tipo || "link")}</span>
+        ${UI.marcaItem({ icone: iconeTipo })}
         <span class="grow">
           ${titulo}
-          ${detalhe ? `<span class="meta">${detalhe}</span>` : ""}
+          <span class="item-info">${[
+            UI.info("lista", fmt.escape(m.tipo || "link")),
+            m.url ? UI.info("globo", fmt.escape(dominio(m.url))) : "",
+            anexos.length ? UI.info("anexar", `${anexos.length} ${anexos.length === 1 ? "documento" : "documentos"}`) : "",
+          ].join("")}</span>
           ${anexos.length ? `<span class="anexos" style="margin-top:8px;">${anexos.map(anexoHTML).join("")}</span>` : ""}
         </span>
         <span class="row-actions">
@@ -313,21 +317,26 @@
     grid.className = "grid g2";
     lista.forEach((r) => {
       const card = document.createElement("div");
-      card.className = "card";
+      card.className = "card resumo-cartao";
+      const nAnexos = (r.anexos || []).length;
       card.innerHTML = `
-        <div class="card-head" style="align-items:flex-start;">
-          <div style="min-width:0;">
-            <h3 class="card-title" style="font-size:14px;">${fmt.escape(r.titulo)}</h3>
-            <div class="card-note" style="margin-top:2px;">${r.atualizadoEm ? `atualizado em ${fmt.data(r.atualizadoEm)}` : ""}</div>
+        <div class="resumo-cab">
+          ${UI.marcaItem({ icone: "lapis" })}
+          <div class="resumo-cab-texto">
+            <h3 class="resumo-titulo">${fmt.escape(r.titulo)}</h3>
+            <span class="item-info">${[
+              r.atualizadoEm ? UI.info("relogio", `atualizado em ${fmt.escape(fmt.data(r.atualizadoEm))}`) : "",
+              nAnexos ? UI.info("anexar", `${nAnexos} ${nAnexos === 1 ? "documento" : "documentos"}`) : "",
+            ].join("")}</span>
           </div>
-          <span class="row-actions" style="opacity:1;">
-            <button class="btn ghost sm" data-editar>Abrir</button>
-            <button class="btn ghost sm" data-anexos>Documentos</button>
-            <button class="btn ghost sm" data-excluir>Excluir</button>
-          </span>
         </div>
-        <div class="resumo-texto rico">${UI.htmlSeguro(r.conteudo || "")}</div>
-        ${(r.anexos || []).length ? `<div class="anexos" style="margin-top:14px;">${r.anexos.map(anexoHTML).join("")}</div>` : ""}`;
+        <div class="resumo-texto rico resumo-previa">${UI.htmlSeguro(r.conteudo || "")}</div>
+        ${nAnexos ? `<div class="anexos">${r.anexos.map(anexoHTML).join("")}</div>` : ""}
+        <div class="resumo-acoes">
+          <button class="btn sm" data-editar type="button">Abrir</button>
+          <button class="btn ghost sm" data-anexos type="button">Documentos</button>
+          <button class="btn ghost sm" data-excluir type="button">Excluir</button>
+        </div>`;
       ligarAnexos(card, r.anexos || []);
       UI.resolverImagens(card.querySelector(".resumo-texto"));
       card.querySelector("[data-editar]").addEventListener("click", () => abrirResumo(r));

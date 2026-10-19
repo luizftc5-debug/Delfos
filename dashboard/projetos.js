@@ -149,8 +149,8 @@
       return;
     }
 
-    const grid = document.createElement("div");
-    grid.className = "grid g2";
+    const ul = document.createElement("ul");
+    ul.className = "list cartoes";
     lista
       .slice()
       .sort((a, b) => {
@@ -158,9 +158,9 @@
         if (fim(a) !== fim(b)) return fim(a) ? 1 : -1;
         return (a.deadline || "9999").localeCompare(b.deadline || "9999");
       })
-      .forEach((p) => grid.appendChild(cartaoProjeto(p)));
+      .forEach((p) => ul.appendChild(cartaoProjeto(p)));
 
-    box.appendChild(grid);
+    box.appendChild(ul);
   }
 
   /**
@@ -168,70 +168,44 @@
    * mora em projeto.html — aqui fica só o que se lê de relance, com a próxima
    * etapa em aberto servindo de "e agora?".
    */
+  /** Um projeto em cartão: as iniciais na cor de Projetos, o que já rendeu, o prazo e as etapas. */
   function cartaoProjeto(p) {
-    const card = document.createElement("div");
-    card.className = "card";
+    const li = document.createElement("li");
     const r = UI.resumoProjeto(p);
     const href = `projeto.html?id=${encodeURIComponent(p.id)}`;
     const proxima = (p.passos || []).find((s) => !s.feito);
+    if (r.encerrado) li.className = "concluido";
+    const tomPrazo = r.urgencia ? (r.urgencia.nivel === "atrasado" || r.urgencia.nivel === "hoje" ? "alerta" : r.urgencia.nivel === "urgente" ? "atencao" : "") : "";
 
-    card.innerHTML = `
-      <div class="card-head" style="align-items:flex-start;">
-        <div style="min-width:0;">
-          <h2 class="card-title" style="font-size:15px;">
-            <span class="swatch projetos"></span>
-            <a class="titulo-link ${r.encerrado ? "strike" : ""}" href="${href}">${fmt.escape(p.nome)}</a>
-          </h2>
-          <div class="stat-sub" style="margin-top:5px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-            <span class="badge ${p.status === "concluído" ? "feito" : ""}">${fmt.escape(p.status)}</span>
-            ${p.tipo ? `<span class="badge projetos">${fmt.escape(p.tipo)}</span>` : ""}
-            ${r.urgencia ? `<span class="badge ${r.urgencia.nivel}">${r.urgencia.rotulo}</span>` : ""}
-            ${p.deadline ? `<span class="muted">${fmt.data(p.deadline)}</span>` : ""}
-          </div>
-        </div>
-        <span class="row-actions" style="opacity:1;">
-          <button class="btn ghost sm" data-editar>Editar</button>
-          <button class="btn ghost sm" data-excluir>Excluir</button>
-        </span>
-      </div>
-
-      ${p.descricao ? `<p class="card-note" style="margin:0 0 12px;">${fmt.escape(p.descricao)}</p>` : ""}
-
-      ${(r.metaMensal || r.faturado) ? `
-        <div class="mini-stats">
-          ${r.metaMensal ? `<div><div class="stat-label">Renda estimada</div><div class="mini-valor num">${fmt.moeda(r.metaMensal)}<span class="muted" style="font-weight:400;">/mês</span></div></div>` : ""}
-          ${r.faturado ? `<div><div class="stat-label">Já faturado</div><div class="mini-valor num" style="color:var(--success-text);">${fmt.moeda(r.faturado)}</div></div>` : ""}
-          ${r.custoTotal ? `<div><div class="stat-label">Custos</div><div class="mini-valor num">${fmt.moeda(r.custoTotal)}</div></div>` : ""}
-        </div>` : ""}
-
-      <div data-progresso></div>
-
-      <p class="card-note" style="margin:10px 0 0;">
+    li.innerHTML = `
+      ${UI.marcaItem({ texto: UI.monograma(p.nome), classe: "grande", nivel: r.encerrado ? "apagada" : "" })}
+      <a class="linha-link cartao-nome" href="${href}">
+        <span class="title ${r.encerrado ? "strike" : ""}">${fmt.escape(p.nome)}</span>
+        <span class="meta">${fmt.escape(p.descricao || [p.status, p.tipo].filter(Boolean).join(", "))}</span>
+      </a>
+      ${r.faturado
+        ? `<span class="item-valor voz valor-bom">${fmt.moeda(r.faturado)}<small>já faturado</small></span>`
+        : r.metaMensal ? `<span class="item-valor voz">${fmt.moeda(r.metaMensal)}<small>estimado por mês</small></span>`
+        : `<span class="item-valor"><small>${fmt.escape(p.status || "")}</small></span>`}
+      <span class="item-info">
+        ${UI.info(p.status === "concluído" ? "check" : "relogio", fmt.escape(p.status || "sem status"), p.status === "concluído" ? "bem" : "")}
+        ${p.tipo ? UI.info("projetos", fmt.escape(p.tipo)) : ""}
+        ${p.deadline ? UI.info("calendario", `${fmt.escape(fmt.data(p.deadline))}${r.urgencia ? `, ${fmt.escape(r.urgencia.rotulo)}` : ""}`, tomPrazo) : ""}
+        ${r.faturado && r.metaMensal ? UI.info("cofre", `${fmt.moeda(r.metaMensal)} por mês estimados`) : ""}
+        ${r.custoTotal ? UI.info("carrinho", `custos ${fmt.moeda(r.custoTotal)}`) : ""}
         ${proxima
-          ? `<b style="font-weight:640; color:var(--texto-2);">Próxima etapa:</b> ${fmt.escape(proxima.texto)}`
-          : r.passos.total
-            ? "Todas as etapas concluídas."
-            : "Sem etapas ainda. Abra o projeto para quebrá-lo em passos."}
-      </p>
+          ? UI.info("lista", `<b>Próxima etapa:</b> ${fmt.escape(proxima.texto)}`)
+          : UI.info("lista", r.passos.total ? "todas as etapas concluídas" : "sem etapas ainda", r.passos.total ? "bem" : "")}
+      </span>
+      ${r.passos.total ? `<span class="cartao-barra" style="--cor-barra:var(--s-projetos)" title="${r.passos.feitos} de ${r.passos.total} etapas"><i style="width:${(r.passos.feitos / r.passos.total) * 100}%"></i></span>` : ""}
+      <span class="row-actions">
+        <button class="btn ghost sm" data-editar type="button">Editar</button>
+        <button class="btn ghost sm" data-excluir type="button">Excluir</button>
+      </span>`;
 
-      <a class="btn sm" href="${href}" style="margin-top:12px;">Abrir projeto</a>`;
-
-    if (r.passos.total) {
-      card.querySelector("[data-progresso]").appendChild(
-        UI.medidor({
-          rotulo: "Progresso",
-          atual: r.passos.feitos,
-          alvo: r.passos.total,
-          formatar: (n) => `${n}`,
-          sufixo: " etapas",
-          cor: "var(--s-projetos)",
-        })
-      );
-    }
-
-    card.querySelector("[data-editar]").addEventListener("click", () => editarProjeto(p));
-    card.querySelector("[data-excluir]").addEventListener("click", () => excluir("projetos", p, "Projeto"));
-    return card;
+    li.querySelector("[data-editar]").addEventListener("click", () => editarProjeto(p));
+    li.querySelector("[data-excluir]").addEventListener("click", () => excluir("projetos", p, "Projeto"));
+    return li;
   }
 
   function renderOportunidades() {
@@ -260,10 +234,14 @@
     lista.forEach((o) => {
       const li = document.createElement("li");
       li.innerHTML = `
+        ${UI.marcaItem({ icone: "lampada" })}
         <span class="grow">
           <span class="title">${fmt.escape(o.descricao)}</span>
-          <span class="meta">${[o.potencial && `retorno: ${o.potencial}`, o.esforco && `esforço: ${o.esforco}`]
-            .filter(Boolean).map(fmt.escape).join(", ") || "sem detalhes"}</span>
+          <span class="item-info">${[
+            o.potencial ? UI.info("cofre", `retorno: ${fmt.escape(o.potencial)}`) : "",
+            o.esforco ? UI.info("relogio", `esforço: ${fmt.escape(o.esforco)}`) : "",
+            o.area ? UI.info("grade", fmt.escape(o.area)) : "",
+          ].join("") || UI.info("info", "sem detalhes")}</span>
         </span>
         <span class="row-actions">
           <button class="btn ghost sm" data-virar>Virar projeto</button>

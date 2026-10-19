@@ -174,8 +174,11 @@
       return;
     }
 
+    // Cada disciplina é um cartão: as iniciais na cor da Faculdade, o nome, a
+    // média grande, o que vem pela frente e a média contra a mínima.
+    const minimaGeral = Number(Store.estado().preferencias.faculdade?.mediaMinima) || 7;
     const ul = document.createElement("ul");
-    ul.className = "list";
+    ul.className = "list cartoes";
     lista
       .slice()
       .sort((a, b) => {
@@ -189,24 +192,33 @@
         const prox = UI.proximaAvaliacao(d);
         const u = prox ? UI.urgencia(prox.data) : null;
         const nPrazos = prazos().filter((p) => p.disciplinaId === d.id && !p.concluido).length;
+        const nAval = (d.avaliacoes || []).length;
+        const nMat = (d.materiais || []).length;
+        const nRes = (d.resumos || []).length;
+        const minima = Number(d.mediaMinima) || minimaGeral;
+        const concluida = d.status === "concluída";
+        const tom = !media ? "" : media.media >= minima ? "bem" : media.media >= minima - 1 ? "atencao" : "alerta";
+        const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 
         const li = document.createElement("li");
+        if (concluida) li.className = "concluido";
         li.innerHTML = `
-          <a class="grow linha-link" href="${linkDisciplina(d)}">
-            <span class="title ${d.status === "concluída" ? "strike" : ""}">${fmt.escape(d.nome)}</span>
-            <span class="meta">${[
-              d.professor && `Prof. ${fmt.escape(d.professor)}`,
-              `${(d.avaliacoes || []).length} ${(d.avaliacoes || []).length === 1 ? "avaliação" : "avaliações"}`,
-              nPrazos ? `${nPrazos} ${nPrazos === 1 ? "prazo aberto" : "prazos abertos"}` : null,
-              (d.materiais || []).length ? `${d.materiais.length} ${d.materiais.length === 1 ? "material" : "materiais"}` : null,
-              (d.resumos || []).length ? `${d.resumos.length} ${d.resumos.length === 1 ? "resumo" : "resumos"}` : null,
-            ].filter(Boolean).join(", ")}</span>
+          ${UI.marcaItem({ texto: UI.monograma(d.nome), classe: "grande", nivel: concluida ? "apagada" : "" })}
+          <a class="linha-link cartao-nome" href="${linkDisciplina(d)}">
+            <span class="title ${concluida ? "strike" : ""}">${fmt.escape(d.nome)}</span>
+            <span class="meta">${d.professor ? `Prof. ${fmt.escape(d.professor)}` : concluida ? "concluída" : "sem professor cadastrado"}</span>
           </a>
-          ${media ? `<span class="nota-chip">${UI.fmt.decimal(media.media)}</span>` : ""}
-          ${u ? `<span class="badge ${u.nivel}">${u.rotulo}</span>` : ""}
+          <span class="item-valor voz">${media ? UI.fmt.decimal(media.media) : "-"}<small>${media ? "média" : "sem nota"}</small></span>
+          <span class="item-info">
+            ${prox ? UI.info("relogio", `${fmt.escape(prox.nome || "Avaliação")}, ${fmt.escape(u.rotulo)}`, u.nivel === "atrasado" || u.nivel === "hoje" ? "alerta" : u.nivel === "urgente" ? "atencao" : "") : ""}
+            ${UI.info("alvo", plural(nAval, "avaliação", "avaliações"))}
+            ${nPrazos ? UI.info("calendario", plural(nPrazos, "prazo aberto", "prazos abertos")) : ""}
+            ${nRes ? UI.info("lapis", plural(nRes, "resumo", "resumos")) : ""}
+            ${nMat ? UI.info("arquivo", plural(nMat, "material", "materiais")) : ""}
+          </span>
+          ${media ? `<span class="cartao-barra ${tom}" title="Média ${UI.fmt.decimal(media.media)}, mínima ${UI.fmt.decimal(minima)}"><i style="width:${Math.min(100, media.media * 10)}%"></i><b style="left:calc(${minima * 10}% - 1px)"></b></span>` : ""}
           <span class="row-actions">
-            <a class="btn ghost sm" href="${linkDisciplina(d)}">Abrir</a>
-            <button class="btn ghost sm" data-excluir>Excluir</button>
+            <button class="btn ghost sm" data-excluir type="button">Excluir</button>
           </span>`;
         li.querySelector("[data-excluir]").addEventListener("click", () => excluirDisciplina(d));
         ul.appendChild(li);
@@ -251,10 +263,13 @@
       const li = document.createElement("li");
       li.innerHTML = `
         <input type="checkbox" class="check" ${p.concluido ? "checked" : ""} aria-label="Marcar como concluído" />
+        ${UI.marcaItem({ data: p.data, nivel: p.concluido ? "feito" : u.nivel === "proximo" ? "" : u.nivel })}
         <span class="grow">
           <span class="title ${p.concluido ? "strike" : ""}">${fmt.escape(p.descricao)}</span>
-          <span class="meta">${[fmt.escape(p.tipo || "entrega"), disc && fmt.escape(disc.nome), fmt.data(p.data)]
-            .filter(Boolean).join(", ")}</span>
+          <span class="item-info">${[
+            UI.info(p.tipo === "prova" ? "alvo" : p.tipo === "TCC" ? "microscopio" : "lista", fmt.escape(p.tipo || "entrega")),
+            disc ? UI.info("faculdade", fmt.escape(disc.nome)) : "",
+          ].join("")}</span>
         </span>
         <span class="badge ${p.concluido ? "feito" : u.nivel}">${p.concluido ? "concluído" : u.rotulo}</span>
         <span class="row-actions">

@@ -3691,3 +3691,242 @@ button.link-gaveta::after { transform: rotate(90deg); }
 /* Vazio numa gaveta que já tem o botão de registrar no puxador: o botão não se repete. */
 .gaveta:has(> .gaveta-cab .gaveta-acoes .btn) .gaveta-corpo .empty .btn { display: none; }
 #progresso + #etapas { margin-top: 14px; }
+
+/* ========================= Itens das gavetas (2.1) =========================
+   Pedido do Luiz: organização interna agradável. Dentro de uma gaveta, cada
+   registro é um compartimento (tom um pouco acima da gaveta, raio 12, sem
+   borda), separado do vizinho por 6px: à esquerda a marca (UI.marcaItem: a
+   data, um ícone ou as iniciais, na cor da aba ou da urgência), no meio o
+   nome e uma linha de informações com ícone (UI.info), à direita o número
+   que importa. Vale para toda lista de gaveta (.list, .linhas-valor,
+   .lembretes, .notas, a agenda); fora de gaveta (janelas) nada muda. */
+
+.gaveta { --fundo-item: color-mix(in srgb, var(--superficie-2) 52%, var(--superficie)); --fundo-item-luz: color-mix(in srgb, var(--superficie-2) 88%, var(--superficie)); }
+
+.gaveta .list, .gaveta .linhas-valor, .gaveta .lembretes, .gaveta .notas { display: flex; flex-direction: column; gap: 6px; }
+.gaveta .list > li, .gaveta .linhas-valor > li, .gaveta .lembretes > li, .gaveta .notas > li {
+  background: var(--fundo-item);
+  border: none;
+  border-radius: 12px;
+  padding: 11px 14px;
+  gap: 14px;
+  transition: background-color var(--t-medio) var(--ease-saida);
+}
+.gaveta .list > li, .gaveta .linhas-valor > li, .gaveta .lembretes > li { align-items: center; }
+.gaveta .list > li:first-child, .gaveta .list > li:last-child,
+.gaveta .linhas-valor > li:first-child, .gaveta .linhas-valor > li:last-child,
+.gaveta .notas > li:first-child, .gaveta .notas > li:last-child { padding: 11px 14px; }
+.gaveta .list > li::before, .gaveta .linhas-valor > li::before { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .gaveta .list > li:hover, .gaveta .linhas-valor > li:hover, .gaveta .lembretes > li:hover { background: var(--fundo-item-luz); }
+  .gaveta .list > li:hover .row-actions { background: linear-gradient(90deg, transparent, var(--fundo-item-luz) 26px); }
+}
+.gaveta .list .row-actions { right: 10px; background: linear-gradient(90deg, transparent, var(--fundo-item) 26px); }
+.gaveta .list .row-actions.fixas { background: none; }
+.gaveta .list .title { font-size: 15px; font-weight: 600; line-height: 1.35; }
+.gaveta .list .meta { font-size: 13px; margin-top: 3px; line-height: 1.45; }
+.gaveta .linhas-valor .t { font-weight: 600; }
+.gaveta .list li.concluido, .gaveta .list li:has(> .check:checked) { background: transparent; box-shadow: inset 0 0 0 1px var(--linha); }
+
+/* A marca do item. */
+.item-marca {
+  --cor-item: var(--cor-pagina, var(--texto-2));
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  color: var(--cor-item);
+  background: color-mix(in srgb, var(--cor-item) 15%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cor-item) 14%, transparent);
+  font-size: 15px;
+  line-height: 1;
+}
+.item-marca .ico { width: 19px; height: 19px; }
+.item-marca .ico.duo .corpo { opacity: 0.22; }
+.item-marca.texto { font-family: var(--font-voz); font-size: 16px; font-weight: 500; letter-spacing: 0.01em; }
+.item-marca.data { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.item-marca.data b { font-family: var(--font-voz); font-size: 17px; font-weight: 500; color: var(--texto); font-variant-numeric: lining-nums; }
+.item-marca.data small { font-size: 10.5px; font-weight: 650; color: var(--cor-item); }
+.item-marca.atrasado, .item-marca.hoje, .item-marca.alerta { --cor-item: var(--st-critical); }
+.item-marca.urgente, .item-marca.atencao { --cor-item: var(--st-warning); }
+.item-marca.feito, .item-marca.bem { --cor-item: var(--st-good); }
+.item-marca.futuro, .item-marca.apagada { --cor-item: var(--texto-3); }
+.item-marca.grande { width: 46px; height: 46px; border-radius: 13px; }
+.item-marca.grande.texto { font-size: 18px; }
+.item-marca.pequena { width: 32px; height: 32px; border-radius: 9px; }
+.item-marca.pequena .ico { width: 16px; height: 16px; }
+
+/* Informações com ícone, na linha de baixo do item. */
+.item-info { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 5px; font-size: 13px; color: var(--texto-3); line-height: 1.4; }
+.info { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
+.info > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.info .ico { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.9; }
+.info b { color: var(--texto-2); font-weight: 600; }
+.info.alerta { color: var(--critical-text); }
+.info.atencao { color: var(--warning-text); }
+.info.bem { color: var(--success-text); }
+
+/* O número à direita (média, valor, quantia). */
+.item-valor { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 1.15; }
+.item-valor small { font-size: 12px; font-weight: 500; color: var(--texto-3); margin-top: 3px; }
+.item-valor.voz { font-family: var(--font-voz); font-size: 24px; font-weight: 450; font-variant-numeric: lining-nums proportional-nums; }
+.item-valor.voz small { font-family: var(--font); }
+
+/* Cartões em grade (disciplinas, projetos...): o compartimento destacado. */
+.gaveta .list.cartoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 10px; }
+.gaveta .list.cartoes > li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "marca nome valor" "info info info" "barra barra barra";
+  align-items: center;
+  gap: 12px 14px;
+  padding: 16px;
+  border-radius: 14px;
+}
+.cartoes .item-marca { grid-area: marca; }
+.cartoes .cartao-nome { grid-area: nome; min-width: 0; }
+.cartoes .item-valor { grid-area: valor; }
+.cartoes .item-info { grid-area: info; margin-top: 0; padding-top: 12px; border-top: 1px solid var(--linha); }
+.cartoes .cartao-barra { grid-area: barra; }
+.cartoes .cartao-nome .title { font-family: var(--font-voz); font-size: 19px; font-weight: 450; letter-spacing: -0.004em; }
+/* O cartão inteiro leva à página (o link do nome cobre o cartão; ações por cima). */
+.cartoes .linha-link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 1; }
+.cartoes .linha-link:focus-visible { outline: none; }
+.cartoes .linha-link:focus-visible::after { box-shadow: inset 0 0 0 2px var(--destaque); }
+.cartoes li > .row-actions { top: 12px; transform: none; z-index: 3; }
+.gaveta .list.cartoes li > * { z-index: auto; }
+
+/* Barra fina dentro do cartão (a média contra a mínima, o progresso). */
+.cartao-barra { position: relative; height: 6px; border-radius: 999px; background: var(--track); }
+.cartao-barra > i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: inherit; background: var(--cor-barra, var(--cor-pagina, var(--texto-2))); }
+.cartao-barra > b { position: absolute; top: -3px; bottom: -3px; width: 2px; border-radius: 1px; background: var(--texto); opacity: 0.7; }
+.cartao-barra.bem { --cor-barra: var(--st-good); }
+.cartao-barra.atencao { --cor-barra: var(--st-warning); }
+.cartao-barra.alerta { --cor-barra: var(--st-critical); }
+
+/* Notas do Delfos: cada aviso no seu compartimento, a cor do sinal no fundo. */
+.gaveta .notas > li { line-height: 1.5; }
+.gaveta .notas .sinal { width: 34px; height: 34px; border-radius: 10px; margin-top: 0; }
+.gaveta .notas > li:has(> .sinal.alerta) { background: color-mix(in srgb, var(--st-critical) 7%, var(--fundo-item)); }
+.gaveta .notas > li:has(> .sinal.atencao) { background: color-mix(in srgb, var(--st-warning) 6%, var(--fundo-item)); }
+.gaveta .notas > li:has(> .sinal.bom) { background: color-mix(in srgb, var(--st-good) 6%, var(--fundo-item)); }
+
+/* Grupos dentro da gaveta (Atrasado, Esta semana, Hoje...): rótulo leve, sem fio. */
+.gaveta .agenda-cab, .gaveta .grupo-tempo-titulo { border-bottom: none; padding-bottom: 0; margin: 0 0 8px; font-size: 13px; color: var(--texto-3); font-weight: 650; }
+.gaveta .agenda-grupo + .agenda-grupo, .gaveta .grupo-tempo + .grupo-tempo { margin-top: 18px; }
+.gaveta .agenda-grupo.atrasado .agenda-cab, .gaveta .grupo-tempo-titulo.alerta { color: var(--critical-text); }
+
+/* A agenda da visão geral no mesmo molde: o dia vira a marca. */
+.gaveta .agenda-lista { display: flex; flex-direction: column; gap: 6px; }
+.gaveta .agenda-lista li + li .agenda-linha { border-top: none; border-radius: 12px; }
+.gaveta .agenda-linha { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--fundo-item); }
+.gaveta .agenda-dia { width: 44px; height: 44px; border-radius: 11px; align-items: center; justify-content: center; gap: 2px; background: color-mix(in srgb, var(--texto) 6%, transparent); }
+.gaveta .agenda-dia b { font-size: 19px; font-weight: 450; }
+.gaveta .agenda-dia small { font-size: 10.5px; margin-top: 0; }
+.gaveta .agenda-dia.hoje { background: var(--texto); }
+.gaveta .agenda-dia.hoje b, .gaveta .agenda-dia.hoje small { color: var(--fundo); }
+.gaveta .agenda-grupo.atrasado .agenda-dia { background: color-mix(in srgb, var(--st-critical) 15%, transparent); }
+@media (hover: hover) and (pointer: fine) {
+  .gaveta .agenda-linha:hover { background: var(--fundo-item-luz); }
+}
+
+/* Lembretes (o que se aproxima, no Pessoal): a marca no lugar do pontinho. */
+.gaveta .lembretes > li { align-items: center; }
+.gaveta .lembretes .t { font-weight: 600; }
+
+@media (max-width: 640px) {
+  .gaveta .list > li, .gaveta .linhas-valor > li, .gaveta .lembretes > li, .gaveta .notas > li { padding: 10px 12px; gap: 12px; }
+  .item-marca { width: 36px; height: 36px; border-radius: 10px; }
+  .item-marca.grande { width: 42px; height: 42px; }
+  .gaveta .list.cartoes > li { padding: 14px; }
+  .item-valor.voz { font-size: 21px; }
+  .gaveta .agenda-linha { grid-template-columns: 40px minmax(0, 1fr); padding: 10px 12px; }
+  .gaveta .agenda-dia { width: 40px; height: 40px; }
+}
+.cartoes .linha-link { position: static; }
+
+/* Barras dentro da gaveta: cada linha no seu compartimento, com o trilho
+   à vista (no compartimento, o trilho é o que dá a medida da barra). */
+.gaveta .cat-lista { gap: 6px; }
+.gaveta .cat-linha { padding: 11px 14px 12px; border-radius: 12px; background: var(--fundo-item); gap: 7px 14px; }
+.gaveta .cat-barra { background: var(--track); height: 7px; }
+.gaveta .cat-linha[data-cat]:hover { background: var(--fundo-item-luz); }
+.gaveta .chart-row { margin-bottom: 6px; padding: 11px 14px; border-radius: 12px; background: var(--fundo-item); }
+.gaveta .chart-row:last-child { margin-bottom: 0; }
+.gaveta .chart-track { background: var(--track); height: 7px; }
+
+/* Resumo da disciplina: marca, título na voz, a prévia do texto (cortada
+   com esmaecimento, o texto inteiro é no editor) e as ações embaixo. */
+.resumo-cartao { display: flex; flex-direction: column; gap: 14px; }
+.resumo-cab { display: flex; gap: 14px; align-items: center; min-width: 0; }
+.resumo-cab-texto { min-width: 0; }
+.resumo-titulo { margin: 0; font-family: var(--font-voz); font-size: 19px; font-weight: 450; letter-spacing: -0.004em; line-height: 1.2; overflow-wrap: anywhere; }
+.resumo-cab .item-info { margin-top: 4px; }
+.resumo-previa { max-height: 220px; overflow: hidden; -webkit-mask-image: linear-gradient(#000 72%, transparent); mask-image: linear-gradient(#000 72%, transparent); }
+.resumo-acoes { display: flex; gap: 6px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--linha); margin-top: auto; }
+.gaveta .resumo-cartao { padding: 18px; border-radius: 14px; }
+/* Cartões de uma aba própria dentro da gaveta: compartimentos, como os outros. */
+.gaveta .pilar-cartao { background: var(--fundo-item); border-color: transparent; border-radius: 14px; }
+.gaveta .pilar-cartao header { align-items: center; }
+@media (hover: hover) and (pointer: fine) {
+  .gaveta .pilar-cartao:hover { background: var(--fundo-item-luz); border-color: transparent; }
+}
+/* Lista dentro de um compartimento (os exercícios de um dia de treino):
+   um tom abaixo do compartimento, para os dois níveis se lerem. */
+.gaveta .card .list > li { background: var(--superficie); }
+@media (hover: hover) and (pointer: fine) {
+  .gaveta .card .list > li:hover { background: color-mix(in srgb, var(--superficie) 70%, var(--superficie-2)); }
+}
+.gaveta .card .list .row-actions { background: linear-gradient(90deg, transparent, var(--superficie) 26px); }
+.dia-cab { align-items: center; justify-content: flex-start; gap: 12px; }
+.dia-cab .card-title { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; font-family: var(--font-voz); font-size: 19px; font-weight: 450; }
+.dia-cab .card-title small { font-family: var(--font); font-size: 13px; font-weight: 400; color: var(--texto-3); }
+
+/* Fichas e números soltos dentro da gaveta viram ladrilhos de rótulo e valor. */
+.gaveta .ficha { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
+.gaveta .ficha > div,
+.gaveta .ficha > div:first-child,
+.gaveta .ficha > div:last-child { flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 4px; padding: 11px 14px; border: none; border-radius: 12px; background: var(--fundo-item); }
+.gaveta .ficha dt { font-size: 12.5px; }
+.gaveta .ficha dd { text-align: left; font-size: 15px; font-weight: 600; }
+.gaveta .trio { gap: 6px; }
+.gaveta .trio-item, .gaveta .trio-item:first-child { padding: 14px 16px 16px; border: none; border-radius: 12px; background: var(--fundo-item); }
+.gaveta .trio + .figuras { border-top: none; padding-top: 0; margin-top: 6px; }
+.gaveta .figuras { gap: 6px; }
+.gaveta .figuras > div, .gaveta .figuras > div:first-child { padding: 11px 14px; border: none; border-radius: 12px; background: var(--fundo-item); }
+@media (max-width: 900px) {
+  .gaveta .trio-item:first-child { padding: 14px 16px 16px; border-bottom: none; }
+  .gaveta .trio-item:nth-child(2) { padding-left: 16px; }
+  .gaveta .trio-item { padding-left: 16px; }
+}
+/* Celular: no cartão, o valor desce para debaixo do nome (lado a lado, um empurrava o outro). */
+@media (max-width: 640px) {
+  .gaveta .list.cartoes > li {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "marca nome" "valor valor" "info info" "barra barra";
+    gap: 10px 12px;
+  }
+  .cartoes .item-valor { flex-direction: row; align-items: baseline; justify-content: flex-start; gap: 8px; text-align: left; }
+  .cartoes .item-valor small { margin-top: 0; }
+  .cartoes .cartao-nome .title { font-size: 17px; }
+}
+/* No toque, as ações do cartão ficam à vista numa linha própria, embaixo
+   (soltas na grade, alargavam a coluna da marca e empurravam o nome). */
+.cartoes > li > .row-actions { grid-column: 1 / -1; }
+@media (hover: none) {
+  .gaveta .list.cartoes > li > .row-actions { justify-self: start; margin: -4px 0 -6px -8px; }
+}
+/* Celular: o item quebra em duas linhas. Em cima, a caixa de marcar, a marca
+   e o nome com as informações (que ocupam a largura que sobra); embaixo, o
+   prazo ou o valor e, à direita, as ações. */
+@media (max-width: 640px) {
+  .gaveta .list:not(.cartoes) > li, .gaveta .linhas-valor > li { flex-wrap: wrap; row-gap: 8px; }
+  .gaveta .list:not(.cartoes) > li > .grow, .gaveta .linhas-valor > li > .grow { flex: 1 1 calc(100% - 110px); min-width: 0; }
+  .gaveta .list:not(.cartoes) > li > .row-actions, .gaveta .linhas-valor > li > .btn:last-child { margin-left: auto; }
+  .gaveta .list:not(.cartoes) > li > .row-actions { position: static; transform: none; opacity: 1; pointer-events: auto; padding-left: 0; background: none; }
+  .info > span { white-space: normal; }
+}
+/* Barras dentro de um compartimento (os resumos de campo de uma aba): soltas, sem outro compartimento em volta. */
+.gaveta .card .cat-linha, .gaveta .card .chart-row { background: none; padding: 6px 0; border-radius: 0; }

@@ -1,6 +1,6 @@
 # Delfos — agente de organização pessoal do Luiz
 
-O painel se chama **Delfos** (versão atual: **2.0**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
+O painel se chama **Delfos** (versão atual: **2.1**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
 em `ui.js`) aparecem no alto da barra lateral (o logotipo, com a versão ao lado), nos títulos das
 abas do navegador e no nome do arquivo de backup exportado. Desde a 1.8 o nome tem **logotipo**
 (desenho vetorizado do quadro da marca, `UI.logotipo()`) e assinatura, "Organização para o que
@@ -897,6 +897,50 @@ superfície delimitada, e o que é secundário fica fechado, dizendo só o essen
   `reg.mjs` testa a janela Registrar, `?novo=`, fechar, lembrar ao recarregar, clique no resumo e
   teclado (Enter e Espaço).
 
+### Delfos 2.1: o item da gaveta
+
+Pedido do Luiz, olhando a gaveta Disciplinas (a disciplina era só uma linha de texto): organização
+interna agradável, cada coisa destacada, em todas as abas e todas as gavetas.
+
+- **Item = compartimento.** Dentro de `.gaveta`, toda `.list`, `.linhas-valor`, `.lembretes`,
+  `.notas`, a agenda da visão geral, as barras (`.cat-linha`, `.chart-row`), a `.ficha` do projeto,
+  o `.trio` e as `.figuras` do dinheiro viram compartimentos: `--fundo-item` (superfície-2 a 52%
+  sobre a superfície), raio 12, sem borda, 6px entre um e outro, `--fundo-item-luz` ao passar o
+  mouse. Fora de gaveta (janelas, editor de campos, versões da nuvem) nada muda. As barras de
+  comparação ganham trilho dentro do compartimento. Lista dentro de compartimento (exercícios de um
+  dia de treino) fica um tom abaixo dele. Notas do Delfos tingem o compartimento pela gravidade.
+- **`UI.marcaItem({ data, icone, glifo, texto, cor, nivel, classe })`**: o quadrado à esquerda do
+  item, 40px, raio 11, fundo a 15% de `--cor-item` (a cor da página, `--cor-pagina`, ou a passada).
+  `data` desenha o dia grande na voz e o mês embaixo; `icone` usa `iconeDuo`; `glifo` é o ícone de
+  uma aba criada (`iconeAba`); `texto` são as iniciais (`UI.monograma`: "Clínica Médica I" vira
+  "CM", ignora "de/da/e" e algarismos romanos). `nivel` pinta pela urgência (os níveis de
+  `UI.urgencia`, mais `alerta`, `atencao`, `bem`, `feito`, `apagada`). `classe`: `grande` (46px,
+  cartões) ou `pequena` (32px). É `aria-hidden`: o texto ao lado já diz tudo.
+- **`UI.info(icone, html, tom)`**: uma informação com ícone de 14px para a linha `.item-info`
+  embaixo do nome (o `html` vem escapado por quem chama). Substituiu os metadados colados por
+  vírgula. `.item-valor` (com `.voz` para o número grande na serifa) é o número à direita.
+- **Cartões destacados** (`ul.list.cartoes`): grade de compartimentos de 330px no mínimo, com marca
+  grande, nome na voz, valor grande, informações embaixo de um fio e uma barra fina
+  (`.cartao-barra`, com `b` marcando uma referência). O link do nome (`.linha-link.cartao-nome`)
+  cobre o cartão inteiro (`::after`); as ações (`.row-actions`) ficam por cima. Usados em:
+  **disciplinas** (iniciais na cor da Faculdade, média, próxima avaliação, avaliações, prazos,
+  resumos, materiais e a barra da média contra a mínima, verde/amarela/vermelha), **contas**
+  (saldo), **cartões** (fatura, vencimento, ciclo, compras e a barra do limite), **investimentos**
+  (valor atual, rentabilidade, ícone pelo tipo) e **projetos** (iniciais, faturado ou estimado,
+  status, prazo, custos, próxima etapa e a barra das etapas).
+- **Marcas por lista**: prazos (Faculdade, disciplina), avaliações, a pagar, maiores gastos,
+  recebimentos e custos, itens de aba de agenda e compromissos do Pessoal levam a **data**; fixos
+  (repetir; os achados ainda sem cadastro, lâmpada em âmbar), materiais (pelo tipo: arquivo, livro,
+  vídeo, slides, link), oportunidades (lâmpada), metas (alvo; check verde quando alcançada), resumos
+  (lápis), dias de treino (haltere), itens sem data de aba própria (o ícone da aba) e o que se
+  aproxima no Pessoal (o ícone da área de onde vem, na cor dela) levam **ícone**. Na agenda da visão
+  geral, o dia do mês virou o quadrado (hoje em marfim cheio, atrasado em vermelho).
+- **Resumo da disciplina** (`.resumo-cartao`): marca, título na voz, quando foi atualizado, a
+  prévia do texto cortada com esmaecimento (`.resumo-previa`, 220px) e as ações embaixo.
+- **Celular**: o item quebra em duas linhas (caixa, marca e nome em cima; prazo ou valor e ações
+  embaixo); no cartão, o valor desce para debaixo do nome; no toque, as ações do cartão ficam numa
+  linha própria (soltas na grade, alargavam a coluna da marca).
+
 ### Delfos 1.8: a marca
 
 Pedido do Luiz: o quadro da identidade (logotipo "Delfos" numa serifa clássica, marfim sobre preto,
@@ -937,8 +981,8 @@ paleta preto `#0B0B0B`, carvão `#1F1F1F`, grafite `#3A3A3A`, marfim `#EDE9E1`, 
 `dashboard/DESIGN.md`, a referência a consultar antes de mexer em qualquer coisa visual.
 
 O princípio, em uma linha: **a leitura é o título e cada assunto mora numa gaveta** (2.0): uma
-superfície delimitada que diz o essencial no puxador e guarda o resto dentro, onde nada vira caixa de
-novo; o caráter vem de tipografia, espaço e hierarquia, na voz e nas cores do logotipo. Seis
+superfície delimitada que diz o essencial no puxador e guarda o resto dentro, cada registro no seu
+compartimento, com a marca colorida à esquerda (2.1), sem caixa com borda dentro de caixa; o caráter vem de tipografia, espaço e hierarquia, na voz e nas cores do logotipo. Seis
 execuções anteriores foram descartadas e estão descritas no DESIGN.md (estúdio, azulejo baiano,
 oráculo sóbrio 1.2–1.3, a segunda leitura 1.4–1.6, a consulta 1.7, sem serifa, e a página aberta
 1.7–1.9, sem caixa, que o Luiz achou poluída).

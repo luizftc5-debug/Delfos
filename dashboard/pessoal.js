@@ -46,6 +46,19 @@
 
   /* ------------------------ Calendário e o que se aproxima ------------------ */
 
+  /** A marca de um item de qualquer aba: o ícone da área, na cor dela. */
+  const FIXAS = ["pessoal", "financeiro", "faculdade", "projetos"];
+  function marcaDaArea(i) {
+    if (FIXAS.includes(i.area)) return UI.marcaItem({ icone: i.area, cor: i.cor, classe: "pequena" });
+    if (String(i.area || "").startsWith("pilar:")) {
+      const p = Store.achar("pilares", i.area.slice(6));
+      return UI.marcaItem({ glifo: p?.icone || "◆", cor: i.cor, classe: "pequena" });
+    }
+    return UI.marcaItem({ icone: "calendario", cor: i.cor, classe: "pequena" });
+  }
+  // O tipo do compromisso vira o ícone: consulta, tarefa, recado...
+  const ICONE_TIPO = { consulta: "estetoscopio", tarefa: "lista", compromisso: "calendario", recado: "lapis", outro: "pessoal" };
+
   // A vista escolhida fica neste navegador; o link "#calendario" (do resumo do dia) sempre abre o calendário.
   let vista = "calendario";
   try { vista = localStorage.getItem("delfos.pessoal.vista") || "calendario"; } catch { /* nada */ }
@@ -82,10 +95,15 @@
       <div class="grupo-tempo">
         <h3 class="grupo-tempo-titulo">${fmt.escape(fmt.capitalizar(UI.dataPorExtensoCurta(iso)))}</h3>
         <ul class="lembretes">${itens.map((i) => `<li>
-          <span class="lembrete-selo" style="--c:${fmt.escape(i.cor || "var(--texto-3)")}"></span>
+          ${marcaDaArea(i)}
           <span class="grow">
             <span class="t">${fmt.escape(i.titulo)}${i.importante ? ` <span class="badge urgente">importante</span>` : ""}</span>
-            <span class="m">${fmt.escape([fmt.capitalizar(i.areaRotulo || ""), i.hora ? `às ${i.hora}` : "", i.local].filter(Boolean).join(", "))}${i.valor ? `, ${fmt.moeda(i.valor)}` : ""}</span>
+            <span class="item-info">${[
+              UI.info("lista", fmt.escape(fmt.capitalizar(i.areaRotulo || ""))),
+              i.hora ? UI.info("relogio", `às ${fmt.escape(i.hora)}`) : "",
+              i.local ? UI.info("casa", fmt.escape(i.local)) : "",
+              i.valor ? UI.info("financeiro", fmt.moeda(i.valor)) : "",
+            ].join("")}</span>
           </span>
           ${avisa.has(`${i.id}|${i.data}`) ? `<span class="badge proximo" title="Entra no resumo do dia e nos avisos">${UI.icone("relogio")} lembrete</span>` : ""}
         </li>`).join("")}</ul>
@@ -200,9 +218,17 @@
         const li = document.createElement("li");
         li.innerHTML = `
           <input type="checkbox" class="check" ${c.concluido ? "checked" : ""} aria-label="Marcar como concluído" />
+          ${c.data
+            ? UI.marcaItem({ data: c.data, nivel: c.concluido ? "feito" : ["atrasado", "hoje", "urgente"].includes(u.nivel) ? u.nivel : "" })
+            : UI.marcaItem({ icone: ICONE_TIPO[c.tipo] || "calendario" })}
           <span class="grow">
-            <span class="title ${c.concluido ? "strike" : ""}">${fmt.escape(c.descricao)}</span>
-            <span class="meta">${fmt.escape([fmt.capitalizar(c.tipo || "compromisso"), c.local, c.data ? fmt.dataPorExtenso(c.data) : "", c.hora ? `às ${c.hora}` : "", c.repete ? (UI.REPETICOES.find(([r]) => r === c.repete) || [, ""])[1].toLowerCase() : ""].filter(Boolean).join(", "))}${c.importante ? " <span class=\"badge urgente\">importante</span>" : ""}</span>
+            <span class="title ${c.concluido ? "strike" : ""}">${fmt.escape(c.descricao)}${c.importante ? " <span class=\"badge urgente\">importante</span>" : ""}</span>
+            <span class="item-info">${[
+              UI.info(ICONE_TIPO[c.tipo] || "calendario", fmt.escape(fmt.capitalizar(c.tipo || "compromisso"))),
+              c.hora ? UI.info("relogio", `às ${fmt.escape(c.hora)}`) : "",
+              c.local ? UI.info("casa", fmt.escape(c.local)) : "",
+              c.repete ? UI.info("repetir", fmt.escape((UI.REPETICOES.find(([r]) => r === c.repete) || [, ""])[1].toLowerCase())) : "",
+            ].join("")}</span>
           </span>
           <span class="badge ${c.concluido ? "feito" : u.nivel}">${c.concluido ? "concluído" : u.rotulo}</span>
           <span class="row-actions">

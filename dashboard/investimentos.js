@@ -92,9 +92,9 @@
           </span>
           <span class="item-valor voz">${fmt.moeda(Number(inv.valorAtual ?? inv.valorAplicado) || 0)}<small>valor atual</small></span>
           <span class="item-info">
-            ${UI.info(sobe ? "subiu" : "desceu", `${fmt.moeda(Math.abs(r.ganho))} (${r.percentual >= 0 ? "+" : "−"}${UI.fmt.decimal(Math.abs(r.percentual))}%)`, sobe ? "bem" : "alerta")}
-            ${UI.info("cofre", `aplicado ${fmt.moeda(Number(inv.valorAplicado) || 0)}${inv.dataAplicacao ? ` em ${fmt.escape(fmt.data(inv.dataAplicacao))}` : ""}`)}
-            ${inv.observacoes ? UI.info("lapis", fmt.escape(inv.observacoes)) : ""}
+            ${UI.info(`${fmt.moeda(Math.abs(r.ganho))} (${r.percentual >= 0 ? "+" : "−"}${UI.fmt.decimal(Math.abs(r.percentual))}%)`, sobe ? "bem" : "alerta")}
+            ${UI.info(`aplicado ${fmt.moeda(Number(inv.valorAplicado) || 0)}${inv.dataAplicacao ? ` em ${fmt.escape(fmt.data(inv.dataAplicacao))}` : ""}`)}
+            ${inv.observacoes ? UI.info(fmt.escape(inv.observacoes)) : ""}
           </span>
           <span class="row-actions">
             <button class="btn ghost sm" data-editar type="button">Editar</button>

@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
   <link rel="stylesheet" href="theme.css" />
 </head>
 <body>
@@ -56,7 +56,7 @@
         <section class="card calendario" id="calendario" data-na-vista="calendario"></section>
 
         <div class="gaveteiro">
-          <section class="gaveta" data-gaveta="proximos" data-icone="relogio" data-na-vista="calendario">
+          <section class="gaveta" data-gaveta="proximos" data-na-vista="calendario">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">O que se aproxima</h2>
               <span class="gaveta-resumo" id="proximos-resumo">próximas duas semanas, de todas as abas</span>
@@ -67,7 +67,7 @@
             </div>
           </section>
 
-          <section class="gaveta" data-gaveta="lista" data-icone="lista" data-na-vista="lista">
+          <section class="gaveta" data-gaveta="lista" data-na-vista="lista">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Compromissos</h2>
               <span class="gaveta-resumo" id="lista-resumo"></span>
@@ -81,15 +81,20 @@
             </div>
           </section>
 
-          <section class="gaveta" data-gaveta="notas" data-icone="lampada">
+          <section class="gaveta" data-gaveta="notas">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">O que o Delfos notou</h2>
               <span class="gaveta-resumo" data-resumo-notas></span>
             </header>
             <div class="gaveta-corpo"><ul class="notas" id="notas"></ul></div>
           </section>
+        </div>
 
-          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-icone="pergunta" data-fechada hidden>
+        <!-- 2.2: análises e ajustes, em gavetas finas, abaixo do que pede ação. -->
+        <div class="gaveteiro consulta" role="group" aria-labelledby="consulta-rotulo">
+          <h2 class="consulta-rotulo" id="consulta-rotulo">Análises e ajustes</h2>
+
+          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-fechada hidden>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Perguntas do Delfos</h2>
               <span class="gaveta-resumo"></span>
@@ -97,7 +102,7 @@
             <div class="gaveta-corpo"><div class="perguntas" id="perguntas"></div></div>
           </section>
 
-          <section class="gaveta" data-gaveta="por-tipo" data-icone="grade" data-fechada>
+          <section class="gaveta" data-gaveta="por-tipo" data-fechada>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Por tipo</h2>
               <span class="gaveta-resumo" id="por-tipo-resumo"></span>

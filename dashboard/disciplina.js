@@ -130,9 +130,9 @@
         <span class="grow">
           <span class="title">${fmt.escape(a.nome || "Avaliação")}</span>
           <span class="item-info">${[
-            a.data ? "" : UI.info("calendario", "sem data"),
-            UI.info("alvo", `peso ${fmt.escape(String(a.peso || 1))}`),
-            temNota ? UI.info("check", "nota lançada", "bem") : "",
+            a.data ? "" : UI.info("sem data"),
+            UI.info(`peso ${fmt.escape(String(a.peso || 1))}`),
+            temNota ? UI.info("nota lançada", "bem") : "",
           ].join("")}</span>
         </span>
         ${temNota
@@ -182,7 +182,7 @@
         ${UI.marcaItem({ data: p.data, nivel: p.concluido ? "feito" : u.nivel === "proximo" ? "" : u.nivel })}
         <span class="grow">
           <span class="title ${p.concluido ? "strike" : ""}">${fmt.escape(p.descricao)}</span>
-          <span class="item-info">${UI.info(p.tipo === "prova" ? "alvo" : "lista", fmt.escape(p.tipo || "entrega"))}</span>
+          <span class="item-info">${UI.info(fmt.escape(p.tipo || "entrega"))}</span>
         </span>
         <span class="badge ${p.concluido ? "feito" : u.nivel}">${p.concluido ? "concluído" : u.rotulo}</span>
         <span class="row-actions"><button class="btn ghost sm" data-excluir>Excluir</button></span>`;
@@ -241,9 +241,9 @@
         <span class="grow">
           ${titulo}
           <span class="item-info">${[
-            UI.info("lista", fmt.escape(m.tipo || "link")),
-            m.url ? UI.info("globo", fmt.escape(dominio(m.url))) : "",
-            anexos.length ? UI.info("anexar", `${anexos.length} ${anexos.length === 1 ? "documento" : "documentos"}`) : "",
+            UI.info(fmt.escape(m.tipo || "link")),
+            m.url ? UI.info(fmt.escape(dominio(m.url))) : "",
+            anexos.length ? UI.info(`${anexos.length} ${anexos.length === 1 ? "documento" : "documentos"}`) : "",
           ].join("")}</span>
           ${anexos.length ? `<span class="anexos" style="margin-top:8px;">${anexos.map(anexoHTML).join("")}</span>` : ""}
         </span>
@@ -325,8 +325,8 @@
           <div class="resumo-cab-texto">
             <h3 class="resumo-titulo">${fmt.escape(r.titulo)}</h3>
             <span class="item-info">${[
-              r.atualizadoEm ? UI.info("relogio", `atualizado em ${fmt.escape(fmt.data(r.atualizadoEm))}`) : "",
-              nAnexos ? UI.info("anexar", `${nAnexos} ${nAnexos === 1 ? "documento" : "documentos"}`) : "",
+              r.atualizadoEm ? UI.info(`atualizado em ${fmt.escape(fmt.data(r.atualizadoEm))}`) : "",
+              nAnexos ? UI.info(`${nAnexos} ${nAnexos === 1 ? "documento" : "documentos"}`) : "",
             ].join("")}</span>
           </div>
         </div>

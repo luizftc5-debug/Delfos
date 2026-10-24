@@ -1,4 +1,4 @@
-# Design System: Delfos 2.1, "marfim" em gavetas
+# Design System: Delfos 2.2, "marfim" em gavetas
 
 Delfos é o nome de um oráculo, e o painel faz o que um oráculo faz: lê a
 situação e diz o que ela é. Desde a 1.7, **em toda página, a leitura é o
@@ -11,10 +11,15 @@ de novo: listas, fios e, quando há peças que se tocam, compartimentos de tom
 mais escuro, sem borda.
 
 A 1.8 ganhou **identidade de marca**: o logotipo "Delfos" numa serifa
-clássica, marfim sobre preto, com a assinatura "Organização para o que
-importa". O painel inteiro passou a falar na voz do logotipo: a leitura, os
-títulos e os números grandes estão na mesma família de serifa, sobre a paleta
-da marca (preto, carvão, grafite, marfim, cinza quente).
+clássica, marfim sobre preto. A 2.2 trocou a marca pela do quadro novo: o
+**símbolo** (um D com uma coluna grega dentro), o logotipo numa **serifa
+pesada** de alto contraste e a assinatura "O essencial se revela.". O painel
+inteiro fala na voz do logotipo: a leitura, os títulos e os números grandes
+estão na mesma serifa, sobre a paleta da marca (preto, carvão, grafite,
+marfim, cinza quente). A 2.2 também tirou o que ainda tinha cara de tela
+gerada: leitura de uma frase só, nenhum número repetido, um desenho por item
+(a marca à esquerda), resumo de gaveta só com ela fechada e as análises em
+gavetas finas, abaixo do que pede ação.
 
 O formato deste documento segue a skill `stitch-design-taste` (atmosfera,
 cor, tipografia, componentes, layout, movimento, proibições), adaptado a um
@@ -57,32 +62,42 @@ fala é a frase do alto. Densidade de app diário (5 de 10), variação contida
 contido (4 de 10: um único momento de entrada, a leitura, e respostas ao
 gesto).
 
-**A ousadia fica num lugar só**: a leitura, em Noto Serif Display leve, como
-título de toda página que tem leitura. Todo o resto é quieto. O efeito é o do
+**A ousadia fica num lugar só**: a leitura, na serifa pesada da marca
+(Gloock), como título de toda página que tem leitura, em uma frase só. Todo o resto é quieto. O efeito é o do
 quadro da marca: uma frase em serifa marfim sobre preto, muito espaço em
 volta.
 
 ## Marca
 
-- **Logotipo**: "Delfos" na serifa do quadro da identidade, vetorizado da
-  imagem original (um caminho SVG só, `LOGOTIPO` em `ui.js`, preenchido com a
-  cor do texto). Nunca é texto digitado numa fonte parecida: é o desenho.
-  `UI.logotipo()` devolve o SVG; quem o usa dá o nome por `aria-label`.
-  Aparece no alto da barra lateral (24px de altura, com a versão baixinha na
-  linha de base), no alto do celular, na entrada, nas boas-vindas e no rodapé
-  do editor de resumos.
-- **D**: a primeira letra do logotipo, sozinha (`icone("delfos")`), para onde
-  o nome inteiro não cabe: o título "O que o Delfos entendeu" e o favicon.
-- **Favicon** (`favicon.svg`): o D marfim num quadrado preto de cantos
-  suaves; os fios finos do D ganham um traço do mesmo tom para não sumir em
-  16px. **Ícone da tela inicial** (`apple-touch-icon.png`, 180px): o
-  logotipo inteiro em marfim sobre preto, como os ícones do quadro.
-- **Assinatura**: "Organização para o que importa", em Funnel Sans 10,5px,
-  caixa alta espaçada (0,3em), em cinza, com um fio curto de 28px em cima.
-  Só na entrada e nas boas-vindas, embaixo do logotipo. É a única caixa alta
-  espaçada do painel, porque é assinatura de marca, não rótulo.
-- **Área livre**: o logotipo nunca encosta em nada; nada fica a menos da
-  altura do "e" dele.
+O quadro da marca (2.2) tem o símbolo em três variações (Clássica, Abertura,
+Monolítica); a escolhida foi a **Clássica**, a mesma da capa, do cartão e dos
+ícones de app do quadro.
+
+- **Símbolo**: o D com a coluna (capitel, fuste em duas partes, base),
+  vetorizado da capa do quadro com potrace (um caminho só, `SIMBOLO` em
+  `ui.js`, viewBox `0 0 219 221`). `UI.simbolo()` devolve o SVG em
+  `currentColor`; `icone("delfos")` é o mesmo desenho em tamanho de ícone
+  (o título "O que o Delfos entendeu").
+- **Logotipo**: "Delfos" na serifa pesada do quadro, vetorizado da mesma
+  capa (`LOGOTIPO`, viewBox `0 0 460 122`). Nunca é texto digitado numa
+  fonte parecida: é o desenho. `UI.logotipo()` devolve o SVG; quem o usa dá
+  o nome por `aria-label`.
+- **Assinatura horizontal**: símbolo à esquerda, logotipo ao lado, como no
+  quadro. Na barra lateral, símbolo de 30px, logotipo de 22px e a versão
+  baixinha no fim da linha; na entrada e nas boas-vindas, 64 e 40px, com a
+  frase embaixo do logotipo. O rodapé do editor de resumos usa só o
+  logotipo.
+- **Favicon** (`favicon.svg`): o símbolo marfim num quadrado preto de raio
+  7,5/32. **Ícone da tela inicial** (`apple-touch-icon.png`, 180px): o
+  símbolo marfim sobre preto, como os ícones de app do quadro. A variação
+  Monolítica ficaria igual nesses tamanhos e o recorte dela no quadro tem
+  metade da resolução; por isso a Clássica vale em tudo.
+- **Assinatura**: "O essencial se revela.", em Funnel Sans 10,5px, caixa
+  alta espaçada (0,24em), em cinza, embaixo do logotipo, sem o fio curto da
+  1.8 (o quadro novo não tem). Só na entrada e nas boas-vindas. É a única
+  caixa alta espaçada do painel, porque é assinatura de marca, não rótulo.
+- **Área livre**: a marca nunca encosta em nada; nada fica a menos da
+  altura do "e" do logotipo.
 
 ## 2. Cor
 
@@ -129,28 +144,30 @@ painel (e some no modo leve).
 
 | Papel | Fonte | Onde |
 |---|---|---|
-| **Voz** | **Noto Serif Display** (300 a 600, Google Fonts, 41 KB) | a leitura, o título das páginas sem leitura, títulos de seção, janelas, números grandes, o dia na agenda |
+| **Voz** | **Gloock** (um peso só, Google Fonts) | a leitura, o título das páginas sem leitura, títulos de seção e de gaveta, janelas, números grandes, o dia na agenda |
 | **Dado e interface** | **Funnel Sans** | todo o resto: texto corrido, rótulos, botões, tabelas, a assinatura |
-| **Marca** | o logotipo (desenho, não fonte) | barra lateral, entrada, boas-vindas |
+| **Marca** | o símbolo e o logotipo (desenho, não fonte) | barra lateral, entrada, boas-vindas |
 
-A voz foi escolhida contra o logotipo, não a olho: "Delfos" foi desenhado em
-mais de 90 famílias de serifa do Google Fonts e comparado com o recorte do quadro da
-marca (proporção, altura de x, contraste, desenho do D, do "f" e do "s"). A
-Noto Serif Display ficou porque é a que mais conversa com o logotipo (leve,
-alto contraste, terminais afilados) e porque serve de dado: algarismos
-alinhados por padrão (a Playfair, a outra finalista, usa algarismos antigos,
-que descem abaixo da linha em "R$ 316,20"), sinal de menos de verdade
-(U+2212) e acentos completos. Só o eixo de peso é baixado (41 KB; com o eixo
-de largura seriam 76 KB).
+A voz foi escolhida contra o logotipo novo, não a olho: "Delfos", um número
+("R$ 6.239,10") e uma frase da leitura foram desenhados em 20 serifas do
+Google Fonts (Noto Serif Display de 600 a 800, DM Serif Display, Playfair,
+Bodoni Moda, Libre Caslon, Prata, Rozha, Yeseva, Gloock e outras) ao lado do
+recorte do quadro. A **Gloock** ficou porque é a mais parecida com o
+logotipo (o D largo, o "f" com gota, o contraste entre haste e fio) e serve
+de dado: algarismos alinhados, sinal de menos e acentos completos. A Noto
+Serif Display pesada (650 a 750) afina demais os fios horizontais; a DM
+Serif Display é mais larga que o logotipo.
 
-- **Pesos**: 300 na leitura, nos títulos de página e nos números grandes (em
-  40px ou mais, o fio fino é a elegância da letra); 350 a 450 entre 20 e 34px;
-  500 nos títulos de seção e de janela; o negrito da leitura é 500. Abaixo de
-  20px, só em frase curta e com peso 450 ou mais (a linha de apoio do novo
-  lançamento, o título "O que o Delfos entendeu"): fio de 300 some em tela
-  comum.
-- **Espaço entre letras**: quase nenhum. A serifa de exibição já vem justa;
-  -0,012em na leitura, -0,01em nos títulos, 0 no que é pequeno.
+- **Um peso só.** A Gloock tem só o regular, e o tema desliga o negrito
+  falso (`font-synthesis-weight: none` no `html`): sem isso, todo `<b>` e
+  todo título pedido em 500 ou mais sairia com o traço engrossado pelo
+  navegador. Os pesos escritos no CSS continuam valendo para a preferência
+  "Sem serifa" (Funnel Sans, que tem os pesos de verdade).
+- **Destaque pela cor**: na leitura, a frase vem em `--texto-2` e o que
+  importa (o `<b>`) sobe para o marfim inteiro; atraso em vermelho, coisa
+  boa em verde. É o que dá o ritmo de duas vozes da leitura.
+- **Espaço entre letras**: quase nenhum. -0,005em na leitura (-0,008em na
+  grande), -0,004em nos números grandes, 0 do puxador da gaveta para baixo.
 
 - **Leitura**: `UI.ajustarLeitura` mede a frase e põe `data-tam` (g, m, p,
   pp): 46, 39, 32 ou 27px no computador; 30, 27, 24 ou 21px no celular.
@@ -176,13 +193,24 @@ de largura seriam 76 KB).
   quem é grande é a leitura. Página sem leitura (Contas, Investimentos, uma
   disciplina, um projeto) mantém o título grande, na voz, em peso 300.
 - **Gaveta** (2.0, `.gaveta`): superfície (`--superficie`, fio `--linha`,
-  raio 16) com o **puxador** no alto: o ícone da aba num quadrado de 34px a
-  12% da cor da página, o nome na voz (20px, 450), o **resumo** em uma linha
-  (14px, `--texto-3`, com `<b>` e os tons de status), as ações (botão
-  pequeno) e a seta, que gira ao abrir. A faixa inteira é clicável; o foco
+  raio 16) com o **puxador** no alto: o nome na voz (20px), o **resumo** em
+  uma linha (14px, `--texto-3`, com `<b>` e os tons de status), as ações
+  (botão pequeno) e a seta, que gira ao abrir. Desde a 2.2 sem ícone no
+  puxador (o nome na voz já basta) e com o resumo **só com a gaveta
+  fechada**: aberta, o conteúdo diz tudo, e o resumo repetido em cima era
+  ruído. `data-sempre` mantém visível o resumo que traz um total que não
+  aparece lá dentro (quanto falta pagar, quanto os fixos somam por mês). A faixa inteira é clicável; o foco
   aparece como um anel por dentro dela. Um fio separa o puxador do conteúdo,
   com 22px de respiro (16 no celular). Gavetas empilham numa coluna só, com
   12px entre elas. Fechada por padrão só a que é análise ou ajuste.
+- **Gaveta fina** (2.2, `.gaveteiro.consulta`): o que se consulta de vez em
+  quando (ritmo, maiores gastos, entradas e saídas, fixos, perguntas,
+  Drive, médias, a ficha de um projeto, os ajustes de uma aba) desce para
+  um grupo abaixo das gavetas de ação, com um rótulo pequeno em Funnel Sans
+  ("Análises e ajustes", "Ficha e documentos"...). Sem superfície: cada uma
+  é uma faixa entre fios, como as gavetas rasas de um arquivo, com o nome a
+  17px. Mesmo puxador, mesma memória de aberta ou fechada. No Financeiro,
+  ficam 5 gavetas de ação em cima e 6 finas embaixo.
 - **Painel de números**: a faixa `.g3`/`.g4` de `.stat-value` é uma
   superfície delimitada, colunas separadas por fio, valor na voz a 30px. No
   celular, duas colunas. Nenhuma página precisou mudar o HTML para isso.
@@ -195,7 +223,9 @@ de largura seriam 76 KB).
   esquerda (`UI.marcaItem`, 40px, raio 11, fundo a 15% da cor da aba ou da
   urgência: a data com o dia na voz e o mês embaixo, um ícone em duas
   camadas ou as iniciais na voz), o nome em Funnel Sans 600, uma linha de
-  **informações com ícone** de 14px (`UI.info`) e o número à direita. A cor
+  **informações** (`UI.info`) e o número à direita. Desde a 2.2 as
+  informações não têm ícone: são uma frase só, separada por vírgula (posta
+  pelo CSS), e a marca à esquerda é o único desenho do item. A cor
   da marca diz de onde é o item ou quão urgente ele está; nunca enfeite.
 - **Cartão destacado** (2.1, `.list.cartoes`): o item que é um objeto
   inteiro (disciplina, conta, cartão, investimento, projeto) vira cartão em
@@ -336,3 +366,9 @@ controle 10, miúdo 6, pílula só para escolha (chips, segmentos, interruptor).
 - Cascata de entrada em toda seção; animação de largura e altura.
 - Cor como único canal de informação; vermelho fora de urgência.
 - Metadados colados com " · " (só sobrevive no título da aba do navegador).
+- Ícone em cada informação do item; ícone no puxador da gaveta (2.2: um
+  desenho por item, a marca à esquerda).
+- Número sem dizer o quê: o da barra lateral só conta o que está atrasado.
+- Leitura que repete a faixa de números logo abaixo, ou de mais de uma
+  frase; resumo de gaveta aberta repetindo o conteúdo dela.
+- Negrito falso na voz: o destaque da Gloock é pela cor.

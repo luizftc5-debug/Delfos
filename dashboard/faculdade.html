@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
   <link rel="stylesheet" href="theme.css" />
   <script src="config.js"></script>
 </head>
@@ -49,7 +49,7 @@
         </div>
 
         <div class="gaveteiro">
-          <section class="gaveta" data-gaveta="semanas" data-icone="calendario">
+          <section class="gaveta" data-gaveta="semanas">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Próximas quatro semanas</h2>
               <span class="gaveta-resumo" id="semanas-resumo">provas e entregas, de segunda a domingo</span>
@@ -57,7 +57,7 @@
             <div class="gaveta-corpo"><div class="semanas" id="semanas"></div></div>
           </section>
 
-          <section class="gaveta" data-gaveta="prazos" data-icone="relogio">
+          <section class="gaveta" data-gaveta="prazos">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Prazos e entregas</h2>
               <span class="gaveta-resumo" id="prazos-resumo"></span>
@@ -70,7 +70,7 @@
             <div class="gaveta-corpo"><div id="prazos"></div></div>
           </section>
 
-          <section class="gaveta" data-gaveta="disciplinas" data-icone="faculdade">
+          <section class="gaveta" data-gaveta="disciplinas">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Disciplinas</h2>
               <span class="gaveta-resumo" id="disciplinas-resumo"></span>
@@ -79,15 +79,20 @@
             <div class="gaveta-corpo"><div id="disciplinas"></div></div>
           </section>
 
-          <section class="gaveta" data-gaveta="notas" data-icone="lampada">
+          <section class="gaveta" data-gaveta="notas">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">O que o Delfos notou</h2>
               <span class="gaveta-resumo" data-resumo-notas></span>
             </header>
             <div class="gaveta-corpo"><ul class="notas" id="notas"></ul></div>
           </section>
+        </div>
 
-          <section class="gaveta" data-gaveta="medias" data-icone="alvo">
+        <!-- 2.2: análises e ajustes, em gavetas finas, abaixo do que pede ação. -->
+        <div class="gaveteiro consulta" role="group" aria-labelledby="consulta-rotulo">
+          <h2 class="consulta-rotulo" id="consulta-rotulo">Análises e ajustes</h2>
+
+          <section class="gaveta" data-gaveta="medias" data-fechada>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Médias por disciplina</h2>
               <span class="gaveta-resumo" id="medias-nota"></span>
@@ -95,7 +100,7 @@
             <div class="gaveta-corpo"><div id="medias"></div></div>
           </section>
 
-          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-icone="pergunta" data-fechada hidden>
+          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-fechada hidden>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Perguntas do Delfos</h2>
               <span class="gaveta-resumo"></span>
@@ -106,7 +111,7 @@
             </div>
           </section>
 
-          <section class="gaveta" data-gaveta="google" data-icone="calendario" data-fechada>
+          <section class="gaveta" data-gaveta="google" data-fechada>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Google Calendar</h2>
               <span class="gaveta-resumo google-state" id="google-status"><span class="google-dot"></span><span id="google-texto">Não conectado</span></span>

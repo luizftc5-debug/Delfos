@@ -210,11 +210,11 @@
           </a>
           <span class="item-valor voz">${media ? UI.fmt.decimal(media.media) : "-"}<small>${media ? "média" : "sem nota"}</small></span>
           <span class="item-info">
-            ${prox ? UI.info("relogio", `${fmt.escape(prox.nome || "Avaliação")}, ${fmt.escape(u.rotulo)}`, u.nivel === "atrasado" || u.nivel === "hoje" ? "alerta" : u.nivel === "urgente" ? "atencao" : "") : ""}
-            ${UI.info("alvo", plural(nAval, "avaliação", "avaliações"))}
-            ${nPrazos ? UI.info("calendario", plural(nPrazos, "prazo aberto", "prazos abertos")) : ""}
-            ${nRes ? UI.info("lapis", plural(nRes, "resumo", "resumos")) : ""}
-            ${nMat ? UI.info("arquivo", plural(nMat, "material", "materiais")) : ""}
+            ${prox ? UI.info(`${fmt.escape(prox.nome || "Avaliação")}, ${fmt.escape(u.rotulo)}`, u.nivel === "atrasado" || u.nivel === "hoje" ? "alerta" : u.nivel === "urgente" ? "atencao" : "") : ""}
+            ${UI.info(plural(nAval, "avaliação", "avaliações"))}
+            ${nPrazos ? UI.info(plural(nPrazos, "prazo aberto", "prazos abertos")) : ""}
+            ${nRes ? UI.info(plural(nRes, "resumo", "resumos")) : ""}
+            ${nMat ? UI.info(plural(nMat, "material", "materiais")) : ""}
           </span>
           ${media ? `<span class="cartao-barra ${tom}" title="Média ${UI.fmt.decimal(media.media)}, mínima ${UI.fmt.decimal(minima)}"><i style="width:${Math.min(100, media.media * 10)}%"></i><b style="left:calc(${minima * 10}% - 1px)"></b></span>` : ""}
           <span class="row-actions">
@@ -267,8 +267,8 @@
         <span class="grow">
           <span class="title ${p.concluido ? "strike" : ""}">${fmt.escape(p.descricao)}</span>
           <span class="item-info">${[
-            UI.info(p.tipo === "prova" ? "alvo" : p.tipo === "TCC" ? "microscopio" : "lista", fmt.escape(p.tipo || "entrega")),
-            disc ? UI.info("faculdade", fmt.escape(disc.nome)) : "",
+            UI.info(fmt.escape(p.tipo || "entrega")),
+            disc ? UI.info(fmt.escape(disc.nome)) : "",
           ].join("")}</span>
         </span>
         <span class="badge ${p.concluido ? "feito" : u.nivel}">${p.concluido ? "concluído" : u.rotulo}</span>

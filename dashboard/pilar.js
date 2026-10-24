@@ -808,10 +808,10 @@
             <span class="grow">
               <span class="title">${fmt.escape(nomeExercicio(ex.exercicioId))}</span>
               <span class="item-info">${[
-                UI.info("haltere", fmt.escape(grupoExercicio(ex.exercicioId))),
-                ex.seriesAtual || ex.repeticoesAtual ? UI.info("repetir", `${fmt.escape(String(ex.seriesAtual || "-"))}x${fmt.escape(String(ex.repeticoesAtual || "-"))}`) : "",
-                ex.cargaAtual !== null && ex.cargaAtual !== undefined ? UI.info("alvo", `carga ${fmt.escape(String(ex.cargaAtual))}${fmt.escape(ex.unidade || "")}`) : "",
-                ex.recorde !== null && ex.recorde !== undefined ? UI.info("estrela", `recorde ${fmt.escape(String(ex.recorde))}${fmt.escape(ex.unidade || "")}`, "bem") : "",
+                UI.info(fmt.escape(grupoExercicio(ex.exercicioId))),
+                ex.seriesAtual || ex.repeticoesAtual ? UI.info(`${fmt.escape(String(ex.seriesAtual || "-"))}x${fmt.escape(String(ex.repeticoesAtual || "-"))}`) : "",
+                ex.cargaAtual !== null && ex.cargaAtual !== undefined ? UI.info(`carga ${fmt.escape(String(ex.cargaAtual))}${fmt.escape(ex.unidade || "")}`) : "",
+                ex.recorde !== null && ex.recorde !== undefined ? UI.info(`recorde ${fmt.escape(String(ex.recorde))}${fmt.escape(ex.unidade || "")}`, "bem") : "",
               ].join("")}</span>
             </span>
             <span class="row-actions">

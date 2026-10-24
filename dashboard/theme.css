@@ -1,9 +1,10 @@
 /* ===========================================================================
-   Delfos — design system (v2.0, "marfim" em gavetas)
+   Delfos — design system (v2.2, "marfim" em gavetas, voz pesada)
 
-   Ver DESIGN.md. A identidade é o logotipo: "Delfos" numa serifa clássica,
-   marfim sobre preto. O painel fala na mesma voz: a leitura é o título da
-   página, em Noto Serif Display leve e grande. Desde a 2.0, os números da
+   Ver DESIGN.md. A identidade é o símbolo (o D com a coluna) e o logotipo:
+   "Delfos" numa serifa pesada de alto contraste, marfim sobre preto. O painel
+   fala na mesma voz: a leitura é o título da página, em Gloock (um peso só;
+   o destaque é pela cor, nunca por negrito falso). Desde a 2.0, os números da
    aba ficam num painel e cada assunto mora numa gaveta (ver "Gavetas (2.0)",
    no fim do arquivo): superfície delimitada, puxador com o essencial,
    conteúdo dentro, sem caixa dentro de caixa. Dado e controle ficam em
@@ -82,8 +83,9 @@
   --sidebar-w: 236px;
 
   --font: "Funnel Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  /* A voz é a serifa da marca; Georgia segura o desenho enquanto ela chega. */
-  --font-voz: "Noto Serif Display", Georgia, "Times New Roman", serif;
+  /* A voz é a serifa da marca (Gloock, um peso só); Georgia segura o desenho
+     enquanto ela chega. */
+  --font-voz: "Gloock", Georgia, "Times New Roman", serif;
   --font-display: var(--font-voz);
 
   /* Ícones em máscara (Phosphor): a cor vem de background. */
@@ -151,6 +153,10 @@
 
 html, body { margin: 0; padding: 0; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+/* A Gloock só tem um peso: sem isto, todo <b> e todo título com peso 500+
+   na voz sairia em negrito falso (o navegador engrossa o traço). As outras
+   fontes do painel e do editor trazem os pesos de verdade. */
+html { font-synthesis-weight: none; }
 
 body {
   font-family: var(--font);
@@ -236,40 +242,41 @@ option { background-color: var(--superficie); color: var(--texto); }
   scrollbar-width: thin;
 }
 
-/* A marca: o logotipo "Delfos" em marfim e a versão, baixinha, na linha
-   de base dele. */
+/* A marca (2.2): o símbolo (o D com a coluna) e o logotipo lado a lado,
+   como no quadro, com a versão baixinha no fim da linha. */
 .marca-topo {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 10px;
-  padding: 8px 10px 28px;
+  padding: 6px 10px 26px;
   text-decoration: none;
   color: var(--texto);
 }
-.marca-topo .marca-versao { margin-bottom: 1px; }
-/* O logotipo é desenho, não texto: altura fixa, largura pela proporção. */
-.logotipo { display: block; height: 24px; width: auto; flex-shrink: 0; }
-.marca-versao { margin-left: auto; font-size: 11.5px; color: var(--texto-3); font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+/* Símbolo e logotipo são desenho, não texto: altura fixa, largura pela
+   proporção. O símbolo é um pouco mais alto que o logotipo, como no quadro. */
+.simbolo { display: block; height: 30px; width: auto; flex-shrink: 0; }
+.logotipo { display: block; height: 22px; width: auto; flex-shrink: 0; }
+.marca-versao { margin-left: auto; align-self: flex-end; margin-bottom: 2px; font-size: 11.5px; color: var(--texto-3); font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
 
-/* Logotipo e assinatura (entrada e boas-vindas): o fio curto em cima e a
-   frase em caixa alta espaçada, como no quadro da marca. É a única caixa
-   alta espaçada do painel: assinatura de marca, não rótulo. */
-.marca-bloco { display: flex; flex-direction: column; gap: 16px; }
+/* Símbolo, logotipo e assinatura (entrada e boas-vindas), como o quadro
+   da marca: o símbolo à esquerda e, ao lado, o logotipo com a frase em caixa
+   alta espaçada embaixo. É a única caixa alta espaçada do painel:
+   assinatura de marca, não rótulo. */
+.marca-bloco { display: flex; align-items: center; gap: 16px; color: var(--texto); }
+.marca-bloco .simbolo { height: 64px; }
+.marca-texto { display: flex; flex-direction: column; gap: 9px; }
 .marca-bloco .marca-topo { margin: 0; padding: 0; font-size: inherit; }
-.marca-bloco .logotipo { height: 32px; }
+.marca-bloco .logotipo { height: 40px; }
 .assinatura {
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   font-size: 10.5px;
   font-weight: 400;
-  line-height: 1.6;
-  letter-spacing: 0.3em;
+  line-height: 1.2;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
+  white-space: nowrap;
   color: var(--texto-3);
 }
-.assinatura::before { content: ""; width: 28px; height: 1px; background: currentColor; }
 
 .nav { display: flex; flex-direction: column; gap: 1px; }
 
@@ -344,6 +351,8 @@ option { background-color: var(--superficie); color: var(--texto); }
   flex-shrink: 0;
 }
 .nav-count.alert { color: var(--critical-text); font-weight: 650; }
+/* Texto só para leitor de tela (o "atrasados" depois do número da barra). */
+.sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 .nav-sub {
   display: flex;
@@ -542,20 +551,24 @@ option { background-color: var(--superficie); color: var(--texto); }
   font-size: 40px;
   font-weight: 300;
   line-height: 1.14;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.005em;
   color: var(--texto);
   max-width: 25em;
   margin: 0 0 36px;
   text-wrap: pretty;
 }
-.leitura[data-tam="g"] { font-size: 46px; letter-spacing: -0.014em; }
+.leitura[data-tam="g"] { font-size: 46px; letter-spacing: -0.008em; }
 .leitura[data-tam="m"] { font-size: 39px; }
-.leitura[data-tam="p"] { font-size: 32px; line-height: 1.2; letter-spacing: -0.008em; max-width: 30em; }
-.leitura[data-tam="pp"] { font-size: 27px; line-height: 1.24; letter-spacing: -0.005em; max-width: 34em; }
-.leitura b { font-weight: 500; }
-.leitura .destaque { color: var(--critical-text); font-weight: 500; }
-.leitura .bem { color: var(--success-text); font-weight: 500; }
+.leitura[data-tam="p"] { font-size: 32px; line-height: 1.2; letter-spacing: -0.003em; max-width: 30em; }
+.leitura[data-tam="pp"] { font-size: 27px; line-height: 1.24; letter-spacing: 0; max-width: 34em; }
+/* 2.2: a voz tem um peso só, então o destaque é pela cor: a frase vem um tom
+   abaixo e o que importa (o <b>) sobe para o marfim inteiro. */
+.leitura { color: var(--texto-2); }
+.leitura b { font-weight: inherit; color: var(--texto); }
+.leitura .destaque { color: var(--critical-text); font-weight: inherit; }
+.leitura .bem { color: var(--success-text); font-weight: inherit; }
 .leitura .saudacao { color: var(--texto-3); }
+:root[data-voz="sans"] .leitura b { font-weight: 600; }
 
 /* ------------------------------- Botões --------------------------------- */
 
@@ -712,7 +725,7 @@ option { background-color: var(--superficie); color: var(--texto); }
   font-family: var(--font-voz);
   font-size: 34px;
   font-weight: 350;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.004em;
   line-height: 1.05;
 }
 .stat-sub { font-size: 13.5px; color: var(--texto-3); margin-top: 8px; line-height: 1.45; }
@@ -914,7 +927,7 @@ table.tabela-importar [data-escolher-fixo] { width: 100%; }
   border-bottom: 1px solid var(--linha);
   margin-bottom: 16px;
 }
-.mini-valor { font-family: var(--font-voz); font-size: 20px; font-weight: 450; letter-spacing: -0.005em; }
+.mini-valor { font-family: var(--font-voz); font-size: 20px; font-weight: 450; letter-spacing: 0; }
 
 .meter { margin-bottom: 18px; min-width: 220px; }
 .meter:last-child { margin-bottom: 0; }
@@ -995,7 +1008,7 @@ table.sheet tbody tr:focus-within .row-actions { opacity: 1; }
   color: var(--texto-2);
 }
 .empty-icon .ico { width: 22px; height: 22px; }
-.empty-title { font-family: var(--font-voz); font-weight: 500; font-size: 19px; letter-spacing: -0.004em; margin-bottom: 6px; }
+.empty-title { font-family: var(--font-voz); font-weight: 500; font-size: 19px; letter-spacing: 0; margin-bottom: 6px; }
 .empty-text { font-size: 14px; color: var(--texto-3); margin-bottom: 18px; max-width: 380px; margin-inline: auto; line-height: 1.6; }
 
 /* -------------------------------- Modal --------------------------------- */
@@ -2230,7 +2243,7 @@ body.modo-foco .editor-folha { padding-top: 72px; }
   flex-direction: column;
   gap: 12px;
 }
-.pergunta-texto { font-family: var(--font-voz); font-size: 20px; font-weight: 450; line-height: 1.3; letter-spacing: -0.006em; text-wrap: pretty; }
+.pergunta-texto { font-family: var(--font-voz); font-size: 20px; font-weight: 450; line-height: 1.3; letter-spacing: 0; text-wrap: pretty; }
 .pergunta-apoio { font-size: 13.5px; color: var(--texto-3); line-height: 1.5; margin-top: -4px; }
 .pergunta-resposta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .pergunta-resposta .input { width: 150px; }
@@ -3328,7 +3341,7 @@ body.entrando .main .wrap > .leitura { animation: chegar 620ms var(--ease-saida)
   font-family: var(--font-voz);
   font-size: 20px;
   font-weight: 450;
-  letter-spacing: -0.006em;
+  letter-spacing: 0;
   line-height: 1.2;
   text-align: left;
   cursor: pointer;
@@ -3350,20 +3363,6 @@ body.entrando .main .wrap > .leitura { animation: chegar 620ms var(--ease-saida)
 .gaveta-nome { min-width: 0; overflow-wrap: anywhere; }
 .gaveta-nome .swatch { display: none; }
 
-/* O ícone da gaveta: o selo da aba em ponto pequeno, na cor da página. */
-.gaveta-ic {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  color: var(--cor-pagina, var(--texto-2));
-  background: color-mix(in srgb, var(--cor-pagina, var(--texto)) 12%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cor-pagina, var(--texto)) 10%, transparent);
-}
-.gaveta-ic .ico { width: 18px; height: 18px; }
-.gaveta-ic .ico.duo .corpo { opacity: 0.2; }
 
 .gaveta-resumo {
   grid-area: resumo;
@@ -3380,6 +3379,11 @@ body.entrando .main .wrap > .leitura { animation: chegar 620ms var(--ease-saida)
 .gaveta-resumo .atencao { color: var(--warning-text); font-weight: 600; }
 .gaveta-resumo .bem { color: var(--success-text); font-weight: 600; }
 .gaveta-resumo a, .gaveta-resumo button { pointer-events: auto; position: relative; }
+/* 2.2: o resumo é o que se lê com a gaveta fechada. Aberta, o conteúdo já
+   diz tudo, e repetir em cima seria ruído; data-sempre mantém um total que
+   não aparece lá dentro (quanto falta pagar). */
+.gaveta-resumo { transition: opacity var(--t-medio) var(--ease-saida), visibility var(--t-medio); }
+.gaveta[data-aberta="sim"] > .gaveta-cab .gaveta-resumo:not([data-sempre]) { opacity: 0; visibility: hidden; }
 .gaveta-acoes { grid-area: acoes; display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap; min-width: 0; }
 .gaveta-acoes .google-state { margin-right: 6px; }
 .gaveta-seta {
@@ -3494,14 +3498,36 @@ body.entrando .main .wrap > .leitura { animation: chegar 620ms var(--ease-saida)
     padding: 11px 8px 11px 12px;
   }
   .gaveta-puxador { font-size: 18px; gap: 11px; }
-  .gaveta-ic { width: 32px; height: 32px; }
-  .gaveta-resumo { padding-left: 43px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 13.5px; }
-  .gaveta-resumo:empty { display: none; }
+  .gaveta-resumo { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 13.5px; }
+  .gaveta-resumo:empty, .gaveta[data-aberta="sim"] > .gaveta-cab .gaveta-resumo:not([data-sempre]) { display: none; }
   .gaveta-dentro { padding: 0 14px; }
   .gaveta-dentro::before { margin: 0 -14px 16px; }
   .gaveta-dentro::after { height: 16px; }
   .gaveta .empty { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "ic titulo" "ic texto" ". acao"; row-gap: 2px; }
   .gaveta .empty .btn { justify-self: start; margin-top: 10px; }
+}
+
+/* ---- Análises e ajustes (2.2): as gavetas finas ----
+   O que pede ação fica nas gavetas de cima, com superfície. O que se
+   consulta de vez em quando (ritmo, maiores gastos, perguntas, ajustes)
+   desce para um grupo de gavetas finas: sem superfície, separadas por fio,
+   como as gavetas rasas de um arquivo. Mesmo puxador, mesma memória. */
+.gaveteiro.consulta { gap: 0; border-bottom: 1px solid var(--linha); }
+.gaveteiro + .gaveteiro.consulta, .gaveta + .gaveteiro.consulta { margin-top: 48px; }
+.consulta-rotulo { margin: 0 0 10px 4px; font-family: var(--font); font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--texto-3); }
+.consulta > .gaveta { background: transparent; border: 0; border-top: 1px solid var(--linha); border-radius: 0; box-shadow: none; margin-top: 0; }
+.consulta .gaveta-cab { min-height: 56px; padding: 8px 6px 8px 4px; }
+.consulta .gaveta-puxador { font-size: 17px; }
+.consulta .gaveta-puxador::after { border-radius: var(--r-md); inset: 4px -8px; }
+.consulta .gaveta-dentro { padding: 0 4px; }
+.consulta .gaveta-dentro::before { display: none; }
+.consulta .gaveta-dentro::after { height: 26px; }
+.consulta .gaveta-corpo:not(:has(> .gaveta-dentro)) { padding: 0 4px 26px; }
+@media (max-width: 640px) {
+  .gaveteiro + .gaveteiro.consulta, .gaveta + .gaveteiro.consulta { margin-top: 36px; }
+  .consulta .gaveta-cab { min-height: 52px; padding: 8px 2px; }
+  .consulta .gaveta-puxador { font-size: 16.5px; }
+  .consulta .gaveta-dentro { padding: 0 2px; }
 }
 
 /* ---- Visão geral em gavetas ---- */
@@ -3584,7 +3610,7 @@ button.link-gaveta::after { transform: rotate(90deg); }
 .ladrilho-selo.projetos { --cor-aba: var(--s-projetos); }
 .ladrilho-selo .ico { width: 18px; height: 18px; }
 .ladrilho-selo .ico.duo .corpo { opacity: 0.2; }
-.ladrilho-nome { grid-area: nome; font-family: var(--font-voz); font-size: 19px; font-weight: 450; letter-spacing: -0.006em; line-height: 1.2; min-width: 0; overflow-wrap: anywhere; }
+.ladrilho-nome { grid-area: nome; font-family: var(--font-voz); font-size: 19px; font-weight: 450; letter-spacing: 0; line-height: 1.2; min-width: 0; overflow-wrap: anywhere; }
 .ladrilho-valor { grid-area: valor; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.1; }
 .ladrilho-valor small { font-size: 13px; font-weight: 500; color: var(--texto-3); letter-spacing: 0; }
 .ladrilho-sub { grid-area: sub; margin-top: -6px; font-size: 13px; color: var(--texto-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -3758,15 +3784,18 @@ button.link-gaveta::after { transform: rotate(90deg); }
 .item-marca.pequena { width: 32px; height: 32px; border-radius: 9px; }
 .item-marca.pequena .ico { width: 16px; height: 16px; }
 
-/* Informações com ícone, na linha de baixo do item. */
-.item-info { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 5px; font-size: 13px; color: var(--texto-3); line-height: 1.4; }
-.info { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
-.info > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.info .ico { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.9; }
-.info b { color: var(--texto-2); font-weight: 600; }
-.info.alerta { color: var(--critical-text); }
-.info.atencao { color: var(--warning-text); }
-.info.bem { color: var(--success-text); }
+/* As informações do item, na linha de baixo: uma frase só, separada por
+   vírgula (2.2; na 2.1 cada uma tinha ícone). Flex para o espaço entre os
+   <span> do HTML não virar espaço antes da vírgula; a vírgula fica no fim de
+   cada pedaço (quebra de linha depois dela, nunca antes) e no tom do texto
+   mesmo quando a informação é vermelha ou âmbar. */
+.item-info { display: flex; flex-wrap: wrap; row-gap: 1px; margin-top: 4px; font-size: 13px; color: var(--texto-3); line-height: 1.45; }
+span.info { min-width: 0; }
+span.info:not(:last-child)::after { content: ","; margin-right: 0.32em; color: var(--texto-3); font-weight: 400; }
+span.info b { color: var(--texto-2); font-weight: 600; }
+span.info.alerta { color: var(--critical-text); }
+span.info.atencao { color: var(--warning-text); }
+span.info.bem { color: var(--success-text); }
 
 /* O número à direita (média, valor, quantia). */
 .item-valor { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 1.15; }
@@ -3926,7 +3955,6 @@ button.link-gaveta::after { transform: rotate(90deg); }
   .gaveta .list:not(.cartoes) > li > .grow, .gaveta .linhas-valor > li > .grow { flex: 1 1 calc(100% - 110px); min-width: 0; }
   .gaveta .list:not(.cartoes) > li > .row-actions, .gaveta .linhas-valor > li > .btn:last-child { margin-left: auto; }
   .gaveta .list:not(.cartoes) > li > .row-actions { position: static; transform: none; opacity: 1; pointer-events: auto; padding-left: 0; background: none; }
-  .info > span { white-space: normal; }
 }
 /* Barras dentro de um compartimento (os resumos de campo de uma aba): soltas, sem outro compartimento em volta. */
 .gaveta .card .cat-linha, .gaveta .card .chart-row { background: none; padding: 6px 0; border-radius: 0; }

@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
   <link rel="stylesheet" href="theme.css" />
 </head>
 <body>
@@ -35,7 +35,7 @@
         <div class="grid g4" id="stats" style="margin-bottom:14px;"></div>
 
         <div class="gaveteiro">
-          <section class="gaveta" data-gaveta="etapas" data-icone="lista">
+          <section class="gaveta" data-gaveta="etapas">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Etapas</h2>
               <span class="gaveta-resumo" id="etapas-resumo"></span>
@@ -47,7 +47,7 @@
             </div>
           </section>
 
-          <section class="gaveta" data-gaveta="recebimentos" data-icone="cofre">
+          <section class="gaveta" data-gaveta="recebimentos">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Recebimentos</h2>
               <span class="gaveta-resumo" id="recebimentos-resumo"></span>
@@ -55,7 +55,7 @@
             <div class="gaveta-corpo"><div id="recebimentos"></div></div>
           </section>
 
-          <section class="gaveta" data-gaveta="custos" data-icone="carrinho">
+          <section class="gaveta" data-gaveta="custos">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Custos do projeto</h2>
               <span class="gaveta-resumo" id="custos-resumo"></span>
@@ -64,15 +64,7 @@
             <div class="gaveta-corpo"><div id="custos"></div></div>
           </section>
 
-          <section class="gaveta" data-gaveta="ficha" data-icone="info" data-fechada>
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Ficha do projeto</h2>
-              <span class="gaveta-resumo" id="ficha-resumo">tipo, cliente, datas, prioridade e horas</span>
-            </header>
-            <div class="gaveta-corpo"><div id="ficha"></div></div>
-          </section>
-
-          <section class="gaveta" data-gaveta="anotacoes" data-icone="lapis">
+          <section class="gaveta" data-gaveta="anotacoes">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Anotações</h2>
               <span class="gaveta-resumo" id="anotacoes-resumo"></span>
@@ -80,8 +72,21 @@
             </header>
             <div class="gaveta-corpo"><div id="anotacoes"></div></div>
           </section>
+        </div>
 
-          <section class="gaveta" data-gaveta="anexos" data-icone="anexar" data-fechada>
+        <!-- 2.2: o que se consulta de vez em quando, em gavetas finas, abaixo do que pede ação. -->
+        <div class="gaveteiro consulta" role="group" aria-labelledby="consulta-rotulo">
+          <h2 class="consulta-rotulo" id="consulta-rotulo">Ficha e documentos</h2>
+
+          <section class="gaveta" data-gaveta="ficha" data-fechada>
+            <header class="gaveta-cab">
+              <h2 class="gaveta-titulo">Ficha do projeto</h2>
+              <span class="gaveta-resumo" id="ficha-resumo">tipo, cliente, datas, prioridade e horas</span>
+            </header>
+            <div class="gaveta-corpo"><div id="ficha"></div></div>
+          </section>
+
+          <section class="gaveta" data-gaveta="anexos" data-fechada>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Documentos</h2>
               <span class="gaveta-resumo" id="anexos-resumo"></span>

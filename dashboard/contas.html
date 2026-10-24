@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
   <link rel="stylesheet" href="theme.css" />
 </head>
 <body>
@@ -54,7 +54,7 @@
         </div>
 
         <div class="gaveteiro">
-          <section class="gaveta" data-gaveta="contas" data-icone="banco">
+          <section class="gaveta" data-gaveta="contas">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Contas</h2>
               <span class="gaveta-resumo" id="contas-resumo"></span>
@@ -62,7 +62,7 @@
             <div class="gaveta-corpo"><div id="contas"></div></div>
           </section>
 
-          <section class="gaveta" data-gaveta="cartoes" data-icone="cartao">
+          <section class="gaveta" data-gaveta="cartoes">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Cartões de crédito</h2>
               <span class="gaveta-resumo" id="cartoes-resumo"></span>
@@ -70,8 +70,13 @@
             </header>
             <div class="gaveta-corpo"><div id="cartoes"></div></div>
           </section>
+        </div>
 
-          <section class="gaveta" data-gaveta="balanco" data-icone="investimentos" data-fechada>
+        <!-- 2.2: o que se consulta de vez em quando, em gavetas finas, abaixo do que pede ação. -->
+        <div class="gaveteiro consulta" role="group" aria-labelledby="consulta-rotulo">
+          <h2 class="consulta-rotulo" id="consulta-rotulo">Análise</h2>
+
+          <section class="gaveta" data-gaveta="balanco" data-fechada>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Balanço</h2>
               <span class="gaveta-resumo">participação de cada conta e cartão nos gastos</span>

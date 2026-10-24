@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
   <link rel="stylesheet" href="theme.css" />
   <script src="config.js"></script>
 </head>
@@ -49,15 +49,15 @@
         <!-- O gaveteiro do mês: o que pede ação e o que se consulta sempre
              fica aberto; o resto, fechado, diz o essencial no puxador. -->
         <div class="gaveteiro">
-          <section class="gaveta" data-gaveta="apagar" data-icone="relogio">
+          <section class="gaveta" data-gaveta="apagar">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">A pagar</h2>
-              <span class="gaveta-resumo" id="apagar-total"></span>
+              <span class="gaveta-resumo" id="apagar-total" data-sempre></span>
             </header>
             <div class="gaveta-corpo"><div id="apagar"></div></div>
           </section>
 
-          <section class="gaveta" data-gaveta="categorias" data-icone="lista">
+          <section class="gaveta" data-gaveta="categorias">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Para onde foi o dinheiro</h2>
               <span class="gaveta-resumo" id="cat-nota"></span>
@@ -65,7 +65,7 @@
             <div class="gaveta-corpo"><div id="categorias"></div></div>
           </section>
 
-          <section class="gaveta" data-gaveta="notas" data-icone="lampada">
+          <section class="gaveta" data-gaveta="notas">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">O que o Delfos notou</h2>
               <span class="gaveta-resumo" data-resumo-notas></span>
@@ -73,7 +73,7 @@
             <div class="gaveta-corpo"><ul class="notas" id="notas"></ul></div>
           </section>
 
-          <section class="gaveta" id="sec-lancamentos" data-gaveta="lancamentos" data-icone="tabela">
+          <section class="gaveta" id="sec-lancamentos" data-gaveta="lancamentos">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Lançamentos</h2>
               <span class="gaveta-resumo num" id="resumo-filtro"></span>
@@ -97,7 +97,7 @@
             </div>
           </section>
 
-          <section class="gaveta" data-gaveta="metas" data-icone="alvo">
+          <section class="gaveta" data-gaveta="metas">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Metas</h2>
               <span class="gaveta-resumo" id="metas-resumo"></span>
@@ -105,17 +105,22 @@
             </header>
             <div class="gaveta-corpo"><div id="metas"></div></div>
           </section>
+        </div>
 
-          <section class="gaveta" data-gaveta="fixos" data-icone="repetir" data-fechada>
+        <!-- 2.2: análises e ajustes, em gavetas finas, abaixo do que pede ação. -->
+        <div class="gaveteiro consulta" role="group" aria-labelledby="consulta-rotulo">
+          <h2 class="consulta-rotulo" id="consulta-rotulo">Análises e ajustes</h2>
+
+          <section class="gaveta" data-gaveta="fixos" data-fechada>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Fixos e assinaturas</h2>
-              <span class="gaveta-resumo num" id="fixos-total"></span>
+              <span class="gaveta-resumo num" id="fixos-total" data-sempre></span>
               <div class="gaveta-acoes"><button class="btn sm" type="button" id="btn-fixo">+ Gasto fixo</button></div>
             </header>
             <div class="gaveta-corpo"><div id="fixos"></div></div>
           </section>
 
-          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-icone="pergunta" data-fechada>
+          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-fechada>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Perguntas do Delfos</h2>
               <span class="gaveta-resumo"></span>
@@ -126,7 +131,7 @@
             </div>
           </section>
 
-          <section class="gaveta ritmo" data-gaveta="ritmo" data-icone="investimentos" data-fechada>
+          <section class="gaveta ritmo" data-gaveta="ritmo" data-fechada>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Ritmo do mês</h2>
               <span class="gaveta-resumo" id="ritmo-resumo">gasto somado dia a dia</span>
@@ -134,7 +139,7 @@
             <div class="gaveta-corpo"><div id="ritmo"></div></div>
           </section>
 
-          <section class="gaveta" data-gaveta="maiores" data-icone="subiu" data-fechada>
+          <section class="gaveta" data-gaveta="maiores" data-fechada>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Maiores gastos do mês</h2>
               <span class="gaveta-resumo" id="maiores-resumo"></span>
@@ -142,7 +147,7 @@
             <div class="gaveta-corpo"><div id="maiores"></div></div>
           </section>
 
-          <section class="gaveta" data-gaveta="meses" data-icone="calendario" data-fechada>
+          <section class="gaveta" data-gaveta="meses" data-fechada>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Entradas e saídas</h2>
               <span class="gaveta-resumo" id="meses-resumo">últimos 6 meses</span>
@@ -150,7 +155,7 @@
             <div class="gaveta-corpo"><div id="grafico-meses"></div></div>
           </section>
 
-          <section class="gaveta" data-gaveta="drive" data-icone="nuvem" data-fechada>
+          <section class="gaveta" data-gaveta="drive" data-fechada>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Documentos no Google Drive</h2>
               <span class="gaveta-resumo google-state" id="google-status"><span class="google-dot"></span><span id="google-texto">Não conectado</span></span>

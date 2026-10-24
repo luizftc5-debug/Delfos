@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
   <link rel="stylesheet" href="theme.css" />
 </head>
 <body>
@@ -53,7 +53,7 @@
         </div>
 
         <div class="gaveteiro">
-          <section class="gaveta" data-gaveta="projetos" data-icone="projetos">
+          <section class="gaveta" data-gaveta="projetos">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Seus projetos</h2>
               <span class="gaveta-resumo" id="projetos-resumo"></span>
@@ -61,7 +61,7 @@
             <div class="gaveta-corpo"><div id="projetos"></div></div>
           </section>
 
-          <section class="gaveta" data-gaveta="notas" data-icone="lampada">
+          <section class="gaveta" data-gaveta="notas">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">O que o Delfos notou</h2>
               <span class="gaveta-resumo" data-resumo-notas></span>
@@ -69,7 +69,7 @@
             <div class="gaveta-corpo"><ul class="notas" id="notas"></ul></div>
           </section>
 
-          <section class="gaveta" data-gaveta="oportunidades" data-icone="lampada">
+          <section class="gaveta" data-gaveta="oportunidades">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Oportunidades de renda</h2>
               <span class="gaveta-resumo" id="oportunidades-resumo">ideias que ainda não viraram projeto</span>
@@ -77,8 +77,13 @@
             </header>
             <div class="gaveta-corpo"><div id="oportunidades"></div></div>
           </section>
+        </div>
 
-          <section class="gaveta" data-gaveta="renda" data-icone="cofre" data-fechada>
+        <!-- 2.2: análises e ajustes, em gavetas finas, abaixo do que pede ação. -->
+        <div class="gaveteiro consulta" role="group" aria-labelledby="consulta-rotulo">
+          <h2 class="consulta-rotulo" id="consulta-rotulo">Análises e ajustes</h2>
+
+          <section class="gaveta" data-gaveta="renda" data-fechada>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo" id="titulo-renda">Recebido por projeto</h2>
               <span class="gaveta-resumo" id="renda-resumo">marca na renda estimada</span>
@@ -86,7 +91,7 @@
             <div class="gaveta-corpo"><div id="renda-projetos"></div></div>
           </section>
 
-          <section class="gaveta" data-gaveta="meses" data-icone="investimentos" data-fechada>
+          <section class="gaveta" data-gaveta="meses" data-fechada>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Últimos seis meses</h2>
               <span class="gaveta-resumo" id="meses-nota"></span>
@@ -94,7 +99,7 @@
             <div class="gaveta-corpo"><div id="renda-meses"></div></div>
           </section>
 
-          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-icone="pergunta" data-fechada hidden>
+          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-fechada hidden>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Perguntas do Delfos</h2>
               <span class="gaveta-resumo"></span>

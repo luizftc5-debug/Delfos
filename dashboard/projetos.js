@@ -188,14 +188,14 @@
         : r.metaMensal ? `<span class="item-valor voz">${fmt.moeda(r.metaMensal)}<small>estimado por mês</small></span>`
         : `<span class="item-valor"><small>${fmt.escape(p.status || "")}</small></span>`}
       <span class="item-info">
-        ${UI.info(p.status === "concluído" ? "check" : "relogio", fmt.escape(p.status || "sem status"), p.status === "concluído" ? "bem" : "")}
-        ${p.tipo ? UI.info("projetos", fmt.escape(p.tipo)) : ""}
-        ${p.deadline ? UI.info("calendario", `${fmt.escape(fmt.data(p.deadline))}${r.urgencia ? `, ${fmt.escape(r.urgencia.rotulo)}` : ""}`, tomPrazo) : ""}
-        ${r.faturado && r.metaMensal ? UI.info("cofre", `${fmt.moeda(r.metaMensal)} por mês estimados`) : ""}
-        ${r.custoTotal ? UI.info("carrinho", `custos ${fmt.moeda(r.custoTotal)}`) : ""}
+        ${UI.info(fmt.escape(p.status || "sem status"), p.status === "concluído" ? "bem" : "")}
+        ${p.tipo ? UI.info(fmt.escape(p.tipo)) : ""}
+        ${p.deadline ? UI.info(`${fmt.escape(fmt.data(p.deadline))}${r.urgencia ? `, ${fmt.escape(r.urgencia.rotulo)}` : ""}`, tomPrazo) : ""}
+        ${r.faturado && r.metaMensal ? UI.info(`${fmt.moeda(r.metaMensal)} por mês estimados`) : ""}
+        ${r.custoTotal ? UI.info(`custos ${fmt.moeda(r.custoTotal)}`) : ""}
         ${proxima
-          ? UI.info("lista", `<b>Próxima etapa:</b> ${fmt.escape(proxima.texto)}`)
-          : UI.info("lista", r.passos.total ? "todas as etapas concluídas" : "sem etapas ainda", r.passos.total ? "bem" : "")}
+          ? UI.info(`<b>próxima etapa:</b> ${fmt.escape(proxima.texto)}`)
+          : UI.info(r.passos.total ? "todas as etapas concluídas" : "sem etapas ainda", r.passos.total ? "bem" : "")}
       </span>
       ${r.passos.total ? `<span class="cartao-barra" style="--cor-barra:var(--s-projetos)" title="${r.passos.feitos} de ${r.passos.total} etapas"><i style="width:${(r.passos.feitos / r.passos.total) * 100}%"></i></span>` : ""}
       <span class="row-actions">
@@ -238,10 +238,10 @@
         <span class="grow">
           <span class="title">${fmt.escape(o.descricao)}</span>
           <span class="item-info">${[
-            o.potencial ? UI.info("cofre", `retorno: ${fmt.escape(o.potencial)}`) : "",
-            o.esforco ? UI.info("relogio", `esforço: ${fmt.escape(o.esforco)}`) : "",
-            o.area ? UI.info("grade", fmt.escape(o.area)) : "",
-          ].join("") || UI.info("info", "sem detalhes")}</span>
+            o.potencial ? UI.info(`retorno: ${fmt.escape(o.potencial)}`) : "",
+            o.esforco ? UI.info(`esforço: ${fmt.escape(o.esforco)}`) : "",
+            o.area ? UI.info(fmt.escape(o.area)) : "",
+          ].join("") || UI.info("sem detalhes")}</span>
         </span>
         <span class="row-actions">
           <button class="btn ghost sm" data-virar>Virar projeto</button>

@@ -77,26 +77,25 @@ const Leituras = (() => {
       return { chave, itens };
     });
 
-    // --- A frase
+    // --- A frase (2.2: uma só, a coisa mais importante; os números ficam na
+    // faixa logo abaixo, que já diz disciplinas, prazos e a próxima avaliação).
     const em14 = [...futuras.filter((a) => UI.diasAte(a.data) <= 14), ...prazosFuturos.filter((p) => UI.diasAte(p.data) <= 14)];
     const nProvas = futuras.filter((a) => UI.diasAte(a.data) <= 14).length;
-    const nEntregas = prazosFuturos.filter((p) => UI.diasAte(p.data) <= 14).length;
-    const primeira = [...futuras.map((a) => ({ t: `${a.nome || "Avaliação"} de ${a.disciplina.nome}`, data: a.data })), ...prazosFuturos.map((p) => ({ t: p.descricao, data: p.data }))]
-      .sort((a, b) => a.data.localeCompare(b.data))[0];
+    const impossivel = porDisciplina.find((x) => x.nec?.situacao === "impossivel");
+    const aperto = porDisciplina.filter((x) => x.media && x.nec?.situacao === "possivel").sort((a, b) => b.nec.precisa - a.nec.precisa)[0];
+    const semanaCheia = semanas.find((s) => s.itens.filter((i) => i.tipo === "prova").length >= 2);
     let frase;
-    if (!ativas.length && !prazos.length) {
-      frase = "Nenhuma disciplina cadastrada ainda. Com as disciplinas e as avaliações de cada uma, o Delfos diz quanto você precisa tirar e onde a semana aperta.";
-    } else {
-      const partes = [];
-      if (em14.length) partes.push(nProvas && nEntregas ? `${plural(nProvas, "avaliação", "avaliações")} e ${plural(nEntregas, "entrega", "entregas")}` : nProvas ? plural(nProvas, "avaliação", "avaliações") : plural(nEntregas, "entrega", "entregas"));
-      frase = em14.length
-        ? `Nas próximas duas semanas há ${partes[0]}; a primeira é <b>${esc(primeira.t)}</b>, ${quando(UI.diasAte(primeira.data))}.`
-        : primeira ? `Nada nas próximas duas semanas. A próxima é <b>${esc(primeira.t)}</b>, ${quando(UI.diasAte(primeira.data))}.` : "Nenhuma prova ou entrega marcada à frente.";
-      if (atrasados.length) frase += ` <span class="destaque">${plural(atrasados.length, "entrega atrasada", "entregas atrasadas")}</span>.`;
-      if (mediaGeral !== null) frase += ` Sua média geral está em <b>${fmt.decimal(mediaGeral)}</b>`;
-      const aperto = porDisciplina.filter((x) => x.media && x.nec?.situacao === "possivel").sort((a, b) => b.nec.precisa - a.nec.precisa)[0];
-      if (mediaGeral !== null) frase += aperto ? `; em <b>${esc(aperto.d.nome)}</b>, precisa de <b>${fmt.decimal(aperto.nec.precisa)}</b> nas próximas avaliações.` : ".";
+    if (!ativas.length && !prazos.length) frase = "Cadastre suas disciplinas e avaliações, e o Delfos diz quanto você precisa tirar em cada uma.";
+    else if (impossivel) frase = `Em <b>${esc(impossivel.d.nome)}</b>, <span class="destaque">nem 10 nas avaliações que faltam</span> fecha a média.`;
+    else if (aperto) frase = `Em <b>${esc(aperto.d.nome)}</b>, você precisa de <b>${fmt.decimal(aperto.nec.precisa)}</b> nas próximas avaliações.`;
+    else if (atrasados.length) frase = `<b>${esc(atrasados[0].descricao)}</b> <span class="destaque">venceu ${quando(UI.diasAte(atrasados[0].data))}</span>.`;
+    else if (semanaCheia) frase = `A semana de ${fmt.dataCurta(semanaCheia.chave)} junta <b>${plural(semanaCheia.itens.filter((i) => i.tipo === "prova").length, "avaliação", "avaliações")}</b>; comece a revisar antes.`;
+    else if (em14.length) {
+      const nEntregas = em14.length - nProvas;
+      const conta = [nProvas ? plural(nProvas, "avaliação", "avaliações") : "", nEntregas ? plural(nEntregas, "entrega", "entregas") : ""].filter(Boolean).join(" e ");
+      frase = `Duas semanas com <b>${conta}</b> pela frente.`;
     }
+    else frase = "Nada de prova ou entrega nas próximas duas semanas.";
 
     // --- As notas
     const notas = [];
@@ -110,10 +109,9 @@ const Leituras = (() => {
         notas.push(nota("atencao", "editar", `<b>${esc(x.d.nome)}</b> tem ${esc(x.prox.nome || "avaliação")} ${quando(UI.diasAte(x.prox.data))} e nenhum resumo cadastrado.`, { acao: { rotulo: "Escrever resumo", href: `resumo.html?disciplina=${encodeURIComponent(x.d.id)}` } }));
       }
     });
-    const cheia = semanas.find((s) => s.itens.filter((i) => i.tipo === "prova").length >= 2);
-    if (cheia) {
-      const provas = cheia.itens.filter((i) => i.tipo === "prova");
-      notas.push(nota("atencao", "calendario", `A semana de ${fmt.dataCurta(cheia.chave)} tem ${plural(provas.length, "avaliação", "avaliações")}: ${provas.map((i) => `${esc(i.titulo)} (${esc(i.sub)})`).join(", ")}. Comece a revisar antes.`));
+    if (semanaCheia) {
+      const provas = semanaCheia.itens.filter((i) => i.tipo === "prova");
+      notas.push(nota("atencao", "calendario", `A semana de ${fmt.dataCurta(semanaCheia.chave)} tem ${plural(provas.length, "avaliação", "avaliações")}: ${provas.map((i) => `${esc(i.titulo)} (${esc(i.sub)})`).join(", ")}. Comece a revisar antes.`));
     }
     const tcc = prazosFuturos.filter((p) => p.tipo === "TCC" && UI.diasAte(p.data) <= 21);
     tcc.forEach((p) => notas.push(nota("atencao", "relogio", `Prazo do TCC: <b>${esc(p.descricao)}</b>, ${quando(UI.diasAte(p.data))}.`)));
@@ -157,17 +155,17 @@ const Leituras = (() => {
       chave = Financas.deslocarMes(chave, -1);
     }
 
+    // A frase (2.2): uma só. A faixa já diz projetos, renda potencial,
+    // faturado e etapas; aqui vai o que ela não diz.
+    const melhorHora = porProjeto.filter((x) => x.valorHora).sort((a, b) => b.valorHora - a.valorHora)[0];
+    const prejuizo = porProjeto.filter((x) => x.r.lucro < 0).sort((a, b) => a.r.lucro - b.r.lucro)[0];
     let frase;
-    if (!e.projetos.length) {
-      frase = "Nenhum projeto ainda. Monitoria, plantão, conteúdo, freela: cada iniciativa que traz dinheiro vira um projeto, com etapas, recebimentos e custos.";
-    } else {
-      frase = `Em ${nomeMes(mes)}, seus projetos renderam <b>${moeda(recebido)}</b>`;
-      if (estimado) frase += `, ${pct(recebido / estimado)} dos ${moeda(estimado)} estimados por mês`;
-      frase += custos ? `, com ${moeda(custos)} de custos.` : ".";
-      if (meta) frase += recebido >= meta ? ` A meta de <span class="bem">${moeda(meta)}</span> foi alcançada.` : ` Para a meta de ${moeda(meta)}, faltam <b>${moeda(meta - recebido)}</b>.`;
-      const melhor = porProjeto.filter((x) => x.valorHora).sort((a, b) => b.valorHora - a.valorHora)[0];
-      if (melhor) frase += ` <b>${esc(melhor.p.nome)}</b> paga cerca de <b>${moeda(melhor.valorHora)} por hora</b>.`;
-    }
+    if (!e.projetos.length) frase = "Cada iniciativa que traz dinheiro vira um projeto, com etapas, recebimentos e custos.";
+    else if (meta && recebido >= meta) frase = `A meta de <span class="bem">${moeda(meta)}</span> deste mês foi alcançada.`;
+    else if (meta) frase = `Faltam <b>${moeda(meta - recebido)}</b> para a meta de ${moeda(meta)} deste mês.`;
+    else if (prejuizo) frase = `<b>${esc(prejuizo.p.nome)}</b> está no prejuízo: <span class="destaque">${moeda(prejuizo.r.lucro)}</span> até agora.`;
+    else if (melhorHora) frase = `<b>${esc(melhorHora.p.nome)}</b> é o que paga melhor: cerca de <b>${moeda(melhorHora.valorHora)} por hora</b>.`;
+    else frase = `Em ${nomeMes(mes)}, os projetos renderam <b>${moeda(recebido)}</b>.`;
 
     const notas = [];
     const disponiveis = Number(prefs.horasDisponiveis) || 0;
@@ -198,14 +196,20 @@ const Leituras = (() => {
     const semana = abertos.filter((c) => c.data && UI.diasAte(c.data) >= 0 && UI.diasAte(c.data) <= 7).sort((a, b) => a.data.localeCompare(b.data));
     const outros = UI.compromissos().filter((i) => i.area !== "pessoal");
 
+    // A frase (2.2): uma só. A faixa já conta em aberto, a semana e os
+    // atrasados; aqui vai o nome do que pede atenção e o que a faixa não diz
+    // (a hora, o lugar, o choque com outra aba).
+    const futuros = abertos.filter((c) => c.data && UI.diasAte(c.data) >= 0).sort((a, b) => a.data.localeCompare(b.data));
+    const choque = futuros.map((c) => ({ c, outro: outros.find((o) => o.data === c.data) })).find((x) => x.outro && UI.diasAte(x.c.data) <= 14);
     let frase;
-    if (!todos.length) frase = "Nada pessoal cadastrado. Consulta, revisão do carro, um recado com data: o que não é financeiro, faculdade nem projeto mora aqui.";
-    else if (semana.length) frase = `Esta semana há ${plural(semana.length, "compromisso pessoal", "compromissos pessoais")}; o próximo é <b>${esc(semana[0].descricao)}</b>, ${quando(UI.diasAte(semana[0].data))}.`;
-    else {
-      const prox = abertos.filter((c) => c.data && UI.diasAte(c.data) >= 0).sort((a, b) => a.data.localeCompare(b.data))[0];
-      frase = prox ? `Semana livre por aqui. O próximo é <b>${esc(prox.descricao)}</b>, ${quando(UI.diasAte(prox.data))}.` : "Nada pessoal marcado à frente.";
-    }
-    if (atrasados.length) frase += ` <span class="destaque">${plural(atrasados.length, "ficou para trás", "ficaram para trás")}</span>.`;
+    if (!todos.length) frase = "Consulta, revisão do carro, um recado com data: o que não é das outras abas mora aqui.";
+    else if (atrasados.length) frase = `<b>${esc(atrasados[0].descricao)}</b> <span class="destaque">ficou para trás</span>; era para ${quando(UI.diasAte(atrasados[0].data))}.`;
+    else if (choque) frase = `<b>${esc(choque.c.descricao)}</b> cai no mesmo dia de <b>${esc(choque.outro.titulo)}</b>.`;
+    else if (futuros.length) {
+      const c = futuros[0];
+      const detalhes = [quando(UI.diasAte(c.data)), c.hora ? `às ${esc(c.hora)}` : "", c.local ? esc(c.local) : ""].filter(Boolean).join(", ");
+      frase = `<b>${esc(c.descricao)}</b> é o próximo: ${detalhes}.`;
+    } else frase = "Nada pessoal marcado à frente.";
 
     const notas = [];
     atrasados.forEach((c) => notas.push(nota("alerta", "alerta", `<b>${esc(c.descricao)}</b> era para ${quando(UI.diasAte(c.data))}. Concluído ou remarcado?`)));
@@ -324,35 +328,37 @@ const Leituras = (() => {
     const prog = progressoMeta(p);
     const checkin = p.checkin ? itens.map((i) => ({ i, seq: sequencia(i.feitos), semana: (i.feitos || []).filter((d) => d >= inicioPeriodo("semana")).length, hoje: (i.feitos || []).includes(UI.hojeISO()) })) : [];
 
-    // --- A frase
-    const partes = [];
+    // --- A frase (2.2: uma só; a faixa já conta em aberto e concluídos).
     const nome = esc(p.nome);
-    if (!itens.length) {
-      partes.push(p.checkin
-        ? `Nada em ${nome} ainda. Cadastre o que você quer fazer com frequência e marque cada dia em que fez; o Delfos conta as sequências.`
-        : `Nada em ${nome} ainda. O primeiro ${esc(rot)} já faz esta página começar a ler.`);
-    } else if (p.checkin) {
-      const feitosSemana = checkin.reduce((s, x) => s + x.semana, 0);
-      const possiveis = checkin.length * Math.min(7, ((new Date(UI.hojeISO() + "T00:00:00").getDay() + 6) % 7) + 1);
-      const melhor = [...checkin].sort((a, b) => b.seq - a.seq)[0];
-      partes.push(`Esta semana, <b>${feitosSemana} de ${possiveis}</b> marcações possíveis em ${nome}.`);
-      if (melhor?.seq >= 2) partes.push(`A maior sequência agora é <b>${esc(melhor.i.descricao)}</b>, com ${melhor.seq} dias seguidos.`);
-      const hojeFalta = checkin.filter((x) => !x.hoje).length;
-      partes.push(hojeFalta ? `Faltam ${hojeFalta} para marcar hoje.` : `<span class="bem">Tudo marcado hoje</span>.`);
-    } else if (p.naAgenda) {
-      partes.push(semana.length ? `${fmt.capitalizar(plural(semana.length, esc(rot), esc(rots)))} para os próximos 7 dias; o próximo é <b>${esc(semana[0].descricao)}</b>, ${quando(UI.diasAte(semana[0].data))}.` : `Nada de ${nome} nos próximos 7 dias; ${plural(abertos.length, `${esc(rot)} em aberto`, `${esc(rots)} em aberto`)}.`);
-      if (atrasados.length) partes.push(`<span class="destaque">${plural(atrasados.length, "atrasado", "atrasados")}</span>.`);
-    } else {
-      partes.push(`${fmt.capitalizar(plural(abertos.length, `${esc(rot)} em aberto`, `${esc(rots)} em aberto`))} e ${plural(concluidos.length, "concluído", "concluídos")} em ${nome}.`);
-    }
-    if (prog) {
-      const d = descreverMeta(p, prog);
-      partes.push(`Na meta ${ROTULO_PERIODO[prog.periodo]}, <b>${d.texto}</b>${prog.atual >= prog.alvo ? ", <span class=\"bem\">cumprida</span>" : prog.noRitmo ? ", no ritmo" : `; no ritmo de agora, fecha com ${d.f(Math.floor(prog.projecao))}`}.`);
-    }
     const dinheiro = resumoCampos.find((r) => r.tipo === "dinheiro");
-    const numero = resumoCampos.find((r) => r.tipo === "numero");
-    if (dinheiro && dinheiro.noMes) partes.push(`${esc(dinheiro.campo.rotulo)} em ${nomeMes(mes)}: <b>${moeda(dinheiro.noMes)}</b>.`);
-    else if (numero && itens.length >= 2) partes.push(`${esc(numero.campo.rotulo)} em média: <b>${fmt.decimal(numero.media)}</b>.`);
+    let frase;
+    if (!itens.length) {
+      frase = p.checkin
+        ? `Cadastre o que você quer fazer com frequência e marque cada dia em que fez; o Delfos conta as sequências.`
+        : `Nada em ${nome} ainda; o primeiro ${esc(rot)} já faz esta página começar a ler.`;
+    } else if (prog && !prog.atual) {
+      frase = `Meta ${ROTULO_PERIODO[prog.periodo]}: <b>${descreverMeta(p, prog).f(prog.alvo)}</b>, nenhum ainda.`;
+    } else if (prog) {
+      const d = descreverMeta(p, prog);
+      frase = `Na meta ${ROTULO_PERIODO[prog.periodo]}, <b>${d.texto}</b>${prog.atual >= prog.alvo ? ", <span class=\"bem\">cumprida</span>" : prog.noRitmo ? ", no ritmo" : `; no ritmo de agora, fecha com ${d.f(Math.floor(prog.projecao))}`}.`;
+    } else if (atrasados.length) {
+      frase = `<b>${esc(atrasados[0].descricao)}</b> <span class="destaque">ficou para trás</span>; era para ${quando(UI.diasAte(atrasados[0].data))}.`;
+    } else if (p.checkin) {
+      const hojeFalta = checkin.filter((x) => !x.hoje).length;
+      const melhor = [...checkin].sort((a, b) => b.seq - a.seq)[0];
+      frase = hojeFalta
+        ? `Faltam <b>${hojeFalta} de ${checkin.length}</b> para marcar hoje.`
+        : `<span class="bem">Tudo marcado hoje</span>${melhor?.seq >= 2 ? `; <b>${esc(melhor.i.descricao)}</b> está com ${melhor.seq} dias seguidos` : ""}.`;
+    } else if (p.naAgenda) {
+      frase = semana.length ? `<b>${esc(semana[0].descricao)}</b> é o próximo, ${quando(UI.diasAte(semana[0].data))}.` : `Nada de ${nome} nos próximos 7 dias.`;
+    } else if (dinheiro && dinheiro.noMes) {
+      frase = `${esc(dinheiro.campo.rotulo)} em ${nomeMes(mes)}: <b>${moeda(dinheiro.noMes)}</b>.`;
+    } else {
+      const ultimo = [...itens].filter((i) => i.criadoEm).sort((a, b) => b.criadoEm.localeCompare(a.criadoEm))[0];
+      frase = ultimo
+        ? `O último ${esc(rot)} registrado foi <b>${esc(ultimo.descricao)}</b>, ${quando(UI.diasAte(ultimo.criadoEm.slice(0, 10)))}.`
+        : `${fmt.capitalizar(plural(abertos.length, `${esc(rot)} em aberto`, `${esc(rots)} em aberto`))} em ${nome}.`;
+    }
 
     // --- As notas
     const notas = [];
@@ -383,7 +389,7 @@ const Leituras = (() => {
       notas.push(nota("info", "painel", `Por ${esc(dist.campo.rotulo.toLowerCase())}, o mais comum é <b>${esc(top.nome)}</b> (${plural(top.valor, esc(rot), esc(rots))}).`));
     }
 
-    return { itens, abertos, concluidos, atrasados, semana, resumoCampos, prog, checkin, frase: partes.join(" "), notas: UI.ordenarNotas(notas), rot, rots };
+    return { itens, abertos, concluidos, atrasados, semana, resumoCampos, prog, checkin, frase, notas: UI.ordenarNotas(notas), rot, rots };
   }
 
   /** "livro" → "livros", "compromisso" → "compromissos", "ação" → "ações". Bom o bastante para rótulos. */

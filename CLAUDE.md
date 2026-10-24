@@ -1,10 +1,16 @@
 # Delfos — agente de organização pessoal do Luiz
 
-O painel se chama **Delfos** (versão atual: **2.1**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
-em `ui.js`) aparecem no alto da barra lateral (o logotipo, com a versão ao lado), nos títulos das
-abas do navegador e no nome do arquivo de backup exportado. Desde a 1.8 o nome tem **logotipo**
-(desenho vetorizado do quadro da marca, `UI.logotipo()`) e assinatura, "Organização para o que
-importa"; ver "Delfos 1.8: a marca".
+O painel se chama **Delfos** (versão atual: **2.2**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
+em `ui.js`) aparecem no alto da barra lateral (o símbolo e o logotipo, com a versão ao lado), nos
+títulos das abas do navegador e no nome do arquivo de backup exportado. Desde a 2.2 a marca é a do
+quadro novo: o **símbolo** (o D com uma coluna grega dentro, `UI.simbolo()`), o **logotipo** numa
+serifa pesada (`UI.logotipo()`), os dois vetorizados do quadro, e a assinatura "O essencial se
+revela."; ver "Delfos 2.2: a marca nova e menos cara de IA" (a marca da 1.8 está em "Delfos 1.8: a
+marca").
+
+**O que o Delfos é** (nas palavras do Luiz, para guiar toda decisão de produto): um organizador
+pessoal que busca potencializar o máximo dentro de cada um; organizar a vida para a pessoa alcançar
+mais alto os objetivos dela.
 
 Duas coisas **continuam** com o nome antigo, de propósito:
 
@@ -345,13 +351,12 @@ antes/depois a cada gravação e apaga do IndexedDB os que sumiram do texto; exc
 O seletor de fonte tem, além das de sistema (Georgia, Arial…), um punhado de fontes do Google Fonts
 importadas só por `resumo.html`/`disciplina.html` (Merriweather, Lora, Inter, Space Mono, Caveat) —
 mais variedade para ler, escrever fórmula ou anotar à mão. É conteúdo do usuário, não design system:
-não confunda com a tipografia do painel (`dashboard/DESIGN.md`), que é Funnel Sans + Noto Serif
-Display.
+não confunda com a tipografia do painel (`dashboard/DESIGN.md`), que é Funnel Sans + Gloock.
 
 ### As outras abas no molde do Financeiro (v1.5)
 
 Faculdade, Projetos, Pessoal e cada aba própria abrem do mesmo jeito que o Financeiro: **leitura**
-na voz (Funnel Display na 1.5 a 1.7; Noto Serif Display desde a 1.8), faixa de números, **O que o Delfos notou** e **Perguntas do Delfos**. O
+na voz (Funnel Display na 1.5 a 1.7; Noto Serif Display na 1.8 a 2.1; Gloock desde a 2.2), faixa de números, **O que o Delfos notou** e **Perguntas do Delfos**. O
 cálculo mora em `leituras.js` (sem DOM); os componentes são comuns em `ui.js`:
 `UI.renderPerguntas(secao, box, escopo, perguntas, aoMudar)`, `UI.resposta.valor/botoes/multipla`,
 `UI.renderNotas(ul, notas, textoVazio)` (nota com `area` e `acao` opcionais), `UI.ordenarNotas` e
@@ -832,13 +837,12 @@ superfície delimitada, e o que é secundário fica fechado, dizendo só o essen
   celular), painel de números e uma coluna de gavetas (`.gaveteiro`). O painel de números é a mesma
   faixa `.g3`/`.g4` de `.stat-value`, agora delimitada (só CSS, nenhuma página mudou o HTML dela).
   O calendário do Pessoal continua fora de gaveta: é o objeto da página, delimitado pela própria grade.
-- **Gaveta (HTML).** `<section class="gaveta" data-gaveta="<nome>" data-icone="<ícone de ICONES>"
-  [data-fechada]>` com `<header class="gaveta-cab">` (`h2.gaveta-titulo`, `.gaveta-resumo`,
+- **Gaveta (HTML).** `<section class="gaveta" data-gaveta="<nome>" [data-fechada]>` (até a 2.1
+  havia `data-icone`, o ícone do puxador; a 2.2 tirou o ícone e o atributo) com `<header class="gaveta-cab">` (`h2.gaveta-titulo`, `.gaveta-resumo`,
   `.gaveta-acoes` opcional) e `<div class="gaveta-corpo">`. `UI.gavetas()` (em `iniciarPagina`, e no
   `MutationObserver` para gaveta criada depois) põe o conteúdo em `.gaveta-dentro`, troca o título
-  por um `button.gaveta-puxador` (`aria-expanded`, `aria-controls`) com o ícone em duas camadas na
-  cor da página (`--cor-pagina`, posto por `marcarCabeca`; a gaveta pode trazer a sua inline, como
-  a do dinheiro na visão geral), acrescenta a seta e decide aberta ou fechada. Id no `h2` passa para
+  por um `button.gaveta-puxador` (`aria-expanded`, `aria-controls`), acrescenta a seta e decide
+  aberta ou fechada. Id no `h2` passa para
   o `span.gaveta-nome`: a página que reescreve o título continua achando (`#titulo-lista`,
   `#titulo-renda`). Ids de conteúdo e de seção (`#sec-perguntas`, `#sec-lancamentos`...) não mudaram.
 - **Puxador.** A cabeça inteira abre e fecha: o `::after` do botão cobre a faixa (`z-index: -1` num
@@ -916,9 +920,9 @@ interna agradável, cada coisa destacada, em todas as abas e todas as gavetas.
   "CM", ignora "de/da/e" e algarismos romanos). `nivel` pinta pela urgência (os níveis de
   `UI.urgencia`, mais `alerta`, `atencao`, `bem`, `feito`, `apagada`). `classe`: `grande` (46px,
   cartões) ou `pequena` (32px). É `aria-hidden`: o texto ao lado já diz tudo.
-- **`UI.info(icone, html, tom)`**: uma informação com ícone de 14px para a linha `.item-info`
-  embaixo do nome (o `html` vem escapado por quem chama). Substituiu os metadados colados por
-  vírgula. `.item-valor` (com `.voz` para o número grande na serifa) é o número à direita.
+- **`UI.info(html, tom)`**: uma informação para a linha `.item-info` embaixo do nome (o `html` vem
+  escapado por quem chama). Na 2.1 levava um ícone de 14px (`UI.info(icone, html, tom)`); desde a
+  2.2 é só texto, e o CSS põe a vírgula entre uma e outra. `.item-valor` (com `.voz` para o número grande na serifa) é o número à direita.
 - **Cartões destacados** (`ul.list.cartoes`): grade de compartimentos de 330px no mínimo, com marca
   grande, nome na voz, valor grande, informações embaixo de um fio e uma barra fina
   (`.cartao-barra`, com `b` marcando uma referência). O link do nome (`.linha-link.cartao-nome`)
@@ -941,7 +945,72 @@ interna agradável, cada coisa destacada, em todas as abas e todas as gavetas.
   embaixo); no cartão, o valor desce para debaixo do nome; no toque, as ações do cartão ficam numa
   linha própria (soltas na grade, alargavam a coluna da marca).
 
+### Delfos 2.2: a marca nova e menos cara de IA
+
+Pedido do Luiz, com um quadro novo da marca (o D com a coluna em três variações, "Delfos" numa
+serifa pesada de alto contraste, "O ESSENCIAL SE REVELA.", a mesma paleta, ícones de app com o
+símbolo): repensar a estética e a função de cada aba, tirar a "cara de slop de IA", dar mais
+personalidade, sempre com a ideia do produto em mente (ver o alto deste arquivo). Combinado com ele
+antes de fazer: símbolo na variação **Clássica**; três fases, cada uma num PR (1: marca e linguagem
+visual; 2: objetivos e foco, com a visão geral virando "Hoje"; 3: funções por aba, como a captura
+rápida); dos toques de personalidade, só a **serifa pesada** (caixa alta espaçada fora da
+assinatura, a coluna como desenho de progresso e o objetivo do perfil em destaque ficaram de fora).
+Esta seção é a fase 1.
+
+- **Marca** (`ui.js`): `SIMBOLO` e `LOGOTIPO` vetorizados da capa do quadro (marfim sobre preto,
+  recorte ampliado 8x, potrace; viewBox `0 0 219 221` e `0 0 460 122`). `UI.simbolo()` e
+  `UI.logotipo()` devolvem o SVG em `currentColor`, `aria-hidden`. `MARCA.delfos`
+  (`icone("delfos")`) é o símbolo. Barra lateral e topo do celular: símbolo + logotipo + versão.
+  `entrar.html` e `bemvindo.html` têm os dois caminhos copiados no HTML (desenham antes do script),
+  símbolo à esquerda, logotipo com a assinatura embaixo (`.marca-bloco` > `.marca-texto`), sem o
+  fio curto da 1.8. `favicon.svg` e `apple-touch-icon.png` são o símbolo marfim sobre preto. A
+  Monolítica, sugerida na proposta para o favicon, ficou de fora: em 16 e 32px as variações
+  ficam iguais, e o recorte dela no quadro tem metade da resolução (o traçado saía irregular). Se a
+  marca mudar de novo, refaça o traçado a partir da imagem nova; nunca texto numa fonte parecida.
+- **Voz: Gloock** (Google Fonts, um peso só), escolhida desenhando "Delfos", dinheiro e uma frase
+  em 20 serifas ao lado do recorte do quadro (ver DESIGN.md). Como só há um peso, `html` tem
+  `font-synthesis-weight: none` (sem negrito falso) e o destaque da leitura é pela cor: a frase em
+  `--texto-2`, o `<b>` em `--texto`. Espaço entre letras afrouxado (a Gloock já vem justa). As
+  regras com `font-weight` continuam valendo para a preferência "Sem serifa".
+- **Leitura de uma frase** (`leituras.js`, `financeiro.js`, `home.js`): cada página escolhe a coisa
+  mais importante e diz só ela, sem repetir a faixa de números logo abaixo. Faculdade: disciplina
+  sem salvação > quanto precisa tirar na mais apertada > entrega atrasada > semana com 2+ provas >
+  as próximas duas semanas. Projetos: meta do mês > projeto no prejuízo > o que paga melhor por
+  hora > o que rendeu no mês. Pessoal: atrasado > choque de data com outra aba > o próximo, com hora
+  e local. Aba própria: meta (ou "nenhum ainda") > atrasado > o que falta marcar hoje > o próximo
+  > o valor do mês > o último registro. Financeiro: o limite (quanto resta e quanto dá por dia) >
+  gastou mais do que entrou > o que mais pesou. Visão geral: a saudação e o atrasado ou o próximo
+  (o dinheiro tem a gaveta dele).
+- **Resumo só com a gaveta fechada**: `.gaveta[data-aberta="sim"] .gaveta-resumo` some (opacidade
+  no computador, `display: none` no celular). `data-sempre` mantém o que traz um total que não
+  está lá dentro: `#apagar-total` e `#fixos-total` no Financeiro.
+- **Um desenho por item**: sem ícone no puxador da gaveta (`.gaveta-ic` e `data-icone` saíram) nem
+  nas informações (`UI.info(html, tom)`; as 64 chamadas perderam o 1º argumento). `.item-info` é
+  flex, e cada `span.info` que não é o último ganha a vírgula no `::after` (flex para o espaço
+  entre as tags não virar espaço antes da vírgula).
+- **Número da barra lateral** (`UI.contagens`): só o que já passou da data (compromissos de todas
+  as abas e contas pendentes vencidas), sempre em vermelho, com "atrasado(s)" para o leitor de tela
+  (`contaHTML`, classe `.sr`). Antes contava os próximos 7 dias, um número que ninguém sabia ler.
+- **Gavetas finas** (`.gaveteiro.consulta`, com `h2.consulta-rotulo`): o que se consulta de vez em
+  quando desce para um grupo abaixo das gavetas de ação, sem superfície, uma faixa entre fios por
+  gaveta. Financeiro: fixos, perguntas, ritmo, maiores gastos, entradas e saídas, Drive (ficam 5
+  gavetas de ação). Faculdade: médias (agora fechada por padrão), perguntas, Google Calendar.
+  Pessoal: perguntas, por tipo. Projetos: recebido por projeto, últimos seis meses, perguntas.
+  Contas: balanço ("Análise"). Um projeto: ficha (passou para depois das anotações) e documentos
+  ("Ficha e documentos"). Aba própria: perguntas e ajustes ("Perguntas e ajustes").
+- **Corrigido de passagem**: a classe `.info` da 2.1 (das informações do item) também pegava
+  `.notice.info`, e o texto dos avisos azuis parava de quebrar linha e estourava a caixa (na
+  entrada, "Não foi possível falar com o servidor" passava da janela). As regras viraram
+  `span.info`.
+- **Testes** (fora do repositório, como os de antes): a suíte ficou igual à base ou melhor (as
+  falhas que sobram dependem da data em que os testes foram escritos); os testes da leitura do
+  Financeiro e da aba própria passaram a conferir o texto novo; o de fixos achou que o total mensal
+  sumia com a gaveta aberta, daí o `data-sempre` em `#fixos-total`. `reg.mjs` 12/12, nenhuma página
+  nem vista estoura a largura a 360px.
+
 ### Delfos 1.8: a marca
+
+(Trocada na 2.2: símbolo, logotipo, voz e assinatura são outros. O que segue é o registro da 1.8.)
 
 Pedido do Luiz: o quadro da identidade (logotipo "Delfos" numa serifa clássica, marfim sobre preto,
 ícones de app com o logotipo, assinatura "Organização para o que importa" com um fio curto em cima,
@@ -977,24 +1046,25 @@ paleta preto `#0B0B0B`, carvão `#1F1F1F`, grafite `#3A3A3A`, marfim `#EDE9E1`, 
 
 ### Direção visual
 
-**"Marfim" (v1.8)**: o detalhe completo, com a marca, tokens, paleta validada e proibições, está em
+**"Marfim" (v1.8; marca e voz trocadas na 2.2)**: o detalhe completo, com a marca, tokens, paleta validada e proibições, está em
 `dashboard/DESIGN.md`, a referência a consultar antes de mexer em qualquer coisa visual.
 
 O princípio, em uma linha: **a leitura é o título e cada assunto mora numa gaveta** (2.0): uma
 superfície delimitada que diz o essencial no puxador e guarda o resto dentro, cada registro no seu
-compartimento, com a marca colorida à esquerda (2.1), sem caixa com borda dentro de caixa; o caráter vem de tipografia, espaço e hierarquia, na voz e nas cores do logotipo. Seis
+compartimento, com a marca colorida à esquerda (2.1) como único desenho do item, a leitura numa
+frase só e o que é análise em gavetas finas embaixo (2.2), sem caixa com borda dentro de caixa; o caráter vem de tipografia, espaço e hierarquia, na voz e nas cores do logotipo. Seis
 execuções anteriores foram descartadas e estão descritas no DESIGN.md (estúdio, azulejo baiano,
 oráculo sóbrio 1.2–1.3, a segunda leitura 1.4–1.6, a consulta 1.7, sem serifa, e a página aberta
 1.7–1.9, sem caixa, que o Luiz achou poluída).
 
-- **Marca**: o logotipo é desenho (`LOGOTIPO` em `ui.js`, `UI.logotipo()`), nunca "Delfos" digitado
-  numa fonte parecida. O D sozinho é `icone("delfos")` e o favicon; `apple-touch-icon.png` é o
-  logotipo em marfim sobre preto. A assinatura (caixa alta espaçada, fio curto em cima) só aparece
-  na entrada e nas boas-vindas.
-- **Tipografia**: **Noto Serif Display** (só o eixo de peso, 300 a 600) é a voz (leitura, título de
-  página sem leitura, títulos de seção e de janela, números grandes, o dia na agenda). **Funnel
-  Sans** é todo o resto. Algarismos alinhados (a voz já os tem por padrão); tabular (`.num`) só onde
-  números se alinham. Espaço entre letras quase nenhum: a serifa de exibição já vem justa.
+- **Marca**: símbolo e logotipo são desenho (`SIMBOLO`/`LOGOTIPO` em `ui.js`, `UI.simbolo()`,
+  `UI.logotipo()`), nunca "Delfos" digitado numa fonte parecida. O símbolo sozinho é
+  `icone("delfos")`, o favicon e o ícone da tela inicial. A assinatura ("O essencial se revela.",
+  caixa alta espaçada) só aparece na entrada e nas boas-vindas.
+- **Tipografia**: **Gloock** (um peso só, sem negrito falso; destaque pela cor) é a voz (leitura,
+  título de página sem leitura, títulos de seção, de gaveta e de janela, números grandes, o dia na
+  agenda). **Funnel Sans** é todo o resto. Algarismos alinhados (a voz já os tem por padrão);
+  tabular (`.num`) só onde números se alinham. Espaço entre letras quase nenhum.
 - **Cromo sem cor**: a paleta da marca, preto `#0b0b0b` (`--lateral`), carvão `#1f1f1f`, grafite
   `#3a3a3a`, marfim `#ede9e1` (o texto no escuro, o fundo no claro) e cinza quente `#d6d1c7`;
   `--fundo` escuro `#111110`. Primário e foco em marfim. Cor só identifica pilar (`--s-*`),

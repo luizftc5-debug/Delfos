@@ -99,10 +99,10 @@
           <span class="grow">
             <span class="t">${fmt.escape(i.titulo)}${i.importante ? ` <span class="badge urgente">importante</span>` : ""}</span>
             <span class="item-info">${[
-              UI.info("lista", fmt.escape(fmt.capitalizar(i.areaRotulo || ""))),
-              i.hora ? UI.info("relogio", `às ${fmt.escape(i.hora)}`) : "",
-              i.local ? UI.info("casa", fmt.escape(i.local)) : "",
-              i.valor ? UI.info("financeiro", fmt.moeda(i.valor)) : "",
+              UI.info(fmt.escape(fmt.capitalizar(i.areaRotulo || ""))),
+              i.hora ? UI.info(`às ${fmt.escape(i.hora)}`) : "",
+              i.local ? UI.info(fmt.escape(i.local)) : "",
+              i.valor ? UI.info(fmt.moeda(i.valor)) : "",
             ].join("")}</span>
           </span>
           ${avisa.has(`${i.id}|${i.data}`) ? `<span class="badge proximo" title="Entra no resumo do dia e nos avisos">${UI.icone("relogio")} lembrete</span>` : ""}
@@ -224,10 +224,10 @@
           <span class="grow">
             <span class="title ${c.concluido ? "strike" : ""}">${fmt.escape(c.descricao)}${c.importante ? " <span class=\"badge urgente\">importante</span>" : ""}</span>
             <span class="item-info">${[
-              UI.info(ICONE_TIPO[c.tipo] || "calendario", fmt.escape(fmt.capitalizar(c.tipo || "compromisso"))),
-              c.hora ? UI.info("relogio", `às ${fmt.escape(c.hora)}`) : "",
-              c.local ? UI.info("casa", fmt.escape(c.local)) : "",
-              c.repete ? UI.info("repetir", fmt.escape((UI.REPETICOES.find(([r]) => r === c.repete) || [, ""])[1].toLowerCase())) : "",
+              UI.info(fmt.escape(fmt.capitalizar(c.tipo || "compromisso"))),
+              c.hora ? UI.info(`às ${fmt.escape(c.hora)}`) : "",
+              c.local ? UI.info(fmt.escape(c.local)) : "",
+              c.repete ? UI.info(fmt.escape((UI.REPETICOES.find(([r]) => r === c.repete) || [, ""])[1].toLowerCase())) : "",
             ].join("")}</span>
           </span>
           <span class="badge ${c.concluido ? "feito" : u.nivel}">${c.concluido ? "concluído" : u.rotulo}</span>

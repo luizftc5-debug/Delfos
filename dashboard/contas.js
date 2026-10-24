@@ -87,8 +87,8 @@
         </a>
         <span class="item-valor voz ${c.saldo < 0 ? "valor-ruim" : ""}">${fmt.moeda(c.saldo)}<small>saldo</small></span>
         <span class="item-info">
-          ${UI.info("cofre", `abertura ${fmt.moeda(c.saldoInicial || 0)}`)}
-          ${UI.info("lista", `${c.movimentos} ${c.movimentos === 1 ? "lançamento" : "lançamentos"}`)}
+          ${UI.info(`abertura ${fmt.moeda(c.saldoInicial || 0)}`)}
+          ${UI.info(`${c.movimentos} ${c.movimentos === 1 ? "lançamento" : "lançamentos"}`)}
         </span>
         <span class="row-actions">
           <button class="btn ghost sm" data-editar type="button">Editar</button>
@@ -138,10 +138,10 @@
         </a>
         <span class="item-valor voz">${fmt.moeda(c.fatura)}<small>fatura aberta</small></span>
         <span class="item-info">
-          ${UI.info("relogio", `vence ${fmt.escape(fmt.dataCurta(c.ciclo.vencimento))}, ${fmt.escape(venc.rotulo)}`, venc.nivel === "atrasado" || venc.nivel === "hoje" ? "alerta" : venc.nivel === "urgente" ? "atencao" : "")}
-          ${UI.info("calendario", `ciclo de ${fmt.escape(fmt.dataCurta(c.ciclo.inicio))} a ${fmt.escape(fmt.dataCurta(c.ciclo.fim))}`)}
-          ${UI.info("carrinho", `${c.movimentos} ${c.movimentos === 1 ? "compra" : "compras"}`)}
-          ${uso !== null ? UI.info("alvo", `${uso}% de ${fmt.moeda(c.limite)}`, uso >= 80 ? "alerta" : "") : ""}
+          ${UI.info(`vence ${fmt.escape(fmt.dataCurta(c.ciclo.vencimento))}, ${fmt.escape(venc.rotulo)}`, venc.nivel === "atrasado" || venc.nivel === "hoje" ? "alerta" : venc.nivel === "urgente" ? "atencao" : "")}
+          ${UI.info(`ciclo de ${fmt.escape(fmt.dataCurta(c.ciclo.inicio))} a ${fmt.escape(fmt.dataCurta(c.ciclo.fim))}`)}
+          ${UI.info(`${c.movimentos} ${c.movimentos === 1 ? "compra" : "compras"}`)}
+          ${uso !== null ? UI.info(`${uso}% de ${fmt.moeda(c.limite)}`, uso >= 80 ? "alerta" : "") : ""}
         </span>
         ${uso !== null ? `<span class="cartao-barra ${uso >= 80 ? "alerta" : uso >= 50 ? "atencao" : ""}"${uso < 50 ? ' style="--cor-barra:var(--serie-saida)"' : ""} title="${uso}% do limite usado"><i style="width:${Math.min(100, uso)}%"></i></span>` : ""}
         <span class="row-actions">

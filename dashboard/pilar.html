@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
   <link rel="stylesheet" href="theme.css" />
 </head>
 <body>
@@ -33,7 +33,7 @@
 
         <div class="grid g4" id="bloco-stats" style="margin-bottom:14px;"></div>
 
-        <section class="gaveta hidden" id="secao-academia" data-gaveta="academia" data-icone="haltere">
+        <section class="gaveta hidden" id="secao-academia" data-gaveta="academia">
           <header class="gaveta-cab">
             <h2 class="gaveta-titulo"><span class="swatch" id="swatch-academia"></span>Dias de treino</h2>
             <span class="gaveta-resumo" id="academia-resumo"></span>
@@ -43,7 +43,7 @@
         </section>
 
         <div class="gaveteiro" id="secao-itens">
-          <section class="gaveta" data-gaveta="itens" data-icone="lista">
+          <section class="gaveta" data-gaveta="itens">
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo" id="titulo-lista"><span class="swatch" id="swatch-lista"></span>Itens</h2>
               <span class="gaveta-resumo" id="lista-resumo"></span>
@@ -61,14 +61,14 @@
           </section>
 
           <div class="gaveteiro" id="coluna-lado">
-            <section class="gaveta" data-gaveta="notas" data-icone="lampada">
+            <section class="gaveta" data-gaveta="notas">
               <header class="gaveta-cab">
                 <h2 class="gaveta-titulo">O que o Delfos notou</h2>
                 <span class="gaveta-resumo" data-resumo-notas></span>
               </header>
               <div class="gaveta-corpo"><ul class="notas" id="notas"></ul></div>
             </section>
-            <section class="gaveta" data-gaveta="campos" data-icone="grade" hidden>
+            <section class="gaveta" data-gaveta="campos" hidden>
               <header class="gaveta-cab">
                 <h2 class="gaveta-titulo">Em números</h2>
                 <span class="gaveta-resumo" id="campos-resumo"></span>
@@ -78,8 +78,10 @@
           </div>
         </div>
 
-        <div class="gaveteiro">
-          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-icone="pergunta" data-fechada hidden>
+        <!-- 2.2: o que se consulta de vez em quando, em gavetas finas, abaixo do que pede ação. -->
+        <div class="gaveteiro consulta" role="group" aria-labelledby="consulta-rotulo">
+          <h2 class="consulta-rotulo" id="consulta-rotulo">Perguntas e ajustes</h2>
+          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-fechada hidden>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Perguntas do Delfos</h2>
               <span class="gaveta-resumo"></span>
@@ -87,7 +89,7 @@
             <div class="gaveta-corpo"><div class="perguntas" id="perguntas"></div></div>
           </section>
 
-          <section class="gaveta" data-gaveta="ajustes" data-icone="ajustes" data-fechada>
+          <section class="gaveta" data-gaveta="ajustes" data-fechada>
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Ajustes da aba</h2>
               <span class="gaveta-resumo">personalizar, campos, layout ou excluir</span>

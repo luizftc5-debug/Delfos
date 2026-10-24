@@ -141,7 +141,7 @@
         <input type="checkbox" class="check" ${s.feito ? "checked" : ""} aria-label="Concluir etapa" />
         <span class="grow">
           <span class="title ${s.feito ? "strike" : ""}">${fmt.escape(s.texto)}</span>
-          ${s.prazo ? `<span class="item-info">${UI.info("calendario", `${fmt.escape(fmt.data(s.prazo))}${u ? `, ${fmt.escape(u.rotulo)}` : ""}`, u && (u.nivel === "atrasado" || u.nivel === "hoje") ? "alerta" : u && u.nivel === "urgente" ? "atencao" : "")}</span>` : ""}
+          ${s.prazo ? `<span class="item-info">${UI.info(`${fmt.escape(fmt.data(s.prazo))}${u ? `, ${fmt.escape(u.rotulo)}` : ""}`, u && (u.nivel === "atrasado" || u.nivel === "hoje") ? "alerta" : u && u.nivel === "urgente" ? "atencao" : "")}</span>` : ""}
         </span>
         <span class="row-actions">
           <button class="btn ghost sm" data-editar>Editar</button>
@@ -205,7 +205,7 @@
         ${m.data ? UI.marcaItem({ data: m.data, nivel: campo === "recebimentos" ? "bem" : "" }) : UI.marcaItem({ icone: campo === "recebimentos" ? "cofre" : "carrinho" })}
         <span class="grow">
           <span class="title">${fmt.escape(m.descricao || "(sem descrição)")}</span>
-          <span class="item-info">${UI.info(campo === "recebimentos" ? "cofre" : "carrinho", campo === "recebimentos" ? "recebimento" : "custo")}${m.data ? "" : UI.info("calendario", "sem data")}</span>
+          <span class="item-info">${UI.info(campo === "recebimentos" ? "recebimento" : "custo")}${m.data ? "" : UI.info("sem data")}</span>
         </span>
         <span class="item-valor" style="color:${cor};">${sinal}${fmt.moeda(Math.abs(Number(m.valor) || 0))}</span>
         <span class="row-actions">

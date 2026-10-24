@@ -63,7 +63,7 @@
       .forEach(([id, k]) => { const el = document.getElementById(id); if (el) el.hidden = mostra[k] === false; });
     if (!Personalizacao.abaAtiva("financeiro")) document.getElementById("sec-topo").hidden = true;
 
-    renderLeitura(atual);
+    renderLeitura();
     renderAgenda();
     renderDinheiro(atual, anterior, mes);
     renderNotasHome();
@@ -76,10 +76,11 @@
    * sentido ao nome: um oráculo lê a situação e a enuncia, em vez de só
    * empilhar números para o leitor interpretar sozinho.
    *
-   * A saudação abre a frase, em tom mais baixo; depois, uma frase sobre o
-   * tempo (o que está atrasado ou mais próximo) e uma sobre dinheiro.
+   * A saudação abre, em tom mais baixo; depois, uma frase só (2.2): o que
+   * está atrasado ou, sem atraso, o que vem primeiro. O dinheiro tem a gaveta
+   * dele logo abaixo, então não se repete aqui.
    */
-  function renderLeitura(atual) {
+  function renderLeitura() {
     const alvo = document.getElementById("leitura");
     if (!alvo) return;
 
@@ -98,31 +99,19 @@
       const dias = Math.abs(UI.diasAte(pior.data));
       tempo = atrasados.length === 1
         ? `<b>${nome(pior)}</b> venceu há <span class="destaque">${plural(dias, "dia", "dias")}</span>.`
-        : `Você tem <span class="destaque">${atrasados.length} compromissos atrasados</span>. O mais antigo é <b>${nome(pior)}</b>, de ${dias} dias atrás.`;
+        : `<span class="destaque">${atrasados.length} coisas atrasadas</span>; a mais antiga é <b>${nome(pior)}</b>.`;
     } else if (naSemana.length) {
       const prox = naSemana[0];
-      const d = UI.diasAte(prox.data);
-      const quando = d === 0 ? "hoje" : d === 1 ? "amanhã" : `em ${d} dias`;
-      tempo = naSemana.length === 1
-        ? `Sua semana tem um compromisso: <b>${nome(prox)}</b>, ${quando}.`
-        : `Sua semana tem ${naSemana.length} compromissos. O próximo é <b>${nome(prox)}</b>, ${quando}.`;
+      tempo = `<b>${nome(prox)}</b> é o próximo, ${quando(prox.data)}.`;
     } else if (proximos.length) {
-      const prox = proximos[0];
-      tempo = `Nada nos próximos sete dias. Depois disso vem <b>${nome(prox)}</b>, em ${fmt.dataPorExtenso(prox.data)}.`;
+      tempo = `Semana livre; depois vem <b>${nome(proximos[0])}</b>, ${fmt.dataPorExtenso(proximos[0].data)}.`;
     } else {
-      tempo = "Nenhum compromisso cadastrado ainda.";
-    }
-
-    let dinheiro = "";
-    if (atual.quantidade > 0) {
-      dinheiro = atual.resultado >= 0
-        ? ` No mês, sobrou <b>${fmt.moeda(atual.resultado)}</b>.`
-        : ` No mês, você gastou <span class="destaque">${fmt.moeda(Math.abs(atual.resultado))} a mais</span> do que recebeu.`;
+      tempo = "Nada marcado por enquanto.";
     }
 
     const saud = Personalizacao.saudacao();
     const abertura = saud !== "Visão geral" ? `<span class="saudacao">${fmt.escape(saud)}.</span> ` : "";
-    alvo.innerHTML = abertura + tempo + dinheiro;
+    alvo.innerHTML = abertura + tempo;
   }
 
   /** Quando, em palavras: "hoje", "amanhã", "em 3 dias", "venceu há 2 dias". */

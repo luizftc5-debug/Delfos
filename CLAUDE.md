@@ -1073,7 +1073,12 @@ entrou:
   o resumo); alteração concorrente oferece "Guardar minha cópia"; barra em grupos centralizada;
   seletor de símbolos (grau, setas, matemática, letras gregas) que insere no cursor e aceita
   desfazer; folha delimitada; rodapé só com o logotipo e "O essencial se revela: seu editor sem
-  distrações". Esta página carrega `interface.css` e `editor.css`, e só ela.
+  distrações". O rodapé é **fixo no pé da tela** (`position: fixed`, 44px; 48px abaixo de 760px,
+  onde a frase quebra em duas linhas; altura em `--editor-rodape-altura`): como a folha tem altura
+  mínima de quase a janela inteira, o rodapé em fluxo normal ficava abaixo da dobra e saía cortado
+  (a 1920×1000, 19px; num notebook de 1366×768, inteiro fora da tela). O `padding-bottom` do corpo
+  reserva o espaço dele, então o fim do texto nunca fica escondido, e o aviso passageiro (`.toasts`)
+  sobe acima dele. Esta página carrega `interface.css` e `editor.css`, e só ela.
 - **Servidor** (`backend/src`): validação do estado, leitura limitada, anexos protegidos (ver
   "Contas de usuário e back end"); `backend/test/seguranca.test.mjs`.
 - **Testes e workflow**: `dashboard/test/` e `.github/workflows/interface.yml` (sintaxe de todo

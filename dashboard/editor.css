@@ -1,6 +1,8 @@
 /* Editor: a barra pertence ao aplicativo; a folha pertence à escrita. */
-.editor-body { background: var(--fundo); padding-bottom: 0; }
-.editor-body .editor { min-height: 100dvh; }
+/* O rodapé é fixo no pé da tela: a página reserva o espaço dele (padding) em vez de
+   deixá-lo sair do fluxo, que o empurrava para baixo da dobra e o cortava. */
+.editor-body { background: var(--fundo); --editor-rodape-altura: 44px; padding-bottom: var(--editor-rodape-altura); }
+.editor-body .editor { min-height: calc(100dvh - var(--editor-rodape-altura)); }
 .editor-body .editor-topo {
   display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 16px; min-height: 68px; padding: 12px 28px;
@@ -37,7 +39,7 @@
   flex: 1; min-width: 0; max-width: 900px; margin: 0 auto;
   padding: 58px 68px 80px; border: 1px solid var(--linha); border-radius: 12px;
   background: var(--superficie); box-shadow: 0 8px 32px -24px rgba(0,0,0,.35);
-  min-height: max(560px, calc(100dvh - 280px));
+  min-height: max(480px, calc(100dvh - 270px));
 }
 .editor-body .editor-folha[data-largura="estreita"] { max-width: 720px; }
 .editor-body .editor-folha[data-largura="larga"] { max-width: 1120px; }
@@ -47,13 +49,16 @@
 .editor-body .editor-folha[data-linhas="arejada"] .editor-area { line-height: 2; }
 .editor-body .editor-sumario { top: calc(var(--editor-topo-altura, 68px) + var(--editor-barra-altura, 68px) + 24px); margin-top: 12px; padding-left: 0; }
 .editor-body .editor-rodape {
-  position: static; min-height: 76px; padding: 22px 32px;
-  display: flex; align-items: center; justify-content: space-between; gap: 24px;
-  background: var(--superficie); color: var(--texto-2);
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  height: var(--editor-rodape-altura); min-height: 0; padding: 0 28px;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  background: var(--superficie); color: var(--texto-2); border-top: 1px solid var(--linha);
 }
-.editor-body .editor-rodape .marca { flex: 0 0 auto; color: var(--texto); }
-.editor-body .editor-rodape .logotipo { height: 23px; }
-.editor-assinatura { font-family: var(--font-voz); font-size: 18px; line-height: 1.5; font-weight: 400; text-align: right; letter-spacing: -.015em; }
+.editor-body .editor-rodape .marca { flex: 0 0 auto; display: flex; align-items: center; color: var(--texto); }
+.editor-body .editor-rodape .logotipo { height: 17px; }
+.editor-assinatura { min-width: 0; font-family: var(--font-voz); font-size: 14.5px; line-height: 1; font-weight: 400; text-align: right; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* O aviso passageiro sobe para não ficar por cima do rodapé. */
+.editor-body .toasts { bottom: calc(var(--editor-rodape-altura) + 16px); }
 .editor-body .editor-busca { justify-content: center; }
 .editor-body .menu-simbolos { width: 304px; max-width: calc(100vw - 16px); padding: 16px; max-height: min(580px, calc(100dvh - 180px)); overflow-y: auto; }
 .simbolos-cabeca { font-size: 15px; font-weight: 600; padding-bottom: 8px; }
@@ -88,16 +93,16 @@
   .editor-body .editor-area { font-size: 16px; }
   .editor-body .editor-titulo { font-size: 24px; }
   .editor-body .editor-sumario { width: 100%; top: 0; margin-top: 0; }
-  .editor-body .editor-rodape { padding: 20px; min-height: 88px; gap: 20px; }
-  .editor-body .editor-rodape .logotipo { height: 20px; }
-  .editor-assinatura { max-width: 245px; font-size: 15px; }
+  .editor-body { --editor-rodape-altura: 48px; }
+  .editor-body .editor-rodape { padding: 0 16px; gap: 12px; }
+  .editor-body .editor-rodape .logotipo { height: 15px; }
+  .editor-assinatura { max-width: 250px; font-size: 12.5px; line-height: 1.2; white-space: normal; }
 }
 @media (max-width: 420px) {
   .editor-body .editor-topo { grid-template-columns: minmax(0,1fr) minmax(0,1.6fr) minmax(0,1fr); }
   .editor-body .editor-estado { font-size: 11px; }
   .editor-body .editor-topo .editor-acoes .btn { font-size: 11px; padding-inline: 4px; }
   .editor-body .editor-folha { padding-inline: 20px; }
-  .editor-body .editor-rodape { padding-inline: 16px; }
 }
 @media print {
   .editor-body .editor-topo, .editor-body .editor-barra, .editor-body .editor-rodape { display: none; }

@@ -8,7 +8,32 @@ export class ErroHttp extends Error {
   }
 }
 
-const JSON_UTF8 = { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" };
+const JSON_UTF8 = { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" };
+
+/** Limita a leitura mesmo quando o cliente não informa Content-Length. */
+export async function lerCorpoLimitado(request, limite, mensagem) {
+  if (Number(request.headers.get("content-length") || 0) > limite) throw new ErroHttp(413, mensagem);
+  if (!request.body) return new Uint8Array();
+  const leitor = request.body.getReader();
+  const partes = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await leitor.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > limite) {
+        await leitor.cancel();
+        throw new ErroHttp(413, mensagem);
+      }
+      partes.push(value);
+    }
+  } finally { leitor.releaseLock(); }
+  const dados = new Uint8Array(total);
+  let posicao = 0;
+  for (const parte of partes) { dados.set(parte, posicao); posicao += parte.byteLength; }
+  return dados;
+}
 
 export function json(dados, status = 200) {
   return new Response(JSON.stringify(dados), { status, headers: JSON_UTF8 });

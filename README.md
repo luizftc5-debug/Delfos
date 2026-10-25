@@ -1,5 +1,25 @@
 # Delfos
 
+### Interface revisada em outubro de 2026
+
+A visão geral agora reúne uma agenda com filtros por dia e por período, resumo
+de compromissos e acesso às áreas. O financeiro fica em um resumo recolhido.
+**Organizar áreas** permite mudar a ordem e ocultar áreas, preservando os dados;
+no celular, os atalhos seguem a ordem escolhida e não mudam ao abrir outra área.
+**Nova área** oferece pontos de partida para Trabalho, Saúde, Academia, Esporte,
+Religião, Leituras e área livre. Projetos continua separado de Trabalho.
+
+A aparência compartilhada está em `dashboard/interface.css`, sobre os
+componentes de `dashboard/theme.css`. As chaves de armazenamento e os dados
+existentes foram preservados. Testes de persistência e backup:
+
+```bash
+node --test dashboard/test/*.test.cjs
+```
+
+O restante deste guia descreve os recursos disponíveis; referências ao visual
+1.8 documentam a versão anterior da hierarquia das telas.
+
 Painel para acompanhar quatro frentes ao mesmo tempo — **Financeiro**, **Faculdade**, **Projetos** e
 **Pessoal** — com alerta automático quando prazos de áreas diferentes caem na mesma semana. Além
 dessas quatro, você pode criar **abas suas**, com nome, ícone e cor próprios.

@@ -123,24 +123,25 @@ const Abas = (() => {
 
     const html = `
       <div class="modal-head">
-        <h2 class="modal-title">${editando ? "Personalizar aba" : "Nova aba"}</h2>
+        <h2 class="modal-title">${editando ? "Personalizar área" : "Uma área do seu jeito"}</h2>
         <p class="modal-desc">${editando
           ? "Mude o propósito e o Delfos sugere o que falta: campos novos, meta e o jeito de ver. O que já está cadastrado não muda."
-          : "Dê um nome e conte o propósito. O Delfos lê e monta a página: campos, meta, vista e agenda. Tudo dá para mudar antes de criar."}</p>
+          : "Escolha um ponto de partida ou dê um nome à sua área. Revise os campos e ajuste antes de criar."}</p>
       </div>
       <div class="modal-body criador">
         <div class="criador-col">
+          ${editando ? "" : `<div class="area-modelos" role="group" aria-label="Modelos de áreas">${["Trabalho", "Saúde", "Academia", "Esporte", "Religião", "Leituras", "Área livre"].map((nome) => `<button type="button" class="chip" data-modelo-area="${nome}">${nome}</button>`).join("")}</div>`}
           <div class="field">
-            <label for="cr-nome">Nome da aba</label>
+            <label for="cr-nome">Nome da área</label>
             <input id="cr-nome" class="criador-nome" type="text" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Ex.: Plantões, Leituras, Corrida…" value="${esc(pilar?.nome || "")}" />
           </div>
           <div class="field">
-            <label for="cr-prop">Propósito da aba</label>
+            <label for="cr-prop">O que você quer organizar?</label>
             <textarea id="cr-prop" class="criador-proposito" rows="4" maxlength="400" placeholder="Ex.: anotar cada plantão com local, horário, quanto vou receber e se já recebi. Ver no calendário. Meta de R$ 2.000 por mês…">${esc(est.sug.proposito || "")}</textarea>
             <span class="hint">Escreva do seu jeito: o que cada registro guarda, se tem data ou é de todo dia, a meta e como quer ver.</span>
           </div>
           <section class="delfos-leu" aria-live="polite" aria-label="O que o Delfos entendeu">
-            <h3 class="delfos-titulo">${icone("delfos")}O que o Delfos entendeu</h3>
+            <h3 class="delfos-titulo">${icone("delfos")}Sugestão de organização</h3>
             <ul class="delfos-lista" data-entendeu></ul>
             <div class="delfos-aplicar" data-aplicar hidden>
               <span>Você mexeu em alguns ajustes. A leitura nova não passa por cima deles.</span>
@@ -204,7 +205,7 @@ const Abas = (() => {
       </div>
       <div class="modal-foot">
         <button class="btn" data-acao="cancelar" type="button">Cancelar</button>
-        <button class="btn primary" data-acao="criar" type="button">${editando ? "Salvar" : "Criar aba"}</button>
+        <button class="btn primary" data-acao="criar" type="button">${editando ? "Salvar" : "Criar área"}</button>
       </div>`;
 
     return new Promise((resolve) => UI.abrirModal(html, {
@@ -214,6 +215,29 @@ const Abas = (() => {
         const $ = (sel) => modal.querySelector(sel);
         const inpNome = $("#cr-nome");
         const inpProp = $("#cr-prop");
+        modal.querySelectorAll("[data-modelo-area]").forEach((b) => b.addEventListener("click", async () => {
+          if (est.mexeu || inpNome.value.trim() || inpProp.value.trim()) {
+            const trocar = await UI.confirmar({ titulo: "Trocar o ponto de partida?", descricao: "Os ajustes desta prévia serão substituídos. Nenhuma área salva será alterada." });
+            if (!trocar) return;
+          }
+          const nome = b.dataset.modeloArea;
+          const propositos = {
+            Trabalho: `Organizar minha rotina profissional, tarefas, reuniões e entregas. ${Personalizacao.ocupacaoResumo()}`,
+            Saúde: "Consultas, exames e retornos com data, local e profissional.",
+            Academia: "Organizar meus dias de treino, exercícios, cargas e repetições.",
+            Esporte: "Organizar treinos e competições. Escreva aqui o esporte que você pratica.",
+            Religião: "Organizar encontros, leituras e práticas da minha fé.",
+            Leituras: "Livros que quero ler, estou lendo ou já terminei, com autor e comentários.",
+            "Área livre": "",
+          };
+          inpNome.value = nome === "Área livre" ? "" : nome;
+          inpProp.value = propositos[nome] || "";
+          est.mexeu = false;
+          est.pendente = null;
+          lerComDelfos();
+          if (nome === "Esporte") { inpNome.focus(); inpNome.select(); }
+          else inpProp.focus();
+        }));
         const pluralRot = (r) => Leituras.pluralizar(r);
         let iconesDesenhados = false;
 
@@ -244,7 +268,7 @@ const Abas = (() => {
           $("#cr-checkin").closest(".linha-switch").hidden = academia;
 
           // Prévia
-          const nomeVisto = inpNome.value.trim() || "Sua aba";
+          const nomeVisto = inpNome.value.trim() || "Sua área";
           $("[data-previa-topo]").innerHTML = `
             <span class="previa-icone" style="--c:${esc(s.cor)}" aria-hidden="true">${UI.iconeAba(s.icone, true)}</span>
             <span><span class="previa-nome">${esc(nomeVisto)}</span><span class="previa-desc">${esc(s.descricao || (s.checkin ? "Marcado a cada dia." : s.naAgenda ? "Com data, entra na agenda." : "Fora da agenda."))}</span></span>`;
@@ -419,7 +443,7 @@ const Abas = (() => {
         };
         inpNome.addEventListener("input", () => {
           const t = $("[data-previa-topo] .previa-nome");
-          if (t) t.textContent = inpNome.value.trim() || "Sua aba";
+          if (t) t.textContent = inpNome.value.trim() || "Sua área";
           agendarLeitura();
         });
         inpProp.addEventListener("input", agendarLeitura);

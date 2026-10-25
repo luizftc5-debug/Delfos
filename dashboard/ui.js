@@ -338,7 +338,10 @@ const UI = (() => {
 
   function linkSeguro(href) {
     const v = String(href || "").trim();
-    return /^(https?:|mailto:)/i.test(v) ? v : "";
+    try {
+      const url = new URL(v);
+      return ["https:", "http:", "mailto:"].includes(url.protocol) ? url.href : "";
+    } catch { return ""; }
   }
 
   // "src" fica de fora de propósito: uma imagem inserida no editor vira
@@ -595,7 +598,7 @@ const UI = (() => {
     const fixas = Personalizacao.abasFixas()
       .filter((a) => a.ativo)
       .map((a) => ({ ...PAGINAS.find((p) => p.id === a.id), rotulo: a.rotulo }));
-    const criadas = (Store.estado().pilares || []).map((p) => ({
+    const criadas = (Store.estado().pilares || []).filter((p) => !p.oculta).map((p) => ({
       id: `pilar:${p.id}`,
       rotulo: p.nome,
       href: `pilar.html?id=${encodeURIComponent(p.id)}`,
@@ -710,13 +713,11 @@ const UI = (() => {
       ? `${perfil.curso}${perfil.semestre ? `, ${fmt.ordinal(perfil.semestre)} semestre` : ""}`
       : Personalizacao.ocupacaoResumo() || "Perfil e ajustes";
 
-    // No celular, a navegação vira uma barra de abas embaixo, ao alcance do
-    // polegar: as quatro primeiras abas e "Mais". A aba aberta sempre aparece
-    // nela, mesmo que esteja mais para o fim da lista.
+    // Atalhos estáveis no celular: início, três áreas na ordem escolhida e
+    // Mais. Abrir outra área não desloca os destinos já conhecidos.
     const todas = paginas();
     const naBarra = todas.slice(0, 4);
-    const aberta = todas.find((p) => p.id === grupoAtivo);
-    if (aberta && !naBarra.includes(aberta)) naBarra[3] = aberta;
+    const emMais = !naBarra.some((p) => p.id === grupoAtivo);
     const abaDaBarra = (p) => {
       const ativa = p.id === grupoAtivo;
       return `<a class="tab ${ativa ? "ativa" : ""}" href="${p.href}"${ativa ? ' aria-current="page"' : ""}>
@@ -729,8 +730,10 @@ const UI = (() => {
         ${logotipo()}
         <span class="marca-versao" aria-hidden="true">${fmt.escape(VERSAO)}</span>
       </a>
-      <nav class="nav" aria-label="Abas do painel">${itens}</nav>
-      <button class="nav-nova" id="btn-nova-aba" type="button">${icone("mais")}Nova aba</button>
+      <p class="nav-legenda">Seu espaço</p>
+      <nav class="nav" aria-label="Áreas da vida">${itens}</nav>
+      <button class="nav-nova" id="btn-nova-aba" type="button">${icone("mais")}Nova área</button>
+      <button class="btn ghost sm nav-organizar" id="btn-organizar" type="button">Organizar áreas</button>
       <div class="sidebar-foot">
         <button class="brand" id="btn-perfil" type="button" title="Perfil, tema, abas e conta" aria-label="Perfil e ajustes de ${fmt.escape(perfil.nome || "você")}">
           ${avatarHTML(perfil)}
@@ -743,12 +746,13 @@ const UI = (() => {
       </div>
       <div class="tabbar">
         ${naBarra.map(abaDaBarra).join("")}
-        <button class="tab" id="btn-mais-abas" type="button" aria-haspopup="dialog">
+        <button class="tab ${emMais ? "ativa" : ""}" id="btn-mais-abas" type="button" aria-haspopup="dialog">
           <span class="tab-ic">${icone("menu")}</span><span class="tab-rotulo">Mais</span>
         </button>
       </div>`;
 
     document.documentElement.dataset.barra = "sim";
+    document.getElementById("btn-organizar").addEventListener("click", () => abrirPerfil("painel"));
     document.getElementById("btn-perfil").addEventListener("click", () => abrirPerfil());
     document.getElementById("btn-nova-aba").addEventListener("click", novaAba);
     prepararCriador(document.getElementById("btn-nova-aba"));
@@ -779,16 +783,18 @@ const UI = (() => {
         <span class="nav-label">${fmt.escape(p.rotulo)}</span>${c[p.id] ? `<span class="nav-count ${p.id === "home" ? "alert" : ""}">${c[p.id]}</span>` : ""}</a>`;
     };
     abrirModal(`
-      <div class="modal-head"><h2 class="modal-title">Abas</h2></div>
+      <div class="modal-head"><h2 class="modal-title">Suas áreas</h2></div>
       <div class="modal-body">
         <nav class="nav" aria-label="Todas as abas">${paginas().map(linha).join("")}</nav>
         <div class="folha-acoes">
-          <button class="btn" type="button" data-acao="nova">${icone("mais")}Nova aba</button>
+          <button class="btn" type="button" data-acao="nova">${icone("mais")}Nova área</button>
+          <button class="btn" type="button" data-acao="organizar">Organizar áreas</button>
           <button class="btn" type="button" data-acao="perfil">${avatarHTML(perfil, "brand-mark mini")}Perfil e ajustes</button>
         </div>
       </div>`, {
       classe: "folha-abas",
       aoMontar(modal, fechar) {
+        modal.querySelector('[data-acao="organizar"]').addEventListener("click", () => { fechar(null); abrirPerfil("painel"); });
         modal.querySelector('[data-acao="nova"]').addEventListener("click", () => { fechar(null); novaAba(); });
         modal.querySelector('[data-acao="perfil"]').addEventListener("click", () => { fechar(null); abrirPerfil(); });
       },
@@ -1101,11 +1107,15 @@ const UI = (() => {
     // Inclui as fixas desligadas (paginas() só traz as ligadas), na posição da ordem salva.
     const ligadas = paginas().slice(1);
     const desligadas = Object.values(fixas).filter((a) => !a.ativo).map((a) => ({ ...PAGINAS.find((x) => x.id === a.id), rotulo: a.rotulo }));
-    const lista = [...ligadas, ...desligadas];
+    const ocultas = Store.lista("pilares").filter((p) => p.oculta).map((p) => ({ id: `pilar:${p.id}`, rotulo: p.nome, href: `pilar.html?id=${encodeURIComponent(p.id)}`, corHex: p.cor, icone: p.icone }));
+    const ordem = experiencia().ordemAbas || [];
+    const pos = (pg) => ordem.includes(pg.id) ? ordem.indexOf(pg.id) : ordem.length;
+    const lista = [...ligadas, ...desligadas, ...ocultas].sort((a, b) => pos(a) - pos(b));
     return lista.map((pg, i) => {
       const fixa = fixas[pg.id];
       const iconeHTML = seloAba(pg);
-      return `<li class="${fixa && !fixa.ativo ? "desligada" : ""}" data-aba-id="${fmt.escape(pg.id)}">
+      const pilar = fixa ? null : Store.achar("pilares", pg.id.slice(6));
+      return `<li class="${(fixa && !fixa.ativo) || pilar?.oculta ? "desligada" : ""}" data-aba-id="${fmt.escape(pg.id)}">
           <span class="ordem-setas">
             <button type="button" class="btn ghost sm icon" data-mover="-1" aria-label="Subir ${fmt.escape(pg.rotulo)}" ${i === 0 ? "disabled" : ""}>${icone("acima")}</button>
             <button type="button" class="btn ghost sm icon" data-mover="1" aria-label="Descer ${fmt.escape(pg.rotulo)}" ${i === lista.length - 1 ? "disabled" : ""}>${icone("abaixo")}</button>
@@ -1114,7 +1124,7 @@ const UI = (() => {
           ${fixa
             ? `<input type="text" class="aba-nome" data-nome-aba="${fixa.id}" value="${fmt.escape(fixa.rotulo)}" aria-label="Nome da aba ${fmt.escape(fixa.rotuloPadrao)}" ${fixa.ativo ? "" : "disabled"} />
                <input type="checkbox" class="switch" role="switch" data-toggle-aba="${fixa.id}" ${fixa.ativo ? "checked" : ""} aria-label="Mostrar a aba ${fmt.escape(fixa.rotuloPadrao)}" />`
-            : `<span class="aba-nome fixo">${fmt.escape(pg.rotulo)}</span><a class="btn ghost sm" href="${fmt.escape(pg.href)}">Abrir</a>`}
+            : `<span class="aba-nome fixo">${fmt.escape(pg.rotulo)}</span><input type="checkbox" class="switch" role="switch" data-toggle-pilar="${fmt.escape(pilar.id)}" ${pilar.oculta ? "" : "checked"} aria-label="Mostrar a área ${fmt.escape(pg.rotulo)}" />`}
         </li>`;
     }).join("");
   }
@@ -1184,7 +1194,7 @@ const UI = (() => {
       <div class="abas perfil-abas" role="tablist" aria-label="Seções do perfil">
         <button type="button" role="tab" data-aba-perfil="sobre">Sobre você</button>
         <button type="button" role="tab" data-aba-perfil="aparencia">Aparência</button>
-        <button type="button" role="tab" data-aba-perfil="painel">Painel</button>
+        <button type="button" role="tab" data-aba-perfil="painel">Áreas e painel</button>
         <button type="button" role="tab" data-aba-perfil="rotina">Rotina e avisos</button>
         <button type="button" role="tab" data-aba-perfil="conta">Conta e dados</button>
       </div>
@@ -1235,7 +1245,7 @@ const UI = (() => {
           ${linhaAjuste("Tamanho do texto", "Aumenta ou diminui tudo, textos e espaços.", segPref("tamanho", [["compacto", "Menor"], ["normal", "Normal"], ["grande", "Maior"]], xp.tamanho || "normal"))}
           ${linhaAjuste("Densidade", "Compacta mostra mais coisa por tela, com menos respiro.", segPref("densidade", [["confortavel", "Confortável"], ["compacta", "Compacta"]], xp.densidade || "confortavel"))}
           ${linhaAjuste("Fonte da leitura e dos títulos", "A serifa é a voz do Delfos, a mesma letra do logotipo; sem serifa, tudo fica na letra da interface.", segPref("voz", [["serifa", "Serifa"], ["sans", "Sem serifa"]], xp.voz || "serifa"))}
-          ${linhaAjuste("Movimento", "Luz que segue o mouse, destaques que deslizam e a entrada das páginas.", switchPref("movimento", (xp.movimento || "completo") !== "reduzido"))}
+          ${linhaAjuste("Movimento", "Transições dos controles, destaques e entrada das páginas.", switchPref("movimento", (xp.movimento || "completo") !== "reduzido"))}
           ${linhaAjuste("Desempenho", `Leve tira o desfoque atrás das janelas, as sombras grandes e as animações, e só baixa o Google quando você pede. Automático liga o leve sozinho em computador mais simples${aparelhoFraco() ? " (é o caso deste)" : ""}.`, segPref("desempenho", [["auto", "Automático"], ["leve", "Leve"], ["completo", "Completo"]], xp.desempenho || "auto"))}
         </div>
       </div>
@@ -1247,14 +1257,14 @@ const UI = (() => {
         </div>
 
         <div class="ajuste">
-          <div class="ajuste-titulo">Abas e ordem</div>
-          <p class="ajuste-texto">Use as setas para mudar a ordem da barra. Desligar só tira a aba da barra; nada do que está nela é apagado. O nome das fixas dá para trocar aqui mesmo.</p>
+          <div class="ajuste-titulo">Suas áreas, na sua ordem</div>
+          <p class="ajuste-texto">Use as setas para ordenar. As três primeiras áreas ficam ao lado da Visão geral no celular. Ocultar preserva todo o conteúdo e os compromissos na agenda.</p>
           <ul class="abas-lista" data-abas>${linhasAbas()}</ul>
         </div>
 
         <div class="ajuste">
           <div class="ajuste-titulo">A visão geral mostra</div>
-          ${[["topo", "Saldo e próximo compromisso"], ["pilares", "Cartões das abas"], ["notas", "O que o Delfos notou"], ["agenda", "Próximos 30 dias"], ["insights", "Leitura da situação"]]
+          ${[["topo", "Resumo financeiro"], ["pilares", "Suas áreas"], ["notas", "Para acompanhar"], ["agenda", "Agenda"], ["insights", "Na sua rotina"]]
             .map(([k, r]) => linhaAjuste(r, "", `<input type="checkbox" class="switch" data-pref-home="${k}" ${xp.home?.[k] !== false ? "checked" : ""} aria-label="${fmt.escape(r)}" />`, true)).join("")}
         </div>
 
@@ -1438,6 +1448,13 @@ const UI = (() => {
 
         // Abas fixas: liga/desliga e renomeia na hora, sem precisar de "Salvar".
         modal.querySelector("[data-abas]").addEventListener("change", (ev) => {
+          const custom = ev.target.closest("[data-toggle-pilar]");
+          if (custom) {
+            Store.atualizar("pilares", custom.dataset.togglePilar, { oculta: !custom.checked });
+            custom.closest("li").classList.toggle("desligada", !custom.checked);
+            montarLayout(paginaAtiva, opcoesAtivas);
+            return;
+          }
           const chk = ev.target.closest("[data-toggle-aba]");
           if (!chk) return;
           const id = chk.dataset.toggleAba;
@@ -1802,9 +1819,9 @@ const UI = (() => {
     return quando ? `${txt}, ${quando}` : txt;
   }
 
-  function isoMaisDias(n) {
-    const d = new Date();
-    d.setDate(d.getDate() + n);
+  function isoMaisDias(baseOuDias, dias) {
+    const d = dias === undefined ? new Date() : new Date(`${baseOuDias}T12:00:00`);
+    d.setDate(d.getDate() + Number(dias === undefined ? baseOuDias : dias));
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
 
@@ -2769,7 +2786,6 @@ const UI = (() => {
     achar(".seg").forEach(trilhoSeg);
     achar(".abas").forEach(indicadorAbas);
     if (!temPonteiro()) return;
-    ligarLuz();
     achar(".sidebar .nav").forEach(realceDeslizante);
   }
 
@@ -3143,12 +3159,33 @@ const UI = (() => {
     return new URLSearchParams(window.location.search).get(nome) || "";
   }
 
+  window.addEventListener("delfos:falha-ao-salvar", () => {
+    if (document.querySelector(".storage-aviso")) return;
+    const aviso = document.createElement("div");
+    aviso.className = "storage-aviso";
+    aviso.setAttribute("role", "alert");
+    const mensagem = document.createElement("span");
+    mensagem.textContent = "Há alterações sem salvar. Não feche o Delfos antes de tentar novamente ou exportar um backup.";
+    aviso.appendChild(mensagem);
+    const tentar = document.createElement("button");
+    tentar.className = "btn sm";
+    tentar.textContent = "Tentar salvar";
+    tentar.addEventListener("click", () => { try { Store.tentarSalvar(); toast("Alterações salvas."); } catch { toast("O navegador ainda não permite salvar. Exporte um backup."); } });
+    const backup = document.createElement("button");
+    backup.className = "btn sm";
+    backup.textContent = "Exportar backup";
+    backup.addEventListener("click", abrirBackup);
+    aviso.append(tentar, backup);
+    document.body.appendChild(aviso);
+  });
+  window.addEventListener("delfos:salvo", () => document.querySelector(".storage-aviso")?.remove());
+
   return {
     NOME, VERSAO, logotipo, aparelhoFraco, ICONES, ICONES_ABA, icone, iconeAba, iconeDuo, seloAba, movimento, aplicarAparencia, experiencia, abrirAtalhos, realcarBotoes,
     REPETICOES, somarPeriodo, ocorrenciasEntre, lembretesAgora, abrirResumoDoDia, textoQuando,
     lerDinheiro, avaliarDinheiro, formatarDinheiroCampo, dataPorExtensoCurta, isoMaisDias, marcaDaPagina,
-    fmt, htmlSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
-    compromissos, conflitos, contagens, mediaDisciplina, notaNecessaria, proximaAvaliacao, resumoProjeto,
+    fmt, htmlSeguro, linkSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
+    paginas, compromissos, conflitos, contagens, mediaDisciplina, notaNecessaria, proximaAvaliacao, resumoProjeto,
     iniciarPagina, montarLayout, tema, toast, formulario, confirmar, abrirModal,
     abrirBackup, abrirPerfil, avatarHTML, iniciais, vazio, barras, colunasMensais, medidor,
     novaAba, abrirCriadorDeAbas, prepararCriador, carregarScript, camposPilar, redimensionarFoto, camposItemPilar, editorCampos,

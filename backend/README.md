@@ -133,9 +133,10 @@ backend/
   (workers.dev) estão em domínios diferentes, e os navegadores bloqueiam cada vez mais cookie entre
   sites. Cookie `HttpOnly` exigiria servir o painel pelo próprio Worker. O painel já só desenha HTML
   de usuário por `UI.htmlSeguro`, que é a defesa que importa aqui.
-- **Por que o servidor não lê o JSON do estado?** Para o formato continuar sendo só de
-  `dashboard/store.js` (`normalizar`) e para não gastar o limite de CPU. Ele guarda, versiona e
-  devolve.
+- **Como o servidor valida o estado?** A leitura é limitada a 10 MB mesmo sem
+  Content-Length. Antes de gravar, ele exige JSON válido, um objeto e uma versão
+  inteira positiva. O formato detalhado e suas migrações continuam em
+  `dashboard/store.js` (`normalizar`). A gravação preserva o texto recebido.
 - **Sem Actions:** `npx wrangler login`, `npx wrangler d1 create delfos`, cole o id em
   `wrangler.toml`, depois `npm run migrar` e `npm run publicar`.
 

@@ -4,6 +4,10 @@
   UI.iniciarPagina("home");
 
   const { fmt } = UI;
+  let diaSelecionado = "";
+  let inicioSemana = UI.chaveSemana(UI.hojeISO());
+  let periodo = 7;
+  let semanaFiltrada = false;
 
   const DIAS_SEMANA = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
   const DIAS_LONGOS = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
@@ -17,10 +21,6 @@
     return { receita, despesa, resultado: receita - despesa, quantidade: t.length };
   }
 
-  function diasNoMes(chave) {
-    const [a, m] = chave.split("-").map(Number);
-    return new Date(a, m, 0).getDate();
-  }
 
   const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 
@@ -47,7 +47,6 @@
   function render() {
     const mes = UI.mesAtual();
     const atual = totaisDoMes(mes);
-    const anterior = totaisDoMes(UI.mesAnterior(mes));
 
     const hoje = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
     document.getElementById("sub-hoje").textContent = fmt.capitalizar(hoje);
@@ -57,24 +56,28 @@
     [["sec-topo", "topo"], ["sec-abas", "pilares"], ["sec-notas", "notas"], ["sec-agenda", "agenda"], ["sec-insights", "insights"]]
       .forEach(([id, k]) => { const el = document.getElementById(id); if (el) el.hidden = mostra[k] === false; });
 
-    renderLeitura(atual);
+    document.getElementById("titulo-dia").textContent = Personalizacao.saudacao() === "Visão geral" ? "Seu dia" : Personalizacao.saudacao() + ".";
+    renderLeitura();
+    renderSemana();
+    const compromissos = UI.compromissos();
+    const hojeCount = compromissos.filter((i) => UI.diasAte(i.data) === 0).length;
+    const semanaCount = compromissos.filter((i) => { const d = UI.diasAte(i.data); return d !== null && d >= 0 && d < 7; }).length;
+    const atrasadosCount = compromissos.filter((i) => (UI.diasAte(i.data) ?? 0) < 0).length;
+    document.getElementById("dia-numeros").innerHTML = [["Hoje", hojeCount], ["Em 7 dias", semanaCount], ["Atrasados", atrasadosCount]].map(([r, n]) => `<div><dt>${r}</dt><dd>${n}</dd></div>`).join("");
+    document.getElementById("resumo-financeiro").hidden = mostra.topo === false || !Personalizacao.abaAtiva("financeiro");
     renderRazao(atual);
     renderAgenda();
-    UI.renderNotas(document.getElementById("notas"), Leituras.todasNotas(6), "Nada pedindo ação agora. Cada aba tem a própria leitura, com o que vai bem e o que mudou.");
-    renderInsights(atual, anterior, mes);
+    const notas = Leituras.todasNotas(2);
+    document.getElementById("sec-notas").hidden = mostra.notas === false || !notas.length;
+    UI.renderNotas(document.getElementById("notas"), notas, "");
+    renderInsights();
     renderPilares(atual);
     UI.montarLayout("home");
+    document.querySelector(".dia-link span").innerHTML = UI.icone("direita");
   }
 
-  /**
-   * A leitura — o painel diz numa frase o que está acontecendo. É o que dá
-   * sentido ao nome: um oráculo lê a situação e a enuncia, em vez de só
-   * empilhar números para o leitor interpretar sozinho.
-   *
-   * A saudação abre a frase, em tom mais baixo; depois, uma frase sobre o
-   * tempo (o que está atrasado ou mais próximo) e uma sobre dinheiro.
-   */
-  function renderLeitura(atual) {
+  /** Uma frase de apoio sobre o compromisso que pede atenção. */
+  function renderLeitura() {
     const alvo = document.getElementById("leitura");
     if (!alvo) return;
 
@@ -108,16 +111,19 @@
       tempo = "Nenhum compromisso cadastrado ainda.";
     }
 
-    let dinheiro = "";
-    if (atual.quantidade > 0) {
-      dinheiro = atual.resultado >= 0
-        ? ` No mês, sobrou <b>${fmt.moeda(atual.resultado)}</b>.`
-        : ` No mês, você gastou <span class="destaque">${fmt.moeda(Math.abs(atual.resultado))} a mais</span> do que recebeu.`;
-    }
+    alvo.innerHTML = proximos.length ? tempo : "Reúna seus compromissos e acompanhe o que importa, uma área de cada vez.";
+  }
 
-    const saud = Personalizacao.saudacao();
-    const abertura = saud !== "Visão geral" ? `<span class="saudacao">${fmt.escape(saud)}.</span> ` : "";
-    alvo.innerHTML = abertura + tempo + dinheiro;
+  function renderSemana() {
+    const todos = UI.compromissos();
+    document.getElementById("semana-rotulo").textContent = `${fmt.dataCurta(inicioSemana)} a ${fmt.dataCurta(UI.isoMaisDias(inicioSemana, 6))}`;
+    document.getElementById("semana-dias").innerHTML = Array.from({ length: 7 }, (_, i) => {
+      const data = UI.isoMaisDias(inicioSemana, i);
+      const d = new Date(data + "T00:00:00");
+      const n = todos.filter((c) => c.data === data).length;
+      const hoje = data === UI.hojeISO();
+      return `<button type="button" class="semana-dia${hoje ? " hoje" : ""}" data-dia="${data}" aria-pressed="${data === diaSelecionado}" aria-label="${fmt.escape(fmt.dataPorExtenso(data))}, ${n} compromissos"${hoje ? ' aria-current="date"' : ""}><span>${DIAS_SEMANA[d.getDay()]}</span><b>${d.getDate()}</b><small>${n ? n + (n === 1 ? " item" : " itens") : ""}</small></button>`;
+    }).join("");
   }
 
   /** Os quatro números do dia: saldo, o mês, o próximo compromisso e o que falta pagar. */
@@ -179,31 +185,29 @@
     }
   }
 
-  /**
-   * Agenda: o que está atrasado no alto, depois semana a semana até 30
-   * dias. A semana cheia de áreas diferentes ganha uma marca no próprio
-   * cabeçalho (antes, uma pilha de avisos no topo da página).
-   */
+  /** Agenda: um dia selecionado ou o período, com atrasados em destaque. */
   function renderAgenda() {
     const box = document.getElementById("agenda");
     const todos = UI.compromissos();
-    const atrasados = todos.filter((i) => (UI.diasAte(i.data) ?? 0) < 0);
+    const atrasados = diaSelecionado || semanaFiltrada ? [] : todos.filter((i) => (UI.diasAte(i.data) ?? 0) < 0);
     const proximos = todos.filter((i) => {
       const d = UI.diasAte(i.data);
-      return d !== null && d >= 0 && d <= 30;
+      if (diaSelecionado) return i.data === diaSelecionado;
+      if (semanaFiltrada) return i.data >= inicioSemana && i.data <= UI.isoMaisDias(inicioSemana, 6);
+      return d !== null && d >= 0 && d < periodo;
     });
 
     document.getElementById("agenda-resumo").textContent = proximos.length
-      ? `${plural(proximos.length, "compromisso", "compromissos")} nos próximos 30 dias`
+      ? `${plural(proximos.length, "compromisso", "compromissos")} ${diaSelecionado ? "em " + fmt.dataPorExtenso(diaSelecionado) : semanaFiltrada ? "na semana de " + fmt.dataPorExtenso(inicioSemana) : "nos próximos " + periodo + " dias"}`
       : "";
 
     box.innerHTML = "";
     if (!atrasados.length && !proximos.length) {
       box.appendChild(UI.vazio({
         icone: "relogio",
-        titulo: "Nada nos próximos 30 dias",
-        texto: "Provas, entregas, consultas e prazos de qualquer aba aparecem aqui, semana a semana.",
-        rotuloAcao: "Cadastrar prazo",
+        titulo: diaSelecionado ? "Um dia sem compromissos" : semanaFiltrada ? "Uma semana sem compromissos" : "Sua agenda começa aqui",
+        texto: diaSelecionado ? "Adicione algo para esta data ou escolha outro dia para consultar." : "Consultas, provas, encontros e entregas. Os compromissos das suas áreas se encontram aqui.",
+        rotuloAcao: "Adicionar compromisso",
         aoAcionar: novoPrazo,
       }));
       return;
@@ -301,14 +305,15 @@
     (e.pilares || []).forEach((p) => {
       const abertos = (p.itens || []).filter((i) => !i.concluido);
       linhas.push({
-        href: `pilar.html?id=${encodeURIComponent(p.id)}`, cor: "", corHex: p.cor, glifo: p.icone,
+        id: `pilar:${p.id}`, href: `pilar.html?id=${encodeURIComponent(p.id)}`, cor: "", corHex: p.cor, glifo: p.icone,
         titulo: p.nome,
         valor: `${abertos.length}`, rotuloValor: "em aberto",
         sub: p.descricao || `${urgentes(`pilar:${p.id}`)} nesta semana`,
       });
     });
 
-    grid.innerHTML = linhas
+    const ordem = UI.paginas().map((p) => p.id);
+    grid.innerHTML = linhas.filter((c) => ordem.includes(c.id)).sort((a, b) => ordem.indexOf(a.id) - ordem.indexOf(b.id))
       .map((c) => `
         <a class="pillar indice-linha ${c.cor}" href="${c.href}"${c.corHex ? ` style="--tint:${fmt.escape(c.corHex)}"` : ""}>
           <span class="pillar-ic" aria-hidden="true">${c.corHex ? UI.iconeAba(c.glifo, true) : UI.iconeDuo(c.id)}</span>
@@ -320,37 +325,10 @@
   }
 
   /** Em números: comparações e projeções, em linhas de rótulo e valor. */
-  function renderInsights(atual, anterior, mes) {
+  function renderInsights() {
     const e = Store.estado();
     const box = document.getElementById("insights");
     const linhas = [];
-
-    // 1. Comparação com o mês anterior
-    if (anterior.quantidade > 0) {
-      const dif = atual.despesa - anterior.despesa;
-      const pct = anterior.despesa > 0 ? Math.round((dif / anterior.despesa) * 100) : 0;
-      const piorou = dif > 0;
-      linhas.push({
-        titulo: "Gastos sobre o mês anterior",
-        valor: `${dif >= 0 ? "+" : "−"}${fmt.moeda(Math.abs(dif))}`,
-        classe: piorou ? "down" : "up",
-        sub: anterior.despesa > 0
-          ? `${Math.abs(pct)}% ${piorou ? "a mais" : "a menos"} que ${fmt.mesRotulo(UI.mesAnterior(mes))}`
-          : `Nada gasto em ${fmt.mesRotulo(UI.mesAnterior(mes))}`,
-      });
-    }
-
-    // 2. Ritmo de gastos e projeção de fechamento do mês
-    const diaDoMes = new Date().getDate();
-    if (atual.despesa > 0 && diaDoMes >= 3) {
-      const media = atual.despesa / diaDoMes;
-      linhas.push({
-        titulo: "Projeção de gastos do mês",
-        valor: fmt.moeda(media * diasNoMes(mes)),
-        classe: "",
-        sub: `No ritmo de ${fmt.moeda(media)} por dia até agora`,
-      });
-    }
 
     // 3. Semana mais carregada à frente
     const conflitos = UI.conflitos();
@@ -379,17 +357,8 @@
       }
     }
 
-    if (!linhas.length) {
-      box.innerHTML = "";
-      box.appendChild(UI.vazio({
-        icone: "investimentos",
-        titulo: "Ainda sem dados suficientes",
-        texto: "Conforme você registra lançamentos, prazos e projetos, aparecem aqui comparações e projeções.",
-        rotuloAcao: "Registrar lançamento",
-        aoAcionar: novoLancamento,
-      }));
-      return;
-    }
+    document.getElementById("sec-insights").hidden = UI.experiencia().home?.insights === false || !linhas.length;
+    if (!linhas.length) { box.innerHTML = ""; return; }
 
     box.innerHTML = linhas
       .map((c) => `<div>
@@ -402,23 +371,38 @@
   /* --------------------------------- Ações --------------------------------- */
 
   function novoLancamento() {
-    Lancamento.abrir({ aoSalvar: render });
+    Lancamento.abrir();
   }
 
   async function novoPrazo() {
+    const areas = [
+      { valor: "pessoal", rotulo: Personalizacao.rotuloAba("pessoal") },
+      ...(Personalizacao.abaAtiva("faculdade") ? [{ valor: "faculdade", rotulo: Personalizacao.rotuloAba("faculdade") }] : []),
+      ...Store.lista("pilares").filter((p) => p.naAgenda && p.modelo !== "academia").map((p) => ({ valor: `pilar:${p.id}`, rotulo: p.nome })),
+    ];
     const v = await UI.formulario({
-      titulo: "Novo prazo",
-      descricao: "Provas, entregas e outros compromissos da faculdade.",
+      titulo: "Novo compromisso",
+      descricao: "Escolha onde guardar. Ele também aparece na sua agenda.",
       campos: [
-        { nome: "descricao", rotulo: "O que é", tipo: "text", obrigatorio: true, placeholder: "Ex.: Entrega da metanálise" },
-        { nome: "data", rotulo: "Data", tipo: "date", obrigatorio: true, valorPadrao: UI.hojeISO() },
-        { nome: "tipo", rotulo: "Tipo", tipo: "select", opcoes: ["entrega", "prova", "seminário", "TCC", "outro"] },
+        { nome: "descricao", rotulo: "O que você vai fazer?", tipo: "text", obrigatorio: true, placeholder: "Ex.: Consulta, reunião ou entrega" },
+        { nome: "area", rotulo: "Área da vida", tipo: "select", opcoes: areas },
+        { nome: "data", rotulo: "Data", tipo: "date", obrigatorio: true, valorPadrao: diaSelecionado || UI.hojeISO() },
+        { nome: "hora", rotulo: "Horário (opcional)", tipo: "time" },
       ],
     });
     if (!v) return;
-    Store.inserir("faculdade.prazos", { ...v, concluido: false });
-    UI.toast("Prazo cadastrado.");
-    render();
+    const { area, ...dados } = v;
+    if (area === "faculdade") Store.inserir("faculdade.prazos", { ...dados, tipo: "outro", concluido: false });
+    else if (area.startsWith("pilar:")) {
+      const pilar = Store.achar("pilares", area.slice(6));
+      if (!pilar) return;
+      const campos = UI.camposItemPilar(pilar);
+      // A agenda não pula os campos obrigatórios de uma área personalizada.
+      const extras = campos.length ? await UI.formulario({ titulo: `Detalhes de ${pilar.nome}`, campos }) : {};
+      if (!extras) return;
+      Store.subInserir("pilares", pilar.id, "itens", { ...dados, extras, concluido: false });
+    } else Store.inserir("pessoal.compromissos", { ...dados, tipo: "compromisso", concluido: false });
+    UI.toast("Compromisso adicionado.");
   }
 
   async function ajustarSaldo() {
@@ -431,12 +415,27 @@
     if (!v) return;
     Store.definirSaldo(v.saldo);
     UI.toast("Saldo atualizado.");
-    render();
   }
 
   document.getElementById("btn-lancamento").addEventListener("click", novoLancamento);
   document.getElementById("btn-prazo").addEventListener("click", novoPrazo);
   document.getElementById("btn-saldo").addEventListener("click", ajustarSaldo);
 
+  document.getElementById("btn-criar-area").addEventListener("click", () => UI.abrirCriadorDeAbas());
+  document.getElementById("btn-nova-area").addEventListener("click", () => UI.abrirCriadorDeAbas());
+  document.getElementById("btn-organizar-areas").addEventListener("click", () => UI.abrirPerfil("painel"));
+  document.getElementById("semana-dias").addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-dia]");
+    if (!b) return;
+    diaSelecionado = diaSelecionado === b.dataset.dia ? "" : b.dataset.dia;
+    renderSemana(); renderAgenda();
+    document.querySelector(`[data-dia="${b.dataset.dia}"]`)?.focus();
+  });
+  const moverSemana = (dias) => { inicioSemana = UI.isoMaisDias(inicioSemana, dias); diaSelecionado = ""; semanaFiltrada = true; document.getElementById("agenda-periodo").value = "semana"; renderSemana(); renderAgenda(); };
+  document.getElementById("semana-anterior").addEventListener("click", () => moverSemana(-7));
+  document.getElementById("semana-seguinte").addEventListener("click", () => moverSemana(7));
+  document.getElementById("agenda-hoje").addEventListener("click", () => { inicioSemana = UI.chaveSemana(UI.hojeISO()); diaSelecionado = UI.hojeISO(); renderSemana(); renderAgenda(); });
+  document.getElementById("agenda-periodo").addEventListener("change", (ev) => { semanaFiltrada = ev.target.value === "semana"; periodo = semanaFiltrada ? 7 : Number(ev.target.value); diaSelecionado = ""; if (!semanaFiltrada) inicioSemana = UI.chaveSemana(UI.hojeISO()); renderSemana(); renderAgenda(); });
+  Store.aoMudar(render);
   render();
 })();

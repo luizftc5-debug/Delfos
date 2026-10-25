@@ -1,0 +1,27 @@
+name: Interface
+
+on:
+  push:
+    paths: ["dashboard/**", ".github/workflows/interface.yml"]
+  pull_request:
+    paths: ["dashboard/**", ".github/workflows/interface.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verificar sintaxe
+        run: |
+          for arquivo in dashboard/*.js; do
+            node --check "$arquivo" || exit 1
+          done
+      - name: Verificar persistência e backup
+        run: node --test dashboard/test/*.test.cjs

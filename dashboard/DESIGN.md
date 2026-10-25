@@ -1,4 +1,26 @@
-# Design System: Delfos 1.8, "marfim"
+# Design System: Delfos, interface cotidiana
+
+## Revisão de 25/10/2026
+
+A identidade continua em preto, marfim e cinzas quentes. A interface agora
+prioriza orientação e ação: títulos curtos em serifa, resumos em sans-serif,
+agenda como centro da visão geral e áreas organizadas em superfícies discretas.
+`interface.css`, carregado após `theme.css`, define essa camada visual compartilhada.
+
+- A leitura automática é apoio, não o título da página. O nome da área continua visível.
+- A visão geral abre com saudação, agenda filtrável por dia e resumo dos compromissos.
+- O resumo financeiro fica recolhido e pode ser ocultado nas preferências existentes.
+- Superfícies delimitam agenda, resumo e destinos de navegação. Não encaixotar cada número.
+- A navegação móvel é estável: Visão geral, as três primeiras áreas da ordem escolhida e Mais.
+- Organizar áreas fica acessível na barra e na visão geral. Ocultar não exclui dados nem compromissos.
+- Criar área oferece pontos de partida e mantém campos e prévia revisáveis.
+- Movimento responde a controles e respeita redução de movimento. A luz que seguia o ponteiro foi desativada.
+- Os temas e as preferências existentes continuam disponíveis.
+
+As seções abaixo documentam a base anterior e seus componentes. Em caso de
+diferença sobre hierarquia, navegação e superfícies, prevalece esta revisão.
+
+## Base visual anterior: 1.8, "marfim"
 
 Delfos é o nome de um oráculo, e o painel faz o que um oráculo faz: lê a
 situação e diz o que ela é. Desde a 1.7, **em toda página, a leitura é o

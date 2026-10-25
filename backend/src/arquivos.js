@@ -17,7 +17,7 @@
    =========================================================================== */
 
 import { cotaAnexosBytes } from "./contas.js";
-import { ErroHttp, agora, json } from "./respostas.js";
+import { ErroHttp, agora, json, lerCorpoLimitado } from "./respostas.js";
 
 export const LIMITE_BYTES = 25 * 1024 * 1024; // igual a Arquivos.LIMITE_MB no painel
 const TAMANHO_PARTE = 1_000_000;
@@ -45,11 +45,7 @@ export async function listarArquivos(env, usuario) {
 /** PUT /api/arquivos/:id — corpo é o arquivo cru; Content-Type é o tipo dele. */
 export async function enviarArquivo(request, env, usuario, id) {
   validarId(id);
-  if (Number(request.headers.get("content-length") || 0) > LIMITE_BYTES) {
-    throw new ErroHttp(413, "Arquivo acima de 25 MB.");
-  }
-  const dados = await request.arrayBuffer();
-  if (dados.byteLength > LIMITE_BYTES) throw new ErroHttp(413, "Arquivo acima de 25 MB.");
+  const dados = (await lerCorpoLimitado(request, LIMITE_BYTES, "Arquivo acima de 25 MB.")).buffer;
 
   const db = env.DB;
   const uid = usuario.id;
@@ -112,6 +108,8 @@ export async function baixarArquivo(env, usuario, id) {
       "content-type": meta.tipo || "application/octet-stream",
       "content-length": String(meta.tamanho),
       "cache-control": "no-store",
+      "x-content-type-options": "nosniff",
+      "content-disposition": /^(application\/pdf|image\/(png|jpeg|gif|webp|avif))$/i.test(meta.tipo || "") ? "inline" : "attachment",
     },
   });
 }

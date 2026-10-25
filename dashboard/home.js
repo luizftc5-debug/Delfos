@@ -45,8 +45,14 @@
   /* -------------------------------- Render --------------------------------- */
 
   // Quanto mostrar dentro das gavetas: o essencial primeiro, o resto a um toque.
-  let agendaToda = false;
   let notasTodas = false;
+
+  // Filtros da agenda (2.3): período ("7", "30" ou a "semana" exibida), a
+  // semana que se vê na faixa de dias e o dia escolhido nela. Só valem nesta
+  // visita; não são dado.
+  let periodo = "7";
+  let inicioSemana = UI.chaveSemana(UI.hojeISO());
+  let diaSelecionado = "";
 
   function render() {
     const mes = UI.mesAtual();
@@ -64,6 +70,7 @@
     if (!Personalizacao.abaAtiva("financeiro")) document.getElementById("sec-topo").hidden = true;
 
     renderLeitura();
+    renderSemana();
     renderAgenda();
     renderDinheiro(atual, anterior, mes);
     renderNotasHome();
@@ -186,44 +193,70 @@
     renderInsights(atual, anterior, mes);
   }
 
+  /** A faixa de sete dias da semana exibida, cada um com quantos compromissos tem. */
+  function renderSemana() {
+    const todos = UI.compromissos();
+    document.getElementById("semana-rotulo").textContent = `${fmt.dataCurta(inicioSemana)} a ${fmt.dataCurta(UI.isoMaisDias(inicioSemana, 6))}`;
+    document.getElementById("semana-dias").innerHTML = Array.from({ length: 7 }, (_, i) => {
+      const data = UI.isoMaisDias(inicioSemana, i);
+      const d = new Date(data + "T00:00:00");
+      const n = todos.filter((c) => c.data === data).length;
+      const ehHoje = data === UI.hojeISO();
+      return `<button type="button" class="semana-dia${ehHoje ? " hoje" : ""}" data-dia="${data}" aria-pressed="${data === diaSelecionado}" aria-label="${fmt.escape(fmt.dataPorExtenso(data))}, ${plural(n, "compromisso", "compromissos")}"${ehHoje ? ' aria-current="date"' : ""}><span>${DIAS_SEMANA[d.getDay()]}</span><b>${d.getDate()}</b><small>${n || ""}</small></button>`;
+    }).join("");
+  }
+
   /**
    * Agenda: o que está atrasado no alto, depois semana a semana. A gaveta
    * mostra os próximos sete dias (no mínimo os quatro próximos compromissos);
-   * o resto, até 30 dias, a um toque. A semana cheia
-   * de áreas diferentes ganha uma marca no próprio cabeçalho.
+   * "Próximos 30 dias" mostra tudo. Com um dia ou a semana escolhidos na
+   * faixa, a lista é só dele (e o atrasado sai, para não competir). A semana
+   * cheia de áreas diferentes ganha uma marca no próprio cabeçalho.
    */
   function renderAgenda() {
     const box = document.getElementById("agenda");
     const todos = UI.compromissos();
-    const atrasados = todos.filter((i) => (UI.diasAte(i.data) ?? 0) < 0);
-    const proximos = todos.filter((i) => {
+    const filtrada = !!diaSelecionado || periodo === "semana";
+    const atrasadosTodos = todos.filter((i) => (UI.diasAte(i.data) ?? 0) < 0);
+    const proximosTodos = todos.filter((i) => {
       const d = UI.diasAte(i.data);
       return d !== null && d >= 0 && d <= 30;
     });
-    const naSemana = proximos.filter((i) => UI.diasAte(i.data) <= 7);
 
-    const prox = proximos[0];
+    // O puxador conta o que há, sem depender do filtro: é o que se lê com a gaveta fechada.
+    const hojeN = proximosTodos.filter((i) => UI.diasAte(i.data) === 0).length;
+    const naSemana = proximosTodos.filter((i) => UI.diasAte(i.data) <= 7);
+    const prox = proximosTodos[0];
     document.getElementById("agenda-resumo").innerHTML = frase([
-      atrasados.length ? `<span class="alerta">${plural(atrasados.length, "atrasado", "atrasados")}</span>` : "",
+      atrasadosTodos.length ? `<span class="alerta">${plural(atrasadosTodos.length, "atrasado", "atrasados")}</span>` : "",
+      hojeN ? `${hojeN} hoje` : "",
       prox ? `próximo: <b>${fmt.escape(prox.titulo)}</b>, ${quando(prox.data)}` : "",
       naSemana.length > 1 ? `${naSemana.length} nos próximos 7 dias` : "",
     ]) || "Nada marcado nos próximos 30 dias";
+
+    const atrasados = filtrada ? [] : atrasadosTodos;
+    const proximos = filtrada
+      ? todos.filter((i) => (diaSelecionado ? i.data === diaSelecionado : i.data >= inicioSemana && i.data <= UI.isoMaisDias(inicioSemana, 6)))
+      : proximosTodos;
 
     box.innerHTML = "";
     if (!atrasados.length && !proximos.length) {
       box.appendChild(UI.vazio({
         icone: "relogio",
-        titulo: "Nada nos próximos 30 dias",
-        texto: "Provas, entregas, consultas e prazos de qualquer aba aparecem aqui, semana a semana.",
+        titulo: diaSelecionado ? "Um dia sem compromissos" : periodo === "semana" ? "Uma semana sem compromissos" : "Nada nos próximos 30 dias",
+        texto: filtrada
+          ? "Adicione algo para esta data ou escolha outro dia para consultar."
+          : "Provas, entregas, consultas e prazos de qualquer aba aparecem aqui, semana a semana.",
         rotuloAcao: "Registrar compromisso",
         aoAcionar: () => registrar({ soComData: true }),
       }));
       return;
     }
 
+    const tudo = filtrada || periodo === "30";
     let limite = proximos.filter((i) => UI.diasAte(i.data) <= 7).length;
     if (limite < 4) limite = Math.min(4, proximos.length);
-    const visiveis = agendaToda ? proximos : proximos.slice(0, limite);
+    const visiveis = tudo ? proximos : proximos.slice(0, limite);
     const escondidos = proximos.length - visiveis.length;
 
     const semanaAtual = UI.chaveSemana(UI.hojeISO());
@@ -254,16 +287,27 @@
         </section>`;
     }).join("");
 
-    if (escondidos > 0 || agendaToda) {
+    // "Ver mais" e "Próximos 30 dias" são o mesmo gesto: um muda o outro.
+    if (!filtrada && (escondidos > 0 || periodo === "30")) {
       const mais = document.createElement("button");
       mais.type = "button";
       mais.className = "link-gaveta";
-      mais.textContent = agendaToda
+      mais.textContent = periodo === "30"
         ? "Mostrar só os próximos dias"
         : `Ver ${plural(escondidos, "compromisso", "compromissos")} até ${fmt.dataPorExtenso(proximos[proximos.length - 1].data)}`;
-      mais.addEventListener("click", () => { agendaToda = !agendaToda; renderAgenda(); });
+      mais.addEventListener("click", () => mudarPeriodo(periodo === "30" ? "7" : "30"));
       box.appendChild(mais);
     }
+  }
+
+  /** Troca o período da agenda e leva o seletor junto. */
+  function mudarPeriodo(valor) {
+    periodo = valor;
+    diaSelecionado = "";
+    if (valor !== "semana") inicioSemana = UI.chaveSemana(UI.hojeISO());
+    document.getElementById("agenda-periodo").value = valor;
+    renderSemana();
+    renderAgenda();
   }
 
   function linhaAgenda(i) {
@@ -353,12 +397,17 @@
     (e.pilares || []).forEach((p) => {
       const abertos = (p.itens || []).filter((i) => !i.concluido);
       linhas.push({
-        href: `pilar.html?id=${encodeURIComponent(p.id)}`, corHex: p.cor, icone: p.icone,
+        id: `pilar:${p.id}`, href: `pilar.html?id=${encodeURIComponent(p.id)}`, corHex: p.cor, icone: p.icone,
         titulo: p.nome,
         valor: `${abertos.length}`, rotuloValor: "em aberto",
         sub: p.descricao || `${urgentes(`pilar:${p.id}`)} nesta semana`,
       });
     });
+
+    // A ordem e a ocultação escolhidas no perfil valem aqui também (UI.paginas
+    // já traz as abas na ordem da pessoa e sem as ocultas).
+    const ordem = UI.paginas().map((p) => p.id);
+    linhas.splice(0, linhas.length, ...linhas.filter((c) => ordem.includes(c.id)).sort((a, b) => ordem.indexOf(a.id) - ordem.indexOf(b.id)));
 
     document.getElementById("abas-resumo").textContent = linhas.length
       ? `${plural(linhas.length, "aba", "abas")}: ${linhas.map((c) => c.titulo).join(", ").replace(/, ([^,]*)$/, " e $1")}`
@@ -424,6 +473,7 @@
       aoEscolher: (id) => {
         if (id === "financeiro") { novoLancamento(); return true; }
         if (id === "faculdade") { novoPrazo(); return true; }
+        if (id === "pessoal") { novoCompromisso("pessoal"); return true; }
         return false;
       },
     });
@@ -449,6 +499,44 @@
     render();
   }
 
+  /**
+   * Compromisso direto da visão geral: a pessoa escolhe em qual aba guardar
+   * (Pessoal, Faculdade ou uma aba própria que entra na agenda); a data já
+   * vem do dia escolhido na faixa da agenda. Numa aba própria, os campos
+   * obrigatórios dela são pedidos em seguida, não pulados.
+   */
+  async function novoCompromisso(abaInicial = "pessoal") {
+    const abas = [
+      { valor: "pessoal", rotulo: Personalizacao.rotuloAba("pessoal") },
+      ...(Personalizacao.abaAtiva("faculdade") ? [{ valor: "faculdade", rotulo: Personalizacao.rotuloAba("faculdade") }] : []),
+      ...Store.lista("pilares").filter((p) => p.naAgenda && p.modelo !== "academia").map((p) => ({ valor: `pilar:${p.id}`, rotulo: p.nome })),
+    ];
+    const v = await UI.formulario({
+      titulo: "Novo compromisso",
+      descricao: "Escolha onde guardar. Ele também aparece na sua agenda.",
+      campos: [
+        { nome: "descricao", rotulo: "O que você vai fazer?", tipo: "text", obrigatorio: true, placeholder: "Ex.: Consulta, reunião ou entrega" },
+        { nome: "area", rotulo: "Em qual aba", tipo: "select", opcoes: abas },
+        { nome: "data", rotulo: "Data", tipo: "date", obrigatorio: true, valorPadrao: diaSelecionado || UI.hojeISO() },
+        { nome: "hora", rotulo: "Horário (opcional)", tipo: "time" },
+      ],
+      valores: { area: abas.some((a) => a.valor === abaInicial) ? abaInicial : "pessoal" },
+    });
+    if (!v) return;
+    const { area, ...dados } = v;
+    if (area === "faculdade") Store.inserir("faculdade.prazos", { ...dados, tipo: "outro", concluido: false });
+    else if (area.startsWith("pilar:")) {
+      const pilar = Store.achar("pilares", area.slice(6));
+      if (!pilar) return;
+      const campos = UI.camposItemPilar(pilar);
+      const extras = campos.length ? await UI.formulario({ titulo: `Detalhes de ${pilar.nome}`, campos }) : {};
+      if (!extras) return;
+      Store.subInserir("pilares", pilar.id, "itens", { ...dados, extras, concluido: false });
+    } else Store.inserir("pessoal.compromissos", { ...dados, tipo: "compromisso", concluido: false });
+    UI.toast("Compromisso adicionado.");
+    render();
+  }
+
   async function ajustarSaldo() {
     const v = await UI.formulario({
       titulo: "Ajustar saldo",
@@ -464,6 +552,36 @@
 
   document.getElementById("btn-registrar").addEventListener("click", () => registrar());
   document.getElementById("btn-agenda-novo").addEventListener("click", () => registrar({ soComData: true }));
+
+  // Filtros da agenda: a semana, o dia e o período.
+  document.getElementById("semana-anterior").innerHTML = UI.icone("esquerda");
+  document.getElementById("semana-seguinte").innerHTML = UI.icone("direita");
+  document.getElementById("semana-dias").addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-dia]");
+    if (!b) return;
+    diaSelecionado = diaSelecionado === b.dataset.dia ? "" : b.dataset.dia;
+    renderSemana();
+    renderAgenda();
+    document.querySelector(`[data-dia="${b.dataset.dia}"]`)?.focus();
+  });
+  const moverSemana = (dias) => {
+    inicioSemana = UI.isoMaisDias(inicioSemana, dias);
+    diaSelecionado = "";
+    periodo = "semana";
+    document.getElementById("agenda-periodo").value = "semana";
+    renderSemana();
+    renderAgenda();
+  };
+  document.getElementById("semana-anterior").addEventListener("click", () => moverSemana(-7));
+  document.getElementById("semana-seguinte").addEventListener("click", () => moverSemana(7));
+  document.getElementById("agenda-hoje").addEventListener("click", () => {
+    inicioSemana = UI.chaveSemana(UI.hojeISO());
+    diaSelecionado = UI.hojeISO();
+    renderSemana();
+    renderAgenda();
+  });
+  document.getElementById("agenda-periodo").addEventListener("change", (ev) => mudarPeriodo(ev.target.value));
+  document.getElementById("btn-organizar-abas").addEventListener("click", () => UI.abrirPerfil("painel"));
   document.getElementById("btn-lancamento").addEventListener("click", novoLancamento);
   document.getElementById("btn-saldo").addEventListener("click", ajustarSaldo);
   document.getElementById("notas-mais").addEventListener("click", () => { notasTodas = !notasTodas; renderNotasHome(); });
@@ -471,5 +589,8 @@
   novaAbaHome.addEventListener("click", () => UI.novaAba());
   UI.prepararCriador(novaAbaHome);
 
+  // O que muda por fora (ordem e ocultação das abas no perfil, outra aba do
+  // navegador, a sincronização) também refaz a página.
+  Store.aoMudar(render);
   render();
 })();

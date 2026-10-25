@@ -239,6 +239,8 @@
     const el = document.createElement("div");
     el.className = `editor-menu ${classe}`;
     el.innerHTML = html;
+    el.setAttribute("role", "dialog");
+    el.setAttribute("aria-label", botao.getAttribute("aria-label") || botao.title || "Opções");
     document.body.appendChild(el);
     const r = botao.getBoundingClientRect();
     const larg = el.offsetWidth;
@@ -246,12 +248,14 @@
     el.style.top = `${r.bottom + scrollY + 6}px`;
     botao.setAttribute("aria-expanded", "true");
     menuAberto = { el, botao };
-    el.addEventListener("mousedown", (ev) => {
+    const escolher = (ev) => {
       const item = ev.target.closest("[data-valor]");
       if (!item || item.tagName === "INPUT") return;
       ev.preventDefault();
       aoEscolher(item.dataset.valor, item);
-    });
+    };
+    el.addEventListener("mousedown", escolher);
+    el.addEventListener("click", (ev) => { if (ev.detail === 0) escolher(ev); });
     return el;
   }
   document.addEventListener("mousedown", (ev) => {
@@ -260,7 +264,17 @@
 
   const item = (valor, rotulo, extra = "") => `<button type="button" class="editor-menu-item" data-valor="${fmt.escape(valor)}">${extra}${fmt.escape(rotulo)}</button>`;
 
+  const SIMBOLOS = [
+    ["Mais usados", [["°", "Grau"], ["º", "Ordinal masculino"], ["ª", "Ordinal feminino"], ["±", "Mais ou menos"], ["×", "Multiplicação"], ["÷", "Divisão"], ["µ", "Micro"], ["%", "Porcentagem"], ["‰", "Por mil"], ["℃", "Grau Celsius"]]],
+    ["Setas", [["←", "Seta à esquerda"], ["↑", "Seta para cima"], ["→", "Seta à direita"], ["↓", "Seta para baixo"], ["↔", "Seta nos dois sentidos"], ["↗", "Seta diagonal"], ["⇒", "Implica"], ["⇔", "Equivalência"]]],
+    ["Matemática", [["≤", "Menor ou igual"], ["≥", "Maior ou igual"], ["≠", "Diferente"], ["≈", "Aproximadamente"], ["∞", "Infinito"], ["√", "Raiz quadrada"], ["∑", "Somatório"], ["∆", "Variação"]]],
+    ["Letras gregas", [["α", "Alfa"], ["β", "Beta"], ["γ", "Gama"], ["δ", "Delta"], ["λ", "Lambda"], ["π", "Pi"], ["σ", "Sigma"], ["Ω", "Ômega"]]],
+  ];
   const MENUS = {
+    simbolos(b) {
+      abrirMenu(b, `<div class="simbolos-cabeca">Inserir símbolo</div>${SIMBOLOS.map(([titulo, itens]) => `<section><h3>${fmt.escape(titulo)}</h3><div class="simbolos-grade">${itens.map(([simbolo, nome]) => `<button type="button" data-valor="${fmt.escape(simbolo)}" aria-label="${fmt.escape(nome)}" title="${fmt.escape(nome)}">${fmt.escape(simbolo)}</button>`).join("")}</div></section>`).join("")}`,
+        (simbolo) => { restaurar(); document.execCommand("insertText", false, simbolo); marcarSujo(); fecharMenu(); }, "menu-simbolos");
+    },
     cor(b) {
       abrirMenu(b, `<div class="menu-titulo">Cor do texto</div><div class="paleta">${CORES_TEXTO.map(([c, r]) =>
         `<button type="button" class="amostra ${c ? "" : "vazia"}" data-valor="${c}" title="${r}" aria-label="${r}" style="${c ? `--c:${c}` : ""}"></button>`).join("")}</div>`,
@@ -324,7 +338,13 @@
     },
   };
   document.querySelectorAll("[data-menu]").forEach((b) => {
+    b.setAttribute("aria-haspopup", "dialog");
     b.addEventListener("mousedown", (ev) => { ev.preventDefault(); MENUS[b.dataset.menu]?.(b); });
+    b.addEventListener("click", (ev) => {
+      if (ev.detail !== 0) return;
+      MENUS[b.dataset.menu]?.(b);
+      menuAberto?.el.querySelector("button, input")?.focus();
+    });
   });
 
   /* ------------------------------ Blocos próprios ------------------------------ */
@@ -788,58 +808,68 @@
   let sujo = false;
   let salvando = null;
   let sumarioPendente = null;
+  let gravando = false;
+  let compondo = false;
+  let descartando = false;
+  let conflito = false;
+  let ultimaVersao = "";
+  let ultimaTentativa = "";
+  const btnRepetir = document.getElementById("btn-repetir-salvamento");
+  const assinaturaResumo = (r) => r ? JSON.stringify([r.titulo || "", r.conteudo || "", r.folha || null]) : "";
 
-  function contarPalavras() {
-    const texto = corpo.innerText.trim();
-    const n = texto ? texto.split(/\s+/).length : 0;
-    const chars = texto.replace(/\s/g, "").length;
-    const min = Math.max(1, Math.round(n / 200));
-    document.getElementById("contagem").textContent = n
-      ? `${n} ${n === 1 ? "palavra" : "palavras"}, ${chars.toLocaleString("pt-BR")} caracteres, cerca de ${min} min de leitura`
-      : "0 palavras";
+  function estadoSalvamento(texto, classe = "", acao = "") {
+    if (elEstado.textContent !== texto) elEstado.textContent = texto;
+    elEstado.className = `editor-estado ${classe}`.trim();
+    elEstado.title = classe ? texto : "Salvo neste navegador. A sincronização da conta acontece em segundo plano quando disponível.";
+    btnRepetir.hidden = !acao;
+    btnRepetir.textContent = acao || "Tentar novamente";
   }
 
   function marcarSujo() {
     sujo = true;
-    elEstado.textContent = "alterações não salvas";
-    elEstado.className = "editor-estado sujo";
-    contarPalavras();
+    estadoSalvamento(conflito ? "Há outra versão" : "Salvando…", conflito ? "erro" : "sujo", conflito ? "Revisar" : "");
     clearTimeout(salvando);
-    salvando = setTimeout(salvar, 2500); // salva sozinho depois da pausa
+    if (!compondo && !conflito) salvando = setTimeout(() => salvar(), 700);
     clearTimeout(sumarioPendente);
     sumarioPendente = setTimeout(desenharSumario, 400);
   }
 
   function marcarSalvo() {
     sujo = false;
-    elEstado.textContent = "salvo";
-    elEstado.className = "editor-estado";
+    conflito = false;
+    ultimaVersao = assinaturaResumo(resumoAtual());
+    ultimaTentativa = "";
+    estadoSalvamento("Salvo");
+  }
+
+  function guardarEndereco() {
+    if (!resumoId) return;
+    history.replaceState(null, "", `resumo.html?disciplina=${encodeURIComponent(disciplinaId)}&id=${encodeURIComponent(resumoId)}`);
+    document.getElementById("btn-excluir").hidden = false;
   }
 
   function salvar({ avisar = false } = {}) {
     clearTimeout(salvando);
+    if (descartando || compondo || !sujo) return !sujo;
+    if (conflito) return false;
     const titulo = campoTitulo.value.trim();
     corpo.querySelectorAll("img.selecionada").forEach((x) => x.classList.remove("selecionada"));
     const conteudo = UI.htmlSeguro(corpo.innerHTML);
     if (imgSel) imgSel.classList.add("selecionada");
+    const anterior = resumoAtual();
 
-    // Resumo em branco não vira registro: sair sem escrever nada não deixa
-    // uma linha vazia na disciplina. Uma imagem sozinha, sem texto, já conta
-    // como conteúdo.
-    if (!titulo && !corpo.innerText.trim() && !corpo.querySelector("img")) {
-      if (avisar) UI.toast("Escreva um título ou um texto antes de salvar.");
+    // Não cria resumos vazios; apagar todo o conteúdo de um resumo existente é salvo.
+    if (!resumoId && !titulo && !corpo.innerText.trim() && !corpo.querySelector("img,table,hr")) {
+      sujo = false;
+      estadoSalvamento("Salvamento automático");
+      return true;
+    }
+    const atual = assinaturaResumo(anterior);
+    if (atual !== ultimaVersao && atual !== ultimaTentativa) {
+      conflito = true;
+      estadoSalvamento("Há outra versão", "erro", "Revisar");
       return false;
     }
-
-    // Imagem apagada do texto (backspace, selecionar e excluir) some daqui
-    // também — senão o arquivo fica esquecido no IndexedDB para sempre.
-    const anterior = resumoAtual();
-    if (anterior) {
-      const antes = new Set(idsImagensEm(anterior.conteudo));
-      const depois = new Set(idsImagensEm(conteudo));
-      antes.forEach((id) => { if (!depois.has(id)) Arquivos.remover(id); });
-    }
-
     const dados = {
       titulo: titulo || "Sem título",
       conteudo,
@@ -847,22 +877,85 @@
       folha: { ...folhaEscolhida },
       atualizadoEm: UI.hojeISO(),
     };
-
-    if (resumoId && resumoAtual()) {
-      Store.subAtualizar(CAMINHO, disciplinaId, "resumos", resumoId, dados);
-    } else {
-      const novo = Store.subInserir(CAMINHO, disciplinaId, "resumos", { ...dados, anexos: [] });
-      resumoId = novo.id;
-      // A URL passa a apontar para o resumo criado, então recarregar ou
-      // salvar de novo mexe nele em vez de criar outro.
-      history.replaceState(null, "", `resumo.html?disciplina=${encodeURIComponent(disciplinaId)}&id=${encodeURIComponent(resumoId)}`);
-      document.getElementById("btn-excluir").hidden = false;
-    }
-
-    marcarSalvo();
-    if (avisar) UI.toast("Resumo salvo.");
-    return true;
+    const imagensAnteriores = idsImagensEm(anterior?.conteudo);
+    ultimaTentativa = assinaturaResumo(dados);
+    // O ID existe antes da tentativa. Se a gravação falhar depois de mudar a
+    // memória do Store, tentar de novo atualiza o mesmo registro, sem duplicar.
+    if (!resumoId) resumoId = Store.uid("re");
+    gravando = true;
+    try {
+      if (anterior) {
+        const atualizado = Store.subAtualizar(CAMINHO, disciplinaId, "resumos", resumoId, dados);
+        if (!atualizado) throw new Error("A disciplina não está mais disponível.");
+      }
+      else {
+        const novo = Store.subInserir(CAMINHO, disciplinaId, "resumos", { id: resumoId, ...dados, anexos: [] });
+        if (!novo) throw new Error("A disciplina não está mais disponível.");
+      }
+      guardarEndereco();
+      marcarSalvo();
+      document.title = `${dados.titulo} · ${UI.NOME}`;
+      // Só remove os anexos antigos depois de a gravação do texto ter sucesso.
+      if (anterior) {
+        const depois = new Set(idsImagensEm(conteudo));
+        imagensAnteriores.forEach((id) => { if (!depois.has(id)) Arquivos.remover(id).catch(() => {}); });
+      }
+      if (avisar) UI.toast("Resumo salvo.");
+      return true;
+    } catch (err) {
+      estadoSalvamento("Não foi possível salvar", "erro", "Tentar novamente");
+      elEstado.title = err.message;
+      return false;
+    } finally { gravando = false; }
   }
+
+  btnRepetir.addEventListener("click", async () => {
+    if (!conflito) { salvar(); return; }
+    const copiar = await UI.confirmar({
+      titulo: "Seu resumo mudou em outro lugar",
+      descricao: "O texto que você está escrevendo continua aqui. Guarde-o como uma cópia para preservar também a versão que chegou de outro lugar.",
+      rotuloConfirmar: "Guardar minha cópia",
+    });
+    if (!copiar) return;
+    resumoId = "";
+    ultimaVersao = "";
+    ultimaTentativa = "";
+    conflito = false;
+    sujo = true;
+    salvar();
+  });
+
+  Store.aoMudar(() => {
+    if (gravando || descartando) return;
+    const atual = resumoAtual();
+    if (assinaturaResumo(atual) === ultimaVersao) return;
+    if (sujo) {
+      if (assinaturaResumo(atual) === ultimaTentativa) return;
+      conflito = true;
+      clearTimeout(salvando);
+      estadoSalvamento("Há outra versão", "erro", "Revisar");
+    } else if (atual) {
+      campoTitulo.value = atual.titulo || "";
+      corpo.innerHTML = UI.htmlSeguro(atual.conteudo || "");
+      folhaEscolhida = { ...FOLHA_PADRAO, ...(atual.folha || {}) };
+      aplicarFolha();
+      UI.resolverImagens(corpo);
+      marcarSalvo();
+      desenharSumario();
+    } else if (resumoId) {
+      conflito = true;
+      sujo = true;
+      estadoSalvamento("Resumo removido em outro lugar", "erro", "Revisar");
+    }
+  });
+  window.addEventListener("delfos:salvo", () => {
+    if (gravando || !sujo || !ultimaTentativa) return;
+    const bufferAtual = assinaturaResumo({ titulo: campoTitulo.value.trim() || "Sem título", conteudo: UI.htmlSeguro(corpo.innerHTML), folha: folhaEscolhida });
+    if (assinaturaResumo(resumoAtual()) === ultimaTentativa && bufferAtual === ultimaTentativa) {
+      guardarEndereco();
+      marcarSalvo();
+    }
+  });
 
   async function excluir() {
     if (!resumoId || !resumoAtual()) return (location.href = voltarHref);
@@ -873,10 +966,22 @@
       perigo: true,
     });
     if (!ok) return;
+    descartando = true;
+    clearTimeout(salvando);
     const atualR = resumoAtual();
     const anexos = atualR?.anexos || [];
     const imagens = idsImagensEm(atualR?.conteudo);
-    Store.subRemover(CAMINHO, disciplinaId, "resumos", resumoId);
+    const lista = Store.achar(CAMINHO, disciplinaId)?.resumos || [];
+    const indice = lista.findIndex((r) => r.id === resumoId);
+    try { Store.subRemover(CAMINHO, disciplinaId, "resumos", resumoId); }
+    catch {
+      // O Store já pode ter mudado a memória quando a persistência falha.
+      const disciplinaAtual = Store.achar(CAMINHO, disciplinaId);
+      if (disciplinaAtual && atualR && !resumoAtual()) disciplinaAtual.resumos.splice(Math.max(0, indice), 0, atualR);
+      descartando = false;
+      UI.toast("Não foi possível excluir. Tente novamente quando o armazenamento estiver disponível.");
+      return;
+    }
     anexos.forEach((a) => Arquivos.remover(a.id));
     imagens.forEach((id) => Arquivos.remover(id));
     sujo = false;
@@ -885,23 +990,23 @@
 
   /* -------------------------------- Ligações -------------------------------- */
 
-  document.querySelectorAll("[data-cmd]").forEach((b) => {
-    // mousedown em vez de click: o clique tiraria o cursor do texto antes de
-    // o comando rodar, e a formatação se perderia.
-    b.addEventListener("mousedown", (ev) => { ev.preventDefault(); comando(b.dataset.cmd); });
-  });
+  const ativarComSelecao = (botao, acao) => {
+    // O mouse preserva a seleção; Enter/Espaço também acionam o controle.
+    botao.addEventListener("mousedown", (ev) => { ev.preventDefault(); acao(); });
+    botao.addEventListener("click", (ev) => { if (ev.detail === 0) acao(); });
+  };
+  document.querySelectorAll("[data-cmd]").forEach((b) => ativarComSelecao(b, () => comando(b.dataset.cmd)));
 
   selBloco.addEventListener("change", () => { restaurar(); document.execCommand("formatBlock", false, `<${selBloco.value}>`); marcarSujo(); atualizarBotoes(); });
   selFonte.addEventListener("change", () => aplicarFonte(selFonte.value));
   selTamanho.addEventListener("change", () => aplicarTamanho(Number(selTamanho.value)));
-  document.getElementById("btn-limpar").addEventListener("mousedown", (ev) => {
-    ev.preventDefault();
-    comando("removeFormat");
-  });
-  document.getElementById("btn-checklist").addEventListener("mousedown", (ev) => { ev.preventDefault(); alternarChecklist(); });
-  document.getElementById("btn-link").addEventListener("mousedown", (ev) => { ev.preventDefault(); abrirLink(); });
+  ativarComSelecao(document.getElementById("btn-limpar"), () => comando("removeFormat"));
+  ativarComSelecao(document.getElementById("btn-checklist"), alternarChecklist);
+  ativarComSelecao(document.getElementById("btn-link"), abrirLink);
 
   corpo.addEventListener("input", marcarSujo);
+  corpo.addEventListener("compositionstart", () => { compondo = true; clearTimeout(salvando); });
+  corpo.addEventListener("compositionend", () => { compondo = false; marcarSujo(); });
   campoTitulo.addEventListener("input", marcarSujo);
   campoTitulo.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); corpo.focus(); } });
 
@@ -968,7 +1073,6 @@
     if (arquivo) inserirImagem(arquivo);
   });
 
-  document.getElementById("btn-salvar").addEventListener("click", () => salvar({ avisar: true }));
   document.getElementById("btn-excluir").addEventListener("click", excluir);
 
   document.addEventListener("keydown", (ev) => {
@@ -992,6 +1096,12 @@
     }
   });
 
+  document.getElementById("voltar").addEventListener("click", (ev) => {
+    if (sujo && !salvar()) { ev.preventDefault(); btnRepetir.focus(); }
+  });
+  window.addEventListener("blur", () => { if (sujo) salvar(); });
+  window.addEventListener("pagehide", () => { if (sujo) salvar(); });
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && sujo) salvar(); });
   window.addEventListener("beforeunload", (ev) => {
     if (!sujo) return;
     salvar();
@@ -1011,12 +1121,21 @@
   } else {
     resumoId = "";
     document.getElementById("btn-excluir").hidden = true;
-    elEstado.textContent = "resumo novo";
+    estadoSalvamento("Salvamento automático");
     campoTitulo.focus();
   }
   aplicarFolha();
   try { if (localStorage.getItem("delfos.editor.sumario") === "1") alternarSumario(true); } catch { /* nada */ }
 
-  contarPalavras();
   atualizarBotoes();
+  const medirBarras = () => {
+    document.documentElement.style.setProperty("--editor-topo-altura", `${document.querySelector(".editor-topo").offsetHeight}px`);
+    document.documentElement.style.setProperty("--editor-barra-altura", `${document.querySelector(".editor-barra").offsetHeight}px`);
+  };
+  if (typeof ResizeObserver === "function") {
+    const medidas = new ResizeObserver(medirBarras);
+    medidas.observe(document.querySelector(".editor-topo"));
+    medidas.observe(document.querySelector(".editor-barra"));
+  }
+  medirBarras();
 })();

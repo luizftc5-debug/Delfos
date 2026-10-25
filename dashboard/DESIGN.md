@@ -1,4 +1,4 @@
-# Design System: Delfos 2.2, "marfim" em gavetas
+# Design System: Delfos 2.3, "marfim" em gavetas
 
 Delfos é o nome de um oráculo, e o painel faz o que um oráculo faz: lê a
 situação e diz o que ela é. Desde a 1.7, **em toda página, a leitura é o
@@ -372,3 +372,50 @@ controle 10, miúdo 6, pílula só para escolha (chips, segmentos, interruptor).
 - Leitura que repete a faixa de números logo abaixo, ou de mais de uma
   frase; resumo de gaveta aberta repetindo o conteúdo dela.
 - Negrito falso na voz: o destaque da Gloock é pela cor.
+
+## 8. Trabalho paralelo do Codex (PRs 19 e 20), integrado na 2.3
+
+Em 25/10/2026, enquanto a 2.2 era feita, o Codex redesenhou o painel a partir
+da 1.8 e os PRs 19 e 20 entraram numa branch que não era a `main` (a branch
+padrão do repositório no GitHub). A 2.3 une os dois trabalhos. A regra da
+união: **toda função do Codex entra; a aparência da 2.2 fica**, porque o que
+ele mudou nas páginas era só a ordem e a moldura das seções (nenhum id, campo
+ou comportamento novo), o que a estrutura de gavetas já resolve.
+
+**Entrou (função):**
+
+- Visão geral: filtros da agenda por semana, dia e período (7 ou 30 dias),
+  dentro da gaveta Agenda; "+ Compromisso" com a aba escolhida no formulário;
+  "Organizar" em "Suas abas", que respeita a ordem e as abas ocultas.
+- Barra do celular estável: as quatro primeiras abas não mudam de lugar; se a
+  aba aberta está fora delas, quem se acende é o "Mais".
+- Organizar abas no perfil: reordenar e ocultar também as abas criadas
+  (`oculta`); ocultar nunca apaga nada.
+- Criador de abas: modelos de partida (Trabalho, Saúde, Academia, Esporte,
+  Religião, Leituras) e o modelo "rotina profissional" no Delfos.
+- Editor: salvamento automático, status centralizado, barra em grupos, folha
+  delimitada, seletor de símbolos, rodapé só com a marca e a frase
+  (`editor.css`, `interface.css` na página do editor).
+- Segurança e falha: validação do estado antes de gravar no servidor, links
+  só em http, https e mailto, aviso persistente quando o navegador não
+  consegue salvar, backup que não omite anexos, corpos de requisição e
+  download de anexos com limites.
+- Testes (`dashboard/test`, `backend/test/seguranca.test.mjs`) e o workflow
+  `.github/workflows/interface.yml`.
+
+**Ficou de fora (aparência que conflita com a 2.2), mas guardado:**
+
+- `areas.css` e as estruturas `area-*` do HTML: o layout em painéis com
+  `<details>`. Nenhuma página o carrega; fica no repositório.
+- A camada global de `interface.css` fora do editor: cores e linhas
+  reescritas, leitura pequena em Funnel Sans, item ativo da barra em marfim
+  cheio, ícones da barra sem selo, luz do ponteiro desligada.
+- Os nomes "área" e "Áreas da vida": o painel continua dizendo "aba".
+
+**Referências do Codex para o editor e a navegação:**
+[hierarquia visual](https://www.nngroup.com/articles/visual-hierarchy-ux-definition/),
+[agrupamento por região](https://www.nngroup.com/articles/common-region/),
+[exibição gradual](https://www.nngroup.com/articles/progressive-disclosure/),
+[ícones com rótulos](https://www.nngroup.com/articles/icon-usability/),
+[barras de ferramentas](https://developer.apple.com/design/human-interface-guidelines/toolbars)
+e [mensagens de status acessíveis](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html).

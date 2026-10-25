@@ -9,6 +9,42 @@ publicado (gratuito, na Cloudflare), o painel passa a exigir **conta** — cada 
 e senha, vê só os próprios dados e os encontra iguais no celular e no computador, com anexos e
 versões anteriores guardados no servidor.
 
+### Novidades da versão 2.3
+
+- **Agenda com filtros** (visão geral): uma faixa com os sete dias da semana, cada um com quantos
+  compromissos tem. Toque num dia para ver só ele; use as setas para trocar de semana, **Hoje** para
+  voltar, e o seletor para ver os próximos 7 dias, os próximos 30 ou a semana exibida.
+- **+ Compromisso** abre o formulário ali mesmo: você escolhe em qual aba guardar (Pessoal, Faculdade
+  ou uma aba sua), a data já vem do dia que você escolheu, e há horário.
+- **Organizar abas**: na barra lateral, no "Mais" do celular e em "Suas abas". Permite mudar a ordem e
+  **ocultar** qualquer aba, inclusive as que você criou. Ocultar não apaga nada, e os compromissos
+  continuam na agenda. No celular, as quatro primeiras abas ficam sempre no mesmo lugar.
+- **Nova aba** oferece pontos de partida (Trabalho, Saúde, Academia, Esporte, Religião, Leituras ou
+  uma aba livre). Trabalho é uma rotina profissional, separada de Projetos.
+- **O editor de resumos salva sozinho** enquanto você escreve (não há botão Salvar), mostra "Salvo"
+  no centro, tem um seletor de símbolos (grau, setas, matemática, letras gregas) e, se chegar uma
+  alteração de outro aparelho, oferece guardar a sua versão como cópia.
+- **Se o navegador não conseguir salvar** (espaço cheio ou bloqueado), um aviso fica na tela com
+  "Tentar salvar" e "Exportar backup". O backup nunca sai sem os anexos sem avisar.
+- Links só abrem se forem http, https ou e-mail. O servidor recusa um estado que não seja JSON
+  válido e limita o tamanho do que lê.
+
+Testes de persistência e backup:
+
+```bash
+node --test dashboard/test/*.test.cjs
+cd backend && npm test
+```
+
+Regressões do editor em navegador, incluindo recarga, recuperação de falha, símbolos e
+responsividade (também executadas pelo workflow Interface):
+
+```bash
+python -m pip install -r dashboard/test/requirements.txt
+python -m playwright install chromium
+python dashboard/test/editor.browser.py
+```
+
 ## Como abrir
 
 **Online (recomendado):** <https://luizftc5-debug.github.io/Delfos/dashboard>

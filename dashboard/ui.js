@@ -6,7 +6,7 @@
 const UI = (() => {
   /** Nome e versão do painel — aparecem na marca do alto da barra lateral. */
   const NOME = "Delfos";
-  const VERSAO = "2.2";
+  const VERSAO = "2.3";
 
   /* -------------------------------- Ícones -------------------------------- */
 
@@ -346,7 +346,10 @@ const UI = (() => {
 
   function linkSeguro(href) {
     const v = String(href || "").trim();
-    return /^(https?:|mailto:)/i.test(v) ? v : "";
+    try {
+      const url = new URL(v);
+      return ["https:", "http:", "mailto:"].includes(url.protocol) ? url.href : "";
+    } catch { return ""; }
   }
 
   // "src" fica de fora de propósito: uma imagem inserida no editor vira
@@ -603,7 +606,7 @@ const UI = (() => {
     const fixas = Personalizacao.abasFixas()
       .filter((a) => a.ativo)
       .map((a) => ({ ...PAGINAS.find((p) => p.id === a.id), rotulo: a.rotulo }));
-    const criadas = (Store.estado().pilares || []).map((p) => ({
+    const criadas = (Store.estado().pilares || []).filter((p) => !p.oculta).map((p) => ({
       id: `pilar:${p.id}`,
       rotulo: p.nome,
       href: `pilar.html?id=${encodeURIComponent(p.id)}`,
@@ -728,12 +731,12 @@ const UI = (() => {
       : Personalizacao.ocupacaoResumo() || "Perfil e ajustes";
 
     // No celular, a navegação vira uma barra de abas embaixo, ao alcance do
-    // polegar: as quatro primeiras abas e "Mais". A aba aberta sempre aparece
-    // nela, mesmo que esteja mais para o fim da lista.
+    // polegar: as quatro primeiras abas e "Mais". Os atalhos não mudam de
+    // lugar conforme a página (desde a 2.3): quando a aba aberta está fora das
+    // quatro, quem se acende é o "Mais".
     const todas = paginas();
     const naBarra = todas.slice(0, 4);
-    const aberta = todas.find((p) => p.id === grupoAtivo);
-    if (aberta && !naBarra.includes(aberta)) naBarra[3] = aberta;
+    const emMais = !naBarra.some((p) => p.id === grupoAtivo);
     const abaDaBarra = (p) => {
       const ativa = p.id === grupoAtivo;
       return `<a class="tab ${ativa ? "ativa" : ""}" href="${p.href}"${ativa ? ' aria-current="page"' : ""}>
@@ -748,6 +751,7 @@ const UI = (() => {
       </a>
       <nav class="nav" aria-label="Abas do painel">${itens}</nav>
       <button class="nav-nova" id="btn-nova-aba" type="button">${icone("mais")}Nova aba</button>
+      <button class="btn ghost sm nav-organizar" id="btn-organizar" type="button">Organizar abas</button>
       <div class="sidebar-foot">
         <button class="brand" id="btn-perfil" type="button" title="Perfil, tema, abas e conta" aria-label="Perfil e ajustes de ${fmt.escape(perfil.nome || "você")}">
           ${avatarHTML(perfil)}
@@ -760,7 +764,7 @@ const UI = (() => {
       </div>
       <div class="tabbar">
         ${naBarra.map(abaDaBarra).join("")}
-        <button class="tab" id="btn-mais-abas" type="button" aria-haspopup="dialog">
+        <button class="tab ${emMais ? "ativa" : ""}" id="btn-mais-abas" type="button" aria-haspopup="dialog">
           <span class="tab-ic">${icone("menu")}</span><span class="tab-rotulo">Mais</span>
         </button>
       </div>`;
@@ -770,6 +774,7 @@ const UI = (() => {
     document.getElementById("btn-nova-aba").addEventListener("click", novaAba);
     prepararCriador(document.getElementById("btn-nova-aba"));
     document.getElementById("btn-mais-abas").addEventListener("click", () => abrirMaisAbas(grupoAtivo, c));
+    document.getElementById("btn-organizar").addEventListener("click", () => abrirPerfil("painel"));
 
     marcarCabeca();
   }
@@ -804,11 +809,13 @@ const UI = (() => {
         <nav class="nav" aria-label="Todas as abas">${paginas().map(linha).join("")}</nav>
         <div class="folha-acoes">
           <button class="btn" type="button" data-acao="nova">${icone("mais")}Nova aba</button>
+          <button class="btn" type="button" data-acao="organizar">Organizar abas</button>
           <button class="btn" type="button" data-acao="perfil">${avatarHTML(perfil, "brand-mark mini")}Perfil e ajustes</button>
         </div>
       </div>`, {
       classe: "folha-abas",
       aoMontar(modal, fechar) {
+        modal.querySelector('[data-acao="organizar"]').addEventListener("click", () => { fechar(null); abrirPerfil("painel"); });
         modal.querySelector('[data-acao="nova"]').addEventListener("click", () => { fechar(null); novaAba(); });
         modal.querySelector('[data-acao="perfil"]').addEventListener("click", () => { fechar(null); abrirPerfil(); });
       },
@@ -1121,11 +1128,15 @@ const UI = (() => {
     // Inclui as fixas desligadas (paginas() só traz as ligadas), na posição da ordem salva.
     const ligadas = paginas().slice(1);
     const desligadas = Object.values(fixas).filter((a) => !a.ativo).map((a) => ({ ...PAGINAS.find((x) => x.id === a.id), rotulo: a.rotulo }));
-    const lista = [...ligadas, ...desligadas];
+    const ocultas = Store.lista("pilares").filter((p) => p.oculta).map((p) => ({ id: `pilar:${p.id}`, rotulo: p.nome, href: `pilar.html?id=${encodeURIComponent(p.id)}`, corHex: p.cor, icone: p.icone }));
+    const ordem = experiencia().ordemAbas || [];
+    const pos = (pg) => ordem.includes(pg.id) ? ordem.indexOf(pg.id) : ordem.length;
+    const lista = [...ligadas, ...desligadas, ...ocultas].sort((a, b) => pos(a) - pos(b));
     return lista.map((pg, i) => {
       const fixa = fixas[pg.id];
       const iconeHTML = seloAba(pg);
-      return `<li class="${fixa && !fixa.ativo ? "desligada" : ""}" data-aba-id="${fmt.escape(pg.id)}">
+      const pilar = fixa ? null : Store.achar("pilares", pg.id.slice(6));
+      return `<li class="${(fixa && !fixa.ativo) || pilar?.oculta ? "desligada" : ""}" data-aba-id="${fmt.escape(pg.id)}">
           <span class="ordem-setas">
             <button type="button" class="btn ghost sm icon" data-mover="-1" aria-label="Subir ${fmt.escape(pg.rotulo)}" ${i === 0 ? "disabled" : ""}>${icone("acima")}</button>
             <button type="button" class="btn ghost sm icon" data-mover="1" aria-label="Descer ${fmt.escape(pg.rotulo)}" ${i === lista.length - 1 ? "disabled" : ""}>${icone("abaixo")}</button>
@@ -1134,7 +1145,7 @@ const UI = (() => {
           ${fixa
             ? `<input type="text" class="aba-nome" data-nome-aba="${fixa.id}" value="${fmt.escape(fixa.rotulo)}" aria-label="Nome da aba ${fmt.escape(fixa.rotuloPadrao)}" ${fixa.ativo ? "" : "disabled"} />
                <input type="checkbox" class="switch" role="switch" data-toggle-aba="${fixa.id}" ${fixa.ativo ? "checked" : ""} aria-label="Mostrar a aba ${fmt.escape(fixa.rotuloPadrao)}" />`
-            : `<span class="aba-nome fixo">${fmt.escape(pg.rotulo)}</span><a class="btn ghost sm" href="${fmt.escape(pg.href)}">Abrir</a>`}
+            : `<span class="aba-nome fixo">${fmt.escape(pg.rotulo)}</span><a class="btn ghost sm" href="${fmt.escape(pg.href)}">Abrir</a><input type="checkbox" class="switch" role="switch" data-toggle-pilar="${fmt.escape(pilar.id)}" ${pilar.oculta ? "" : "checked"} aria-label="Mostrar a aba ${fmt.escape(pg.rotulo)}" />`}
         </li>`;
     }).join("");
   }
@@ -1268,7 +1279,7 @@ const UI = (() => {
 
         <div class="ajuste">
           <div class="ajuste-titulo">Abas e ordem</div>
-          <p class="ajuste-texto">Use as setas para mudar a ordem da barra. Desligar só tira a aba da barra; nada do que está nela é apagado. O nome das fixas dá para trocar aqui mesmo.</p>
+          <p class="ajuste-texto">Use as setas para mudar a ordem da barra. As quatro primeiras ficam como atalhos no celular. Desligar ou ocultar só tira a aba da barra; nada do que está nela é apagado, e os compromissos continuam na agenda. O nome das fixas dá para trocar aqui mesmo.</p>
           <ul class="abas-lista" data-abas>${linhasAbas()}</ul>
         </div>
 
@@ -1457,7 +1468,15 @@ const UI = (() => {
         });
 
         // Abas fixas: liga/desliga e renomeia na hora, sem precisar de "Salvar".
+        // Abas criadas: o mesmo interruptor só esconde (oculta), nada é apagado.
         modal.querySelector("[data-abas]").addEventListener("change", (ev) => {
+          const custom = ev.target.closest("[data-toggle-pilar]");
+          if (custom) {
+            Store.atualizar("pilares", custom.dataset.togglePilar, { oculta: !custom.checked });
+            custom.closest("li").classList.toggle("desligada", !custom.checked);
+            montarLayout(paginaAtiva, opcoesAtivas);
+            return;
+          }
           const chk = ev.target.closest("[data-toggle-aba]");
           if (!chk) return;
           const id = chk.dataset.toggleAba;
@@ -1822,9 +1841,9 @@ const UI = (() => {
     return quando ? `${txt}, ${quando}` : txt;
   }
 
-  function isoMaisDias(n) {
-    const d = new Date();
-    d.setDate(d.getDate() + n);
+  function isoMaisDias(baseOuDias, dias) {
+    const d = dias === undefined ? new Date() : new Date(`${baseOuDias}T12:00:00`);
+    d.setDate(d.getDate() + Number(dias === undefined ? baseOuDias : dias));
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
 
@@ -3407,12 +3426,40 @@ const UI = (() => {
     return new URLSearchParams(window.location.search).get(nome) || "";
   }
 
+  /**
+   * Falha ao gravar no navegador (cheio, bloqueado, modo anônimo): o Store
+   * avisa por evento em vez de seguir como se tivesse salvo. O aviso fica na
+   * tela até a gravação dar certo e oferece tentar de novo ou exportar um backup.
+   */
+  window.addEventListener("delfos:falha-ao-salvar", () => {
+    if (document.querySelector(".storage-aviso")) return;
+    const aviso = document.createElement("div");
+    aviso.className = "storage-aviso";
+    aviso.setAttribute("role", "alert");
+    const mensagem = document.createElement("span");
+    mensagem.textContent = "Há alterações sem salvar. Não feche o Delfos antes de tentar novamente ou exportar um backup.";
+    aviso.appendChild(mensagem);
+    const tentar = document.createElement("button");
+    tentar.className = "btn sm";
+    tentar.type = "button";
+    tentar.textContent = "Tentar salvar";
+    tentar.addEventListener("click", () => { try { Store.tentarSalvar(); toast("Alterações salvas."); } catch { toast("O navegador ainda não permite salvar. Exporte um backup."); } });
+    const backup = document.createElement("button");
+    backup.className = "btn sm";
+    backup.type = "button";
+    backup.textContent = "Exportar backup";
+    backup.addEventListener("click", abrirBackup);
+    aviso.append(tentar, backup);
+    document.body.appendChild(aviso);
+  });
+  window.addEventListener("delfos:salvo", () => document.querySelector(".storage-aviso")?.remove());
+
   return {
     NOME, VERSAO, logotipo, simbolo, aparelhoFraco, ICONES, ICONES_ABA, icone, iconeAba, iconeDuo, seloAba, movimento, aplicarAparencia, experiencia, abrirAtalhos, realcarBotoes,
     REPETICOES, somarPeriodo, ocorrenciasEntre, lembretesAgora, abrirResumoDoDia, textoQuando,
     lerDinheiro, avaliarDinheiro, formatarDinheiroCampo, dataPorExtensoCurta, isoMaisDias, marcaDaPagina,
-    fmt, htmlSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
-    compromissos, conflitos, contagens, mediaDisciplina, notaNecessaria, proximaAvaliacao, resumoProjeto,
+    fmt, htmlSeguro, linkSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,
+    paginas, compromissos, conflitos, contagens, mediaDisciplina, notaNecessaria, proximaAvaliacao, resumoProjeto,
     iniciarPagina, montarLayout, tema, toast, formulario, confirmar, abrirModal,
     abrirBackup, abrirPerfil, avatarHTML, iniciais, vazio, barras, colunasMensais, medidor,
     novaAba, abrirCriadorDeAbas, prepararCriador, carregarScript, camposPilar, redimensionarFoto, camposItemPilar, editorCampos,

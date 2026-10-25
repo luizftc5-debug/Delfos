@@ -230,8 +230,8 @@
     lista.forEach((m) => {
       const li = document.createElement("li");
       const anexos = m.anexos || [];
-      const titulo = m.url
-        ? `<a class="title" href="${fmt.escape(m.url)}" target="_blank" rel="noopener">${fmt.escape(m.titulo)}</a>`
+      const titulo = UI.linkSeguro(m.url)
+        ? `<a class="title" href="${fmt.escape(UI.linkSeguro(m.url))}" target="_blank" rel="noopener noreferrer">${fmt.escape(m.titulo)}</a>`
         : `<span class="title">${fmt.escape(m.titulo)}</span>`;
 
       const tipo = String(m.tipo || "link").toLowerCase();

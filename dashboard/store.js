@@ -447,21 +447,18 @@ const Store = (() => {
 
   function carregar() {
     if (estado) return estado;
+    let salvo = null;
     try {
       const bruto = localStorage.getItem(KEY);
-      if (bruto) {
-        const salvo = JSON.parse(bruto);
-        estado = normalizar(salvo);
-        // Grava já o formato convertido, para o que está no navegador não
-        // ficar preso a uma versão antiga esperando a próxima edição.
-        if (salvo.versao !== estado.versao) persistir();
-        return estado;
-      }
+      if (bruto) salvo = JSON.parse(bruto);
     } catch (e) {
-      console.warn("Estado salvo ilegível; recomeçando a partir do seed.", e);
+      console.warn("Não foi possível ler o estado do navegador.", e);
     }
-    estado = migrarLegado(apartirDoSeed());
-    persistir();
+    estado = salvo ? normalizar(salvo) : migrarLegado(apartirDoSeed());
+    // Falha de gravação não deve descartar o estado que acabou de ser lido.
+    if (!salvo || salvo.versao !== estado.versao) {
+      try { persistir(); } catch { /* O aviso persistente permite tentar de novo ou exportar. */ }
+    }
     return estado;
   }
 
@@ -642,9 +639,10 @@ const Store = (() => {
       localStorage.setItem(KEY, JSON.stringify(estado));
     } catch (e) {
       console.error("Falha ao salvar no navegador.", e);
-      alert("Não foi possível salvar. O armazenamento do navegador pode estar cheio ou bloqueado (modo anônimo).");
-      return;
+      window.dispatchEvent(new CustomEvent("delfos:falha-ao-salvar"));
+      throw new Error("A alteração ainda não foi salva. Libere espaço ou exporte um backup antes de fechar o Delfos.", { cause: e });
     }
+    window.dispatchEvent(new CustomEvent("delfos:salvo"));
     ouvintes.forEach((fn) => fn(estado));
   }
 
@@ -676,6 +674,7 @@ const Store = (() => {
     textoParaHTML,
 
     estado: () => carregar(),
+    tentarSalvar: () => persistir(),
     aoMudar(fn) { ouvintes.push(fn); },
 
     lista(caminho) { return colecao(caminho); },
@@ -802,7 +801,7 @@ const Store = (() => {
       const pacote = { ...carregar() };
       if (typeof Arquivos !== "undefined" && Arquivos.disponivel) {
         try { pacote.arquivos = await Arquivos.exportarTodos(); }
-        catch (e) { console.warn("Backup sem os anexos: não foi possível lê-los.", e); }
+        catch (e) { throw new Error("Não foi possível incluir os anexos. Tente novamente para gerar um backup completo.", { cause: e }); }
       }
       return JSON.stringify(pacote, null, 2);
     },

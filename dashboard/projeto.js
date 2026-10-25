@@ -178,7 +178,7 @@
       <dl class="ficha">
         ${linhas.map(([k, v]) => `<div><dt>${fmt.escape(k)}</dt><dd>${fmt.escape(v)}</dd></div>`).join("")}
       </dl>
-      ${projeto.link ? `<a class="btn sm" href="${fmt.escape(projeto.link)}" target="_blank" rel="noopener" style="margin-top:12px;">Abrir o link do projeto</a>` : ""}`;
+      ${UI.linkSeguro(projeto.link) ? `<a class="btn sm" href="${fmt.escape(UI.linkSeguro(projeto.link))}" target="_blank" rel="noopener noreferrer" style="margin-top:12px;">Abrir o link do projeto</a>` : ""}`;
   }
 
   /* ---------------------- Recebimentos e custos (dinheiro) ------------------- */

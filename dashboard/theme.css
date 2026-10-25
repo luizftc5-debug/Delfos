@@ -2824,7 +2824,7 @@ body.entrando .main .wrap > .leitura { animation: chegar 620ms var(--ease-saida)
     overflow: visible;
   }
   .marca-topo { padding: 4px 0; }
-  .marca-versao, .sidebar .nav, .sidebar .nav-nova { display: none; }
+  .marca-versao, .sidebar .nav, .sidebar .nav-nova, .sidebar .nav-organizar { display: none; }
   .sidebar-foot { margin: 0 0 0 auto; padding: 0; flex-shrink: 0; }
   .brand { padding: 4px; width: auto; border-radius: 14px; }
   .brand-text, .brand-caret { display: none; }
@@ -3958,3 +3958,66 @@ span.info.bem { color: var(--success-text); }
 }
 /* Barras dentro de um compartimento (os resumos de campo de uma aba): soltas, sem outro compartimento em volta. */
 .gaveta .card .cat-linha, .gaveta .card .chart-row { background: none; padding: 6px 0; border-radius: 0; }
+
+/* ---- Integração das áreas e do editor (2.3) ----
+   Peças que vieram do trabalho paralelo do Codex (PRs 19 e 20), desenhadas
+   no idioma das gavetas: filtros da agenda, aviso de falha ao salvar,
+   modelos do criador de abas e o botão de organizar. A camada geral de
+   aparência dele (interface.css) só vale na página do editor. */
+
+/* Agenda: período, semana exibida e o dia, dentro da gaveta. */
+.agenda-filtros { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; margin-bottom: 12px; }
+.agenda-semana { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.agenda-semana .btn.icon { width: 32px; padding: 0; }
+.agenda-semana-rotulo { min-width: 120px; text-align: center; font-size: 13.5px; color: var(--texto-2); font-variant-numeric: tabular-nums; }
+.agenda-filtros select.input { width: auto; max-width: 100%; font-size: 13px; }
+.semana-dias { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin-bottom: 20px; }
+.semana-dia {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  min-height: 70px; padding: 10px 2px 8px; margin: 0;
+  font: inherit; color: var(--texto-2);
+  background: var(--fundo-item); border: 0; border-radius: 12px; cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color var(--t-rapido) var(--ease-saida), color var(--t-rapido) var(--ease-saida);
+}
+.semana-dia span { font-size: 12px; font-weight: 550; }
+.semana-dia b { font-family: var(--font-voz); font-size: 21px; font-weight: 400; line-height: 1; font-variant-numeric: tabular-nums; color: var(--texto); }
+.semana-dia small { font-size: 11px; line-height: 1; min-height: 11px; color: var(--texto-3); font-variant-numeric: tabular-nums; }
+.semana-dia.hoje { box-shadow: inset 0 0 0 1px var(--linha-forte); }
+.semana-dia[aria-pressed="true"] { background: var(--texto); color: var(--sobre-claro); }
+.semana-dia[aria-pressed="true"] b, .semana-dia[aria-pressed="true"] small { color: inherit; }
+.semana-dia:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  .semana-dia:hover:not([aria-pressed="true"]) { background: var(--fundo-item-luz); }
+}
+@media (max-width: 640px) {
+  .agenda-filtros { gap: 8px; }
+  .agenda-filtros select.input { flex: 1 1 100%; }
+  .semana-dias { gap: 3px; }
+  .semana-dia { min-height: 64px; padding-top: 8px; border-radius: 10px; }
+  .semana-dia b { font-size: 19px; }
+}
+
+/* Falha ao gravar no navegador: o aviso fica até dar certo. */
+.storage-aviso {
+  position: fixed; z-index: 300;
+  left: calc(var(--sidebar-w) + 20px); right: 20px; bottom: 20px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 14px;
+  padding: 14px 18px;
+  background: var(--superficie); color: var(--texto);
+  border: 1px solid var(--st-critical); border-radius: var(--r-md);
+  box-shadow: var(--shadow-pop);
+  font-size: 14px; line-height: 1.5;
+}
+.storage-aviso > span { flex: 1 1 280px; min-width: 0; }
+.storage-aviso .btn { flex-shrink: 0; }
+@media (max-width: 900px) {
+  .storage-aviso { left: 16px; right: 16px; bottom: calc(84px + env(safe-area-inset-bottom)); }
+}
+
+/* Criador de abas: pontos de partida. */
+.area-modelos { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 20px; }
+.area-modelos .chip { min-height: 36px; }
+
+/* Organizar as abas: o botão discreto logo abaixo de "Nova aba". */
+.nav-organizar { width: 100%; justify-content: flex-start; margin-top: 4px; color: var(--texto-3); }

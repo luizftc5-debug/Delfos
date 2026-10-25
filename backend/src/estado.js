@@ -7,34 +7,31 @@
    bate e a resposta é 409 — o painel então pergunta qual versão fica, em vez
    de um aparelho apagar em silêncio o que o outro fez.
 
-   O JSON nunca é interpretado aqui, só guardado e devolvido: o formato é
-   responsabilidade de store.js (normalizar), e o servidor não precisa mudar
-   quando o painel ganha um campo novo.
+   O JSON é validado antes da gravação (objeto e versão inteira positiva),
+   mas é guardado e devolvido como texto. O formato detalhado e as migrações
+   continuam sendo responsabilidade de store.js (normalizar).
 
    Toda função recebe `usuario` de exigirSessao (contas.js) e só toca as
    linhas daquele id.
    =========================================================================== */
 
-import { ErroHttp, agora, json, jsonBruto, textoCurto } from "./respostas.js";
+import { ErroHttp, agora, json, jsonBruto, textoCurto, lerCorpoLimitado } from "./respostas.js";
 import { gravarTexto, idsDeAnexos, lerTexto } from "./textos.js";
 
-const MAX_CARACTERES = 10 * 1024 * 1024;
+const MAX_BYTES = 10 * 1024 * 1024;
 // Uma cópia automática a cada 10 minutos de uso basta para voltar atrás sem
 // encher o banco com uma versão por tecla.
 const INTERVALO_VERSAO_MS = 10 * 60 * 1000;
 export const MAX_VERSOES = 60;
 
 async function lerCorpoEstado(request) {
-  if (Number(request.headers.get("content-length") || 0) > MAX_CARACTERES) {
-    throw new ErroHttp(413, "O estado passou de 10 MB — grande demais para sincronizar.");
-  }
-  const texto = (await request.text()).trim();
-  if (texto.length > MAX_CARACTERES) {
-    throw new ErroHttp(413, "O estado passou de 10 MB — grande demais para sincronizar.");
-  }
-  // Checagem leve (sem JSON.parse, que custaria o tempo de CPU do plano
-  // gratuito): basta para recusar algo que claramente não veio do painel.
-  if (!texto.startsWith("{") || !texto.endsWith("}") || !texto.includes('"versao"')) {
+  const dados = await lerCorpoLimitado(request, MAX_BYTES, "O estado passou de 10 MB — grande demais para sincronizar.");
+  const texto = new TextDecoder().decode(dados).trim();
+  let estado;
+  try { estado = JSON.parse(texto); }
+  catch { throw new ErroHttp(400, "O estado não contém JSON válido."); }
+  if (!estado || typeof estado !== "object" || Array.isArray(estado) ||
+      !Number.isInteger(estado.versao) || estado.versao < 1) {
     throw new ErroHttp(400, "Isso não parece um estado do Delfos.");
   }
   return texto;

@@ -1,12 +1,18 @@
 # Delfos — agente de organização pessoal do Luiz
 
-O painel se chama **Delfos** (versão atual: **2.2**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
+O painel se chama **Delfos** (versão atual: **2.3**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
 em `ui.js`) aparecem no alto da barra lateral (o símbolo e o logotipo, com a versão ao lado), nos
 títulos das abas do navegador e no nome do arquivo de backup exportado. Desde a 2.2 a marca é a do
 quadro novo: o **símbolo** (o D com uma coluna grega dentro, `UI.simbolo()`), o **logotipo** numa
 serifa pesada (`UI.logotipo()`), os dois vetorizados do quadro, e a assinatura "O essencial se
 revela."; ver "Delfos 2.2: a marca nova e menos cara de IA" (a marca da 1.8 está em "Delfos 1.8: a
-marca").
+marca"). A 2.3 uniu esse trabalho ao que o Codex fez em paralelo; ver "Delfos 2.3: a união com o
+trabalho do Codex".
+
+**Branch certa: `main`.** Todo PR vai para a `main`. A branch padrão do repositório no GitHub chegou
+a ser `claude/agente-organizacao-pessoal-xqow0u`, e quem abre PR sem escolher a base (o Codex, por
+exemplo) cai nela: foi assim que os PRs 11, 19 e 20 entraram no lugar errado. Se o "Compare" de um
+PR mostrar essa branch como base, corrija antes de integrar.
 
 **O que o Delfos é** (nas palavras do Luiz, para guiar toda decisão de produto): um organizador
 pessoal que busca potencializar o máximo dentro de cada um; organizar a vida para a pessoa alcançar
@@ -71,6 +77,9 @@ Aplicação estática multi-página em `dashboard/`, sem build. Dependências ex
 | `financas.js` | Cálculos derivados: saldo por conta, ciclo e fatura de cartão, balanço, investimentos, e a análise do mês (`analisarMes`, `recorrentes`, `acumuladoDiario`) |
 | `ui.js` | Componentes: layout (barra lateral, barra de abas do celular), ícones Phosphor (`UI.icone`), perfil, modais de formulário, avisos, gráficos, datas/urgência |
 | `theme.css` | Design system (tema claro/escuro) |
+| `editor.css` + `interface.css` | Só a página do editor (`resumo.html`): a barra em grupos, a folha delimitada, o status no centro e o seletor de símbolos. O `interface.css` é uma camada geral de aparência do Codex que **não** vale nas outras páginas (ver "Delfos 2.3") |
+| `areas.css` | Layout em painéis das áreas, do Codex. Nenhuma página o carrega; fica guardado, sem uso |
+| `test/` | Testes do painel que moram no repositório: `store.test.cjs` (persistência e backup, `node --test dashboard/test/*.test.cjs`) e `editor.browser.py` (o editor num Chromium de verdade, Python + Playwright) |
 | `config.js` + `google-integration.js` | Integração OAuth com Google Calendar e Drive (inclui busca/exportação de arquivos, usada pela importação em disciplina.js); as bibliotecas do Google são baixadas sob demanda (`carregarGoogle`) |
 | `data.js` | Conteúdo inicial (seed), lido só na primeira abertura |
 | `exercicios.js` | Catálogo de exercícios da aba Academia (`const EXERCICIOS`), carregado só por `pilar.html` |
@@ -110,9 +119,13 @@ contas e os dados de cada uma. O localStorage continua sendo a cópia de trabalh
   locais** (continuam na conta). Entrar com outra conta apaga os dados da anterior antes de baixar.
   Dados sem dono (de antes das contas) disparam a pergunta "levar para a minha conta?" em
   `Nuvem.aposEntrar`, chamado por `entrar.js` antes de liberar o painel.
-- **O servidor não interpreta o estado.** Guarda o JSON como texto (pedaços de 400 mil caracteres,
-  pelo limite de linha do D1), com `revisao`, e devolve como veio. `Store.substituir()` passa o que
-  chega por `normalizar` como qualquer carga.
+- **O servidor valida o estado, mas não o interpreta.** Antes de gravar, `PUT /api/estado` exige JSON
+  válido, um objeto e `versao` inteira positiva (400 se não); a leitura do corpo é limitada a 10 MB
+  por `lerCorpoLimitado`, mesmo sem `Content-Length`. Guarda o texto recebido (pedaços de 400 mil
+  caracteres, pelo limite de linha do D1), com `revisao`, e devolve como veio. O formato e as
+  migrações continuam sendo de `store.js` (`normalizar`): `Store.substituir()` passa o que chega por
+  ele como qualquer carga. Anexos: leitura limitada a 25 MB, `x-content-type-options: nosniff` e
+  download como arquivo (`attachment`) para tudo que não seja PDF ou imagem conhecida.
 - **Conflito nunca é silencioso.** `PUT /api/estado?base=N` recusa com 409 se outro aparelho gravou
   depois; `nuvem.js` pergunta qual versão fica. A que perde vai para `versoes` (60 por conta).
 - **Isolamento.** Toda rota de dados usa o id que sai de `exigirSessao`, nunca um id da requisição;
@@ -1007,6 +1020,90 @@ Esta seção é a fase 1.
   Financeiro e da aba própria passaram a conferir o texto novo; o de fixos achou que o total mensal
   sumia com a gaveta aberta, daí o `data-sempre` em `#fixos-total`. `reg.mjs` 12/12, nenhuma página
   nem vista estoura a largura a 360px.
+
+### Delfos 2.3: a união com o trabalho do Codex
+
+**O que aconteceu.** Em 25/10/2026, enquanto a 2.2 era feita, o Luiz pediu ao Codex um redesenho
+paralelo (a partir da 1.8). Os PRs 19 e 20 dele entraram em `claude/agente-organizacao-pessoal-xqow0u`
+(a branch padrão do repositório no GitHub), não na `main`, e a `main` não tinha nenhum dos dois.
+Pedido do Luiz: integrar tudo na `main` "sem perder nada de funcionalidade e sem excluir nada". O #20
+continua o #19, então os dois vieram juntos (o merge de `claude/agente-organizacao-pessoal-xqow0u`
+na `main` traz exatamente esses dois, 37 arquivos). `REVISAO-2026-10-25.md` é o diagnóstico que o
+Codex escreveu e fica como registro.
+
+**A regra da união: toda função do Codex entra; a aparência da 2.2 fica.** Nas dez páginas internas
+(Financeiro, Contas, uma conta, Investimentos, Faculdade, uma disciplina, Projetos, um projeto,
+Pessoal e aba própria) o Codex só reorganizou e reindentou o HTML, sem id, campo ou comportamento
+novo (conferido id a id); a estrutura de gavetas da `main` já faz o mesmo trabalho (o que pede ação
+primeiro, as análises em gavetas finas), então ficou a da `main`. Onde havia função de verdade, ela
+entrou:
+
+- **Visão geral** (`index.html`, `home.js`, a mais mexida): na gaveta Agenda, faixa de sete dias com
+  quantos compromissos cada um tem (clicar filtra o dia), semana anterior e seguinte, "Hoje" e o
+  seletor de período (Próximos 7 dias, Próximos 30 dias, Semana exibida). "Ver mais" e "Próximos 30
+  dias" são o mesmo gesto (um muda o outro); escolher dia ou semana tira o atrasado da lista, e o
+  puxador continua contando o que há (atrasados, hoje, o próximo, 7 dias). "+ Compromisso" e
+  "Registrar → Compromisso" abrem aqui mesmo o formulário do Codex (`novoCompromisso`): escolhe a aba
+  (Pessoal, Faculdade como prazo, ou aba própria que entra na agenda, pedindo os campos obrigatórios
+  dela), a data vem do dia escolhido e há horário. "Organizar" em "Suas abas" abre o perfil em
+  Painel; os ladrilhos seguem a ordem da pessoa e escondem as abas ocultas. `Store.aoMudar(render)`
+  refaz a página quando algo muda por fora. Sai da visão geral do Codex: o resumo financeiro
+  recolhido (a gaveta Dinheiro já faz isso), "Sua semana, num olhar" (o puxador da Agenda diz o mesmo)
+  e "Na sua rotina" (a semana cheia está na agenda, as etapas no ladrilho de Projetos).
+- **Navegação** (`ui.js`): a barra do celular tem as quatro primeiras abas fixas e o "Mais" se acende
+  quando a aba aberta está fora delas (antes a quarta mudava de lugar); "Organizar abas" na barra
+  lateral e na folha "Mais"; `p.oculta` em aba criada (some da barra e do índice; nada é apagado e os
+  compromissos dela continuam na agenda) com interruptor no perfil, que também ordena as ocultas
+  (`ordemAbas`); `UI.paginas` e `UI.linkSeguro` exportados; `UI.isoMaisDias(base, dias)`.
+- **Falha ao gravar** (`store.js`, `ui.js`): `persistir` não engole mais o erro do `localStorage`.
+  Dispara `delfos:falha-ao-salvar` e lança; o aviso `.storage-aviso` fica na tela com "Tentar salvar"
+  (`Store.tentarSalvar`) e "Exportar backup" até `delfos:salvo`. `Store.exportar` lança em vez de
+  entregar um backup sem os anexos. `carregar` não descarta o estado lido se a gravação da
+  migração falhar.
+- **Links** (`UI.linkSeguro`): o protocolo é conferido por `new URL` (http, https, mailto) e o
+  resultado é o `href` normalizado ("https://ok.com" vira "https://ok.com/"). Usado nos materiais
+  de disciplina e no link de projeto (`rel="noopener noreferrer"`).
+- **Criador de abas** (`abas.js`, `delfos.js`): fileira de modelos (Trabalho, Saúde, Academia,
+  Esporte, Religião, Leituras, Aba livre) que preenche nome e propósito (pede confirmação se a
+  pessoa já mexeu), e o assunto "rotina profissional" no Delfos (Situação, Prioridade, Projeto ou
+  equipe, Observações; quadro por situação), separado de "trabalhos e freelas".
+- **Editor** (`resumo.html`, `resumo.js`, `editor.css`): salvamento automático 700 ms depois de
+  parar de digitar, gravando na hora ao sair ou recarregar; sem botão Salvar nem contador de
+  palavras; status no centro ("Salvo", "Salvando...", falha com "Tentar novamente", que não duplica
+  o resumo); alteração concorrente oferece "Guardar minha cópia"; barra em grupos centralizada;
+  seletor de símbolos (grau, setas, matemática, letras gregas) que insere no cursor e aceita
+  desfazer; folha delimitada; rodapé só com o logotipo e "O essencial se revela: seu editor sem
+  distrações". Esta página carrega `interface.css` e `editor.css`, e só ela.
+- **Servidor** (`backend/src`): validação do estado, leitura limitada, anexos protegidos (ver
+  "Contas de usuário e back end"); `backend/test/seguranca.test.mjs`.
+- **Testes e workflow**: `dashboard/test/` e `.github/workflows/interface.yml` (sintaxe de todo
+  `dashboard/*.js`, persistência e o editor num Chromium).
+
+**Ficou de fora, mas guardado no repositório** (aparência que contradiz a 2.2, sem função):
+`areas.css` e o HTML `area-*` (painéis com `<details>`), e a camada geral de `interface.css` fora
+do editor (cores e linhas reescritas, leitura de 15px em Funnel Sans, item ativo da barra em marfim
+cheio, ícones da barra sem selo, luz do ponteiro desligada). Se o Luiz preferir esse caminho em
+alguma página, os arquivos estão aqui. `entrar.html` e `bemvindo.html` chegaram do merge com o link
+para `interface.css` e ele foi tirado: ali a camada achataria a marca nova.
+
+**Vocabulário**: o Codex trocou "aba" por "área" (e "O que o Delfos entendeu" por "Sugestão de
+organização"). Foi desfeito: o painel, os testes e este arquivo dizem "aba" e "O que o Delfos
+entendeu". Se o Luiz preferir "área", é uma troca de texto em `ui.js`, `abas.js`, `home.js` e nas
+páginas.
+
+**Corrigido na união**: o título do editor cortava títulos longos no celular com a Gloock (24px
+abaixo de 760px); `.storage-aviso`, os filtros da agenda, `.area-modelos` e `.nav-organizar` ganharam
+CSS no idioma das gavetas, no fim de `theme.css` ("Integração das áreas e do editor (2.3)").
+
+**Testes** (os de navegador moram fora do repositório, como os de antes): `npm test` no backend 40/40;
+`node --test dashboard/test/*.test.cjs` 3/3; `editor.browser.py` passa (Python + Playwright: `pip
+install playwright`, e o Chromium já instalado, por `PATH` ou `executable_path`); visão geral 17/17
+(filtros, formulário, ocultar aba); falha ao salvar 12/12 (o navegador recusa a gravação, o aviso
+aparece nos dois tamanhos e some depois de salvar); `reg.mjs` 14/14; nenhuma página passa da largura
+a 360px. A suíte e2e antiga ficou igual à base (Financeiro 7 e Fixos 10, presos à data em que os
+testes foram escritos, e 1 do calendário); três expectativas mudaram de propósito: o editor não tem
+mais botão Salvar, o link normalizado ganha a barra e "Registrar → Compromisso" abre o formulário na
+própria visão geral.
 
 ### Delfos 1.8: a marca
 

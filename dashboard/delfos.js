@@ -256,7 +256,12 @@ const Delfos = (() => {
       descricao: "Aniversários e encontros, com presente e local.",
       campos: [c("pessoa", "Pessoa", "text", [], true), c("presente", "Presente comprado", "simNao", [], true), c("local", "Local", "text"), c("ideia", "Ideia de presente", "text")],
       agruparPor: "", meta: SEM_META, exemplos: [] } },
-    { nome: "trabalhos e freelas", chaves: ["freela", "freelas", "freelancer", "trabalho", "trabalhos", "clientes", "servicos", "bico", "bicos", "job", "jobs"], tpl: {
+    { nome: "rotina profissional", chaves: ["trabalho", "rotina profissional", "expediente", "tarefas de trabalho"], tpl: {
+      icone: "svg:maleta", cor: "#6e8f22", rotuloItem: "tarefa", naAgenda: true, checkin: false, vista: "quadro",
+      descricao: "Tarefas, reuniões e entregas da sua rotina de trabalho.",
+      campos: [c("situacao", "Situação", "select", ["a fazer", "em andamento", "concluído"], true), c("prioridade", "Prioridade", "select", ["baixa", "média", "alta"], true), c("contexto", "Projeto ou equipe", "text", [], true), c("observacoes", "Observações", "textarea")],
+      agruparPor: "situacao", meta: SEM_META, exemplos: [] } },
+    { nome: "trabalhos e freelas", chaves: ["freela", "freelas", "freelancer", "trabalhos", "clientes", "servicos", "bico", "bicos", "job", "jobs"], tpl: {
       icone: "svg:maleta", cor: "#6e8f22", rotuloItem: "trabalho", naAgenda: true, checkin: false, vista: "quadro",
       descricao: "Cada trabalho com cliente, valor e situação do pagamento.",
       campos: [c("cliente", "Cliente", "text", [], true), c("valor", "Valor (R$)", "dinheiro", [], true), c("pagamento", "Pagamento", "select", ["a combinar", "a receber", "recebido"], true), c("horas", "Horas", "number"), c("observacoes", "Observações", "textarea")],

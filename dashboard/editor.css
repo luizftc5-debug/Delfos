@@ -1,0 +1,106 @@
+/* Editor: a barra pertence ao aplicativo; a folha pertence à escrita. */
+.editor-body { background: var(--fundo); padding-bottom: 0; }
+.editor-body .editor { min-height: 100dvh; }
+.editor-body .editor-topo {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 16px; min-height: 68px; padding: 12px 28px;
+  background: var(--superficie); border-bottom: 1px solid var(--linha);
+}
+.editor-body .editor-voltar { grid-column: 1; max-width: 100%; width: fit-content; min-width: 0; font-size: 13px; }
+.editor-body .editor-topo-direita { grid-column: 3; justify-self: end; display: flex; align-items: center; gap: 14px; min-width: 0; }
+.editor-body .editor-ferramentas { gap: 3px; }
+.editor-body .editor-status { grid-column: 2; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 3px; max-width: 240px; }
+.editor-body .editor-estado { display: inline-block; flex: none; font-size: 12px; line-height: 1.4; color: var(--texto-2); }
+.editor-body .editor-estado:not(.sujo):not(.erro)::before { content: ""; display: inline-block; width: 5px; height: 5px; margin-right: 7px; border-radius: 50%; background: var(--st-good); vertical-align: 2px; }
+.editor-body .editor-estado.sujo { color: var(--texto-3); }
+.editor-body .editor-estado.erro { color: var(--critical-text); }
+.editor-repetir { border: 0; background: transparent; color: var(--texto); padding: 0; font: inherit; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.editor-body .editor-acoes .btn { min-height: 32px; font-size: 12px; padding: 6px 10px; }
+.editor-body .editor-barra {
+  top: var(--editor-topo-altura, 68px); justify-content: center; gap: 8px;
+  padding: 12px 22px; background: var(--superficie); box-shadow: 0 5px 16px -14px rgba(0,0,0,.4);
+}
+.editor-body .editor-grupo {
+  gap: 1px; padding: 4px; margin: 0; border: 1px solid var(--linha);
+  border-radius: 8px; background: var(--fundo); min-width: 0;
+}
+.editor-body .editor-grupo:last-of-type { border-right: 1px solid var(--linha); }
+.editor-body .editor-btn { height: 32px; min-width: 32px; padding: 0 7px; border-radius: 5px; font-size: 13px; }
+.editor-body .editor-btn .ico { width: 17px; height: 17px; }
+.editor-body .editor-select { height: 32px; border-color: transparent; background: transparent; font-size: 12px; padding: 4px 6px; }
+.editor-body #fonte.editor-select { max-width: 143px; }
+.editor-body #bloco.editor-select { max-width: 96px; }
+.editor-body .editor-select.estreito { width: 56px; }
+.editor-body .simbolos-abrir { font-family: Georgia, serif; font-size: 19px; }
+.editor-body .editor-meio { padding: 36px 28px 52px; gap: 24px; align-items: flex-start; }
+.editor-body .editor-folha {
+  flex: 1; min-width: 0; max-width: 900px; margin: 0 auto;
+  padding: 58px 68px 80px; border: 1px solid var(--linha); border-radius: 12px;
+  background: var(--superficie); box-shadow: 0 8px 32px -24px rgba(0,0,0,.35);
+  min-height: max(560px, calc(100dvh - 280px));
+}
+.editor-body .editor-folha[data-largura="estreita"] { max-width: 720px; }
+.editor-body .editor-folha[data-largura="larga"] { max-width: 1120px; }
+.editor-body .editor-titulo { font-size: clamp(27px, 3vw, 38px); padding-bottom: 22px; margin-bottom: 12px; letter-spacing: -.025em; }
+.editor-body .editor-area { font-size: 17px; line-height: 1.8; min-height: 45dvh; padding: 16px 0; overflow-wrap: anywhere; }
+.editor-body .editor-folha[data-linhas="compacta"] .editor-area { line-height: 1.5; }
+.editor-body .editor-folha[data-linhas="arejada"] .editor-area { line-height: 2; }
+.editor-body .editor-sumario { top: calc(var(--editor-topo-altura, 68px) + var(--editor-barra-altura, 68px) + 24px); margin-top: 12px; padding-left: 0; }
+.editor-body .editor-rodape {
+  position: static; min-height: 76px; padding: 22px 32px;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  background: var(--superficie); color: var(--texto-2);
+}
+.editor-body .editor-rodape .marca { flex: 0 0 auto; color: var(--texto); }
+.editor-body .editor-rodape .logotipo { height: 23px; }
+.editor-assinatura { font-family: var(--font-voz); font-size: 18px; line-height: 1.5; font-weight: 400; text-align: right; letter-spacing: -.015em; }
+.editor-body .editor-busca { justify-content: center; }
+.editor-body .menu-simbolos { width: 304px; max-width: calc(100vw - 16px); padding: 16px; max-height: min(580px, calc(100dvh - 180px)); overflow-y: auto; }
+.simbolos-cabeca { font-size: 15px; font-weight: 600; padding-bottom: 8px; }
+.menu-simbolos section + section { margin-top: 14px; }
+.menu-simbolos h3 { font: inherit; font-size: 12px; color: var(--texto-3); margin: 4px 0 8px; }
+.simbolos-grade { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 5px; }
+.simbolos-grade button { height: 40px; border: 1px solid var(--linha); border-radius: 6px; font-family: Georgia, serif; font-size: 21px; color: var(--texto); background: var(--fundo); cursor: pointer; }
+.simbolos-grade button:hover { background: var(--superficie-2); border-color: var(--linha-forte); }
+.editor-body.modo-foco .editor-meio { padding-top: 28px; }
+.editor-body.modo-foco .editor-folha { box-shadow: none; }
+@media (max-width: 1050px) {
+  .editor-body .editor-topo { padding-inline: 20px; gap: 12px; }
+  .editor-body .editor-topo-direita { gap: 8px; }
+  .editor-body .editor-folha { padding: 44px 48px 64px; }
+  .editor-body .editor-sumario { width: 180px; }
+}
+@media (max-width: 760px) {
+  .editor-body .editor-topo { padding: 12px 16px 8px; row-gap: 8px; min-height: 0; }
+  .editor-body .editor-status { max-width: 170px; }
+  .editor-body .editor-topo-direita { display: contents; }
+  .editor-body .editor-ferramentas { grid-column: 1 / -1; grid-row: 2; justify-content: center; gap: 8px; }
+  .editor-body .editor-ferramentas .editor-btn[data-menu="folha"], .editor-body .editor-ferramentas #btn-sumario { display: inline-flex; }
+  .editor-body .editor-acoes { grid-column: 3; grid-row: 1; justify-self: end; }
+  .editor-body .editor-voltar { grid-row: 1; font-size: 11px; max-width: 100%; }
+  .editor-body .editor-voltar span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .editor-body .editor-barra { padding: 8px; gap: 5px; justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+  .editor-body .editor-barra::-webkit-scrollbar { display: block; height: 3px; }
+  .editor-body .editor-barra::-webkit-scrollbar-thumb { background: var(--linha-forte); border-radius: 4px; }
+  .editor-body .editor-grupo { padding: 2px; }
+  .editor-body .editor-meio { padding: 20px 14px 28px; }
+  .editor-body .editor-folha { padding: 30px 24px 44px; border-radius: 10px; min-height: 60dvh; }
+  .editor-body .editor-area { font-size: 16px; }
+  .editor-body .editor-titulo { font-size: 24px; }
+  .editor-body .editor-sumario { width: 100%; top: 0; margin-top: 0; }
+  .editor-body .editor-rodape { padding: 20px; min-height: 88px; gap: 20px; }
+  .editor-body .editor-rodape .logotipo { height: 20px; }
+  .editor-assinatura { max-width: 245px; font-size: 15px; }
+}
+@media (max-width: 420px) {
+  .editor-body .editor-topo { grid-template-columns: minmax(0,1fr) minmax(0,1.6fr) minmax(0,1fr); }
+  .editor-body .editor-estado { font-size: 11px; }
+  .editor-body .editor-topo .editor-acoes .btn { font-size: 11px; padding-inline: 4px; }
+  .editor-body .editor-folha { padding-inline: 20px; }
+  .editor-body .editor-rodape { padding-inline: 16px; }
+}
+@media print {
+  .editor-body .editor-topo, .editor-body .editor-barra, .editor-body .editor-rodape { display: none; }
+  .editor-body .editor-meio { padding: 0; }
+  .editor-body .editor-folha { margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; max-width: none; }
+}

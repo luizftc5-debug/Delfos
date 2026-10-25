@@ -41,7 +41,24 @@
               <div class="gaveta-acoes"><button class="btn sm" id="btn-agenda-novo" type="button">+ Compromisso</button></div>
             </header>
             <div class="gaveta-corpo">
+              <!-- Filtros da agenda (2.3): o período, a semana e o dia. -->
+              <div class="agenda-filtros">
+                <div class="agenda-semana">
+                  <button class="btn ghost sm icon" id="semana-anterior" type="button" aria-label="Semana anterior"></button>
+                  <span class="agenda-semana-rotulo" id="semana-rotulo" aria-live="polite"></span>
+                  <button class="btn ghost sm icon" id="semana-seguinte" type="button" aria-label="Próxima semana"></button>
+                  <button class="btn ghost sm" id="agenda-hoje" type="button">Hoje</button>
+                </div>
+                <label class="sr" for="agenda-periodo">Período da agenda</label>
+                <select class="input sm" id="agenda-periodo">
+                  <option value="7">Próximos 7 dias</option>
+                  <option value="30">Próximos 30 dias</option>
+                  <option value="semana">Semana exibida</option>
+                </select>
+              </div>
+              <div class="semana-dias" id="semana-dias" role="group" aria-label="Filtrar a agenda por dia"></div>
               <div id="agenda"></div>
+              <a class="link-gaveta" href="pessoal.html">Abrir o calendário</a>
             </div>
           </section>
 
@@ -90,7 +107,10 @@
             <header class="gaveta-cab">
               <h2 class="gaveta-titulo">Suas abas</h2>
               <span class="gaveta-resumo" id="abas-resumo"></span>
-              <div class="gaveta-acoes"><button class="btn sm" id="btn-nova-aba-home" type="button">+ Nova aba</button></div>
+              <div class="gaveta-acoes">
+                <button class="btn ghost sm" id="btn-organizar-abas" type="button">Organizar</button>
+                <button class="btn sm" id="btn-nova-aba-home" type="button">+ Nova aba</button>
+              </div>
             </header>
             <div class="gaveta-corpo">
               <nav class="estante" id="pilares" aria-label="Suas abas"></nav>

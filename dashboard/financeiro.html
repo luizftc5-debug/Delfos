@@ -1,179 +1,188 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Financeiro · Delfos</title>
-  <meta name="theme-color" content="#111110" />
-  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
-  <link rel="stylesheet" href="theme.css" />
-  <link rel="stylesheet" href="interface.css" />
-  <script src="config.js"></script>
-</head>
-<body>
-  <div class="app">
-    <nav class="sidebar" id="sidebar"></nav>
-    <main class="main">
-      <div class="wrap">
-        <header class="topbar">
-          <div>
-            <h1>Financeiro</h1>
-          </div>
-          <div class="topbar-actions">
-            <button class="btn ghost" id="btn-preferencias" type="button"></button>
-            <button class="btn" id="btn-importar" type="button"></button>
-            <button class="btn primary" id="btn-lancamento" type="button"></button>
-          </div>
-        </header>
-
-        <nav class="abas" aria-label="Seções do financeiro">
-          <a href="financeiro.html" aria-current="page">Resumo do mês</a>
-          <a href="contas.html">Contas e cartões</a>
-          <a href="investimentos.html">Investimentos</a>
-        </nav>
-
-        <div class="mes-nav">
-          <button class="btn ghost icon" id="mes-anterior" type="button" aria-label="Mês anterior"></button>
-          <span class="mes-rotulo" id="mes-rotulo" aria-live="polite"></span>
-          <button class="btn ghost icon" id="mes-seguinte" type="button" aria-label="Mês seguinte"></button>
-          <button class="btn ghost sm voltar-hoje" id="mes-hoje" type="button" hidden>Voltar para este mês</button>
-        </div>
-
-        <p class="leitura" id="leitura"></p>
-
-        <div class="grid g4 fin-faixa" id="faixa"></div>
-
-        <div class="fin-duas">
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title">Para onde foi o dinheiro</h2>
-              <span class="card-note" id="cat-nota"></span>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Financeiro · Delfos</title>
+    <meta name="theme-color" content="#111110" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="interface.css" />
+    <link rel="stylesheet" href="areas.css" />
+    <script src="config.js"></script>
+  </head>
+  <body class="area-pagina area-financeiro">
+    <div class="app">
+      <nav class="sidebar" id="sidebar"></nav>
+      <main class="main">
+        <div class="wrap">
+          <header class="topbar">
+            <div>
+              <h1>Financeiro</h1>
             </div>
-            <div id="categorias"></div>
-          </section>
-
-          <section class="card ritmo">
-            <div class="card-head">
-              <h2 class="card-title">Ritmo do mês</h2>
-              <span class="card-note">gasto somado dia a dia</span>
+            <div class="topbar-actions">
+              <button class="btn ghost" id="btn-preferencias" type="button"></button>
+              <button class="btn" id="btn-importar" type="button"></button>
+              <button class="btn primary" id="btn-lancamento" type="button"></button>
             </div>
-            <div id="ritmo"></div>
-          </section>
-        </div>
-
-        <section class="section" id="sec-perguntas">
-          <div class="section-head">
-            <h2 class="section-title">Perguntas do Delfos</h2>
-            <span class="card-note">Cada resposta deixa a leitura mais sua. Dá para mudar depois em Limites e preferências.</span>
+          </header>
+          <nav class="abas" aria-label="Seções do financeiro">
+            <a href="financeiro.html" aria-current="page">Resumo do mês</a>
+            <a href="contas.html">Contas e cartões</a>
+            <a href="investimentos.html">Investimentos</a>
+          </nav>
+          <div class="mes-nav">
+            <button class="btn ghost icon" id="mes-anterior" type="button" aria-label="Mês anterior"></button>
+            <span class="mes-rotulo" id="mes-rotulo" aria-live="polite"></span>
+            <button class="btn ghost icon" id="mes-seguinte" type="button" aria-label="Mês seguinte"></button>
+            <button class="btn ghost sm voltar-hoje" id="mes-hoje" type="button" hidden>Voltar para este mês</button>
           </div>
-          <div class="perguntas" id="perguntas"></div>
-        </section>
-
-        <div class="fin-duas section">
-          <div class="fin-coluna">
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">O que o Delfos notou</h2>
-              </div>
-              <ul class="notas" id="notas"></ul>
-            </section>
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">Entradas e saídas</h2>
-                <span class="card-note">últimos 6 meses</span>
-              </div>
-              <div id="grafico-meses"></div>
-            </section>
-          </div>
-
-          <div class="fin-coluna">
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">A pagar</h2>
-                <span class="card-note num" id="apagar-total"></span>
-              </div>
-              <div id="apagar"></div>
-            </section>
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">Fixos e assinaturas</h2>
-                <span class="card-note num" id="fixos-total"></span>
-                <button class="btn ghost sm" type="button" id="btn-fixo">+ Gasto fixo</button>
-              </div>
-              <div id="fixos"></div>
-            </section>
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">Maiores gastos do mês</h2>
-              </div>
-              <div id="maiores"></div>
-            </section>
-          </div>
-        </div>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Metas</h2>
-            <button class="btn sm" id="btn-meta" type="button"></button>
-          </div>
-          <div id="metas"></div>
-        </section>
-
-        <section class="section" id="sec-lancamentos">
-          <div class="section-head">
-            <h2 class="section-title">Lançamentos</h2>
-            <span class="card-note num" id="resumo-filtro"></span>
-          </div>
-
-          <div class="fin-filtros">
-            <div class="chips" id="f-tipo" role="group" aria-label="Tipo de lançamento">
-              <button class="chip" type="button" data-tipo="todos" aria-pressed="true">Tudo</button>
-              <button class="chip" type="button" data-tipo="despesa" aria-pressed="false">Saídas</button>
-              <button class="chip" type="button" data-tipo="receita" aria-pressed="false">Entradas</button>
-              <button class="chip" type="button" data-tipo="pendente" aria-pressed="false">Pendentes</button>
+          <p class="leitura" id="leitura"></p>
+          <div class="grid g4 fin-faixa area-resumo" id="faixa"></div>
+          <nav class="area-atalhos" aria-label="Nesta página">
+            <a href="#sec-lancamentos">Lançamentos</a>
+            <a href="#sec-apagar">A pagar</a>
+            <a href="#sec-metas">Metas</a>
+            <a href="#sec-analise">Análise</a>
+          </nav>
+          <div class="area-conteudo">
+            <div class="area-principal">
+              <section class="section area-painel" id="sec-lancamentos">
+                <div class="section-head">
+                  <h2 class="section-title">Lançamentos</h2>
+                  <span class="card-note num" id="resumo-filtro"></span>
+                </div>
+                <div class="fin-filtros">
+                  <div class="chips" id="f-tipo" role="group" aria-label="Tipo de lançamento">
+                    <button class="chip" type="button" data-tipo="todos" aria-pressed="true">Tudo</button>
+                    <button class="chip" type="button" data-tipo="despesa" aria-pressed="false">Saídas</button>
+                    <button class="chip" type="button" data-tipo="receita" aria-pressed="false">Entradas</button>
+                    <button class="chip" type="button" data-tipo="pendente" aria-pressed="false">Pendentes</button>
+                  </div>
+                  <label class="busca"> <span class="hidden">Buscar</span> <input class="input" type="search" id="f-busca" placeholder="Buscar descrição…" aria-label="Buscar nos lançamentos" autocomplete="off" /> </label>
+                  <select class="input" id="f-categoria" aria-label="Categoria"></select>
+                  <button class="chip" type="button" id="f-todos-meses" aria-pressed="false">Todos os meses</button>
+                </div>
+                <div id="tabela"></div>
+              </section>
             </div>
-            <label class="busca">
-              <span class="hidden">Buscar</span>
-              <input class="input" type="search" id="f-busca" placeholder="Buscar descrição…" aria-label="Buscar nos lançamentos" autocomplete="off" />
-            </label>
-            <select class="input" id="f-categoria" aria-label="Categoria"></select>
-            <button class="chip" type="button" id="f-todos-meses" aria-pressed="false">Todos os meses</button>
+            <aside class="area-contexto" aria-label="Contexto e acompanhamento">
+              <section class="card area-painel" id="sec-apagar">
+                <div class="card-head">
+                  <h2 class="card-title">A pagar</h2>
+                  <span class="card-note num" id="apagar-total"></span>
+                </div>
+                <div id="apagar"></div>
+              </section>
+              <section class="card area-painel">
+                <div class="card-head">
+                  <h2 class="card-title">Fixos e assinaturas</h2>
+                  <span class="card-note num" id="fixos-total"></span>
+                  <button class="btn ghost sm" type="button" id="btn-fixo">+ Gasto fixo</button>
+                </div>
+                <div id="fixos"></div>
+              </section>
+              <section class="section area-painel" id="sec-metas">
+                <div class="section-head">
+                  <h2 class="section-title">Metas</h2>
+                  <button class="btn sm" id="btn-meta" type="button"></button>
+                </div>
+                <div id="metas"></div>
+              </section>
+            </aside>
           </div>
-
-          <div id="tabela"></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Documentos no Google Drive</h2>
-            <span class="google-state" id="google-status"><span class="google-dot"></span><span id="google-texto">Não conectado</span></span>
-          </div>
-          <div class="card">
-            <p class="card-note" style="margin:0 0 12px;">Conecte para ver os documentos financeiros mais recentes do seu Drive: extratos, boletos, comprovantes.</p>
-            <button class="btn" id="google-connect-btn" type="button">Conectar ao Google</button>
-            <div id="google-drive-list" style="margin-top:12px;"></div>
-          </div>
-        </section>
-      </div>
-    </main>
-  </div>
-
-  <script src="data.js"></script>
-  <script src="arquivos.js"></script>
-  <script src="store.js"></script>
-  <script src="personalizacao.js"></script>
-  <script src="ui.js"></script>
-  <script src="sessao.js"></script>
-  <script src="nuvem.js"></script>
-  <script src="financas.js"></script>
-  <script src="lancamento.js"></script>
-  <script src="leituras.js"></script>
-  <script src="importar.js"></script>
-  <script src="google-integration.js"></script>
-  <script src="financeiro.js"></script>
-</body>
+          <details class="area-detalhes" id="sec-analise">
+            <summary>Entender seus gastos e o ritmo do mês</summary>
+            <div class="area-detalhes-corpo">
+              <div class="area-analises">
+                <section class="card">
+                  <div class="card-head">
+                    <h2 class="card-title">Para onde foi o dinheiro</h2>
+                    <span class="card-note" id="cat-nota"></span>
+                  </div>
+                  <div id="categorias"></div>
+                </section>
+                <section class="card ritmo">
+                  <div class="card-head">
+                    <h2 class="card-title">Ritmo do mês</h2>
+                    <span class="card-note">gasto somado dia a dia</span>
+                  </div>
+                  <div id="ritmo"></div>
+                </section>
+                <section class="card">
+                  <div class="card-head">
+                    <h2 class="card-title">Entradas e saídas</h2>
+                    <span class="card-note">últimos 6 meses</span>
+                  </div>
+                  <div id="grafico-meses"></div>
+                </section>
+                <section class="card">
+                  <div class="card-head">
+                    <h2 class="card-title">Maiores gastos do mês</h2>
+                  </div>
+                  <div id="maiores"></div>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="area-detalhes">
+            <summary>Alertas e acompanhamento</summary>
+            <div class="area-detalhes-corpo">
+              <section class="card">
+                <div class="card-head">
+                  <h2 class="card-title">Para acompanhar</h2>
+                </div>
+                <ul class="notas" id="notas"></ul>
+              </section>
+            </div>
+          </details>
+          <details class="area-detalhes">
+            <summary>Ajustar limites e preferências</summary>
+            <div class="area-detalhes-corpo">
+              <section class="section" id="sec-perguntas">
+                <div class="section-head">
+                  <h2 class="section-title">Preferências da área</h2>
+                  <span class="card-note">Cada resposta deixa a leitura mais sua. Dá para mudar depois em Limites e preferências.</span>
+                </div>
+                <div class="perguntas" id="perguntas"></div>
+              </section>
+            </div>
+          </details>
+          <details class="area-detalhes">
+            <summary>Documentos do Google Drive</summary>
+            <div class="area-detalhes-corpo">
+              <section class="section">
+                <div class="section-head">
+                  <h2 class="section-title">Documentos no Google Drive</h2>
+                  <span class="google-state" id="google-status"><span class="google-dot"></span><span id="google-texto">Não conectado</span></span>
+                </div>
+                <div class="card">
+                  <p class="card-note" style="margin:0 0 12px;">Conecte para ver os documentos financeiros mais recentes do seu Drive: extratos, boletos, comprovantes.</p>
+                  <button class="btn" id="google-connect-btn" type="button">Conectar ao Google</button>
+                  <div id="google-drive-list" style="margin-top:12px;"></div>
+                </div>
+              </section>
+            </div>
+          </details>
+        </div>
+      </main>
+    </div>
+    <script src="data.js"></script>
+    <script src="arquivos.js"></script>
+    <script src="store.js"></script>
+    <script src="personalizacao.js"></script>
+    <script src="ui.js"></script>
+    <script src="sessao.js"></script>
+    <script src="nuvem.js"></script>
+    <script src="financas.js"></script>
+    <script src="lancamento.js"></script>
+    <script src="leituras.js"></script>
+    <script src="importar.js"></script>
+    <script src="google-integration.js"></script>
+    <script src="financeiro.js"></script>
+  </body>
 </html>

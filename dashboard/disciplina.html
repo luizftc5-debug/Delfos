@@ -1,114 +1,110 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Disciplina · Delfos</title>
-  <meta name="theme-color" content="#111110" />
-  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <script src="config.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
-  <!-- Mesmas fontes do editor de resumos: a pré-visualização aqui usa a fonte
-       que a pessoa escolheu lá, então precisa carregá-las também. -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;600&family=Space+Mono:wght@400;700&family=Caveat:wght@500;700&display=swap" />
-  <link rel="stylesheet" href="theme.css" />
-  <link rel="stylesheet" href="interface.css" />
-</head>
-<body>
-  <div class="app">
-    <nav class="sidebar" id="sidebar"></nav>
-    <main class="main">
-      <div class="wrap" id="conteudo">
-        <a class="voltar" href="faculdade.html">← Faculdade</a>
-
-        <header class="topbar">
-          <div>
-            <div class="eyebrow faculdade" id="etiqueta">Disciplina</div>
-            <h1 id="titulo">&nbsp;</h1>
-            <p class="sub" id="subtitulo"></p>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Disciplina · Delfos</title>
+    <meta name="theme-color" content="#111110" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <script src="config.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
+    <!-- Mesmas fontes do editor de resumos: a pré-visualização aqui usa a fonte
+    que a pessoa escolheu lá, então precisa carregá-las também. -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;600&family=Space+Mono:wght@400;700&family=Caveat:wght@500;700&display=swap" />
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="interface.css" />
+    <link rel="stylesheet" href="areas.css" />
+  </head>
+  <body class="area-pagina area-detalhe">
+    <div class="app">
+      <nav class="sidebar" id="sidebar"></nav>
+      <main class="main">
+        <div class="wrap" id="conteudo">
+          <a class="voltar" href="faculdade.html">← Faculdade</a>
+          <header class="topbar">
+            <div>
+              <div class="eyebrow faculdade" id="etiqueta">Disciplina</div>
+              <h1 id="titulo">&nbsp;</h1>
+              <p class="sub" id="subtitulo"></p>
+            </div>
+            <div class="topbar-actions">
+              <button class="btn" id="btn-editar">Editar disciplina</button>
+              <button class="btn" id="btn-avaliacao">+ Avaliação</button>
+              <button class="btn primary" id="btn-resumo">+ Novo resumo</button>
+            </div>
+          </header>
+          <div class="grid g4 area-resumo">
+            <div class="card tinted faculdade">
+              <div class="stat-label">Média até agora</div>
+              <div class="stat-value num" id="s-media">-</div>
+              <div class="stat-sub" id="s-media-d"></div>
+            </div>
+            <div class="card tinted faculdade">
+              <div class="stat-label">Próxima avaliação</div>
+              <div class="stat-value" id="s-proxima" style="font-size:17px;">-</div>
+              <div class="stat-sub" id="s-proxima-d"></div>
+            </div>
+            <div class="card tinted faculdade">
+              <div class="stat-label">Prazos em aberto</div>
+              <div class="stat-value num" id="s-prazos">-</div>
+              <div class="stat-sub" id="s-prazos-d"></div>
+            </div>
+            <div class="card tinted faculdade">
+              <div class="stat-label">Materiais e resumos</div>
+              <div class="stat-value num" id="s-conteudo">-</div>
+              <div class="stat-sub" id="s-conteudo-d"></div>
+            </div>
           </div>
-          <div class="topbar-actions">
-            <button class="btn" id="btn-editar">Editar disciplina</button>
-            <button class="btn primary" id="btn-avaliacao">+ Avaliação</button>
-          </div>
-        </header>
-
-        <div class="grid g4" style="margin-bottom:14px;">
-          <div class="card tinted faculdade">
-            <div class="stat-label">Média até agora</div>
-            <div class="stat-value num" id="s-media">-</div>
-            <div class="stat-sub" id="s-media-d"></div>
-          </div>
-          <div class="card tinted faculdade">
-            <div class="stat-label">Próxima avaliação</div>
-            <div class="stat-value" id="s-proxima" style="font-size:17px;">-</div>
-            <div class="stat-sub" id="s-proxima-d"></div>
-          </div>
-          <div class="card tinted faculdade">
-            <div class="stat-label">Prazos em aberto</div>
-            <div class="stat-value num" id="s-prazos">-</div>
-            <div class="stat-sub" id="s-prazos-d"></div>
-          </div>
-          <div class="card tinted faculdade">
-            <div class="stat-label">Materiais e resumos</div>
-            <div class="stat-value num" id="s-conteudo">-</div>
-            <div class="stat-sub" id="s-conteudo-d"></div>
+          <div class="area-conteudo">
+            <div class="area-principal">
+              <section class="area-painel">
+                <div class="section-head">
+                  <h2 class="section-title">Resumos e anotações</h2>
+                  <span class="card-note">Seu espaço de estudo</span>
+                </div>
+                <div id="resumos"></div>
+              </section>
+              <section class="area-painel">
+                <div class="section-head">
+                  <h2 class="section-title">Materiais</h2>
+                  <span class="area-acoes-linha"> <button class="btn ghost sm" id="btn-drive">⇩ Importar do Drive</button> <button class="btn ghost sm" id="btn-material">+ Material</button> </span>
+                </div>
+                <div id="materiais"></div>
+              </section>
+            </div>
+            <aside class="area-contexto" aria-label="Informações e acompanhamento">
+              <section class="card area-painel">
+                <div class="card-head">
+                  <h2 class="card-title"><span class="swatch faculdade"></span>Avaliações e notas</h2>
+                  <button class="btn ghost sm" id="btn-avaliacao-2">+ Adicionar</button>
+                </div>
+                <div id="avaliacoes"></div>
+              </section>
+              <section class="card area-painel">
+                <div class="card-head">
+                  <h2 class="card-title">Prazos e entregas</h2>
+                  <button class="btn ghost sm" id="btn-prazo">+ Adicionar</button>
+                </div>
+                <div id="prazos"></div>
+              </section>
+            </aside>
           </div>
         </div>
-
-        <div class="grid g2">
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title"><span class="swatch faculdade"></span>Avaliações e notas</h2>
-              <button class="btn ghost sm" id="btn-avaliacao-2">+ Adicionar</button>
-            </div>
-            <div id="avaliacoes"></div>
-          </section>
-
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title">Prazos e entregas</h2>
-              <button class="btn ghost sm" id="btn-prazo">+ Adicionar</button>
-            </div>
-            <div id="prazos"></div>
-          </section>
-        </div>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Materiais</h2>
-            <span style="display:flex; gap:8px;">
-              <button class="btn ghost sm" id="btn-drive">⇩ Importar do Drive</button>
-              <button class="btn ghost sm" id="btn-material">+ Material</button>
-            </span>
-          </div>
-          <div class="card"><div id="materiais"></div></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Resumos e anotações</h2>
-            <button class="btn ghost sm" id="btn-resumo">+ Resumo</button>
-          </div>
-          <div id="resumos"></div>
-        </section>
-      </div>
-    </main>
-  </div>
-
-  <script src="data.js"></script>
-  <script src="arquivos.js"></script>
-  <script src="store.js"></script>
-  <script src="personalizacao.js"></script>
-  <script src="ui.js"></script>
-  <script src="sessao.js"></script>
-  <script src="nuvem.js"></script>
-  <script src="financas.js"></script>
-  <script src="leituras.js"></script>
-  <script src="google-integration.js"></script>
-  <script src="disciplina.js"></script>
-</body>
+      </main>
+    </div>
+    <script src="data.js"></script>
+    <script src="arquivos.js"></script>
+    <script src="store.js"></script>
+    <script src="personalizacao.js"></script>
+    <script src="ui.js"></script>
+    <script src="sessao.js"></script>
+    <script src="nuvem.js"></script>
+    <script src="financas.js"></script>
+    <script src="leituras.js"></script>
+    <script src="google-integration.js"></script>
+    <script src="disciplina.js"></script>
+  </body>
 </html>

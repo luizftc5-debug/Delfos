@@ -25,3 +25,18 @@ jobs:
           done
       - name: Verificar persistência e backup
         run: node --test dashboard/test/*.test.cjs
+
+  editor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar ferramenta de teste
+        run: |
+          python -m pip install -r dashboard/test/requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Verificar salvamento automático e editor
+        run: python dashboard/test/editor.browser.py

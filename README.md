@@ -9,12 +9,27 @@ no celular, os atalhos seguem a ordem escolhida e não mudam ao abrir outra áre
 **Nova área** oferece pontos de partida para Trabalho, Saúde, Academia, Esporte,
 Religião, Leituras e área livre. Projetos continua separado de Trabalho.
 
+As páginas internas agrupam registros e suas ações em painéis principais, com
+contexto ao lado e ajustes/relatórios expansíveis. Os ícones da navegação são
+monocromáticos. O editor salva automaticamente enquanto você escreve, mostra o
+status no centro, permite inserir símbolos e conserva a versão em edição caso
+chegue uma alteração concorrente. O rodapé exibe apenas a marca e a assinatura.
+
 A aparência compartilhada está em `dashboard/interface.css`, sobre os
 componentes de `dashboard/theme.css`. As chaves de armazenamento e os dados
 existentes foram preservados. Testes de persistência e backup:
 
 ```bash
 node --test dashboard/test/*.test.cjs
+```
+
+Regressões do editor em navegador, incluindo recarga, recuperação de falha,
+símbolos e responsividade (também executadas pelo workflow Interface):
+
+```bash
+python -m pip install -r dashboard/test/requirements.txt
+python -m playwright install chromium
+python dashboard/test/editor.browser.py
 ```
 
 O restante deste guia descreve os recursos disponíveis; referências ao visual

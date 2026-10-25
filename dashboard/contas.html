@@ -1,98 +1,104 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Contas e cartões · Delfos</title>
-  <meta name="theme-color" content="#111110" />
-  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
-  <link rel="stylesheet" href="theme.css" />
-  <link rel="stylesheet" href="interface.css" />
-</head>
-<body>
-  <div class="app">
-    <nav class="sidebar" id="sidebar"></nav>
-    <main class="main">
-      <div class="wrap">
-        <header class="topbar">
-          <div>
-            <h1>Contas e cartões</h1>
-            <p class="sub">Quanto você tem em cada conta e quanto deve em cada cartão.</p>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Contas e cartões · Delfos</title>
+    <meta name="theme-color" content="#111110" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="interface.css" />
+    <link rel="stylesheet" href="areas.css" />
+  </head>
+  <body class="area-pagina area-contas">
+    <div class="app">
+      <nav class="sidebar" id="sidebar"></nav>
+      <main class="main">
+        <div class="wrap">
+          <header class="topbar">
+            <div>
+              <h1>Contas e cartões</h1>
+              <p class="sub">Quanto você tem em cada conta e quanto deve em cada cartão.</p>
+            </div>
+            <div class="topbar-actions">
+              <button class="btn" id="btn-cartao">+ Cartão</button>
+              <button class="btn primary" id="btn-conta">+ Conta</button>
+            </div>
+          </header>
+          <nav class="abas" aria-label="Seções do financeiro">
+            <a href="financeiro.html">Resumo do mês</a>
+            <a href="contas.html" aria-current="page">Contas e cartões</a>
+            <a href="investimentos.html">Investimentos</a>
+          </nav>
+          <div id="avisos"></div>
+          <div class="grid g3 area-resumo" style="margin-bottom:14px;">
+            <div class="card tinted financeiro">
+              <div class="stat-label">Total em contas</div>
+              <div class="stat-value num" id="s-total">-</div>
+              <div class="stat-sub" id="s-total-d"></div>
+            </div>
+            <div class="card tinted financeiro">
+              <div class="stat-label">Faturas abertas</div>
+              <div class="stat-value num" id="s-faturas">-</div>
+              <div class="stat-sub" id="s-faturas-d"></div>
+            </div>
+            <div class="card tinted financeiro">
+              <div class="stat-label">Sobra estimada</div>
+              <div class="stat-value num" id="s-sobra">-</div>
+              <div class="stat-sub">Contas menos faturas em aberto</div>
+            </div>
           </div>
-          <div class="topbar-actions">
-            <button class="btn" id="btn-cartao">+ Cartão</button>
-            <button class="btn primary" id="btn-conta">+ Conta</button>
+          <nav class="area-atalhos" aria-label="Nesta página">
+            <a href="#sec-contas">Contas</a>
+            <a href="#sec-cartoes">Cartões</a>
+            <a href="#sec-balanco">Balanço</a>
+          </nav>
+          <div class="area-duas">
+            <section class="section area-painel" style="margin-top:28px;" id="sec-contas">
+              <div class="section-head">
+                <h2 class="section-title"><span class="swatch financeiro"></span>Contas</h2>
+                <span class="card-note" id="contas-resumo"></span>
+              </div>
+              <div id="contas"></div>
+            </section>
+            <section class="section area-painel" id="sec-cartoes">
+              <div class="section-head">
+                <h2 class="section-title"><span class="swatch cartao"></span>Cartões de crédito</h2>
+                <span class="card-note" id="cartoes-resumo"></span>
+              </div>
+              <div id="cartoes"></div>
+            </section>
           </div>
-        </header>
-
-        <nav class="abas" aria-label="Seções do financeiro">
-          <a href="financeiro.html">Resumo do mês</a>
-          <a href="contas.html" aria-current="page">Contas e cartões</a>
-          <a href="investimentos.html">Investimentos</a>
-        </nav>
-
-        <div id="avisos"></div>
-
-        <div class="grid g3" style="margin-bottom:14px;">
-          <div class="card tinted financeiro">
-            <div class="stat-label">Total em contas</div>
-            <div class="stat-value num" id="s-total">-</div>
-            <div class="stat-sub" id="s-total-d"></div>
-          </div>
-          <div class="card tinted financeiro">
-            <div class="stat-label">Faturas abertas</div>
-            <div class="stat-value num" id="s-faturas">-</div>
-            <div class="stat-sub" id="s-faturas-d"></div>
-          </div>
-          <div class="card tinted financeiro">
-            <div class="stat-label">Sobra estimada</div>
-            <div class="stat-value num" id="s-sobra">-</div>
-            <div class="stat-sub">Contas menos faturas em aberto</div>
-          </div>
+          <details class="area-detalhes" id="sec-balanco">
+            <summary>Comparar participação nos gastos</summary>
+            <div class="area-detalhes-corpo">
+              <section class="section">
+                <div class="section-head">
+                  <h2 class="section-title">Balanço</h2>
+                  <span class="card-note">participação de cada conta e cartão nos gastos</span>
+                </div>
+                <div class="card">
+                  <div id="balanco"></div>
+                </div>
+              </section>
+            </div>
+          </details>
         </div>
-
-        <section class="section" style="margin-top:28px;">
-          <div class="section-head">
-            <h2 class="section-title"><span class="swatch financeiro"></span>Contas</h2>
-            <span class="card-note" id="contas-resumo"></span>
-          </div>
-          <div id="contas"></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title"><span class="swatch cartao"></span>Cartões de crédito</h2>
-            <span class="card-note" id="cartoes-resumo"></span>
-          </div>
-          <div id="cartoes"></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Balanço</h2>
-            <span class="card-note">participação de cada conta e cartão nos gastos</span>
-          </div>
-          <div class="card">
-            <div id="balanco"></div>
-          </div>
-        </section>
-      </div>
-    </main>
-  </div>
-
-  <script src="data.js"></script>
-  <script src="arquivos.js"></script>
-  <script src="store.js"></script>
-  <script src="personalizacao.js"></script>
-  <script src="ui.js"></script>
-  <script src="sessao.js"></script>
-  <script src="nuvem.js"></script>
-  <script src="financas.js"></script>
-  <script src="leituras.js"></script>
-  <script src="contas.js"></script>
-</body>
+      </main>
+    </div>
+    <script src="data.js"></script>
+    <script src="arquivos.js"></script>
+    <script src="store.js"></script>
+    <script src="personalizacao.js"></script>
+    <script src="ui.js"></script>
+    <script src="sessao.js"></script>
+    <script src="nuvem.js"></script>
+    <script src="financas.js"></script>
+    <script src="leituras.js"></script>
+    <script src="contas.js"></script>
+  </body>
 </html>

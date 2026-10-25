@@ -188,17 +188,12 @@ const UI = (() => {
     return `<svg class="ico duo ${classe}" data-ico="${nome}" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">${miolo}</svg>`;
   }
 
-  /**
-   * O selo de uma aba na navegação (barra lateral, folha "Mais", lista de
-   * abas do perfil): quadrado no tom da aba com o ícone em duas camadas. A
-   * cor vem de --cor-aba: classe do pilar nas fixas, hex inline nas criadas.
-   * É enfeite ao lado do nome: o leitor de tela pula (um glifo como "◆"
-   * seria lido antes do nome da aba).
-   */
+  // A navegação usa apenas o contorno regular. Cores continuam disponíveis
+  // nos dados e no calendário, sem transformar cada destino num selo.
   function seloAba(p, classe = "nav-icon") {
-    return p.corHex
-      ? `<span class="${classe} propria" style="--cor-aba:${fmt.escape(p.corHex)}" aria-hidden="true">${iconeAba(p.icone, true)}</span>`
-      : `<span class="${classe} ${p.cor || "geral"}" aria-hidden="true">${iconeDuo(p.icone)}</span>`;
+    const legados = { "★": "estrela", "✦": "estrela", "♥": "coracao", "⚑": "bandeira", "⌂": "casa", "♪": "musica", "☾": "lua", "✎": "lapis", "✚": "cruz", "✈": "aviao", "⚘": "folha" };
+    const nome = p.corHex ? (String(p.icone || "").startsWith("svg:") ? p.icone.slice(4) : legados[p.icone] || "grade") : p.icone;
+    return `<span class="${classe} ${p.cor || "geral"}" aria-hidden="true">${icone(nome) || icone("grade")}</span>`;
   }
 
   /** SVG de um ícone do Delfos (vazio se o nome não existir). */
@@ -575,11 +570,11 @@ const UI = (() => {
   // `icone` aqui é o nome de um desenho de ICONES; as abas criadas pelo
   // usuário guardam um glifo (Store.ICONES_PILAR), que é dado dele.
   const PAGINAS = [
-    { id: "home", rotulo: "Visão geral", href: "index.html", cor: "", icone: "home" },
-    { id: "pessoal", rotulo: "Pessoal", href: "pessoal.html", cor: "pessoal", icone: "pessoal" },
+    { id: "home", rotulo: "Visão geral", href: "index.html", cor: "", icone: "casa" },
+    { id: "pessoal", rotulo: "Pessoal", href: "pessoal.html", cor: "pessoal", icone: "calendario" },
     { id: "financeiro", rotulo: "Financeiro", href: "financeiro.html", cor: "financeiro", icone: "financeiro" },
     { id: "faculdade", rotulo: "Faculdade", href: "faculdade.html", cor: "faculdade", icone: "faculdade" },
-    { id: "projetos", rotulo: "Projetos", href: "projetos.html", cor: "projetos", icone: "projetos" },
+    { id: "projetos", rotulo: "Projetos", href: "projetos.html", cor: "projetos", icone: "maleta" },
   ];
 
   // Páginas de detalhe se acendem no item de nível de cima a que pertencem.
@@ -728,9 +723,9 @@ const UI = (() => {
     el.innerHTML = `
       <a class="marca-topo" href="index.html" aria-label="${fmt.escape(NOME)}, visão geral" translate="no">
         ${logotipo()}
-        <span class="marca-versao" aria-hidden="true">${fmt.escape(VERSAO)}</span>
+        <span class="marca-assinatura">O essencial se revela.</span>
       </a>
-      <p class="nav-legenda">Seu espaço</p>
+      <p class="nav-legenda">Áreas da vida</p>
       <nav class="nav" aria-label="Áreas da vida">${itens}</nav>
       <button class="nav-nova" id="btn-nova-aba" type="button">${icone("mais")}Nova área</button>
       <button class="btn ghost sm nav-organizar" id="btn-organizar" type="button">Organizar áreas</button>

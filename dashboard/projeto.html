@@ -1,102 +1,98 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Projeto · Delfos</title>
-  <meta name="theme-color" content="#111110" />
-  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
-  <link rel="stylesheet" href="theme.css" />
-  <link rel="stylesheet" href="interface.css" />
-</head>
-<body>
-  <div class="app">
-    <nav class="sidebar" id="sidebar"></nav>
-    <main class="main">
-      <div class="wrap" id="conteudo">
-        <a class="voltar" href="projetos.html">← Projetos</a>
-
-        <header class="topbar">
-          <div>
-            <div class="eyebrow projetos" id="etiqueta">Projeto</div>
-            <h1 id="titulo">&nbsp;</h1>
-            <p class="sub" id="subtitulo"></p>
-            <div class="selos" id="selos"></div>
-          </div>
-          <div class="topbar-actions">
-            <button class="btn" id="btn-editar">Editar projeto</button>
-            <button class="btn primary" id="btn-recebimento">+ Recebimento</button>
-          </div>
-        </header>
-
-        <div class="grid g4" id="stats" style="margin-bottom:14px;"></div>
-
-        <div class="grid g2">
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title"><span class="swatch projetos"></span>Etapas</h2>
-              <button class="btn ghost sm" id="btn-etapa">+ Etapa</button>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Projeto · Delfos</title>
+    <meta name="theme-color" content="#111110" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="interface.css" />
+    <link rel="stylesheet" href="areas.css" />
+  </head>
+  <body class="area-pagina area-detalhe">
+    <div class="app">
+      <nav class="sidebar" id="sidebar"></nav>
+      <main class="main">
+        <div class="wrap" id="conteudo">
+          <a class="voltar" href="projetos.html">← Projetos</a>
+          <header class="topbar">
+            <div>
+              <div class="eyebrow projetos" id="etiqueta">Projeto</div>
+              <h1 id="titulo">&nbsp;</h1>
+              <p class="sub" id="subtitulo"></p>
+              <div class="selos" id="selos"></div>
             </div>
-            <div id="progresso"></div>
-            <div id="etapas"></div>
-          </section>
-
-          <section class="card">
-            <div class="card-head">
-              <h2 class="card-title">Ficha do projeto</h2>
+            <div class="topbar-actions">
+              <button class="btn" id="btn-editar">Editar projeto</button>
+              <button class="btn primary" id="btn-recebimento">+ Recebimento</button>
             </div>
-            <div id="ficha"></div>
-          </section>
+          </header>
+          <div class="grid g4 area-resumo" id="stats"></div>
+          <div class="area-conteudo">
+            <div class="area-principal">
+              <section class="card area-painel">
+                <div class="card-head">
+                  <h2 class="card-title"><span class="swatch projetos"></span>Etapas</h2>
+                  <button class="btn ghost sm" id="btn-etapa">+ Etapa</button>
+                </div>
+                <div id="progresso"></div>
+                <div id="etapas"></div>
+              </section>
+              <section class="area-painel">
+                <div class="section-head">
+                  <h2 class="section-title"><span class="swatch financeiro"></span>Recebimentos</h2>
+                  <span class="card-note" id="recebimentos-resumo"></span>
+                </div>
+                <div id="recebimentos"></div>
+              </section>
+              <section class="area-painel">
+                <div class="section-head">
+                  <h2 class="section-title">Custos do projeto</h2>
+                  <button class="btn ghost sm" id="btn-custo">+ Custo</button>
+                </div>
+                <div id="custos"></div>
+              </section>
+            </div>
+            <aside class="area-contexto" aria-label="Informações e acompanhamento">
+              <section class="card area-painel">
+                <div class="card-head">
+                  <h2 class="card-title">Ficha do projeto</h2>
+                </div>
+                <div id="ficha"></div>
+              </section>
+              <section class="area-painel">
+                <div class="section-head">
+                  <h2 class="section-title">Anotações</h2>
+                  <button class="btn ghost sm" id="btn-anotacoes">Editar anotações</button>
+                </div>
+                <div id="anotacoes"></div>
+              </section>
+              <section class="area-painel">
+                <div class="section-head">
+                  <h2 class="section-title">Documentos</h2>
+                  <button class="btn ghost sm" id="btn-anexos">Anexar documentos</button>
+                </div>
+                <div id="anexos"></div>
+              </section>
+            </aside>
+          </div>
         </div>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title"><span class="swatch financeiro"></span>Recebimentos</h2>
-            <span class="card-note" id="recebimentos-resumo"></span>
-          </div>
-          <div class="card"><div id="recebimentos"></div></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Custos do projeto</h2>
-            <button class="btn ghost sm" id="btn-custo">+ Custo</button>
-          </div>
-          <div class="card"><div id="custos"></div></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Documentos</h2>
-            <button class="btn ghost sm" id="btn-anexos">Anexar documentos</button>
-          </div>
-          <div class="card"><div id="anexos"></div></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Anotações</h2>
-            <button class="btn ghost sm" id="btn-anotacoes">Editar anotações</button>
-          </div>
-          <div class="card"><div id="anotacoes"></div></div>
-        </section>
-      </div>
-    </main>
-  </div>
-
-  <script src="data.js"></script>
-  <script src="arquivos.js"></script>
-  <script src="store.js"></script>
-  <script src="personalizacao.js"></script>
-  <script src="ui.js"></script>
-  <script src="sessao.js"></script>
-  <script src="nuvem.js"></script>
-  <script src="financas.js"></script>
-  <script src="leituras.js"></script>
-  <script src="projeto.js"></script>
-</body>
+      </main>
+    </div>
+    <script src="data.js"></script>
+    <script src="arquivos.js"></script>
+    <script src="store.js"></script>
+    <script src="personalizacao.js"></script>
+    <script src="ui.js"></script>
+    <script src="sessao.js"></script>
+    <script src="nuvem.js"></script>
+    <script src="financas.js"></script>
+    <script src="leituras.js"></script>
+    <script src="projeto.js"></script>
+  </body>
 </html>

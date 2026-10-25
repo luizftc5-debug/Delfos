@@ -312,11 +312,12 @@
       });
     });
 
-    const ordem = UI.paginas().map((p) => p.id);
+    const paginas = UI.paginas();
+    const ordem = paginas.map((p) => p.id);
     grid.innerHTML = linhas.filter((c) => ordem.includes(c.id)).sort((a, b) => ordem.indexOf(a.id) - ordem.indexOf(b.id))
       .map((c) => `
         <a class="pillar indice-linha ${c.cor}" href="${c.href}"${c.corHex ? ` style="--tint:${fmt.escape(c.corHex)}"` : ""}>
-          <span class="pillar-ic" aria-hidden="true">${c.corHex ? UI.iconeAba(c.glifo, true) : UI.iconeDuo(c.id)}</span>
+          ${UI.seloAba(paginas.find((p) => p.id === c.id), "pillar-ic")}
           <span class="indice-nome">${fmt.escape(c.titulo)}<small>${fmt.escape(c.sub)}</small></span>
           <span class="indice-valor num">${fmt.escape(c.valor)}<small>${fmt.escape(c.rotuloValor)}</small></span>
           <span class="indice-seta">${UI.icone("direita")}</span>
@@ -422,7 +423,6 @@
   document.getElementById("btn-saldo").addEventListener("click", ajustarSaldo);
 
   document.getElementById("btn-criar-area").addEventListener("click", () => UI.abrirCriadorDeAbas());
-  document.getElementById("btn-nova-area").addEventListener("click", () => UI.abrirCriadorDeAbas());
   document.getElementById("btn-organizar-areas").addEventListener("click", () => UI.abrirPerfil("painel"));
   document.getElementById("semana-dias").addEventListener("click", (ev) => {
     const b = ev.target.closest("[data-dia]");

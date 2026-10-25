@@ -1,89 +1,91 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Investimentos · Delfos</title>
-  <meta name="theme-color" content="#111110" />
-  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
-  <link rel="stylesheet" href="theme.css" />
-  <link rel="stylesheet" href="interface.css" />
-</head>
-<body>
-  <div class="app">
-    <nav class="sidebar" id="sidebar"></nav>
-    <main class="main">
-      <div class="wrap">
-        <header class="topbar">
-          <div>
-            <h1>Investimentos</h1>
-            <p class="sub">Renda fixa, ações, fundos e cripto: o que você já aplicou e quanto vale hoje.</p>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Investimentos · Delfos</title>
+    <meta name="theme-color" content="#111110" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="interface.css" />
+    <link rel="stylesheet" href="areas.css" />
+  </head>
+  <body class="area-pagina area-detalhe">
+    <div class="app">
+      <nav class="sidebar" id="sidebar"></nav>
+      <main class="main">
+        <div class="wrap">
+          <header class="topbar">
+            <div>
+              <h1>Investimentos</h1>
+              <p class="sub">Acompanhe sua carteira, a evolução dos valores e a distribuição dos investimentos.</p>
+            </div>
+            <div class="topbar-actions">
+              <button class="btn primary" id="btn-investimento">+ Investimento</button>
+            </div>
+          </header>
+          <nav class="abas" aria-label="Seções do financeiro">
+            <a href="financeiro.html">Resumo do mês</a>
+            <a href="contas.html">Contas e cartões</a>
+            <a href="investimentos.html" aria-current="page">Investimentos</a>
+          </nav>
+          <div class="grid g4 area-resumo">
+            <div class="card tinted financeiro">
+              <div class="stat-label">Total aplicado</div>
+              <div class="stat-value num" id="s-aplicado">-</div>
+              <div class="stat-sub" id="s-aplicado-d"></div>
+            </div>
+            <div class="card tinted financeiro">
+              <div class="stat-label">Valor atual</div>
+              <div class="stat-value num" id="s-atual">-</div>
+              <div class="stat-sub" id="s-atual-d"></div>
+            </div>
+            <div class="card tinted financeiro">
+              <div class="stat-label">Rentabilidade</div>
+              <div class="stat-value num" id="s-ganho">-</div>
+              <div class="stat-sub" id="s-ganho-d"></div>
+            </div>
+            <div class="card tinted financeiro">
+              <div class="stat-label">Diversificação</div>
+              <div class="stat-value num" id="s-tipos">-</div>
+              <div class="stat-sub" id="s-tipos-d"></div>
+            </div>
           </div>
-          <div class="topbar-actions">
-            <button class="btn primary" id="btn-investimento">+ Investimento</button>
-          </div>
-        </header>
-
-        <nav class="abas" aria-label="Seções do financeiro">
-          <a href="financeiro.html">Resumo do mês</a>
-          <a href="contas.html">Contas e cartões</a>
-          <a href="investimentos.html" aria-current="page">Investimentos</a>
-        </nav>
-
-        <div class="grid g4" style="margin-bottom:14px;">
-          <div class="card tinted financeiro">
-            <div class="stat-label">Total aplicado</div>
-            <div class="stat-value num" id="s-aplicado">-</div>
-            <div class="stat-sub" id="s-aplicado-d"></div>
-          </div>
-          <div class="card tinted financeiro">
-            <div class="stat-label">Valor atual</div>
-            <div class="stat-value num" id="s-atual">-</div>
-            <div class="stat-sub" id="s-atual-d"></div>
-          </div>
-          <div class="card tinted financeiro">
-            <div class="stat-label">Rentabilidade</div>
-            <div class="stat-value num" id="s-ganho">-</div>
-            <div class="stat-sub" id="s-ganho-d"></div>
-          </div>
-          <div class="card tinted financeiro">
-            <div class="stat-label">Diversificação</div>
-            <div class="stat-value num" id="s-tipos">-</div>
-            <div class="stat-sub" id="s-tipos-d"></div>
+          <div class="area-conteudo">
+            <div class="area-principal">
+              <section class="area-painel">
+                <div class="section-head">
+                  <h2 class="section-title">Seus investimentos</h2>
+                  <span class="card-note" id="resumo"></span>
+                </div>
+                <div id="lista"></div>
+              </section>
+            </div>
+            <aside class="area-contexto" aria-label="Informações e acompanhamento">
+              <section class="area-painel">
+                <div class="section-head">
+                  <h2 class="section-title"><span class="swatch financeiro"></span>Por tipo</h2>
+                </div>
+                <div id="por-tipo"></div>
+              </section>
+            </aside>
           </div>
         </div>
-
-        <section class="section" style="margin-top:28px;">
-          <div class="section-head">
-            <h2 class="section-title"><span class="swatch financeiro"></span>Por tipo</h2>
-          </div>
-          <div class="card"><div id="por-tipo"></div></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Seus investimentos</h2>
-            <span class="card-note" id="resumo"></span>
-          </div>
-          <div id="lista"></div>
-        </section>
-      </div>
-    </main>
-  </div>
-
-  <script src="data.js"></script>
-  <script src="arquivos.js"></script>
-  <script src="store.js"></script>
-  <script src="personalizacao.js"></script>
-  <script src="ui.js"></script>
-  <script src="sessao.js"></script>
-  <script src="nuvem.js"></script>
-  <script src="financas.js"></script>
-  <script src="leituras.js"></script>
-  <script src="investimentos.js"></script>
-</body>
+      </main>
+    </div>
+    <script src="data.js"></script>
+    <script src="arquivos.js"></script>
+    <script src="store.js"></script>
+    <script src="personalizacao.js"></script>
+    <script src="ui.js"></script>
+    <script src="sessao.js"></script>
+    <script src="nuvem.js"></script>
+    <script src="financas.js"></script>
+    <script src="leituras.js"></script>
+    <script src="investimentos.js"></script>
+  </body>
 </html>

@@ -2,6 +2,33 @@
 
 ## Revisão de 25/10/2026
 
+### Segunda revisão: composição e escrita
+
+O painel usa uma região principal por página, com controles e registros da mesma
+tarefa agrupados. Informação de contexto ocupa uma coluna secundária; análises,
+preferências e integrações menos frequentes ficam em painéis expansíveis.
+`areas.css` compõe as páginas internas e `editor.css` cuida da área de escrita.
+
+- Visão geral: contagens em faixa compacta, agenda principal e acesso às áreas ao lado.
+- Faculdade: disciplinas e entregas antes das médias e do planejamento.
+- Financeiro: lançamentos e filtros juntos; pagamentos, fixos e metas no contexto.
+- Pessoal: calendário e lista com acesso imediato; alertas ficam próximos, sem disputar a tela.
+- Projetos: projetos e oportunidades primeiro; resultados em relatórios expansíveis.
+- Navegação: ícones regulares monocromáticos, sem corpo duotone ou fundo colorido; nomes sempre visíveis.
+- Editor: grupos funcionais centralizados, status estável no centro e folha de leitura delimitada.
+- Rodapé do editor: somente logo e assinatura em serifa, sem métricas ou dicas de atalhos.
+- Salvamento automático: status acessível sem mover foco; falhas e versões concorrentes ficam explícitas.
+
+Referências utilizadas para as decisões de composição:
+[hierarquia visual](https://www.nngroup.com/articles/visual-hierarchy-ux-definition/),
+[agrupamento por região](https://www.nngroup.com/articles/common-region/),
+[exibição gradual de opções](https://www.nngroup.com/articles/progressive-disclosure/),
+[ícones com rótulos](https://www.nngroup.com/articles/icon-usability/),
+[barras de ferramentas](https://developer.apple.com/design/human-interface-guidelines/toolbars)
+e [mensagens de status acessíveis](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html).
+
+### Base da primeira revisão
+
 A identidade continua em preto, marfim e cinzas quentes. A interface agora
 prioriza orientação e ação: títulos curtos em serifa, resumos em sans-serif,
 agenda como centro da visão geral e áreas organizadas em superfícies discretas.

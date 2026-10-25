@@ -1,121 +1,132 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Projetos · Delfos</title>
-  <meta name="theme-color" content="#111110" />
-  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
-  <link rel="stylesheet" href="theme.css" />
-  <link rel="stylesheet" href="interface.css" />
-</head>
-<body>
-  <div class="app">
-    <nav class="sidebar" id="sidebar"></nav>
-    <main class="main">
-      <div class="wrap">
-        <header class="topbar">
-          <div>
-            <h1>Projetos</h1>
-            <p class="sub">Iniciativas pessoais que geram renda. Trabalhos da faculdade e o TCC ficam em <a href="faculdade.html">Faculdade</a>.</p>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Projetos · Delfos</title>
+    <meta name="theme-color" content="#111110" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="interface.css" />
+    <link rel="stylesheet" href="areas.css" />
+  </head>
+  <body class="area-pagina area-projetos">
+    <div class="app">
+      <nav class="sidebar" id="sidebar"></nav>
+      <main class="main">
+        <div class="wrap">
+          <header class="topbar">
+            <div>
+              <h1>Projetos</h1>
+              <p class="sub">Iniciativas pessoais que geram renda. Trabalhos da faculdade e o TCC ficam em <a href="faculdade.html">Faculdade</a>.</p>
+            </div>
+            <div class="topbar-actions">
+              <button class="btn" id="btn-oportunidade">+ Oportunidade</button>
+              <button class="btn primary" id="btn-projeto">+ Projeto</button>
+            </div>
+          </header>
+          <p class="leitura" id="leitura"></p>
+          <div class="grid g4 area-resumo" style="margin-bottom:14px;">
+            <div class="card tinted projetos">
+              <div class="stat-label">Projetos ativos</div>
+              <div class="stat-value num" id="s-ativos">-</div>
+              <div class="stat-sub" id="s-ativos-d"></div>
+            </div>
+            <div class="card tinted projetos">
+              <div class="stat-label">Renda potencial</div>
+              <div class="stat-value num" id="s-renda">-</div>
+              <div class="stat-sub" id="s-renda-d"></div>
+            </div>
+            <div class="card tinted projetos">
+              <div class="stat-label">Já faturado</div>
+              <div class="stat-value num" id="s-faturado">-</div>
+              <div class="stat-sub" id="s-faturado-d"></div>
+            </div>
+            <div class="card tinted projetos">
+              <div class="stat-label">Etapas concluídas</div>
+              <div class="stat-value num" id="s-etapas">-</div>
+              <div class="stat-sub" id="s-etapas-d"></div>
+            </div>
           </div>
-          <div class="topbar-actions">
-            <button class="btn" id="btn-oportunidade">+ Oportunidade</button>
-            <button class="btn primary" id="btn-projeto">+ Projeto</button>
+          <nav class="area-atalhos" aria-label="Nesta página">
+            <a href="#sec-projetos">Seus projetos</a>
+            <a href="#sec-oportunidades">Oportunidades</a>
+            <a href="#sec-resultados">Resultados</a>
+          </nav>
+          <div class="area-conteudo">
+            <div class="area-principal">
+              <section class="section area-painel" id="sec-projetos">
+                <div class="section-head">
+                  <h2 class="section-title">Seus projetos</h2>
+                </div>
+                <div id="projetos"></div>
+              </section>
+            </div>
+            <aside class="area-contexto" aria-label="Contexto e acompanhamento">
+              <section class="section area-painel" id="sec-oportunidades">
+                <div class="section-head">
+                  <h2 class="section-title">Oportunidades de renda</h2>
+                  <span class="card-note">ideias ainda não viraram projeto</span>
+                </div>
+                <div id="oportunidades"></div>
+              </section>
+              <section class="card area-painel">
+                <div class="card-head">
+                  <h2 class="card-title">Para acompanhar</h2>
+                </div>
+                <ul class="notas" id="notas"></ul>
+              </section>
+            </aside>
           </div>
-        </header>
-
-        <p class="leitura" id="leitura"></p>
-
-        <div class="grid g4" style="margin-bottom:14px;">
-          <div class="card tinted projetos">
-            <div class="stat-label">Projetos ativos</div>
-            <div class="stat-value num" id="s-ativos">-</div>
-            <div class="stat-sub" id="s-ativos-d"></div>
-          </div>
-          <div class="card tinted projetos">
-            <div class="stat-label">Renda potencial</div>
-            <div class="stat-value num" id="s-renda">-</div>
-            <div class="stat-sub" id="s-renda-d"></div>
-          </div>
-          <div class="card tinted projetos">
-            <div class="stat-label">Já faturado</div>
-            <div class="stat-value num" id="s-faturado">-</div>
-            <div class="stat-sub" id="s-faturado-d"></div>
-          </div>
-          <div class="card tinted projetos">
-            <div class="stat-label">Etapas concluídas</div>
-            <div class="stat-value num" id="s-etapas">-</div>
-            <div class="stat-sub" id="s-etapas-d"></div>
-          </div>
+          <details class="area-detalhes" id="sec-resultados">
+            <summary>Acompanhar resultados e recebimentos</summary>
+            <div class="area-detalhes-corpo">
+              <div class="area-analises">
+                <section class="card">
+                  <div class="card-head">
+                    <h2 class="card-title" id="titulo-renda">Recebido por projeto</h2>
+                    <span class="card-note">marca na renda estimada</span>
+                  </div>
+                  <div id="renda-projetos"></div>
+                </section>
+                <section class="card">
+                  <div class="card-head">
+                    <h2 class="card-title">Últimos seis meses</h2>
+                    <span class="card-note" id="meses-nota"></span>
+                  </div>
+                  <div id="renda-meses"></div>
+                </section>
+              </div>
+            </div>
+          </details>
+          <details class="area-detalhes">
+            <summary>Ajustar metas de trabalho</summary>
+            <div class="area-detalhes-corpo">
+              <section class="section" id="sec-perguntas" hidden>
+                <div class="section-head">
+                  <h2 class="section-title">Preferências da área</h2>
+                  <span class="card-note">Cada resposta deixa a leitura mais sua.</span>
+                </div>
+                <div class="perguntas" id="perguntas"></div>
+              </section>
+            </div>
+          </details>
         </div>
-
-        <div class="fin-duas">
-          <div class="fin-coluna">
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">O que o Delfos notou</h2>
-              </div>
-              <ul class="notas" id="notas"></ul>
-            </section>
-          </div>
-          <div class="fin-coluna">
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title" id="titulo-renda">Recebido por projeto</h2>
-                <span class="card-note">marca na renda estimada</span>
-              </div>
-              <div id="renda-projetos"></div>
-            </section>
-            <section class="card">
-              <div class="card-head">
-                <h2 class="card-title">Últimos seis meses</h2>
-                <span class="card-note" id="meses-nota"></span>
-              </div>
-              <div id="renda-meses"></div>
-            </section>
-          </div>
-        </div>
-
-        <section class="section" id="sec-perguntas" hidden>
-          <div class="section-head">
-            <h2 class="section-title">Perguntas do Delfos</h2>
-            <span class="card-note">Cada resposta deixa a leitura mais sua.</span>
-          </div>
-          <div class="perguntas" id="perguntas"></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Seus projetos</h2>
-          </div>
-          <div id="projetos"></div>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">Oportunidades de renda</h2>
-            <span class="card-note">ideias ainda não viraram projeto</span>
-          </div>
-          <div class="card"><div id="oportunidades"></div></div>
-        </section>
-      </div>
-    </main>
-  </div>
-
-  <script src="data.js"></script>
-  <script src="arquivos.js"></script>
-  <script src="store.js"></script>
-  <script src="personalizacao.js"></script>
-  <script src="ui.js"></script>
-  <script src="sessao.js"></script>
-  <script src="nuvem.js"></script>
-  <script src="financas.js"></script>
-  <script src="leituras.js"></script>
-  <script src="projetos.js"></script>
-</body>
+      </main>
+    </div>
+    <script src="data.js"></script>
+    <script src="arquivos.js"></script>
+    <script src="store.js"></script>
+    <script src="personalizacao.js"></script>
+    <script src="ui.js"></script>
+    <script src="sessao.js"></script>
+    <script src="nuvem.js"></script>
+    <script src="financas.js"></script>
+    <script src="leituras.js"></script>
+    <script src="projetos.js"></script>
+  </body>
 </html>

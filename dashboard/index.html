@@ -15,7 +15,8 @@
 </head>
 <body class="pagina-hoje">
   <div class="app">
-    <nav class="sidebar" id="sidebar" aria-label="Navegação principal"></nav>
+    <nav class="sidebar" id="sidebar" aria-label="Navegação principal">
+    </nav>
     <main class="main">
       <div class="wrap">
         <header class="topbar">
@@ -24,73 +25,109 @@
             <h1 id="titulo-dia">Seu dia</h1>
           </div>
           <div class="topbar-actions">
-            <button class="btn" id="btn-criar-area" type="button">Criar área</button>
             <button class="btn primary" id="btn-prazo" type="button">+ Novo compromisso</button>
           </div>
         </header>
         <p class="leitura" id="leitura"></p>
-
+        <section class="dia-resumo" aria-labelledby="titulo-resumo">
+          <div class="section-head">
+            <h2 class="section-title" id="titulo-resumo">Sua semana, num olhar</h2>
+          </div>
+          <dl class="dia-numeros" id="dia-numeros"></dl>
+          <a class="dia-link" href="pessoal.html">Abrir calendário <span aria-hidden="true">↗</span></a>
+        </section>
         <div class="home-duas">
-          <section class="home-agenda" id="sec-agenda" aria-labelledby="titulo-agenda">
-            <div class="section-head">
-              <div><h2 class="section-title" id="titulo-agenda">Sua agenda</h2><p class="card-note" id="agenda-resumo"></p></div>
-              <select class="input sm" id="agenda-periodo" aria-label="Período da agenda">
-                <option value="7">Próximos 7 dias</option>
-                <option value="30">Próximos 30 dias</option>
-                <option value="semana">Semana exibida</option>
-              </select>
-            </div>
-            <div class="semana-navegacao"><button class="btn ghost sm" id="semana-anterior" type="button" aria-label="Semana anterior">‹</button><span id="semana-rotulo"></span><button class="btn ghost sm" id="semana-seguinte" type="button" aria-label="Próxima semana">›</button><button class="link-mini" id="agenda-hoje" type="button">Hoje</button></div>
-            <div class="semana-dias" id="semana-dias" role="group" aria-label="Filtrar agenda por dia"></div>
-            <div id="agenda"></div>
-          </section>
-
-          <aside class="home-lado" aria-label="Resumo pessoal">
-            <section class="dia-resumo" aria-labelledby="titulo-resumo">
-              <div class="section-head"><h2 class="section-title" id="titulo-resumo">Em perspectiva</h2></div>
-              <dl class="dia-numeros" id="dia-numeros"></dl>
-              <a class="dia-link" href="pessoal.html">Abrir calendário <span aria-hidden="true">↗</span></a>
+          <div class="home-fluxo">
+            <section class="home-agenda" id="sec-agenda" aria-labelledby="titulo-agenda">
+              <div class="section-head">
+                <div>
+                  <h2 class="section-title" id="titulo-agenda">Sua agenda</h2>
+                  <p class="card-note" id="agenda-resumo"></p>
+                </div>
+                <select class="input sm" id="agenda-periodo" aria-label="Período da agenda"><option value="7">Próximos 7 dias</option><option value="30">Próximos 30 dias</option><option value="semana">Semana exibida</option></select>
+              </div>
+              <div class="semana-navegacao">
+                <button class="btn ghost sm" id="semana-anterior" type="button" aria-label="Semana anterior">‹</button>
+                <span id="semana-rotulo"></span><button class="btn ghost sm" id="semana-seguinte" type="button" aria-label="Próxima semana">›</button>
+                <button class="link-mini" id="agenda-hoje" type="button">Hoje</button>
+              </div>
+              <div class="semana-dias" id="semana-dias" role="group" aria-label="Filtrar agenda por dia">
+              </div>
+              <div id="agenda">
+              </div>
             </section>
             <section id="sec-notas">
-              <div class="section-head"><h2 class="section-title">Para acompanhar</h2></div>
+              <div class="section-head">
+                <h2 class="section-title">Para acompanhar</h2>
+              </div>
               <ul class="notas" id="notas"></ul>
+            </section>
+          </div>
+          <aside class="home-lado" aria-label="Áreas e contexto">
+            <section class="section areas-secao" id="sec-abas" aria-labelledby="titulo-areas">
+              <div class="section-head">
+                <div>
+                  <h2 class="section-title" id="titulo-areas">Suas áreas</h2>
+                  <p class="card-note">Abra uma área para continuar.</p>
+                </div>
+                <button class="btn ghost sm" id="btn-organizar-areas" type="button">Editar</button>
+              </div>
+              <nav class="indice" id="pilares" aria-label="Suas áreas">
+              </nav>
+              <div class="areas-acoes">
+                <button class="btn" id="btn-criar-area" type="button">+ Nova área</button>
+              </div>
             </section>
             <details class="financas-detalhe" id="resumo-financeiro">
               <summary>Seu dinheiro <span class="card-note">Resumo do mês</span></summary>
-        <section class="razao resumo-financeiro" id="sec-topo" aria-label="Números de hoje">
-          <div class="razao-item principal">
-            <div class="stat-label" id="hero-rotulo">Saldo nas contas</div>
-            <div class="hero-value num" id="hero-saldo">-</div>
-            <div class="stat-sub" id="hero-detalhe"></div>
-            <button class="btn sm" id="btn-saldo">Ajustar saldo</button>
-          </div>
-          <div class="razao-item">
-            <div class="stat-label" id="mes-rotulo">No mês</div>
-            <div class="stat-value num" id="mes-valor">-</div>
-            <div class="stat-sub" id="mes-detalhe"></div>
-          </div>
-          <div class="razao-item" id="proximo"></div>
-          <div class="razao-item">
-            <div class="stat-label">A pagar</div>
-            <div class="stat-value num" id="pagar-valor">-</div>
-            <div class="stat-sub" id="pagar-detalhe"></div>
-          </div>
-        </section>
-
-              <div class="financas-acoes"><a class="link-mini" href="financeiro.html">Ver financeiro</a><button class="btn sm" id="btn-lancamento" type="button">+ Lançamento</button></div>
+              <section class="razao resumo-financeiro" id="sec-topo" aria-label="Números de hoje">
+                <div class="razao-item principal">
+                  <div class="stat-label" id="hero-rotulo">
+                    Saldo nas contas
+                  </div>
+                  <div class="hero-value num" id="hero-saldo">
+                    -
+                  </div>
+                  <div class="stat-sub" id="hero-detalhe">
+                  </div>
+                  <button class="btn sm" id="btn-saldo">Ajustar saldo</button>
+                </div>
+                <div class="razao-item">
+                  <div class="stat-label" id="mes-rotulo">
+                    No mês
+                  </div>
+                  <div class="stat-value num" id="mes-valor">
+                    -
+                  </div>
+                  <div class="stat-sub" id="mes-detalhe">
+                  </div>
+                </div>
+                <div class="razao-item" id="proximo">
+                </div>
+                <div class="razao-item">
+                  <div class="stat-label">
+                    A pagar
+                  </div>
+                  <div class="stat-value num" id="pagar-valor">
+                    -
+                  </div>
+                  <div class="stat-sub" id="pagar-detalhe">
+                  </div>
+                </div>
+              </section>
+              <div class="financas-acoes">
+                <a class="link-mini" href="financeiro.html">Ver financeiro</a>
+                <button class="btn sm" id="btn-lancamento" type="button">+ Lançamento</button>
+              </div>
             </details>
             <section id="sec-insights">
-              <div class="section-head"><h2 class="section-title">Na sua rotina</h2></div>
+              <div class="section-head">
+                <h2 class="section-title">Na sua rotina</h2>
+              </div>
               <dl class="figuras" id="insights"></dl>
             </section>
           </aside>
         </div>
-
-        <section class="section areas-secao" id="sec-abas" aria-labelledby="titulo-areas">
-          <div class="section-head"><div><h2 class="section-title" id="titulo-areas">Suas áreas</h2><p class="card-note">Cada parte da vida, no seu lugar.</p></div><button class="btn ghost sm" id="btn-organizar-areas" type="button">Organizar áreas</button></div>
-          <nav class="indice" id="pilares" aria-label="Suas áreas"></nav>
-          <button class="area-adicionar" id="btn-nova-area" type="button">+ Criar uma área do seu jeito</button>
-        </section>
       </div>
     </main>
   </div>

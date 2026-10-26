@@ -11,62 +11,96 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
   <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="paginas.css" />
 </head>
-<body>
+<body class="pagina-organizada pagina-conta">
   <div class="app">
-    <nav class="sidebar" id="sidebar"></nav>
+    <nav class="sidebar" id="sidebar">
+    </nav>
     <main class="main">
-      <div class="wrap" id="conteudo">
+      <div class="wrap" data-pagina-secoes="conta" id="conteudo">
         <a class="voltar" href="contas.html">← Contas e cartões</a>
-
         <header class="topbar">
           <div>
             <div class="eyebrow financeiro" id="etiqueta">Conta</div>
-            <h1 id="titulo">&nbsp;</h1>
-            <p class="sub" id="subtitulo"></p>
+            <h1 id="titulo">
+            </h1>
+            <p class="sub" id="subtitulo">
+            </p>
           </div>
           <div class="topbar-actions">
             <button class="btn" id="btn-editar">Editar</button>
             <button class="btn primary" id="btn-lancamento">+ Lançamento</button>
           </div>
         </header>
-
-        <div class="grid g4" style="margin-bottom:14px;" id="stats"></div>
-
-        <div class="gaveteiro">
-          <section class="gaveta" data-gaveta="categorias">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo"><span class="swatch financeiro" id="swatch-categorias"></span>Gastos por categoria</h2>
-              <span class="gaveta-resumo" id="categorias-resumo"></span>
-            </header>
-            <div class="gaveta-corpo"><div id="categorias"></div></div>
-          </section>
-
-          <section class="gaveta" id="card-limite" data-gaveta="limite" style="display:none;">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Limite do cartão</h2>
-              <span class="gaveta-resumo" id="limite-resumo"></span>
-            </header>
-            <div class="gaveta-corpo"><div id="limite"></div></div>
-          </section>
-
-          <section class="gaveta" data-gaveta="lancamentos">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Lançamentos</h2>
-              <span class="gaveta-resumo" id="lancamentos-resumo"></span>
-            </header>
-            <div class="gaveta-corpo">
-              <div class="table-wrap">
-                <table class="sheet">
-                  <thead>
-                    <tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Status</th><th style="text-align:right;">Valor</th><th></th></tr>
-                  </thead>
-                  <tbody id="lancamentos"></tbody>
-                </table>
+        <nav aria-label="Seções desta página" class="pagina-secoes" data-navegacao-secoes="" hidden="" role="tablist">
+          <button aria-controls="painel-movimentacoes" data-secao="movimentacoes" id="secao-movimentacoes" role="tab" type="button">Movimentações</button>
+          <button aria-controls="painel-analise" data-secao="analise" id="secao-analise" role="tab" type="button">Saldo e análise</button>
+        </nav>
+        <section aria-labelledby="secao-movimentacoes" class="pagina-painel" data-painel="movimentacoes" id="painel-movimentacoes" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">As entradas e saídas desta conta.</p>
+          <div class="painel-conteudo">
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Lançamentos</h2>
+                <span class="bloco-resumo" id="lancamentos-resumo">
+                </span>
+              </header>
+              <div class="bloco-corpo">
+                <div class="table-wrap">
+                  <table class="sheet">
+                    <thead>
+                      <tr>
+                        <th>Data</th>
+                        <th>Descrição</th>
+                        <th>Categoria</th>
+                        <th>Status</th>
+                        <th style="text-align:right;">Valor</th>
+                        <th>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody id="lancamentos">
+                    </tbody>
+                  </table>
+                </div>
               </div>
+            </section>
+          </div>
+        </section>
+        <section aria-labelledby="secao-analise" class="pagina-painel" data-painel="analise" id="painel-analise" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Saldo, limite e distribuição dos gastos.</p>
+          <div class="painel-conteudo painel-dupla">
+            <div class="grid g4 pagina-indicadores" id="stats">
             </div>
-          </section>
-        </div>
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">
+                  <span class="swatch financeiro" id="swatch-categorias">
+                  </span>
+                  Gastos por categoria
+                </h2>
+                <span class="bloco-resumo" id="categorias-resumo">
+                </span>
+              </header>
+              <div class="bloco-corpo">
+                <div id="categorias">
+                </div>
+              </div>
+            </section>
+            <section class="pagina-bloco" id="card-limite" style="display:none;">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Limite do cartão</h2>
+                <span class="bloco-resumo" id="limite-resumo">
+                </span>
+              </header>
+              <div class="bloco-corpo">
+                <div id="limite">
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
       </div>
     </main>
   </div>
@@ -76,6 +110,7 @@
   <script src="store.js"></script>
   <script src="personalizacao.js"></script>
   <script src="ui.js"></script>
+  <script src="paginas.js"></script>
   <script src="sessao.js"></script>
   <script src="nuvem.js"></script>
   <script src="financas.js"></script>

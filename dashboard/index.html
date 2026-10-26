@@ -11,112 +11,145 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
   <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="paginas.css" />
 </head>
-<body>
+<body class="pagina-organizada pagina-index">
   <div class="app">
-    <nav class="sidebar" id="sidebar"></nav>
+    <nav class="sidebar" id="sidebar">
+    </nav>
     <main class="main">
-      <div class="wrap">
+      <div class="wrap" data-pagina-secoes="index">
         <header class="topbar">
           <div>
-            <h1>Visão geral</h1>
-            <p class="sub" id="sub-hoje"></p>
+            <h1>Seu dia, com clareza.</h1>
+            <p class="sub" id="sub-hoje">
+            </p>
           </div>
           <div class="topbar-actions">
             <button class="btn primary" id="btn-registrar" type="button">+ Registrar</button>
           </div>
         </header>
-
-        <!-- A leitura é o título da página: a saudação abre a frase, em tom
-             mais baixo, e o painel diz o que está acontecendo. -->
-        <p class="leitura" id="leitura"></p>
-
-        <!-- O gaveteiro: cada gaveta diz o essencial no puxador e guarda o
-             resto dentro (UI.gavetas liga o abrir e fechar). -->
-        <div class="gaveteiro">
-          <section class="gaveta" id="sec-agenda" data-gaveta="agenda">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Agenda</h2>
-              <span class="gaveta-resumo" id="agenda-resumo"></span>
-              <div class="gaveta-acoes"><button class="btn sm" id="btn-agenda-novo" type="button">+ Compromisso</button></div>
-            </header>
-            <div class="gaveta-corpo">
-              <!-- Filtros da agenda (2.3): o período, a semana e o dia. -->
-              <div class="agenda-filtros">
-                <div class="agenda-semana">
-                  <button class="btn ghost sm icon" id="semana-anterior" type="button" aria-label="Semana anterior"></button>
-                  <span class="agenda-semana-rotulo" id="semana-rotulo" aria-live="polite"></span>
-                  <button class="btn ghost sm icon" id="semana-seguinte" type="button" aria-label="Próxima semana"></button>
-                  <button class="btn ghost sm" id="agenda-hoje" type="button">Hoje</button>
+        <nav aria-label="Seções desta página" class="pagina-secoes" data-navegacao-secoes="" hidden="" role="tablist">
+          <button aria-controls="painel-meu-dia" data-secao="meu-dia" id="secao-meu-dia" role="tab" type="button">Meu dia</button>
+          <button aria-controls="painel-minhas-abas" data-secao="minhas-abas" id="secao-minhas-abas" role="tab" type="button">Minhas abas</button>
+          <button aria-controls="painel-dinheiro" data-secao="dinheiro" id="secao-dinheiro" role="tab" type="button">Dinheiro</button>
+        </nav>
+        <section aria-labelledby="secao-meu-dia" class="pagina-painel" data-painel="meu-dia" id="painel-meu-dia" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Sua agenda e o que merece atenção hoje.</p>
+          <div class="painel-conteudo painel-dia">
+            <p class="leitura" id="leitura">
+            </p>
+            <section class="pagina-bloco" id="sec-agenda">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Agenda</h2>
+                <span class="bloco-resumo" id="agenda-resumo">
+                </span>
+                <div class="bloco-acoes">
+                  <button class="btn sm" id="btn-agenda-novo" type="button">+ Compromisso</button>
                 </div>
-                <label class="sr" for="agenda-periodo">Período da agenda</label>
-                <select class="input sm" id="agenda-periodo">
-                  <option value="7">Próximos 7 dias</option>
-                  <option value="30">Próximos 30 dias</option>
-                  <option value="semana">Semana exibida</option>
-                </select>
+              </header>
+              <div class="bloco-corpo">
+                <!-- Filtros da agenda (2.3): o período, a semana e o dia. -->
+                <div class="agenda-filtros">
+                  <div class="agenda-semana">
+                    <button aria-label="Semana anterior" class="btn ghost sm icon" id="semana-anterior" type="button">
+                    </button>
+                    <span aria-live="polite" class="agenda-semana-rotulo" id="semana-rotulo">
+                    </span>
+                    <button aria-label="Próxima semana" class="btn ghost sm icon" id="semana-seguinte" type="button">
+                    </button>
+                    <button class="btn ghost sm" id="agenda-hoje" type="button">Hoje</button>
+                  </div>
+                  <label class="sr" for="agenda-periodo">Período da agenda</label>
+                  <select class="input sm" id="agenda-periodo">
+                    <option value="7">Próximos 7 dias</option>
+                    <option value="30">Próximos 30 dias</option>
+                    <option value="semana">Semana exibida</option>
+                  </select>
+                </div>
+                <div aria-label="Filtrar a agenda por dia" class="semana-dias" id="semana-dias" role="group">
+                </div>
+                <div id="agenda">
+                </div>
+                <a class="link-gaveta" href="pessoal.html">Abrir o calendário</a>
               </div>
-              <div class="semana-dias" id="semana-dias" role="group" aria-label="Filtrar a agenda por dia"></div>
-              <div id="agenda"></div>
-              <a class="link-gaveta" href="pessoal.html">Abrir o calendário</a>
-            </div>
-          </section>
-
-          <section class="gaveta" id="sec-topo" data-gaveta="dinheiro" style="--cor-pagina: var(--s-financeiro)">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Dinheiro</h2>
-              <span class="gaveta-resumo" id="dinheiro-resumo"></span>
-              <div class="gaveta-acoes"><button class="btn sm" id="btn-lancamento" type="button">+ Lançamento</button></div>
-            </header>
-            <div class="gaveta-corpo">
-              <div class="trio" aria-label="Números do dinheiro">
-                <div class="trio-item">
-                  <div class="stat-label" id="hero-rotulo">Saldo nas contas</div>
-                  <div class="stat-value num" id="hero-saldo">-</div>
-                  <div class="stat-sub" id="hero-detalhe"></div>
-                  <button class="btn sm" id="btn-saldo" type="button">Ajustar saldo</button>
-                </div>
-                <div class="trio-item">
-                  <div class="stat-label" id="mes-rotulo">No mês</div>
-                  <div class="stat-value num" id="mes-valor">-</div>
-                  <div class="stat-sub" id="mes-detalhe"></div>
-                </div>
-                <div class="trio-item">
-                  <div class="stat-label">A pagar</div>
-                  <div class="stat-value num" id="pagar-valor">-</div>
-                  <div class="stat-sub" id="pagar-detalhe"></div>
-                </div>
+            </section>
+            <section class="pagina-bloco" id="sec-notas">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">O que o Delfos notou</h2>
+                <span class="bloco-resumo" id="notas-resumo">
+                </span>
+              </header>
+              <div class="bloco-corpo">
+                <ul class="notas" id="notas">
+                </ul>
+                <button class="link-gaveta" hidden="" id="notas-mais" type="button">
+                </button>
               </div>
-              <dl class="figuras" id="sec-insights"></dl>
-              <a class="link-gaveta" href="financeiro.html">Abrir o Financeiro</a>
-            </div>
-          </section>
-
-          <section class="gaveta" id="sec-notas" data-gaveta="notas">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">O que o Delfos notou</h2>
-              <span class="gaveta-resumo" id="notas-resumo"></span>
-            </header>
-            <div class="gaveta-corpo">
-              <ul class="notas" id="notas"></ul>
-              <button class="link-gaveta" id="notas-mais" type="button" hidden></button>
-            </div>
-          </section>
-
-          <section class="gaveta" id="sec-abas" data-gaveta="abas">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Suas abas</h2>
-              <span class="gaveta-resumo" id="abas-resumo"></span>
-              <div class="gaveta-acoes">
-                <button class="btn ghost sm" id="btn-organizar-abas" type="button">Organizar</button>
-                <button class="btn sm" id="btn-nova-aba-home" type="button">+ Nova aba</button>
+            </section>
+          </div>
+        </section>
+        <section aria-labelledby="secao-minhas-abas" class="pagina-painel" data-painel="minhas-abas" id="painel-minhas-abas" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Um lugar para cada parte da sua vida.</p>
+          <div class="painel-conteudo">
+            <section class="pagina-bloco" id="sec-abas">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Suas abas</h2>
+                <span class="bloco-resumo" id="abas-resumo">
+                </span>
+                <div class="bloco-acoes">
+                  <button class="btn ghost sm" id="btn-organizar-abas" type="button">Organizar</button>
+                  <button class="btn primary" id="btn-nova-aba-home" type="button">+ Nova aba</button>
+                </div>
+              </header>
+              <div class="bloco-corpo">
+                <nav aria-label="Suas abas" class="estante" id="pilares">
+                </nav>
               </div>
-            </header>
-            <div class="gaveta-corpo">
-              <nav class="estante" id="pilares" aria-label="Suas abas"></nav>
-            </div>
-          </section>
-        </div>
+            </section>
+          </div>
+        </section>
+        <section aria-labelledby="secao-dinheiro" class="pagina-painel" data-painel="dinheiro" id="painel-dinheiro" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Seu dinheiro, sem sair da visão geral.</p>
+          <div class="painel-conteudo">
+            <section class="pagina-bloco" id="sec-topo" style="--cor-pagina: var(--s-financeiro)">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Dinheiro</h2>
+                <span class="bloco-resumo" id="dinheiro-resumo">
+                </span>
+                <div class="bloco-acoes">
+                  <button class="btn sm" id="btn-lancamento" type="button">+ Lançamento</button>
+                </div>
+              </header>
+              <div class="bloco-corpo">
+                <div aria-label="Números do dinheiro" class="trio">
+                  <div class="trio-item">
+                    <div class="stat-label" id="hero-rotulo">Saldo nas contas</div>
+                    <div class="stat-value num" id="hero-saldo">-</div>
+                    <div class="stat-sub" id="hero-detalhe">
+                    </div>
+                    <button class="btn sm" id="btn-saldo" type="button">Ajustar saldo</button>
+                  </div>
+                  <div class="trio-item">
+                    <div class="stat-label" id="mes-rotulo">No mês</div>
+                    <div class="stat-value num" id="mes-valor">-</div>
+                    <div class="stat-sub" id="mes-detalhe">
+                    </div>
+                  </div>
+                  <div class="trio-item">
+                    <div class="stat-label">A pagar</div>
+                    <div class="stat-value num" id="pagar-valor">-</div>
+                    <div class="stat-sub" id="pagar-detalhe">
+                    </div>
+                  </div>
+                </div>
+                <dl class="figuras" id="sec-insights">
+                </dl>
+                <a class="link-gaveta" href="financeiro.html">Abrir o Financeiro</a>
+              </div>
+            </section>
+          </div>
+        </section>
       </div>
     </main>
   </div>
@@ -126,6 +159,7 @@
   <script src="store.js"></script>
   <script src="personalizacao.js"></script>
   <script src="ui.js"></script>
+  <script src="paginas.js"></script>
   <script src="sessao.js"></script>
   <script src="nuvem.js"></script>
   <script src="financas.js"></script>

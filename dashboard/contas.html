@@ -11,79 +11,106 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
   <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="paginas.css" />
 </head>
-<body>
+<body class="pagina-organizada pagina-contas">
   <div class="app">
-    <nav class="sidebar" id="sidebar"></nav>
+    <nav class="sidebar" id="sidebar">
+    </nav>
     <main class="main">
-      <div class="wrap">
+      <div class="wrap" data-pagina-secoes="contas">
+        <nav aria-label="Seções do financeiro" class="familia-paginas">
+          <a href="financeiro.html">Resumo do mês</a>
+          <a aria-current="page" href="contas.html">Contas e cartões</a>
+          <a href="investimentos.html">Investimentos</a>
+        </nav>
         <header class="topbar">
           <div>
             <h1>Contas e cartões</h1>
             <p class="sub">Quanto você tem em cada conta e quanto deve em cada cartão.</p>
           </div>
           <div class="topbar-actions">
-            <button class="btn primary" id="btn-conta">+ Conta</button>
           </div>
         </header>
-
-        <nav class="abas" aria-label="Seções do financeiro">
-          <a href="financeiro.html">Resumo do mês</a>
-          <a href="contas.html" aria-current="page">Contas e cartões</a>
-          <a href="investimentos.html">Investimentos</a>
+        <nav aria-label="Seções desta página" class="pagina-secoes" data-navegacao-secoes="" hidden="" role="tablist">
+          <button aria-controls="painel-minhas-contas" data-secao="minhas-contas" id="secao-minhas-contas" role="tab" type="button">Contas</button>
+          <button aria-controls="painel-meus-cartoes" data-secao="meus-cartoes" id="secao-meus-cartoes" role="tab" type="button">Cartões</button>
+          <button aria-controls="painel-balanco-geral" data-secao="balanco-geral" id="secao-balanco-geral" role="tab" type="button">Balanço</button>
         </nav>
-
-        <div id="avisos"></div>
-
-        <div class="grid g3" style="margin-bottom:14px;">
-          <div class="card tinted financeiro">
-            <div class="stat-label">Total em contas</div>
-            <div class="stat-value num" id="s-total">-</div>
-            <div class="stat-sub" id="s-total-d"></div>
+        <section aria-labelledby="secao-minhas-contas" class="pagina-painel" data-painel="minhas-contas" id="painel-minhas-contas" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Escolha uma conta para consultar saldo e movimentações.</p>
+          <div class="painel-conteudo">
+            <div id="avisos">
+            </div>
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Contas</h2>
+                <span class="bloco-resumo" id="contas-resumo">
+                </span>
+                <div class="bloco-acoes">
+                  <button class="btn primary" id="btn-conta">+ Conta</button>
+                </div>
+              </header>
+              <div class="bloco-corpo">
+                <div id="contas">
+                </div>
+              </div>
+            </section>
           </div>
-          <div class="card tinted financeiro">
-            <div class="stat-label">Faturas abertas</div>
-            <div class="stat-value num" id="s-faturas">-</div>
-            <div class="stat-sub" id="s-faturas-d"></div>
+        </section>
+        <section aria-labelledby="secao-meus-cartoes" class="pagina-painel" data-painel="meus-cartoes" id="painel-meus-cartoes" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Faturas e limites dos seus cartões de crédito.</p>
+          <div class="painel-conteudo">
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Cartões de crédito</h2>
+                <span class="bloco-resumo" id="cartoes-resumo">
+                </span>
+                <div class="bloco-acoes">
+                  <button class="btn primary" id="btn-cartao" type="button">+ Cartão</button>
+                </div>
+              </header>
+              <div class="bloco-corpo">
+                <div id="cartoes">
+                </div>
+              </div>
+            </section>
           </div>
-          <div class="card tinted financeiro">
-            <div class="stat-label">Sobra estimada</div>
-            <div class="stat-value num" id="s-sobra">-</div>
-            <div class="stat-sub">Contas menos faturas em aberto</div>
+        </section>
+        <section aria-labelledby="secao-balanco-geral" class="pagina-painel" data-painel="balanco-geral" id="painel-balanco-geral" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Uma visão conjunta do dinheiro em contas e das faturas.</p>
+          <div class="painel-conteudo">
+            <div class="grid g3 pagina-indicadores">
+              <div class="card tinted financeiro">
+                <div class="stat-label">Total em contas</div>
+                <div class="stat-value num" id="s-total">-</div>
+                <div class="stat-sub" id="s-total-d">
+                </div>
+              </div>
+              <div class="card tinted financeiro">
+                <div class="stat-label">Faturas abertas</div>
+                <div class="stat-value num" id="s-faturas">-</div>
+                <div class="stat-sub" id="s-faturas-d">
+                </div>
+              </div>
+              <div class="card tinted financeiro">
+                <div class="stat-label">Sobra estimada</div>
+                <div class="stat-value num" id="s-sobra">-</div>
+                <div class="stat-sub">Contas menos faturas em aberto</div>
+              </div>
+            </div>
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Balanço</h2>
+                <span class="bloco-resumo">participação de cada conta e cartão nos gastos</span>
+              </header>
+              <div class="bloco-corpo">
+                <div id="balanco">
+                </div>
+              </div>
+            </section>
           </div>
-        </div>
-
-        <div class="gaveteiro">
-          <section class="gaveta" data-gaveta="contas">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Contas</h2>
-              <span class="gaveta-resumo" id="contas-resumo"></span>
-            </header>
-            <div class="gaveta-corpo"><div id="contas"></div></div>
-          </section>
-
-          <section class="gaveta" data-gaveta="cartoes">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Cartões de crédito</h2>
-              <span class="gaveta-resumo" id="cartoes-resumo"></span>
-              <div class="gaveta-acoes"><button class="btn sm" id="btn-cartao" type="button">+ Cartão</button></div>
-            </header>
-            <div class="gaveta-corpo"><div id="cartoes"></div></div>
-          </section>
-        </div>
-
-        <!-- 2.2: o que se consulta de vez em quando, em gavetas finas, abaixo do que pede ação. -->
-        <div class="gaveteiro consulta" role="group" aria-labelledby="consulta-rotulo">
-          <h2 class="consulta-rotulo" id="consulta-rotulo">Análise</h2>
-
-          <section class="gaveta" data-gaveta="balanco" data-fechada>
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Balanço</h2>
-              <span class="gaveta-resumo">participação de cada conta e cartão nos gastos</span>
-            </header>
-            <div class="gaveta-corpo"><div id="balanco"></div></div>
-          </section>
-        </div>
+        </section>
       </div>
     </main>
   </div>
@@ -93,6 +120,7 @@
   <script src="store.js"></script>
   <script src="personalizacao.js"></script>
   <script src="ui.js"></script>
+  <script src="paginas.js"></script>
   <script src="sessao.js"></script>
   <script src="nuvem.js"></script>
   <script src="financas.js"></script>

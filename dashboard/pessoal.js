@@ -60,19 +60,29 @@
   const ICONE_TIPO = { consulta: "estetoscopio", tarefa: "lista", compromisso: "calendario", recado: "lapis", outro: "pessoal" };
 
   // A vista escolhida fica neste navegador; o link "#calendario" (do resumo do dia) sempre abre o calendário.
-  let vista = "calendario";
-  try { vista = localStorage.getItem("delfos.pessoal.vista") || "calendario"; } catch { /* nada */ }
-  if (location.hash === "#calendario") vista = "calendario";
-  if (location.hash === "#lista") vista = "lista";
+  let vista = Organizacao.atual() === "compromissos" ? "lista" : "calendario";
+  if (!location.hash) {
+    try {
+      if (localStorage.getItem("delfos.pessoal.vista") === "lista") {
+        vista = "lista";
+        Organizacao.selecionar("compromissos");
+      }
+    } catch { /* A seleção também funciona sem armazenamento. */ }
+  }
 
   function aoMudarCalendario(opcoes) {
     if (opcoes?.editar) return editarCompromisso(opcoes.editar);
     render();
   }
 
+  document.addEventListener("delfos:secao", (ev) => {
+    if (!["calendario", "compromissos"].includes(ev.detail.chave)) return;
+    vista = ev.detail.chave === "calendario" ? "calendario" : "lista";
+    try { localStorage.setItem("delfos.pessoal.vista", vista); } catch { /* seleção nesta visita */ }
+    renderVista();
+  });
+
   function renderVista() {
-    document.querySelectorAll("[data-vista]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.vista === vista)));
-    document.querySelectorAll("[data-na-vista]").forEach((el) => { el.hidden = el.dataset.naVista !== vista; });
     if (vista === "calendario") {
       Calendario.montar(document.getElementById("calendario"), { aoMudar: aoMudarCalendario, novoNoDia: (iso) => novoCompromisso(iso) });
       renderProximos();
@@ -358,11 +368,6 @@
 
   document.getElementById("btn-compromisso").addEventListener("click", () => novoCompromisso());
   document.getElementById("btn-importar-cal").addEventListener("click", () => importar());
-  document.querySelectorAll("[data-vista]").forEach((b) => b.addEventListener("click", () => {
-    vista = b.dataset.vista;
-    try { localStorage.setItem("delfos.pessoal.vista", vista); } catch { /* nada */ }
-    renderVista();
-  }));
   document.getElementById("f-concluidos").addEventListener("change", (ev) => { verConcluidos = ev.target.checked; render(); });
   document.getElementById("f-tipo").addEventListener("click", (ev) => {
     const c = ev.target.closest("[data-tipo]");

@@ -11,90 +11,145 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
   <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="paginas.css" />
 </head>
-<body>
+<body class="pagina-organizada pagina-projeto">
   <div class="app">
-    <nav class="sidebar" id="sidebar"></nav>
+    <nav class="sidebar" id="sidebar">
+    </nav>
     <main class="main">
-      <div class="wrap" id="conteudo">
+      <div class="wrap" data-pagina-secoes="projeto" id="conteudo">
         <a class="voltar" href="projetos.html">← Projetos</a>
-
         <header class="topbar">
           <div>
             <div class="eyebrow projetos" id="etiqueta">Projeto</div>
-            <h1 id="titulo">&nbsp;</h1>
-            <p class="sub" id="subtitulo"></p>
-            <div class="selos" id="selos"></div>
+            <h1 id="titulo">
+            </h1>
+            <p class="sub" id="subtitulo">
+            </p>
+            <div class="selos" id="selos">
+            </div>
           </div>
           <div class="topbar-actions">
             <button class="btn" id="btn-editar">Editar projeto</button>
-            <button class="btn primary" id="btn-recebimento">+ Recebimento</button>
           </div>
         </header>
-
-        <div class="grid g4" id="stats" style="margin-bottom:14px;"></div>
-
-        <div class="gaveteiro">
-          <section class="gaveta" data-gaveta="etapas">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Etapas</h2>
-              <span class="gaveta-resumo" id="etapas-resumo"></span>
-              <div class="gaveta-acoes"><button class="btn sm" id="btn-etapa" type="button">+ Etapa</button></div>
-            </header>
-            <div class="gaveta-corpo">
-              <div id="progresso"></div>
-              <div id="etapas"></div>
+        <nav aria-label="Seções desta página" class="pagina-secoes" data-navegacao-secoes="" hidden="" role="tablist">
+          <button aria-controls="painel-andamento" data-secao="andamento" id="secao-andamento" role="tab" type="button">Etapas</button>
+          <button aria-controls="painel-financeiro" data-secao="financeiro" id="secao-financeiro" role="tab" type="button">Financeiro</button>
+          <button aria-controls="painel-escrever" data-secao="escrever" id="secao-escrever" role="tab" type="button">Anotações</button>
+          <button aria-controls="painel-documentos" data-secao="documentos" id="secao-documentos" role="tab" type="button">Documentos</button>
+          <button aria-controls="painel-detalhes" data-secao="detalhes" id="secao-detalhes" role="tab" type="button">Detalhes</button>
+        </nav>
+        <section aria-labelledby="secao-andamento" class="pagina-painel" data-painel="andamento" id="painel-andamento" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">O próximo passo do projeto fica aqui.</p>
+          <div class="painel-conteudo">
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Etapas</h2>
+                <span class="bloco-resumo" id="etapas-resumo">
+                </span>
+                <div class="bloco-acoes">
+                  <button class="btn primary" id="btn-etapa" type="button">+ Etapa</button>
+                </div>
+              </header>
+              <div class="bloco-corpo">
+                <div id="progresso">
+                </div>
+                <div id="etapas">
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+        <section aria-labelledby="secao-financeiro" class="pagina-painel" data-painel="financeiro" id="painel-financeiro" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Acompanhe o que entrou e o que foi investido.</p>
+          <div class="painel-conteudo painel-dupla">
+            <div class="grid g4 pagina-indicadores" id="stats">
             </div>
-          </section>
-
-          <section class="gaveta" data-gaveta="recebimentos">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Recebimentos</h2>
-              <span class="gaveta-resumo" id="recebimentos-resumo"></span>
-            </header>
-            <div class="gaveta-corpo"><div id="recebimentos"></div></div>
-          </section>
-
-          <section class="gaveta" data-gaveta="custos">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Custos do projeto</h2>
-              <span class="gaveta-resumo" id="custos-resumo"></span>
-              <div class="gaveta-acoes"><button class="btn sm" id="btn-custo" type="button">+ Custo</button></div>
-            </header>
-            <div class="gaveta-corpo"><div id="custos"></div></div>
-          </section>
-
-          <section class="gaveta" data-gaveta="anotacoes">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Anotações</h2>
-              <span class="gaveta-resumo" id="anotacoes-resumo"></span>
-              <div class="gaveta-acoes"><button class="btn sm" id="btn-anotacoes" type="button">Editar anotações</button></div>
-            </header>
-            <div class="gaveta-corpo"><div id="anotacoes"></div></div>
-          </section>
-        </div>
-
-        <!-- 2.2: o que se consulta de vez em quando, em gavetas finas, abaixo do que pede ação. -->
-        <div class="gaveteiro consulta" role="group" aria-labelledby="consulta-rotulo">
-          <h2 class="consulta-rotulo" id="consulta-rotulo">Ficha e documentos</h2>
-
-          <section class="gaveta" data-gaveta="ficha" data-fechada>
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Ficha do projeto</h2>
-              <span class="gaveta-resumo" id="ficha-resumo">tipo, cliente, datas, prioridade e horas</span>
-            </header>
-            <div class="gaveta-corpo"><div id="ficha"></div></div>
-          </section>
-
-          <section class="gaveta" data-gaveta="anexos" data-fechada>
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Documentos</h2>
-              <span class="gaveta-resumo" id="anexos-resumo"></span>
-              <div class="gaveta-acoes"><button class="btn sm" id="btn-anexos" type="button">Anexar documentos</button></div>
-            </header>
-            <div class="gaveta-corpo"><div id="anexos"></div></div>
-          </section>
-        </div>
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Recebimentos</h2>
+                <span class="bloco-resumo" id="recebimentos-resumo">
+                </span>
+                <div class="bloco-acoes">
+                  <button class="btn primary" id="btn-recebimento">+ Recebimento</button>
+                </div>
+              </header>
+              <div class="bloco-corpo">
+                <div id="recebimentos">
+                </div>
+              </div>
+            </section>
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Custos do projeto</h2>
+                <span class="bloco-resumo" id="custos-resumo">
+                </span>
+                <div class="bloco-acoes">
+                  <button class="btn sm" id="btn-custo" type="button">+ Custo</button>
+                </div>
+              </header>
+              <div class="bloco-corpo">
+                <div id="custos">
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+        <section aria-labelledby="secao-escrever" class="pagina-painel" data-painel="escrever" id="painel-escrever" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Decisões e ideias que você quer guardar.</p>
+          <div class="painel-conteudo">
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Anotações</h2>
+                <span class="bloco-resumo" id="anotacoes-resumo">
+                </span>
+                <div class="bloco-acoes">
+                  <button class="btn sm" id="btn-anotacoes" type="button">Editar anotações</button>
+                </div>
+              </header>
+              <div class="bloco-corpo">
+                <div id="anotacoes">
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+        <section aria-labelledby="secao-documentos" class="pagina-painel" data-painel="documentos" id="painel-documentos" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Todos os arquivos do projeto em um lugar.</p>
+          <div class="painel-conteudo">
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Documentos</h2>
+                <span class="bloco-resumo" id="anexos-resumo">
+                </span>
+                <div class="bloco-acoes">
+                  <button class="btn sm" id="btn-anexos" type="button">Anexar documentos</button>
+                </div>
+              </header>
+              <div class="bloco-corpo">
+                <div id="anexos">
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+        <section aria-labelledby="secao-detalhes" class="pagina-painel" data-painel="detalhes" id="painel-detalhes" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Cliente, datas e informações do projeto.</p>
+          <div class="painel-conteudo">
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Ficha do projeto</h2>
+                <span class="bloco-resumo" id="ficha-resumo">tipo, cliente, datas, prioridade e horas</span>
+              </header>
+              <div class="bloco-corpo">
+                <div id="ficha">
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
       </div>
     </main>
   </div>
@@ -104,6 +159,7 @@
   <script src="store.js"></script>
   <script src="personalizacao.js"></script>
   <script src="ui.js"></script>
+  <script src="paginas.js"></script>
   <script src="sessao.js"></script>
   <script src="nuvem.js"></script>
   <script src="financas.js"></script>

@@ -11,118 +11,163 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
   <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="paginas.css" />
   <script src="config.js"></script>
 </head>
-<body>
+<body class="pagina-organizada pagina-faculdade">
   <div class="app">
-    <nav class="sidebar" id="sidebar"></nav>
+    <nav class="sidebar" id="sidebar">
+    </nav>
     <main class="main">
-      <div class="wrap">
+      <div class="wrap" data-pagina-secoes="faculdade">
         <header class="topbar">
           <div>
             <h1>Faculdade</h1>
             <p class="sub" id="sub-faculdade">Disciplinas, provas, entregas e TCC.</p>
           </div>
           <div class="topbar-actions">
-            <button class="btn primary" id="btn-prazo">+ Prazo</button>
           </div>
         </header>
-
-        <p class="leitura" id="leitura"></p>
-
-        <div class="grid g3" style="margin-bottom:14px;">
-          <div class="card tinted faculdade">
-            <div class="stat-label">Disciplinas ativas</div>
-            <div class="stat-value num" id="s-disciplinas">-</div>
-            <div class="stat-sub" id="s-disciplinas-d"></div>
-          </div>
-          <div class="card tinted faculdade">
-            <div class="stat-label">Prazos em aberto</div>
-            <div class="stat-value num" id="s-prazos">-</div>
-            <div class="stat-sub" id="s-prazos-d"></div>
-          </div>
-          <div class="card tinted faculdade">
-            <div class="stat-label">Próxima avaliação</div>
-            <div class="stat-value" id="s-proxima" style="font-size:19px;">-</div>
-            <div class="stat-sub" id="s-proxima-d"></div>
-          </div>
-        </div>
-
-        <div class="gaveteiro">
-          <section class="gaveta" data-gaveta="semanas">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Próximas quatro semanas</h2>
-              <span class="gaveta-resumo" id="semanas-resumo">provas e entregas, de segunda a domingo</span>
-            </header>
-            <div class="gaveta-corpo"><div class="semanas" id="semanas"></div></div>
-          </section>
-
-          <section class="gaveta" data-gaveta="prazos">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Prazos e entregas</h2>
-              <span class="gaveta-resumo" id="prazos-resumo"></span>
-              <div class="gaveta-acoes">
-                <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-                  <input type="checkbox" class="check" id="ver-concluidos" /> ver concluídos
-                </label>
+        <nav aria-label="Seções desta página" class="pagina-secoes" data-navegacao-secoes="" hidden="" role="tablist">
+          <button aria-controls="painel-disciplinas" data-secao="disciplinas" id="secao-disciplinas" role="tab" type="button">Disciplinas</button>
+          <button aria-controls="painel-agenda-academica" data-secao="agenda-academica" id="secao-agenda-academica" role="tab" type="button">Prazos e agenda</button>
+          <button aria-controls="painel-desempenho" data-secao="desempenho" id="secao-desempenho" role="tab" type="button">Desempenho</button>
+          <button aria-controls="painel-conexoes" data-secao="conexoes" id="secao-conexoes" role="tab" type="button">Conexões</button>
+        </nav>
+        <section aria-labelledby="secao-disciplinas" class="pagina-painel" data-painel="disciplinas" id="painel-disciplinas" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Entre em uma disciplina para estudar e escrever.</p>
+          <div class="painel-conteudo">
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Disciplinas</h2>
+                <span class="bloco-resumo" id="disciplinas-resumo">
+                </span>
+                <div class="bloco-acoes">
+                  <button class="btn primary" id="btn-disciplina" type="button">+ Disciplina</button>
+                </div>
+              </header>
+              <div class="bloco-corpo">
+                <div id="disciplinas">
+                </div>
               </div>
-            </header>
-            <div class="gaveta-corpo"><div id="prazos"></div></div>
-          </section>
-
-          <section class="gaveta" data-gaveta="disciplinas">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Disciplinas</h2>
-              <span class="gaveta-resumo" id="disciplinas-resumo"></span>
-              <div class="gaveta-acoes"><button class="btn sm" id="btn-disciplina" type="button">+ Disciplina</button></div>
-            </header>
-            <div class="gaveta-corpo"><div id="disciplinas"></div></div>
-          </section>
-
-          <section class="gaveta" data-gaveta="notas">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">O que o Delfos notou</h2>
-              <span class="gaveta-resumo" data-resumo-notas></span>
-            </header>
-            <div class="gaveta-corpo"><ul class="notas" id="notas"></ul></div>
-          </section>
-        </div>
-
-        <!-- 2.2: análises e ajustes, em gavetas finas, abaixo do que pede ação. -->
-        <div class="gaveteiro consulta" role="group" aria-labelledby="consulta-rotulo">
-          <h2 class="consulta-rotulo" id="consulta-rotulo">Análises e ajustes</h2>
-
-          <section class="gaveta" data-gaveta="medias" data-fechada>
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Médias por disciplina</h2>
-              <span class="gaveta-resumo" id="medias-nota"></span>
-            </header>
-            <div class="gaveta-corpo"><div id="medias"></div></div>
-          </section>
-
-          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-fechada hidden>
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Perguntas do Delfos</h2>
-              <span class="gaveta-resumo"></span>
-            </header>
-            <div class="gaveta-corpo">
-              <p class="dica-gaveta">Cada resposta deixa a leitura mais sua.</p>
-              <div class="perguntas" id="perguntas"></div>
+            </section>
+          </div>
+        </section>
+        <section aria-labelledby="secao-agenda-academica" class="pagina-painel" data-painel="agenda-academica" id="painel-agenda-academica" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Provas e entregas em ordem de prioridade.</p>
+          <div class="painel-conteudo">
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Prazos e entregas</h2>
+                <span class="bloco-resumo" id="prazos-resumo">
+                </span>
+                <div class="bloco-acoes">
+                  <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                    <input class="check" id="ver-concluidos" type="checkbox"/>
+                    ver concluídos
+                  </label>
+                  <button class="btn primary" id="btn-prazo">+ Prazo</button>
+                </div>
+              </header>
+              <div class="bloco-corpo">
+                <div id="prazos">
+                </div>
+              </div>
+            </section>
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Próximas quatro semanas</h2>
+                <span class="bloco-resumo" id="semanas-resumo">provas e entregas, de segunda a domingo</span>
+              </header>
+              <div class="bloco-corpo">
+                <div class="semanas" id="semanas">
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+        <section aria-labelledby="secao-desempenho" class="pagina-painel" data-painel="desempenho" id="painel-desempenho" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Notas, médias e o que precisa de atenção.</p>
+          <div class="painel-conteudo painel-analises">
+            <p class="leitura" id="leitura">
+            </p>
+            <div class="grid g3 pagina-indicadores">
+              <div class="card tinted faculdade">
+                <div class="stat-label">Disciplinas ativas</div>
+                <div class="stat-value num" id="s-disciplinas">-</div>
+                <div class="stat-sub" id="s-disciplinas-d">
+                </div>
+              </div>
+              <div class="card tinted faculdade">
+                <div class="stat-label">Prazos em aberto</div>
+                <div class="stat-value num" id="s-prazos">-</div>
+                <div class="stat-sub" id="s-prazos-d">
+                </div>
+              </div>
+              <div class="card tinted faculdade">
+                <div class="stat-label">Próxima avaliação</div>
+                <div class="stat-value" id="s-proxima" style="font-size:19px;">-</div>
+                <div class="stat-sub" id="s-proxima-d">
+                </div>
+              </div>
             </div>
-          </section>
-
-          <section class="gaveta" data-gaveta="google" data-fechada>
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Google Calendar</h2>
-              <span class="gaveta-resumo google-state" id="google-status"><span class="google-dot"></span><span id="google-texto">Não conectado</span></span>
-            </header>
-            <div class="gaveta-corpo">
-              <p class="dica-gaveta">Conecte para ver os próximos eventos da sua agenda ao lado dos prazos cadastrados aqui.</p>
-              <button class="btn" id="google-connect-btn" type="button">Conectar ao Google</button>
-              <div id="google-calendar-list" style="margin-top:12px;"></div>
-            </div>
-          </section>
-        </div>
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Médias por disciplina</h2>
+                <span class="bloco-resumo" id="medias-nota">
+                </span>
+              </header>
+              <div class="bloco-corpo">
+                <div id="medias">
+                </div>
+              </div>
+            </section>
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">O que o Delfos notou</h2>
+                <span class="bloco-resumo" data-resumo-notas="">
+                </span>
+              </header>
+              <div class="bloco-corpo">
+                <ul class="notas" id="notas">
+                </ul>
+              </div>
+            </section>
+          </div>
+        </section>
+        <section aria-labelledby="secao-conexoes" class="pagina-painel" data-painel="conexoes" id="painel-conexoes" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Sua agenda acadêmica também pode vir do Google Calendar.</p>
+          <div class="painel-conteudo">
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Google Calendar</h2>
+                <span class="bloco-resumo google-state" id="google-status">
+                  <span class="google-dot">
+                  </span>
+                  <span id="google-texto">Não conectado</span>
+                </span>
+              </header>
+              <div class="bloco-corpo">
+                <p class="dica-gaveta">Conecte para ver os próximos eventos da sua agenda ao lado dos prazos cadastrados aqui.</p>
+                <button class="btn" id="google-connect-btn" type="button">Conectar ao Google</button>
+                <div id="google-calendar-list" style="margin-top:12px;">
+                </div>
+              </div>
+            </section>
+            <section class="pagina-bloco" hidden="" id="sec-perguntas">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Perguntas do Delfos</h2>
+                <span class="bloco-resumo">
+                </span>
+              </header>
+              <div class="bloco-corpo">
+                <p class="dica-gaveta">Cada resposta deixa a leitura mais sua.</p>
+                <div class="perguntas" id="perguntas">
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
       </div>
     </main>
   </div>
@@ -132,6 +177,7 @@
   <script src="store.js"></script>
   <script src="personalizacao.js"></script>
   <script src="ui.js"></script>
+  <script src="paginas.js"></script>
   <script src="sessao.js"></script>
   <script src="nuvem.js"></script>
   <script src="financas.js"></script>

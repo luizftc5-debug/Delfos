@@ -1055,8 +1055,8 @@
         <td><span class="badge">${esc(item.categoria || "Outros")}</span></td>
         <td class="muted">${esc(origem || "-")}</td>
         <td>${pendente
-          ? `<button class="badge urgente" type="button" data-pagar title="Marcar como pago" style="border:none; cursor:pointer; font:inherit; font-size:12.5px;">pendente</button>`
-          : `<span class="muted" style="font-size:13.5px;">${receita ? "recebido" : "pago"}</span>`}</td>
+          ? `<button class="badge urgente" type="button" data-pagar title="Marcar como pago" style="border:none; cursor:pointer; font:inherit; font-size:calc(12.5px * var(--escala-fonte, 1));">pendente</button>`
+          : `<span class="muted" style="font-size:calc(13.5px * var(--escala-fonte, 1));">${receita ? "recebido" : "pago"}</span>`}</td>
         <td class="right" style="color:${receita ? "var(--success-text)" : "var(--texto)"};">
           ${receita ? "+" : "−"}${moeda(Math.abs(Number(item.valor) || 0))}
         </td>

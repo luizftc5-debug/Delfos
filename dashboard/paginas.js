@@ -16,6 +16,13 @@ const Organizacao = (() => {
       b.tabIndex = ativo ? 0 : -1;
     });
     paineis.forEach((p) => { p.hidden = p.dataset.painel !== chave; });
+    // No celular, a seção selecionada deve continuar visível na faixa rolável.
+    // Ajusta só essa faixa, sem deslocar o conteúdo da página.
+    const faixa = botao.parentElement;
+    const limite = faixa.getBoundingClientRect();
+    const posicao = botao.getBoundingClientRect();
+    if (posicao.left < limite.left) faixa.scrollLeft += posicao.left - limite.left;
+    else if (posicao.right > limite.right) faixa.scrollLeft += posicao.right - limite.right;
     if (url && location.hash !== `#${chave}`) {
       const destino = new URL(location.href);
       destino.hash = chave;

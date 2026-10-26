@@ -656,7 +656,7 @@
         card.innerHTML = `<div class="card-head"><h2 class="card-title">${fmt.escape(r.campo.rotulo)}</h2></div>
           <div class="mini-stats" style="margin:0;"><div><div class="stat-label">Este mês</div><div class="mini-valor">${fmt.moeda(r.noMes)}</div></div><div><div class="stat-label">Mês passado</div><div class="mini-valor">${fmt.moeda(r.antes)}</div></div><div><div class="stat-label">Total</div><div class="mini-valor">${fmt.moeda(r.total)}</div></div></div>`;
       } else if (r.tipo === "simNao") {
-        card.innerHTML = `<div class="card-head"><h2 class="card-title">${fmt.escape(r.campo.rotulo)}</h2></div><p class="card-note" style="margin:0; font-size:14.5px; color:var(--texto-2);">${r.sim} de ${r.n} ${r.n === 1 ? rotulo() : Leituras.pluralizar(rotulo())}.</p>`;
+        card.innerHTML = `<div class="card-head"><h2 class="card-title">${fmt.escape(r.campo.rotulo)}</h2></div><p class="card-note" style="margin:0; font-size:calc(14.5px * var(--escala-fonte, 1)); color:var(--texto-2);">${r.sim} de ${r.n} ${r.n === 1 ? rotulo() : Leituras.pluralizar(rotulo())}.</p>`;
       }
       box.appendChild(card);
     });

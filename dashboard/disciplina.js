@@ -90,6 +90,7 @@
     renderPrazos();
     renderMateriais();
     renderResumos();
+    renderPlano();
     UI.montarLayout("disciplina", { idAtivo: id });
   }
 
@@ -273,7 +274,7 @@
         <span class="anexo-nome">${fmt.escape(a.nome)}
           <span class="anexo-meta">${fmt.escape(Arquivos.tamanhoLegivel(a.tamanho))}</span>
         </span>
-        <span class="muted" style="font-size:12px;">abrir</span>
+        <span class="muted" style="font-size:calc(12px * var(--escala-fonte, 1));">abrir</span>
       </button>`;
   }
 
@@ -349,6 +350,56 @@
 
   /* --------------------------------- Ações ---------------------------------- */
 
+  function renderPlano() {
+    const plano = disciplina.planoEnsino || {};
+    const anexos = plano.anexos || [];
+    const assuntos = plano.assuntos || [];
+    document.getElementById("plano-convite").hidden = !!(anexos.length || assuntos.length);
+    document.getElementById("plano-resumo").textContent = anexos.length ? `${anexos.length} ${anexos.length === 1 ? "documento" : "documentos"} · ${assuntos.length} assuntos` : "Opcional: comece pelos documentos da matéria";
+    const docs = document.getElementById("plano-documentos");
+    docs.innerHTML = anexos.length ? `<div class="plano-anexos">${anexos.map(anexoHTML).join("")}</div>` : '<p class="card-note">Guarde o edital ou o plano de ensino e confira os itens encontrados antes de organizar sua agenda.</p>';
+    ligarAnexos(docs, anexos);
+    document.getElementById("plano-assuntos").innerHTML = assuntos.length ? `<ul class="plano-assuntos">${assuntos.map(x => `<li>${fmt.escape(x.texto)}</li>`).join("")}</ul>` : '<p class="card-note">Os assuntos da matéria aparecerão aqui.</p>';
+    const aulas = [...(disciplina.aulas || [])].sort((a,b) => a.data.localeCompare(b.data) || (a.hora || "").localeCompare(b.hora || ""));
+    document.getElementById("aulas-resumo").textContent = `${aulas.length} ${aulas.length === 1 ? "aula na agenda" : "aulas na agenda"}`;
+    const box = document.getElementById("aulas");
+    box.innerHTML = aulas.length ? `<ul class="list">${aulas.map(a => `<li>${UI.marcaItem({data:a.data,nivel:"futuro"})}<span class="grow"><span class="title">${fmt.escape(a.nome || "Aula")}</span><span class="plano-aula-hora">${fmt.escape(fmt.data(a.data))}${a.hora ? ` · ${fmt.escape(a.hora)}${a.horaFim ? `–${fmt.escape(a.horaFim)}` : ""}` : ""}</span></span><span class="row-actions"><button class="btn ghost sm" type="button" data-aula-editar="${fmt.escape(a.id)}" aria-label="Editar aula ${fmt.escape(a.nome)}">Editar</button><button class="btn ghost sm" type="button" data-aula-excluir="${fmt.escape(a.id)}" aria-label="Excluir aula ${fmt.escape(a.nome)}">Excluir</button></span></li>`).join("")}</ul>` : '<p class="card-note">Importe os horários do plano ou adicione uma aula. Eles aparecem no calendário de todas as áreas.</p>';
+    box.querySelectorAll("[data-aula-editar]").forEach(b => b.addEventListener("click", () => editarAula(aulas.find(x => x.id === b.dataset.aulaEditar))));
+    box.querySelectorAll("[data-aula-excluir]").forEach(b => b.addEventListener("click", () => excluirSub("aulas", aulas.find(x => x.id === b.dataset.aulaExcluir), "Aula")));
+  }
+
+  async function organizarPlano() {
+    try {
+      await UI.carregarScript("plano-ensino.js");
+      const resultado = await PlanoEnsino.abrir({disciplinaId:id});
+      if (resultado) {
+        render(); Organizacao.selecionar("plano", {url:true});
+        const total = resultado.aulas + resultado.avaliacoes + resultado.prazos;
+        UI.toast(total ? `Plano guardado. ${total} ${total === 1 ? "item adicionado" : "itens adicionados"} à agenda.` : "Plano guardado. Os itens já existentes foram preservados.");
+      }
+    } catch (erro) { UI.toast(erro.message || "Não foi possível abrir a leitura do plano. Tente novamente."); }
+  }
+
+  async function editarAssuntos() {
+    const v = await UI.formulario({titulo:"Assuntos da matéria",campos:[{nome:"assuntos",rotulo:"Um assunto por linha",tipo:"textarea"}],valores:{assuntos:(disciplina.planoEnsino?.assuntos || []).map(x=>x.texto).join("\n")}});
+    if (!v) return;
+    const assuntos = [...new Set(v.assuntos.split("\n").map(x=>x.trim()).filter(Boolean))].slice(0,80).map(texto=>({texto:texto.slice(0,200)}));
+    Store.atualizar(CAMINHO,id,{planoEnsino:{...disciplina.planoEnsino,assuntos}});render();
+  }
+
+  async function editarAula(aula = {}) {
+    const v = await UI.formulario({titulo:aula.id ? "Editar aula" : "Nova aula",descricao:"A data e o horário aparecem também na agenda geral.",campos:[
+      {nome:"nome",rotulo:"Nome",tipo:"text",obrigatorio:true,valorPadrao:"Aula"},
+      {nome:"data",rotulo:"Data",tipo:"date",obrigatorio:true},
+      {nome:"hora",rotulo:"Início",tipo:"time",obrigatorio:true},
+      {nome:"horaFim",rotulo:"Fim (opcional)",tipo:"time"}
+    ],valores:aula,validar(v){return v.horaFim && v.horaFim<=v.hora ? {campo:"horaFim",mensagem:"O fim deve ser depois do início."} : null;}});
+    if (!v) return;
+    if (aula.id) Store.subAtualizar(CAMINHO,id,"aulas",aula.id,v);
+    else Store.subInserir(CAMINHO,id,"aulas",v);
+    render();
+  }
+
   const camposDisciplina = () => [
     { nome: "nome", rotulo: "Nome da disciplina", tipo: "text", obrigatorio: true },
     { nome: "professor", rotulo: "Professor(a)", tipo: "text" },
@@ -359,6 +410,7 @@
   const camposAvaliacao = () => [
     { nome: "nome", rotulo: "Nome", tipo: "text", obrigatorio: true, placeholder: "Ex.: Prova 1" },
     { nome: "data", rotulo: "Data", tipo: "date" },
+    { nome: "hora", rotulo: "Horário (opcional)", tipo: "time" },
     { nome: "peso", rotulo: "Peso", tipo: "number", step: "0.5", valorPadrao: 1, dica: "Use 1 se todas as avaliações valem o mesmo." },
     { nome: "nota", rotulo: "Nota", tipo: "number", step: "0.1", dica: "Deixe em branco enquanto não sair." },
   ];
@@ -596,6 +648,15 @@
   document.getElementById("btn-prazo").addEventListener("click", novoPrazo);
   document.getElementById("btn-material").addEventListener("click", novoMaterial);
   document.getElementById("btn-resumo").addEventListener("click", novoResumo);
+  document.getElementById("btn-plano").addEventListener("click", organizarPlano);
+  document.getElementById("btn-plano-convite").addEventListener("click", organizarPlano);
+  document.getElementById("btn-aula").addEventListener("click", () => editarAula());
+  document.getElementById("btn-assuntos").addEventListener("click", editarAssuntos);
 
   render();
+  if (UI.parametro("planejar") === "1") {
+    const endereco = new URL(location.href);
+    endereco.searchParams.delete("planejar");history.replaceState(null,"",endereco);
+    organizarPlano();
+  }
 })();

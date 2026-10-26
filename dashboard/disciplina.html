@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;600&family=Space+Mono:wght@400;700&family=Caveat:wght@500;700&display=swap" />
   <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="paginas.css" />
+  <link rel="stylesheet" href="plano-ensino.css" />
 </head>
 <body class="pagina-organizada pagina-disciplina">
   <div class="app">
@@ -36,11 +37,13 @@
             <button class="btn" id="btn-editar">Editar disciplina</button>
           </div>
         </header>
+        <aside class="plano-convite" id="plano-convite"><div><b>Sugestão do Delfos</b><p>Tem o edital ou plano de ensino? Organize os assuntos, aulas e provas a partir dele.</p></div><button class="btn" type="button" id="btn-plano-convite">Anexar documento</button></aside>
         <nav aria-label="Seções desta página" class="pagina-secoes" data-navegacao-secoes="" hidden="" role="tablist">
           <button aria-controls="painel-estudar" data-secao="estudar" id="secao-estudar" role="tab" type="button">Resumos</button>
           <button aria-controls="painel-avaliacoes" data-secao="avaliacoes" id="secao-avaliacoes" role="tab" type="button">Avaliações</button>
           <button aria-controls="painel-entregas" data-secao="entregas" id="secao-entregas" role="tab" type="button">Prazos</button>
           <button aria-controls="painel-biblioteca" data-secao="biblioteca" id="secao-biblioteca" role="tab" type="button">Materiais</button>
+          <button aria-controls="painel-plano" data-secao="plano" id="secao-plano" role="tab" type="button">Plano e aulas</button>
         </nav>
         <section aria-labelledby="secao-estudar" class="pagina-painel" data-painel="estudar" id="painel-estudar" role="tabpanel" tabindex="0">
           <p class="painel-descricao">Seus textos e anotações, prontos para continuar.</p>
@@ -73,7 +76,7 @@
               </div>
               <div class="card tinted faculdade">
                 <div class="stat-label">Próxima avaliação</div>
-                <div class="stat-value" id="s-proxima" style="font-size:17px;">-</div>
+                <div class="stat-value" id="s-proxima" style="font-size:calc(17px * var(--escala-fonte, 1));">-</div>
                 <div class="stat-sub" id="s-proxima-d">
                 </div>
               </div>
@@ -143,6 +146,13 @@
                 </div>
               </div>
             </section>
+          </div>
+        </section>
+        <section aria-labelledby="secao-plano" class="pagina-painel" data-painel="plano" id="painel-plano" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Documentos, assuntos e horários da matéria. As aulas e provas também aparecem na agenda geral.</p>
+          <div class="painel-conteudo">
+            <section class="pagina-bloco"><header class="bloco-cabecalho"><h2 class="bloco-titulo">Plano de ensino</h2><span class="bloco-resumo" id="plano-resumo"></span><div class="bloco-acoes"><button class="btn primary" id="btn-plano" type="button">Anexar edital ou plano</button></div></header><div class="bloco-corpo"><div id="plano-documentos"></div><div id="plano-assuntos"></div><button class="btn ghost sm" id="btn-assuntos" type="button">Editar assuntos</button></div></section>
+            <section class="pagina-bloco"><header class="bloco-cabecalho"><h2 class="bloco-titulo">Aulas na agenda</h2><span class="bloco-resumo" id="aulas-resumo"></span><div class="bloco-acoes"><button class="btn" id="btn-aula" type="button">+ Aula</button></div></header><div class="bloco-corpo" id="aulas"></div></section>
           </div>
         </section>
       </div>

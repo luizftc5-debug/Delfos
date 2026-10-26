@@ -29,7 +29,7 @@
     dPrazos.textContent = atrasados.length ? `${atrasados.length} já ${atrasados.length === 1 ? "venceu" : "venceram"}` : "Nenhum atrasado";
     dPrazos.className = `stat-sub ${atrasados.length ? "delta down" : ""}`;
 
-    const prox = UI.compromissos().filter((i) => i.area === "faculdade" && (UI.diasAte(i.data) ?? -1) >= 0)[0];
+    const prox = UI.compromissos().filter((i) => i.area === "faculdade" && i.tipo !== "aula" && (UI.diasAte(i.data) ?? -1) >= 0)[0];
     document.getElementById("s-proxima").textContent = prox ? prox.titulo : "Nada agendado";
     document.getElementById("s-proxima-d").innerHTML = prox
       ? `${fmt.data(prox.data)}, <span class="delta flat">${UI.urgencia(prox.data).rotulo}</span>`
@@ -301,6 +301,7 @@
     return [
       { nome: "descricao", rotulo: "O que é", tipo: "text", obrigatorio: true, placeholder: "Ex.: Entrega da metanálise" },
       { nome: "data", rotulo: "Data", tipo: "date", obrigatorio: true, valorPadrao: UI.hojeISO() },
+      { nome: "hora", rotulo: "Horário (opcional)", tipo: "time" },
       { nome: "tipo", rotulo: "Tipo", tipo: "select", opcoes: ["entrega", "seminário", "trabalho", "TCC", "outro"] },
       {
         nome: "disciplinaId", rotulo: "Disciplina", tipo: "select",
@@ -312,13 +313,14 @@
   async function novaDisciplina() {
     const v = await UI.formulario({
       titulo: "Nova disciplina",
-      descricao: "Ela ganha uma página própria para avaliações, materiais e resumos.",
-      campos: camposDisciplina(),
+      descricao: "Sugestão do Delfos: anexe o edital ou plano de ensino para organizar assuntos, aulas e provas. É opcional e você revisa antes de adicionar à agenda.",
+      campos: [...camposDisciplina(), { nome: "organizarPlano", rotulo: "Quero anexar o plano de ensino ao criar", tipo: "simNao", dica: "Aceita PDF, Word (.docx) e PowerPoint (.pptx). Também pode fazer isso depois na matéria." }],
       rotuloConfirmar: "Criar e abrir",
     });
     if (!v) return;
-    const nova = Store.inserir("faculdade.disciplinas", { ...v, avaliacoes: [], materiais: [], resumos: [] });
-    location.href = linkDisciplina(nova);
+    const { organizarPlano, ...dados } = v;
+    const nova = Store.inserir("faculdade.disciplinas", { ...dados, avaliacoes: [], materiais: [], resumos: [] });
+    location.href = linkDisciplina(nova) + (organizarPlano ? "&planejar=1#plano" : "");
   }
 
   async function novoPrazo() {

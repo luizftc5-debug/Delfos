@@ -1,0 +1,53 @@
+/* Plano de ensino: documentos primeiro, revisão por assunto depois. */
+.plano-convite { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 20px 0; margin: 4px 0 24px; border-block: 1px solid var(--linha); }
+.plano-convite p { margin: 6px 0 0; color: var(--texto-3); font-size: calc(13px * var(--escala-fonte,1)); line-height: 1.6; }
+.plano-convite b { font-weight: 550; }
+.plano-convite .btn { flex-shrink: 0; }
+.plano-anexos { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 16px; }
+.plano-assuntos { padding-left: 22px; margin: 0; line-height: 1.8; overflow-wrap: anywhere; }
+.plano-aula-hora { display: block; color: var(--texto-3); margin-top: 4px; }
+.modal.plano-importador { display: grid; grid-template-rows: auto minmax(0,1fr) auto; overflow: hidden; max-height: min(880px,calc(100dvh - 32px)); }
+.plano-importador [hidden] { display: none !important; }
+.plano-modal-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px; border-bottom: 1px solid var(--linha); }
+.plano-modal-cab .modal-title { margin-top: 8px; font-size: calc(25px * var(--escala-fonte,1)); }
+.plano-modal-corpo { overflow-y: auto; min-height: 0; padding: 24px; overscroll-behavior: contain; }
+.plano-modal-corpo h3 { margin: 0 0 12px; font-size: calc(21px * var(--escala-fonte,1)); font-family: var(--font-voz); font-weight: 400; }
+.plano-modal-corpo section > p { color: var(--texto-3); line-height: 1.65; }
+.plano-etapa { font-size: calc(12px * var(--escala-fonte,1)); color: var(--texto-3); margin: 0 0 24px; }
+.plano-arquivo { display: grid; gap: 12px; padding: 20px; border: 1px dashed var(--linha-forte); border-radius: 10px; margin-block: 24px 12px; }
+.plano-arquivo input { width: 100%; min-width: 0; font: inherit; }
+.plano-arquivos { padding: 0; list-style: none; }
+.plano-arquivos li { display: flex; align-items: center; gap: 12px; justify-content: space-between; padding-block: 10px; overflow-wrap: anywhere; }
+.plano-arquivos small { display: block; color: var(--texto-3); margin-top: 4px; }
+.plano-modal-corpo .field { display: flex; flex-direction: column; gap: 8px; min-width: 0; font-size: calc(13px * var(--escala-fonte,1)); }
+.plano-modal-corpo .input { min-width: 0; max-width: 100%; }
+.plano-periodo { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin-top: 24px; }
+.plano-periodo-ajuste { border-block: 1px solid var(--linha); padding-block: 16px; margin-top: 20px; }
+.plano-periodo-ajuste > summary { cursor: pointer; font-size: calc(13px * var(--escala-fonte,1)); }
+.plano-periodo-ajuste > summary span { display: block; margin-top: 6px; color: var(--texto-3); }
+.plano-grupo { margin-top: 16px; border: 1px solid var(--linha); border-radius: 10px; }
+.plano-grupo > summary { cursor: pointer; padding: 18px; font-weight: 550; }
+.plano-grupo > summary span { float: right; color: var(--texto-3); font-weight: 400; }
+.plano-grupo > .hint { padding-inline: 18px; }
+.plano-grupo > ul { padding: 0 18px; margin: 0; list-style: none; }
+.plano-grupo li { display: flex; align-items: flex-start; gap: 14px; border-top: 1px solid var(--linha); padding-block: 18px; }
+.plano-incluir { display: flex; align-items: center; gap: 7px; padding-top: 26px; font-size: calc(12px * var(--escala-fonte,1)); }
+.plano-incluir input { width: 17px; height: 17px; accent-color: var(--destaque); }
+.plano-item-corpo { min-width: 0; flex: 1; }
+.plano-item-datas { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin-top: 12px; }
+.plano-fonte { margin-top: 12px; font-size: calc(12px * var(--escala-fonte,1)); color: var(--texto-3); overflow-wrap: anywhere; }
+.plano-fonte summary { cursor: pointer; }
+.plano-fonte p { line-height: 1.6; }
+.plano-progresso { color: var(--texto-2); line-height: 1.6; }
+.plano-erro { color: var(--critical-text); line-height: 1.6; }
+.plano-importador .modal-foot { border-top: 1px solid var(--linha); padding: 16px 24px; flex-wrap: wrap; }
+@media(max-width:600px) {
+  .plano-convite { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .plano-modal-cab, .plano-modal-corpo { padding: 20px; }
+  .plano-item-datas, .plano-periodo { grid-template-columns: minmax(0,1fr); }
+  .plano-incluir { padding-top: 0; }
+  .plano-incluir span { display: none; }
+  .plano-grupo li { gap: 10px; }
+  .plano-modal-corpo .input { font-size: max(16px,calc(15px * var(--escala-fonte,1))); }
+  .plano-importador .modal-foot { padding: 14px 20px; gap: 8px; }
+}

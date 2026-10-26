@@ -20,7 +20,7 @@ jobs:
           node-version: 22
       - name: Verificar sintaxe
         run: |
-          for arquivo in dashboard/*.js; do
+          for arquivo in dashboard/*.js dashboard/*.mjs; do
             node --check "$arquivo" || exit 1
           done
       - name: Verificar persistência e backup
@@ -44,3 +44,5 @@ jobs:
         run: python dashboard/test/organizacao.browser.py
       - name: Verificar configurações e criação com IA local
         run: python dashboard/test/configuracoes_ia.browser.py
+      - name: Verificar fontes, documentos da faculdade e agenda
+        run: python dashboard/test/faculdade_documentos.browser.py

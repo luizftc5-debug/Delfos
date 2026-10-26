@@ -20,7 +20,7 @@ Os painéis ficam no DOM para preservar filtros e componentes enquanto a pessoa 
 | Visão geral | Meu dia: agenda e avisos | Minhas abas; Dinheiro |
 | Pessoal | Calendário | Compromissos; Visão geral |
 | Faculdade | Disciplinas | Prazos e agenda; Desempenho; Conexões |
-| Disciplina | Resumos | Avaliações; Prazos; Materiais |
+| Disciplina | Resumos | Avaliações; Prazos; Materiais; Plano e aulas |
 | Projetos | Projetos | Oportunidades; Resultados |
 | Projeto | Etapas | Financeiro; Anotações; Documentos; Detalhes |
 | Financeiro | Movimentações | A pagar; Planejamento; Análises; Conexões e ajustes |
@@ -35,6 +35,19 @@ progressiva de opções. Os rótulos descrevem tarefas reconhecíveis, sem exigi
 saiba como o código ou o modelo de dados estão organizados.
 
 ## Composição
+
+O tamanho de texto é um fator de tipografia (`--escala-fonte`), aplicado nas
+declarações de fonte do dashboard. Não usar `zoom`, transformações ou medidas de
+layout para essa preferência. Densidade deixou de ser um controle da interface;
+valores antigos em backups não alteram o layout.
+
+O plano de ensino é opcional no cadastro. A leitura de PDF/DOCX/PPTX roda localmente;
+DOCX e PPTX extraem apenas XML de texto em worker, com limites de tamanho e tempo.
+A revisão separa assuntos, aulas, avaliações e entregas e conserva o trecho de origem.
+Só a confirmação grava anexos e agenda. Aulas recorrentes exigem um período explícito;
+faltas de informação ficam para revisão. As importações não executam conteúdo do documento.
+Uma gravação do Store reúne todos os registros, com identidade de origem para recuperar
+falhas e preservar edições ao reimportar. Os anexos usam o sistema existente de backup e nuvem.
 
 O cabeçalho identifica a página. A ação global aparece ali quando serve em todas as seções.
 Ações específicas pertencem ao conteúdo: criar resumo na seção Resumos, avaliação em

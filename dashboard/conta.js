@@ -82,7 +82,7 @@
       </div>
       <div class="card tinted projetos">
         <div class="stat-label">Ciclo atual</div>
-        <div class="stat-value" style="font-size:15px;">${fmt.dataCurta(r.ciclo.inicio)} a ${fmt.dataCurta(r.ciclo.fim)}</div>
+        <div class="stat-value" style="font-size:calc(15px * var(--escala-fonte, 1));">${fmt.dataCurta(r.ciclo.inicio)} a ${fmt.dataCurta(r.ciclo.fim)}</div>
         <div class="stat-sub">${(() => { const n = r.itens.filter((t) => t.data >= r.ciclo.inicio && t.data <= r.ciclo.fim).length; return `${n} ${n === 1 ? "compra" : "compras"} no ciclo`; })()}</div>
       </div>
       <div class="card tinted projetos">

@@ -44,3 +44,22 @@ test("backup recusa exportação silenciosa sem os anexos", async () => {
   const { store } = ambiente({ disponivel: true, exportarTodos: async () => { throw new Error("IndexedDB indisponível"); } });
   await assert.rejects(store.exportar(), /backup completo/);
 });
+
+test("plano de ensino preserva dados manuais e não duplica a agenda ao repetir após falha", () => {
+  const { store, storage } = ambiente();
+  const d = store.inserir("faculdade.disciplinas", { nome:"Clínica",avaliacoes:[{id:"manual",nome:"Prova antiga",data:"2026-10-20",nota:8}],materiais:[],resumos:[] });
+  const plano = {aulas:[{nome:"Aula",data:"2026-10-26",hora:"08:00",horaFim:"10:00"}],avaliacoes:[{nome:"Prova 1",data:"2026-10-29",hora:"08:30",nota:"",peso:1,origemPlano:"avaliacoes|Prova 1|2026-10-29"}],prazos:[{descricao:"Trabalho",data:"2026-10-30",concluido:false}],assuntos:[{texto:"Semiologia"}],anexos:[{id:"arq-abc-xyz",nome:"Plano.docx",hash:"123"}]};
+  const salvar=storage.setItem;
+  storage.setItem=()=>{throw new Error("QuotaExceededError");};
+  assert.throws(()=>store.importarPlanoEnsino(d.id,plano),/ainda não foi salva/);
+  storage.setItem=salvar;
+  store.importarPlanoEnsino(d.id,plano);
+  const prova = store.achar("faculdade.disciplinas",d.id).avaliacoes.find(x=>x.origemPlano);
+  store.subAtualizar("faculdade.disciplinas",d.id,"avaliacoes",prova.id,{nome:"Prova revisada",data:"2026-10-31"});
+  store.importarPlanoEnsino(d.id,plano);
+  const atual=store.achar("faculdade.disciplinas",d.id);
+  assert.equal(atual.aulas.length,1);assert.equal(atual.avaliacoes.length,2);assert.equal(atual.avaliacoes[0].nota,8);
+  assert.equal(atual.avaliacoes[1].nome,"Prova revisada");assert.equal(atual.avaliacoes[1].data,"2026-10-31");
+  assert.equal(atual.planoEnsino.anexos.length,1);assert.equal(atual.planoEnsino.assuntos.length,1);
+  assert.equal(store.lista("faculdade.prazos").filter(p=>p.disciplinaId===d.id).length,1);
+});

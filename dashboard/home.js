@@ -26,7 +26,7 @@
 
   /** Para onde leva um item da agenda: a página de onde ele veio. */
   function destino(i) {
-    if (i.area === "faculdade") return i.disciplinaId ? `disciplina.html?id=${encodeURIComponent(i.disciplinaId)}` : "faculdade.html";
+    if (i.area === "faculdade") return i.disciplinaId ? `disciplina.html?id=${encodeURIComponent(i.disciplinaId)}#${i.tipo === "aula" ? "plano" : i.tipo === "prova" ? "avaliacoes" : "entregas"}` : "faculdade.html";
     if (i.area === "projetos") return `projeto.html?id=${encodeURIComponent(i.id)}`;
     if (i.area === "financeiro") return i.tipo === "conta" ? "financeiro.html" : "financeiro.html#metas";
     if (i.area === "pessoal") return "pessoal.html";
@@ -321,7 +321,7 @@
           <span class="agenda-dia${dias === 0 ? " hoje" : ""}"><b>${d.getDate()}</b><small>${dias === 0 ? "hoje" : DIAS_SEMANA[d.getDay()]}</small></span>
           <span class="agenda-texto">
             <span class="t">${fmt.escape(i.titulo)}</span>
-            <span class="m">${marcaArea(i)}${fmt.escape(fmt.capitalizar(i.areaRotulo || ""))}${i.tipo ? `, ${fmt.escape(i.tipo)}` : ""}</span>
+            <span class="m">${marcaArea(i)}${fmt.escape(fmt.capitalizar(i.areaRotulo || ""))}${i.tipo ? `, ${fmt.escape(i.tipo)}` : ""}${i.hora ? ` · ${fmt.escape(i.hora)}${i.horaFim ? `–${fmt.escape(i.horaFim)}` : ""}` : ""}</span>
           </span>
           <span class="badge ${u.nivel}">${quando(i.data)}</span>
         </a>
@@ -356,7 +356,7 @@
     const e = Store.estado();
     const grid = document.getElementById("pilares");
     const urgentes = (area) =>
-      UI.compromissos().filter((i) => i.area === area && (UI.diasAte(i.data) ?? 99) <= 7).length;
+      UI.compromissos().filter((i) => i.area === area && i.tipo !== "aula" && (UI.diasAte(i.data) ?? 99) <= 7).length;
 
     const linhas = [
       {

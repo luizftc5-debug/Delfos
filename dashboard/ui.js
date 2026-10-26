@@ -505,7 +505,7 @@ const UI = (() => {
 
     e.faculdade.prazos.forEach((p) => {
       if (!p.data || (!incluirConcluidos && p.concluido)) return;
-      itens.push({ id: p.id, titulo: p.descricao, data: p.data, ...daArea("faculdade"), tipo: p.tipo || "entrega", concluido: !!p.concluido });
+      itens.push({ id: p.id, titulo: p.descricao, data: p.data, hora: p.hora || "", disciplinaId: p.disciplinaId, ...daArea("faculdade"), tipo: p.tipo || "entrega", concluido: !!p.concluido });
     });
 
     // Avaliações agendadas de cada disciplina. Uma avaliação com nota lançada
@@ -516,9 +516,15 @@ const UI = (() => {
         const feita = a.nota !== null && a.nota !== undefined && a.nota !== "";
         if (feita && !incluirConcluidos) return;
         itens.push({
-          id: a.id, titulo: `${a.nome || "Avaliação"}, ${d.nome}`, data: a.data,
+          id: a.id, titulo: `${a.nome || "Avaliação"}, ${d.nome}`, data: a.data, hora: a.hora || "", horaFim: a.horaFim || "",
           ...daArea("faculdade"), tipo: "prova", concluido: feita, disciplinaId: d.id,
         });
+      });
+      if (!["concluída", "trancada"].includes(d.status)) (d.aulas || []).forEach((a) => {
+        if (!a.data) return;
+        const passada = a.data < hojeISO();
+        if (passada && !incluirConcluidos) return;
+        itens.push({ id: a.id, titulo: `${a.nome || "Aula"}, ${d.nome}`, data: a.data, hora: a.hora || "", horaFim: a.horaFim || "", ...daArea("faculdade"), tipo: "aula", concluido: passada, disciplinaId: d.id });
       });
     });
 
@@ -551,7 +557,7 @@ const UI = (() => {
       });
     });
 
-    return itens.sort((a, b) => a.data.localeCompare(b.data));
+    return itens.sort((a, b) => a.data.localeCompare(b.data) || (a.hora || "").localeCompare(b.hora || ""));
   }
 
   // Semanas com mais de um compromisso — o alerta é mais forte quando os
@@ -1315,8 +1321,7 @@ const UI = (() => {
         </div>
 
         <div class="ajuste">
-          ${linhaAjuste("Tamanho do texto", "Aumenta ou diminui tudo, textos e espaços.", segPref("tamanho", [["compacto", "Menor"], ["normal", "Normal"], ["grande", "Maior"]], xp.tamanho || "normal"))}
-          ${linhaAjuste("Densidade", "Compacta mostra mais coisa por tela, com menos respiro.", segPref("densidade", [["confortavel", "Confortável"], ["compacta", "Compacta"]], xp.densidade || "confortavel"))}
+          ${linhaAjuste("Tamanho do texto", "Aumenta ou diminui as letras, sem aplicar zoom à interface.", segPref("tamanho", [["compacto", "Menor"], ["normal", "Normal"], ["grande", "Maior"]], xp.tamanho || "normal"))}
           ${linhaAjuste("Fonte da leitura e dos títulos", "A serifa é a voz do Delfos, a mesma letra do logotipo; sem serifa, tudo fica na letra da interface.", segPref("voz", [["serifa", "Serifa"], ["sans", "Sem serifa"]], xp.voz || "serifa"))}
           ${linhaAjuste("Movimento", "Luz que segue o mouse, destaques que deslizam e a entrada das páginas.", switchPref("movimento", (xp.movimento || "completo") !== "reduzido"))}
           ${linhaAjuste("Desempenho", `Leve tira o desfoque atrás das janelas, as sombras grandes e as animações, e só baixa o Google quando você pede. Automático liga o leve sozinho em computador mais simples${aparelhoFraco() ? " (é o caso deste)" : ""}.`, segPref("desempenho", [["auto", "Automático"], ["leve", "Leve"], ["completo", "Completo"]], xp.desempenho || "auto"))}
@@ -1788,7 +1793,7 @@ const UI = (() => {
     const xp = experiencia();
     const h = document.documentElement;
     h.dataset.tamanho = xp.tamanho || "normal";
-    h.dataset.densidade = xp.densidade || "confortavel";
+    delete h.dataset.densidade; // Preferências antigas não compactam mais a interface.
     h.dataset.destaque = xp.destaque || "osso";
     h.dataset.movimento = xp.movimento || "completo";
     h.dataset.leve = modoLeve(xp.desempenho) ? "sim" : "nao";
@@ -2277,7 +2282,7 @@ const UI = (() => {
         controle = `<input type="url" inputmode="url" id="${id}" name="${c.nome}" value="${v}" placeholder="${fmt.escape(c.placeholder || "https://")}" />`;
         break;
       case "simNao":
-        controle = `<label class="campo-simnao"><input type="checkbox" class="check" name="${c.nome}" ${valor ? "checked" : ""} /> ${fmt.escape(c.rotuloMarcado || "Sim")}</label>`;
+        controle = `<label class="campo-simnao"><input type="checkbox" class="check" id="${id}" aria-label="${fmt.escape(c.rotulo)}" name="${c.nome}" ${valor ? "checked" : ""} /> ${fmt.escape(c.rotuloMarcado || "Sim")}</label>`;
         break;
       case "dinheiro":
         classe = c.destaque ? "campo-dinheiro-destaque" : "";
@@ -2595,8 +2600,8 @@ const UI = (() => {
     el.className = "meter";
     el.innerHTML = `
       <div class="meter-head">
-        <span style="font-size:14px; font-weight:550;">${fmt.escape(rotulo)}</span>
-        <span class="num" style="font-size:13.5px; color:var(--texto-2);">${formatar(atual)} de ${formatar(alvo)}${sufixo}</span>
+        <span style="font-size:calc(14px * var(--escala-fonte, 1)); font-weight:550;">${fmt.escape(rotulo)}</span>
+        <span class="num" style="font-size:calc(13.5px * var(--escala-fonte, 1)); color:var(--texto-2);">${formatar(atual)} de ${formatar(alvo)}${sufixo}</span>
       </div>
       <div class="meter-track"><div class="meter-fill" style="width:${pct}%; background:${cor};"></div></div>`;
     return el;
@@ -2874,7 +2879,7 @@ const UI = (() => {
     container.prepend(realce);
     let visivel = false;
     const posicionar = (el) => {
-      // Offsets (e não getBoundingClientRect): continuam certos com o zoom do "tamanho do texto".
+      // Medidas locais ao container mantêm o realce alinhado durante a rolagem.
       let x = 0;
       let y = 0;
       for (let n = el; n && n !== container; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; }

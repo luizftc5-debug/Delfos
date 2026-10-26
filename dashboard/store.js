@@ -81,7 +81,6 @@ const Store = (() => {
     // Acompanha a conta — por isso mora aqui, e não no localStorage como o tema.
     experiencia: {
       tamanho: "normal", // compacto | normal | grande
-      densidade: "confortavel", // confortavel | compacta
       destaque: "osso", // osso (marfim) | louro | anil | cobre | ameixa (cor do botão principal e do que está escolhido)
       movimento: "completo", // completo | reduzido
       desempenho: "auto", // auto | leve | completo (leve: sem desfoque, sombras grandes, animações; Google só sob demanda)
@@ -739,6 +738,43 @@ const Store = (() => {
       item[campo] = (item[campo] || []).filter((s) => s.id !== subId);
       persistir();
       return item;
+    },
+
+    // Uma única gravação para o plano, anexos e agenda da disciplina. As chaves
+    // também tornam segura a repetição após falha de quota ou reimportação.
+    importarPlanoEnsino(disciplinaId, plano) {
+      const e = carregar();
+      const d = e.faculdade.disciplinas.find(x => x.id === disciplinaId);
+      if (!d) throw new Error("Esta disciplina não está mais disponível.");
+      const acrescentar = (originais, novos, prefixo, campoNome = "nome") => {
+        const lista = [...(originais || [])];
+        const chave = x => [prefixo === "au" ? "" : String(x[campoNome] || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim(), x.data || "", x.hora || "", x.horaFim || ""].join("|");
+        const existentes = new Set(lista.map(chave));
+        const origens = new Set(lista.map(x => x.origemPlano).filter(Boolean));
+        let incluidos = 0;
+        for (const item of novos || []) {
+          if (existentes.has(chave(item)) || (item.origemPlano && origens.has(item.origemPlano))) continue;
+          lista.push({ ...item, id: uid(prefixo) });
+          existentes.add(chave(item)); if (item.origemPlano) origens.add(item.origemPlano); incluidos++;
+        }
+        return { lista, incluidos };
+      };
+      const aulas = acrescentar(d.aulas, plano.aulas, "au");
+      const avaliacoes = acrescentar(d.avaliacoes, plano.avaliacoes, "av");
+      const prazosAtuais = e.faculdade.prazos.filter(x => x.disciplinaId === disciplinaId);
+      const prazos = acrescentar(prazosAtuais, plano.prazos, "pr", "descricao");
+      const assuntos = [...(d.planoEnsino?.assuntos || [])];
+      for (const assunto of plano.assuntos || []) {
+        if (!assuntos.some(x => x.texto.toLocaleLowerCase() === assunto.texto.toLocaleLowerCase())) assuntos.push(assunto);
+      }
+      const anexos = [...(d.planoEnsino?.anexos || [])];
+      for (const anexo of plano.anexos || []) if (!anexos.some(x => x.id === anexo.id || (x.hash && x.hash === anexo.hash))) anexos.push(anexo);
+      d.aulas = aulas.lista;
+      d.avaliacoes = avaliacoes.lista;
+      d.planoEnsino = { ...d.planoEnsino, assuntos, anexos, inicio: plano.inicio || d.planoEnsino?.inicio || "", fim: plano.fim || d.planoEnsino?.fim || "", atualizadoEm: new Date().toISOString() };
+      e.faculdade.prazos = [...e.faculdade.prazos.filter(x => x.disciplinaId !== disciplinaId), ...prazos.lista.map(x => ({ ...x, disciplinaId }))];
+      persistir();
+      return { aulas: aulas.incluidos, avaliacoes: avaliacoes.incluidos, prazos: prazos.incluidos };
     },
 
     definirSaldo(valor) {

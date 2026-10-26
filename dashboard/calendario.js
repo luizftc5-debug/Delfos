@@ -175,7 +175,7 @@ const Calendario = (() => {
 
     UI.compromissos({ incluirConcluidos: true }).forEach((i) => {
       if (idsPessoais.has(i.id)) return;
-      if (i.data >= ini && i.data <= fim) por(i.data, { ...i, hora: "" });
+      if (i.data >= ini && i.data <= fim) por(i.data, { ...i, hora: i.hora || "" });
     });
     pessoais.forEach((c) => {
       UI.ocorrenciasEntre(c, ini, fim).forEach((iso, n) => {
@@ -278,7 +278,7 @@ const Calendario = (() => {
               <span class="t ${i.concluido ? "strike" : ""}">${fmt.escape(i.titulo)}${i.importante ? ` <span class="badge urgente">importante</span>` : ""}</span>
               <span class="m">${fmt.escape([fmt.capitalizar(i.areaRotulo || ""), i.hora ? `às ${i.hora}` : "", i.local, i.repete ? (UI.REPETICOES.find(([v]) => v === i.repete) || [, ""])[1].toLowerCase() : "", i.tipo && i.area !== "pessoal" ? i.tipo : ""].filter(Boolean).join(", "))}${i.valor ? `, ${fmt.moeda(i.valor)}` : ""}</span>
             </span>
-            ${i.pessoal ? `<button type="button" class="btn ghost sm icon" data-editar="${n}" aria-label="Editar">${UI.icone("editar")}</button>` : LINK_AREA[i.area] ? `<a class="btn ghost sm" href="${LINK_AREA[i.area]}">Abrir</a>` : ""}
+            ${i.pessoal ? `<button type="button" class="btn ghost sm icon" data-editar="${n}" aria-label="Editar">${UI.icone("editar")}</button>` : LINK_AREA[i.area] ? `<a class="btn ghost sm" href="${i.disciplinaId ? `disciplina.html?id=${encodeURIComponent(i.disciplinaId)}#${i.tipo === "aula" ? "plano" : i.tipo === "prova" ? "avaliacoes" : "entregas"}` : LINK_AREA[i.area]}">Abrir</a>` : ""}
           </li>`).join("")}</ul>` : `<p class="card-note" style="margin:0;">Dia livre. Marque uma consulta, uma tarefa ou um lembrete.</p>`}
       </div>
       <div class="modal-foot">

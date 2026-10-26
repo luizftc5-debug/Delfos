@@ -9,8 +9,15 @@ publicado (gratuito, na Cloudflare), o painel passa a exigir **conta** — cada 
 e senha, vê só os próprios dados e os encontra iguais no celular e no computador, com anexos e
 versões anteriores guardados no servidor.
 
-### Novidades da versão 2.4 alpha
+### Atualizações de leitura e faculdade
 
+- **Tamanho das letras**: Menor, Normal e Maior ajustam as fontes, sem zoom na
+  interface. A opção de densidade foi removida, inclusive seu efeito em preferências antigas.
+- **Plano de ensino da matéria**: anexe PDF, Word (.docx) ou PowerPoint (.pptx),
+  revise assuntos, horários, provas e entregas encontrados e inclua na agenda geral.
+  O processamento acontece no aparelho; os documentos acompanham o backup e a sincronização da conta.
+
+### Novidades da versão 2.4 alpha
 - **Configurações por assunto**: perfil, abas, visão geral, aparência, leitura,
   rotina e conta. As ações ficam visíveis e as preferências são salvas automaticamente.
 - **Criação manual ou com IA local**: escolha os elementos ou use “Deixar Delfos criar”.
@@ -64,6 +71,7 @@ python -m playwright install chromium
 python dashboard/test/editor.browser.py
 python dashboard/test/organizacao.browser.py
 python dashboard/test/configuracoes_ia.browser.py
+python dashboard/test/faculdade_documentos.browser.py
 ```
 
 ## Como abrir
@@ -117,7 +125,7 @@ A barra lateral escolhe a área da vida; a navegação interna escolhe o que faz
 | Visão geral | Meu dia, Minhas abas, Dinheiro |
 | Pessoal | Calendário, Compromissos, Visão geral |
 | Faculdade | Disciplinas, Prazos e agenda, Desempenho, Conexões |
-| Disciplina | Resumos, Avaliações, Prazos, Materiais |
+| Disciplina | Resumos, Avaliações, Prazos, Materiais, Plano e aulas |
 | Projetos | Projetos, Oportunidades, Resultados |
 | Projeto | Etapas, Financeiro, Anotações, Documentos, Detalhes |
 | Financeiro | Movimentações, A pagar, Planejamento, Análises, Conexões e ajustes |
@@ -258,13 +266,40 @@ O botão do perfil abre **Configurações**, com uma categoria visível por vez:
 - **Minhas abas**: nomes, visibilidade e ordem das áreas.
 - **Visão geral**: página inicial e conteúdo do dia.
 - **Aparência**: tema e cor de destaque.
-- **Leitura e desempenho**: tamanho do texto, densidade, fonte, movimento e modo leve.
+- **Leitura e desempenho**: tamanho das letras, fonte, movimento e modo leve.
 - **Rotina e avisos**: início da semana e lembretes.
 - **Conta e dados**: sincronização, backups e acesso.
 
 As preferências são salvas automaticamente. No celular, um seletor substitui o menu lateral;
 apenas o conteúdo rola, mantendo a ação de fechar visível. O financeiro reúne os ajustes
 menos frequentes em grupos recolhidos: essenciais, limites por categoria e respostas anteriores.
+
+### Organizar a matéria pelo edital ou plano de ensino
+
+Ao criar uma disciplina, a opção **Quero anexar o plano de ensino ao criar** abre
+a leitura de documentos. Ela é opcional. A matéria também oferece **Plano e aulas**
+para anexar documentos depois, consultar os assuntos e ajustar cada aula.
+
+São aceitos até 5 documentos PDF com texto selecionável, Word **.docx** ou PowerPoint
+**.pptx**, com até 10 MB por arquivo e 25 MB por seleção. PDF tem limite de 100 páginas;
+Office, 150 partes de slides ou texto, com limites para o XML descompactado. Arquivos
+Word antigos **.doc** precisam ser salvos como DOCX ou PDF. PDFs de imagem exigem OCR
+prévio; documentos protegidos por senha precisam de uma cópia desbloqueada.
+
+A leitura local procura rótulos, ementas, tabelas e cronogramas em português.
+Ela não chama API de IA nem depende de WebGPU. A identificação depende da organização
+do documento: cada sugestão mostra seu trecho de origem para conferência. Datas sem ano
+usam o ano visível no formulário. Não são inventados datas, horários ou fim de semestre.
+Complete dados ausentes ou desmarque os itens que não quer importar.
+
+Na revisão, aulas semanais precisam de início e fim do período; confira feriados e recessos.
+Datas explicitamente indicadas no documento como feriado, recesso ou sem aula são
+mostradas na revisão e excluídas das aulas geradas.
+As avaliações entram na matéria, as entregas em seus prazos e as aulas em **Plano e aulas**.
+Todos aparecem na agenda da Visão geral e no calendário de Pessoal, com os horários.
+Essa agenda é a compartilhada entre áreas do Delfos; a importação não publica eventos
+em calendários externos. Aulas passadas continuam no histórico sem virar pendências vencidas.
+Reimportar preserva ajustes anteriores e evita duplicar os mesmos eventos e arquivos.
 
 ### Escrever um resumo
 

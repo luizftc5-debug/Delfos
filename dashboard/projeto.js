@@ -294,7 +294,7 @@
             <span class="anexo-nome">${fmt.escape(a.nome)}
               <span class="anexo-meta">${fmt.escape(Arquivos.tamanhoLegivel(a.tamanho))}</span>
             </span>
-            <span class="muted" style="font-size:12px;">abrir</span>
+            <span class="muted" style="font-size:calc(12px * var(--escala-fonte, 1));">abrir</span>
           </button>`;
       })
       .join("");

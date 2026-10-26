@@ -66,13 +66,14 @@ def testar(base):
         page.locator('[data-aba-perfil="sobre"]').focus();page.keyboard.press('ArrowDown')
         expect(page.locator('[data-aba-perfil="abas"]')).to_be_focused()
         page.locator('[data-aba-perfil="leitura"]').click()
-        page.locator('[data-pref="densidade"] [data-valor="compacta"]').click()
-        assert page.evaluate('Store.estado().preferencias.experiencia.densidade')=='compacta'
+        page.locator('[data-pref="tamanho"] [data-valor="grande"]').click()
+        assert page.evaluate('Store.estado().preferencias.experiencia.tamanho')=='grande'
         expect(page.locator('[data-config-status]')).to_contain_text('salvas')
         page.keyboard.press('Escape');expect(page.locator('#btn-perfil')).to_be_focused()
         page.locator('#btn-perfil').click();page.locator('.configuracoes').wait_for()
         page.locator('[data-aba-perfil="leitura"]').click()
-        expect(page.locator('[data-pref="densidade"] [data-valor="compacta"]')).to_have_attribute('aria-pressed','true')
+        expect(page.locator('[data-pref="tamanho"] [data-valor="grande"]')).to_have_attribute('aria-pressed','true')
+        page.locator('[data-pref="tamanho"] [data-valor="normal"]').click()
         page.keyboard.press('Escape')
         page.goto(base+'/financeiro.html');page.locator('#btn-preferencias').click()
         page.locator('#p-orcamento').fill('1500')

@@ -1,1 +1,2 @@
 dashboard/vendor/webllm/webllm.js linguist-generated=true -whitespace
+dashboard/vendor/fflate/fflate.mjs linguist-vendored=true -whitespace

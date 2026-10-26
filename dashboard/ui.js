@@ -774,7 +774,7 @@ const UI = (() => {
     document.getElementById("btn-nova-aba").addEventListener("click", novaAba);
     prepararCriador(document.getElementById("btn-nova-aba"));
     document.getElementById("btn-mais-abas").addEventListener("click", () => abrirMaisAbas(grupoAtivo, c));
-    document.getElementById("btn-organizar").addEventListener("click", () => abrirPerfil("painel"));
+    document.getElementById("btn-organizar").addEventListener("click", () => abrirPerfil("abas"));
 
     marcarCabeca();
   }
@@ -815,7 +815,7 @@ const UI = (() => {
       </div>`, {
       classe: "folha-abas",
       aoMontar(modal, fechar) {
-        modal.querySelector('[data-acao="organizar"]').addEventListener("click", () => { fechar(null); abrirPerfil("painel"); });
+        modal.querySelector('[data-acao="organizar"]').addEventListener("click", () => { fechar(null); abrirPerfil("abas"); });
         modal.querySelector('[data-acao="nova"]').addEventListener("click", () => { fechar(null); novaAba(); });
         modal.querySelector('[data-acao="perfil"]').addEventListener("click", () => { fechar(null); abrirPerfil(); });
       },
@@ -860,20 +860,26 @@ const UI = (() => {
     return p;
   }
 
-  /** O Delfos (a IA do painel) e o criador de abas, nessa ordem. */
-  let estiloCriador;
-  function carregarEstiloCriador() {
-    if (estiloCriador) return estiloCriador;
-    estiloCriador = new Promise((ok, falha) => {
+  /** Carrega os modelos prontos e o criador; a IA só é carregada quando solicitada. */
+  const estilosCarregados = new Map();
+  function carregarEstilo(src) {
+    if (estilosCarregados.has(src)) return estilosCarregados.get(src);
+    const promessa = new Promise((ok, falha) => {
       const link = document.createElement("link");
-      link.rel = "stylesheet";link.href = "criador.css";
+      link.rel = "stylesheet";
+      link.href = src;
       link.onload = ok;
-      link.onerror = () => { estiloCriador = null;link.remove();falha(new Error("Não foi possível carregar o criador.")); };
+      link.onerror = () => {
+        estilosCarregados.delete(src);
+        link.remove();
+        falha(new Error("Não foi possível abrir esta interface. Confira a conexão e tente novamente."));
+      };
       document.head.appendChild(link);
     });
-    return estiloCriador;
+    estilosCarregados.set(src, promessa);
+    return promessa;
   }
-  const carregarCriador = () => Promise.all([carregarEstiloCriador(), carregarScript("delfos.js").then(() => carregarScript("abas.js"))]);
+  const carregarCriador = () => Promise.all([carregarEstilo("criador.css"), carregarScript("delfos.js").then(() => carregarScript("abas.js"))]);
 
   /** Baixa o criador antes do clique (ao passar o mouse ou focar o botão), para a janela abrir na hora. */
   function prepararCriador(botao) {
@@ -936,6 +942,27 @@ const UI = (() => {
   function formularioCampo(valores = {}) {
     return formulario({
       titulo: valores.id ? "Editar campo" : "Novo campo",
+      descricao: "Escolha qual informação este elemento vai guardar.",
+      configuracao: true,
+      preparar(form) {
+        const tipo = form.elements.namedItem("tipo");
+        const opcoes = form.elements.namedItem("opcoes").closest(".field");
+        const ajustar = () => { opcoes.hidden = tipo.value !== "select"; };
+        tipo.addEventListener("change", ajustar);
+        ajustar();
+        const detalhes = document.createElement("details");
+        detalhes.className = "config-detalhes form-inteira";
+        detalhes.innerHTML = "<summary>Opções do campo</summary>";
+        ["naLista", "obrigatorio"].forEach((nome) => detalhes.append(form.elements.namedItem(nome).closest(".field")));
+        form.append(detalhes);
+      },
+      validar(v) {
+        if (v.rotulo.length > 40) return { campo: "rotulo", mensagem: "Use até 40 caracteres no nome." };
+        if (v.tipo !== "select") return null;
+        const opcoes = [...new Set(v.opcoes.split("\n").map(s=>s.trim()).filter(Boolean))];
+        if (opcoes.length < 2 || opcoes.length > 8 || opcoes.some(s=>s.length>40)) return { campo: "opcoes", mensagem: "Informe de 2 a 8 opções diferentes, com até 40 caracteres cada." };
+        return null;
+      },
       campos: [
         { nome: "rotulo", rotulo: "Nome do campo", tipo: "text", obrigatorio: true, placeholder: "Ex.: Prioridade" },
         { nome: "tipo", rotulo: "Tipo", tipo: "select", opcoes: Store.TIPOS_CAMPO },
@@ -943,14 +970,14 @@ const UI = (() => {
         { nome: "naLista", rotulo: "Mostrar na listagem", tipo: "simNao" },
         { nome: "obrigatorio", rotulo: "Obrigatório ao cadastrar", tipo: "simNao" },
       ],
-      valores: { ...valores, opcoes: Array.isArray(valores.opcoes) ? valores.opcoes.join("\n") : (valores.opcoes || "") },
+      valores: { naLista: true, ...valores, opcoes: Array.isArray(valores.opcoes) ? valores.opcoes.join("\n") : (valores.opcoes || "") },
       rotuloConfirmar: "Salvar campo",
     }).then((v) => {
       if (!v) return null;
       return {
         rotulo: v.rotulo,
         tipo: v.tipo,
-        opcoes: v.opcoes ? v.opcoes.split("\n").map((s) => s.trim()).filter(Boolean) : [],
+        opcoes: v.tipo === "select" ? [...new Set(v.opcoes.split("\n").map((s) => s.trim()).filter(Boolean))] : [],
         naLista: !!v.naLista,
         obrigatorio: !!v.obrigatorio,
       };
@@ -1167,8 +1194,19 @@ const UI = (() => {
    * backup. É o único lugar de configuração do painel — por isso concentra o
    * que antes ficava espalhado no rodapé da barra lateral.
    */
-  function abrirPerfil(aba) {
-    const abaInicial = ["sobre", "aparencia", "painel", "rotina", "conta"].includes(aba) ? aba : "sobre";
+  async function abrirPerfil(aba) {
+    try { await carregarEstilo("configuracoes.css"); } catch (erro) { toast(erro.message); return; }
+    const secoes = [
+      ["sobre", "Seu perfil", "pessoal", "Como você aparece no Delfos."],
+      ["abas", "Minhas abas", "grade", "Escolha o que aparece e a ordem das suas áreas."],
+      ["painel", "Visão geral", "casa", "Decida o que encontrar ao abrir o Delfos."],
+      ["aparencia", "Aparência", "sol", "Tema e cor para deixar o Delfos do seu jeito."],
+      ["leitura", "Leitura e desempenho", "livro", "Conforto de leitura e fluidez no seu aparelho."],
+      ["rotina", "Rotina e avisos", "relogio", "Calendário e lembretes no seu ritmo."],
+      ["conta", "Conta e dados", "nuvem", "Sincronização, cópias de segurança e acesso."],
+    ];
+    const abaInicial = secoes.some(([id]) => id === aba) ? aba : "sobre";
+    const eventosConfiguracao = new AbortController();
     const e = Store.estado();
     const p = e.perfil || {};
 
@@ -1224,14 +1262,16 @@ const UI = (() => {
         <input type="file" accept="image/*" class="hidden" data-arquivo-foto />
       </div>
 
-      <div class="abas perfil-abas" role="tablist" aria-label="Seções do perfil">
-        <button type="button" role="tab" data-aba-perfil="sobre">Sobre você</button>
-        <button type="button" role="tab" data-aba-perfil="aparencia">Aparência</button>
-        <button type="button" role="tab" data-aba-perfil="painel">Painel</button>
-        <button type="button" role="tab" data-aba-perfil="rotina">Rotina e avisos</button>
-        <button type="button" role="tab" data-aba-perfil="conta">Conta e dados</button>
-      </div>
-
+      <header class="config-cabecalho">
+        <div><span>Delfos · seu espaço pessoal</span><h2 class="modal-title">Configurações</h2></div>
+        <button class="btn ghost icon" data-acao="fechar-topo" type="button" aria-label="Fechar configurações">${icone("fechar")}</button>
+      </header>
+      <div class="config-layout">
+        <nav class="perfil-abas config-menu" role="tablist" aria-label="Categorias de configuração" aria-orientation="vertical">
+          ${secoes.map(([id, nome, ic]) => `<button type="button" role="tab" id="config-aba-${id}" aria-controls="config-painel-${id}" data-aba-perfil="${id}">${icone(ic)}<span>${nome}</span></button>`).join("")}
+        </nav>
+        <label class="config-mobile">Configuração<select class="input" data-config-select>${secoes.map(([id,nome]) => `<option value="${id}">${nome}</option>`).join("")}</select></label>
+        <div class="config-conteudo" data-config-corpo>
       <div class="perfil-painel" role="tabpanel" data-painel="sobre">
         <div class="perfil-stats seis">
           <div class="perfil-stat"><b>${urgentes}</b><span>compromissos nesta semana</span></div>
@@ -1291,7 +1331,7 @@ const UI = (() => {
 
         <div class="ajuste">
           <div class="ajuste-titulo">Abas e ordem</div>
-          <p class="ajuste-texto">Use as setas para mudar a ordem da barra. As quatro primeiras ficam como atalhos no celular. Desligar ou ocultar só tira a aba da barra; nada do que está nela é apagado, e os compromissos continuam na agenda. O nome das fixas dá para trocar aqui mesmo.</p>
+          <p class="ajuste-texto">Use as setas para ordenar. As quatro primeiras são atalhos no celular. Ocultar preserva os registros e a agenda.</p>
           <ul class="abas-lista" data-abas>${linhasAbas()}</ul>
         </div>
 
@@ -1345,26 +1385,82 @@ const UI = (() => {
         </div>
       </div>
 
-      <div class="modal-foot" style="padding-top:18px;">
+        <div class="perfil-painel" role="tabpanel" data-painel="abas" hidden></div>
+        <div class="perfil-painel" role="tabpanel" data-painel="leitura" hidden></div>
+        </div>
+      </div>
+      <div class="modal-foot config-rodape">
+        <span class="config-salvamento" role="status" data-config-status>As alterações são salvas automaticamente.</span>
         <button class="btn" data-acao="fechar" type="button">Fechar</button>
         <button class="btn primary" data-acao="editar" type="button">${icone("editar")}Editar perfil</button>
       </div>`;
 
     abrirModal(html, {
-      classe: "perfil",
+      classe: "perfil configuracoes",
+      aoFechar: () => eventosConfiguracao.abort(),
       aoMontar(modal, fechar) {
+        const cabecalhoConfiguracao = modal.querySelector(".modal-title");
+        cabecalhoConfiguracao.id = "config-titulo";
+        modal.setAttribute("aria-labelledby", cabecalhoConfiguracao.id);
+        const painelDe = (id) => modal.querySelector(`[data-painel="${id}"]`);
+        painelDe("sobre").prepend(modal.querySelector(".perfil-topo"));
+        // Estatísticas são consulta, não uma barreira para configurar o perfil.
+        const numeros = modal.querySelector(".perfil-stats");
+        const detalhes = document.createElement("details");
+        detalhes.className = "config-detalhes";
+        detalhes.innerHTML = "<summary>Seu uso do Delfos</summary>";
+        detalhes.append(numeros);
+        painelDe("sobre").append(detalhes);
+        painelDe("abas").append(modal.querySelector("[data-abas]").closest(".ajuste"));
+        painelDe("leitura").append(painelDe("aparencia").querySelector(".ajuste:last-child"));
+        secoes.forEach(([id, nome, , descricao]) => {
+          const painel = painelDe(id);
+          painel.id = `config-painel-${id}`;
+          painel.setAttribute("aria-labelledby", `config-aba-${id}`);
+          painel.tabIndex = 0;
+          const intro = document.createElement("header");
+          intro.className = "config-intro";
+          const titulo = document.createElement("h3");
+          titulo.textContent = nome;
+          const apoio = document.createElement("p");
+          apoio.textContent = descricao;
+          intro.append(titulo, apoio);
+          painel.prepend(intro);
+        });
+        const status = modal.querySelector("[data-config-status]");
+        window.addEventListener("delfos:salvo", () => { status.textContent = "Alterações salvas."; }, { signal: eventosConfiguracao.signal });
+        window.addEventListener("delfos:falha-ao-salvar", () => { status.textContent = "Há alterações sem salvar. Use Tentar salvar no aviso da tela."; }, { signal: eventosConfiguracao.signal });
+        modal.querySelector('[data-acao="fechar-topo"]').addEventListener("click", () => fechar(null));
         const entrada = modal.querySelector("[data-arquivo-foto]");
         let abaAtual = abaInicial;
 
         // Abas internas: mostram um painel por vez, sem fechar o cartão.
         const mostrarAba = (id) => {
           abaAtual = id;
-          modal.querySelectorAll("[data-aba-perfil]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.abaPerfil === id)));
+          modal.querySelectorAll("[data-aba-perfil]").forEach((b) => {
+            const ativo = b.dataset.abaPerfil === id;
+            b.setAttribute("aria-selected", String(ativo));
+            b.tabIndex = ativo ? 0 : -1;
+          });
+          modal.querySelector("[data-config-select]").value = id;
+          modal.querySelector('[data-acao="editar"]').hidden = id !== "sobre";
+          modal.querySelector("[data-config-corpo]").scrollTop = 0;
           modal.querySelectorAll("[data-painel]").forEach((pn) => { pn.hidden = pn.dataset.painel !== id; });
         };
         modal.querySelector(".perfil-abas").addEventListener("click", (ev) => {
           const b = ev.target.closest("[data-aba-perfil]");
           if (b) mostrarAba(b.dataset.abaPerfil);
+        });
+        modal.querySelector("[data-config-select]").addEventListener("change", (ev) => mostrarAba(ev.target.value));
+        modal.querySelector(".perfil-abas").addEventListener("keydown", (ev) => {
+          const botoes = [...modal.querySelectorAll("[data-aba-perfil]")];
+          const i = botoes.indexOf(document.activeElement);
+          if (i < 0 || !["ArrowUp", "ArrowDown", "Home", "End"].includes(ev.key)) return;
+          ev.preventDefault();
+          const proximo = ev.key === "Home" ? 0 : ev.key === "End" ? botoes.length - 1
+            : (i + (ev.key === "ArrowDown" ? 1 : -1) + botoes.length) % botoes.length;
+          mostrarAba(botoes[proximo].dataset.abaPerfil);
+          botoes[proximo].focus();
         });
         mostrarAba(abaInicial);
 
@@ -1752,7 +1848,9 @@ const UI = (() => {
       backdrop.remove();
       document.removeEventListener("keydown", onKey);
       // A volta do foco para quem abriu a janela: o teclado não se perde no topo da página.
-      if (origem instanceof HTMLElement && document.contains(origem)) origem.focus({ preventScroll: true });
+      const retorno = origem instanceof HTMLElement && document.contains(origem) ? origem
+        : origem?.id ? document.getElementById(origem.id) : null;
+      retorno?.focus({ preventScroll: true });
       aoFechar?.(resultado);
     };
     const onKey = (e) => {
@@ -1872,7 +1970,10 @@ const UI = (() => {
    * extenso; dinheiro aceita "45+12,90".
    * Resolve com um objeto de valores, ou null se cancelado.
    */
-  function formulario({ titulo, descricao, campos, valores = {}, rotuloConfirmar = "Salvar", largo = false, rotuloExcluir = "", aoExcluir = null, icone: iconeHTML = null, cor = null }) {
+  async function formulario({ titulo, descricao, campos, valores = {}, rotuloConfirmar = "Salvar", largo = false, rotuloExcluir = "", aoExcluir = null, icone: iconeHTML = null, cor = null, configuracao = false, validar = null, preparar = null }) {
+    if (configuracao) {
+      try { await carregarEstilo("configuracoes.css"); } catch (erro) { toast(erro.message); return null; }
+    }
     return new Promise((resolve) => {
       const marca = iconeHTML ? { icone: iconeHTML, cor: cor || "var(--texto-2)" } : marcaDaPagina();
       const larg = larguras(campos);
@@ -1895,7 +1996,7 @@ const UI = (() => {
         </div>`;
 
       abrirModal(html, {
-        classe: `formulario ${largo ? "wide" : ""}`,
+        classe: `formulario ${largo ? "wide" : ""} ${configuracao ? "configuracao-form" : ""}`,
         aoMontar(modal, fechar) {
           const form = modal.querySelector("form");
 
@@ -1981,6 +2082,7 @@ const UI = (() => {
 
           // Foco no primeiro campo só com mouse e teclado: no celular ele abriria
           // o teclado por cima da janela antes de a pessoa ver o que tem nela.
+          preparar?.(form);
           const primeiro = form.querySelector("input:not([type=hidden]):not([type=file]):not([type=checkbox]), select, textarea");
           if (temPonteiro()) {
             primeiro?.focus();
@@ -2033,6 +2135,20 @@ const UI = (() => {
             });
 
             if (primeiroErro) { primeiroErro.focus?.(); return; }
+            const problema = validar?.(saida);
+            if (problema) {
+              const input = form.elements.namedItem(problema.campo);
+              const campo = input?.closest(".field");
+              if (campo) {
+                const mensagem = document.createElement("span");
+                mensagem.className = "err";
+                mensagem.textContent = problema.mensagem;
+                campo.append(mensagem);
+                campo.classList.add("tem-erro");
+              }
+              input?.focus();
+              return;
+            }
 
             const nomes = Object.keys(gravarAnexos);
             if (nomes.length) {
@@ -3477,7 +3593,7 @@ const UI = (() => {
     paginas, compromissos, conflitos, contagens, mediaDisciplina, notaNecessaria, proximaAvaliacao, resumoProjeto,
     iniciarPagina, montarLayout, tema, toast, formulario, confirmar, abrirModal,
     abrirBackup, abrirPerfil, avatarHTML, iniciais, vazio, barras, colunasMensais, medidor,
-    novaAba, abrirCriadorDeAbas, prepararCriador, carregarScript, formularioCampo, camposPilar, redimensionarFoto, camposItemPilar, editorCampos,
+    novaAba, abrirCriadorDeAbas, prepararCriador, carregarScript, carregarEstilo, formularioCampo, camposPilar, redimensionarFoto, camposItemPilar, editorCampos,
     perguntaDispensada, dispensarPergunta, resposta, renderPerguntas, renderNotas, ordenarNotas, barrasComMeta,
     gavetas, abrirGaveta, abrirGavetaDe, abrirRegistrar, marcaItem, monograma, info,
   };

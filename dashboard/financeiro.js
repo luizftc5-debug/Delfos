@@ -1163,7 +1163,8 @@
 
   /* ------------------------- Limites e preferências ------------------------- */
 
-  function abrirPreferencias() {
+  async function abrirPreferencias() {
+    try { await UI.carregarEstilo("configuracoes.css"); } catch (erro) { UI.toast(erro.message); return; }
     const p = prefs();
     const cats = [...new Set([...Store.estado().financeiro.categorias, ...transacoes().filter((t) => t.tipo === "despesa").map((t) => t.categoria || "Outros")])];
     const essenciais = p.essenciais || [];
@@ -1189,12 +1190,14 @@
             <input id="p-renda" type="number" step="1" min="1" max="31" value="${numero(p.diaRenda)}" placeholder="não sei" />
           </div>
         </div>
+        <details class="config-detalhes"><summary>Gastos essenciais</summary><div class="config-detalhe-corpo">
         <div class="field">
-          <label>Gastos essenciais</label>
+          <label>Quais categorias são essenciais?</label>
           <div class="chips" data-essenciais>${cats.map((c) => `<button type="button" class="chip" aria-pressed="${essenciais.includes(c)}">${esc(c)}</button>`).join("")}</div>
           <span class="hint">O resto conta como escolha, na leitura do mês.</span>
         </div>
-        <div class="form-secao">Limite por categoria</div>
+        </div></details>
+        <details class="config-detalhes"><summary>Limites por categoria</summary><div class="config-detalhe-corpo">
         <ul class="abas-lista" data-limites>
           ${cats.map((c) => `
             <li>
@@ -1203,11 +1206,12 @@
                      value="${numero(p.orcamentos[c])}" placeholder="sem limite" aria-label="Limite para ${esc(c)} em reais" />
             </li>`).join("")}
         </ul>
-        <div class="form-secao">Respostas anteriores</div>
+        </div></details>
+        <details class="config-detalhes"><summary>Rever respostas anteriores</summary><div class="config-detalhe-corpo">
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn sm" type="button" data-reset="fixos">Esquecer o que é gasto fixo</button>
           <button class="btn sm" type="button" data-reset="dispensadas">Mostrar de novo as perguntas dispensadas</button>
-        </div>
+        </div></div></details>
       </div>
       <div class="modal-foot">
         <button class="btn" data-acao="cancelar" type="button">Cancelar</button>
@@ -1215,7 +1219,7 @@
       </div>`;
 
     UI.abrirModal(html, {
-      classe: "wide",
+      classe: "wide configuracao-form",
       aoMontar(modal, fechar) {
         const resets = {};
         modal.querySelector("[data-essenciais]").addEventListener("click", (ev) => {

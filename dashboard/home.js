@@ -583,7 +583,7 @@
     renderAgenda();
   });
   document.getElementById("agenda-periodo").addEventListener("change", (ev) => mudarPeriodo(ev.target.value));
-  document.getElementById("btn-organizar-abas").addEventListener("click", () => UI.abrirPerfil("painel"));
+  document.getElementById("btn-organizar-abas").addEventListener("click", () => UI.abrirPerfil("abas"));
   document.getElementById("btn-lancamento").addEventListener("click", novoLancamento);
   document.getElementById("btn-saldo").addEventListener("click", ajustarSaldo);
   document.getElementById("notas-mais").addEventListener("click", () => { notasTodas = !notasTodas; renderNotasHome(); });

@@ -11,6 +11,10 @@ versões anteriores guardados no servidor.
 
 ### Novidades da versão 2.4 alpha
 
+- **Configurações por assunto**: perfil, abas, visão geral, aparência, leitura,
+  rotina e conta. As ações ficam visíveis e as preferências são salvas automaticamente.
+- **Criação manual ou com IA local**: escolha os elementos ou use “Deixar Delfos criar”.
+  O modelo roda no navegador, com revisão antes de criar e sem API de inferência.
 - **Páginas organizadas por tarefa**: o conteúdo principal abre primeiro. Análises e ajustes
   ficam em seções próprias, com navegação por teclado e links diretos preservados.
 - **Criação em três etapas**: escolher um modelo, dar nome e revisar. Os campos, a agenda,
@@ -59,6 +63,7 @@ python -m pip install -r dashboard/test/requirements.txt
 python -m playwright install chromium
 python dashboard/test/editor.browser.py
 python dashboard/test/organizacao.browser.py
+python dashboard/test/configuracoes_ia.browser.py
 ```
 
 ## Como abrir
@@ -73,8 +78,8 @@ python -m http.server 8000
 
 E acesse <http://localhost:8000>.
 
-> Abrir o arquivo direto (`file://`) funciona para tudo, **menos** o login do Google — ele exige
-> `http://` ou `https://`.
+> Para usar o login do Google, abra por HTTP ou HTTPS. A IA local exige HTTPS ou localhost,
+> além de um navegador compatível com WebGPU; ela não funciona por `file://`.
 
 ## Na primeira vez que você abrir
 
@@ -247,24 +252,19 @@ Na lista de projetos, o cartão continua mostrando o resumo e a **próxima etapa
 
 ### Seu perfil e os ajustes do painel
 
-Clique na sua foto e nome, **no pé da barra lateral**, para abrir o cartão de perfil. **É o único
-lugar de configuração**, dividido em cinco abas:
+O botão do perfil abre **Configurações**, com uma categoria visível por vez:
 
-- **Sobre você**: sua ficha. **Editar perfil** abre um formulário em partes (quem você é, como
-  prefere ser chamado, ocupação, vida acadêmica — só para quem estuda — e dois textos livres). A
-  idade é calculada sozinha. **Toque na foto** para trocá-la.
-- **Aparência**: tema (claro, escuro ou automático, que segue o do aparelho), cor de destaque dos
-  botões e do que está escolhido, tamanho do texto, densidade (confortável ou compacta), a fonte das
-  leituras e títulos (serifa ou sem serifa) e se o painel usa animações.
-- **Painel**: quais abas aparecem, com que nome e **em que ordem** (setas para subir e descer), qual
-  página abre primeiro, se a barra mostra os contadores e quais blocos a visão geral mostra.
-- **Rotina e avisos**: em que dia a semana começa (vale para o calendário), com quanta antecedência
-  o Delfos lembra das coisas, se mostra o **resumo do dia** ao abrir e se usa **avisos do
-  navegador**. Também lista os **atalhos de teclado** (aperte `?` em qualquer página para vê-los).
-- **Conta e dados**: sincronização, backup, refazer a configuração inicial, sair.
+- **Seu perfil**: identidade, foto e informações pessoais; estatísticas ficam em consulta recolhida.
+- **Minhas abas**: nomes, visibilidade e ordem das áreas.
+- **Visão geral**: página inicial e conteúdo do dia.
+- **Aparência**: tema e cor de destaque.
+- **Leitura e desempenho**: tamanho do texto, densidade, fonte, movimento e modo leve.
+- **Rotina e avisos**: início da semana e lembretes.
+- **Conta e dados**: sincronização, backups e acesso.
 
-O cartão também mostra quantas disciplinas e registros você tem, quantos compromissos há nesta
-semana e quanto os documentos anexados ocupam.
+As preferências são salvas automaticamente. No celular, um seletor substitui o menu lateral;
+apenas o conteúdo rola, mantendo a ação de fechar visível. O financeiro reúne os ajustes
+menos frequentes em grupos recolhidos: essenciais, limites por categoria e respostas anteriores.
 
 ### Escrever um resumo
 
@@ -297,67 +297,38 @@ há algo não salvo. `Ctrl + S` (ou `Cmd + S`) salva na hora.
 
 ### Criar suas próprias abas
 
-O botão **＋ Nova aba** na barra lateral (ou em **Mais**, no celular) abre três etapas:
+**Nova aba** abre Escolher, Dar nome e Revisar. Um modelo pronto é opcional.
+Na segunda etapa, escolha um dos caminhos:
 
-1. **Escolher**: Trabalho, Saúde, Academia, Esporte, Religião, Leituras ou Aba livre.
-2. **Dar nome**: escreva um nome. Se quiser, diga o que pretende guardar.
-3. **Revisar**: veja a prévia da estrutura e crie a aba. Você pode voltar para corrigir o nome.
+- **Montar manualmente**: escolha os elementos sem geração automática. Uma aba livre começa
+  com nome e data, e você acrescenta, edita, remove e ordena os campos que precisar.
+- **Deixar Delfos criar**: descreva o que deseja acompanhar, os campos, a visualização e as metas.
+  O modelo de linguagem prepara uma proposta no próprio aparelho. Revise e ajuste antes de criar.
 
-Na revisão, abra apenas o que precisar:
+A revisão reúne **Elementos e visualização**, **Agenda e metas** e **Ícone e aparência**.
+Campos podem ser texto, número, dinheiro, opções, sim/não, data, hora, link e estrelas.
+São até oito campos adicionais por aba. Numa lista de opções, use de duas a oito opções diferentes.
 
-- **Campos e visualização**: escolha lista, cartões, quadro, tabela ou calendário e revise
-  os campos. **Adicionar campo** permite incluir informações próprias, até oito campos adicionais.
-- **Agenda e metas**: registros com data, marcação por dia, meta e agrupamento.
-- **Ícone e aparência**: ícone, cor, descrição e nome de cada registro.
-- **Adicionar registros de exemplo**: opcional; nenhum exemplo entra sem ser selecionado.
-- **Sobre a sugestão**: explica como o propósito foi interpretado.
+**IA local, sem API de inferência.** A opção usa Qwen2.5-0.5B-Instruct pelo WebLLM, dentro
+de um worker do navegador. Nome, descrição e estrutura não são enviados a um servidor.
+O primeiro uso baixa arquivos públicos do modelo (centenas de MB), que podem ser reutilizados
+pelo cache do navegador. Esse download só ocorre quando a pessoa pede a geração.
 
-A Academia usa sua estrutura própria de dias, exercícios e cargas. Depois de criar, cada aba
-abre nos registros (ou nos treinos), com análises e ajustes separados. Se você ajustar a estrutura
-à mão, uma nova interpretação do propósito só a substitui ao escolher **Usar nova sugestão**.
+A IA precisa de HTTPS ou localhost, um navegador com **WebGPU** e memória gráfica disponível
+(aproximadamente 1 GB para o modelo, além do restante da aplicação). O modo manual continua
+disponível sem esses requisitos. Se faltar suporte, conexão para o primeiro download ou memória,
+a interface informa o problema; não apresenta uma sugestão de regras como se tivesse sido gerada
+pelo modelo. O cache pode ser removido pelo navegador, exigindo novo download.
 
-**O Delfos interpreta, não copia.** Você escreve do seu jeito e ele traduz:
+A IA não é um modelo treinado do zero para o Delfos: o site executa um modelo aberto localmente,
+com instruções e validação específicas para suas abas. Resultados podem precisar de ajustes.
+A resposta aceita apenas a estrutura conhecida pelo painel, sem HTML, scripts ou ações.
+Nenhum registro de exemplo é criado automaticamente. Um pedido novo não substitui ajustes manuais
+sem a escolha explícita **Usar estrutura da IA**. Cancelar ou mudar o pedido interrompe a geração.
 
-> Leitura. *Aba para anotar os livros que estou lendo, metas, anotações sobre as leituras*
-
-vira uma aba de livros com **Autor**, **Situação** (quero ler, lendo, lido, abandonado),
-**Avaliação** (estrelas) e **Anotações**, em cartões, com uma meta inicial de 12 livros por ano. A
-frase "livros que estou lendo" não vira campo: é o próprio livro, e mostra que existe uma situação.
-O que você pediu vem ligado; o que o Delfos acrescentou por conhecer o assunto vem com o selo
-**sugestão**, e outras ideias (Gênero, Páginas) ficam desligadas, prontas para você ligar. A
-descrição da página ("Seus livros, com autor, situação, avaliação e anotações.") é escrita por ele.
-
-**Erro de digitação não atrapalha.** "livors q estou lendo, metaz, anotaçoes" é entendido como
-"livros que estou lendo, metas, anotações"; o Delfos diz o que corrigiu e a aba nunca leva o erro.
-Abreviações de quem escreve rápido (q, pq, vc, tb, obs) também valem.
-
-**Ele raciocina sobre o que você quer**, mesmo sem você pedir o campo: "para não esquecer" coloca
-data e lembrete; "por prioridade" cria o campo e separa a lista por ele; "acompanhar a evolução"
-abre em tabela, por data; "quem indicou" e "onde assistir" viram campos; "simples" ou "só quero
-marcar os dias" pede o mínimo.
-
-O que o Delfos entende no propósito:
-
-- **Campos**: "com local, horário e valor" vira esses campos, com o tipo certo ("quanto recebi" é
-  valor em R$, "horário" é hora, "se já paguei" é sim/não, "nota de 1 a 5" são estrelas, "link" é
-  link). Ele completa com o que costuma ajudar no assunto (uns 45 assuntos: plantões, leitura,
-  corrida, idiomas, questões, gastos, contas a pagar, monitoria, freelas, conteúdo para redes,
-  reuniões, vagas, medidas do corpo…).
-- **Opções**: "situação (quero ler, lendo, lido)" ou "status: ideia, testando, descartada" viram
-  uma lista com essas opções.
-- **O que você não quer**: "sem horário", "não precisa de data", "sem meta", "só distância".
-- **Data ou todo dia**: "prazo", "vencimento", "quando" põem na agenda; "todo dia", "todos os dias",
-  "3 vezes por semana" fazem uma aba de marcar por dia, com sequência.
-- **Meta**: "12 livros por ano", "40 km por mês", "R$ 800 por mês", "20 páginas por dia".
-- **Como ver**: "no calendário", "em quadro", "em tabela", "cartões"; e a ordem: "mais recentes",
-  "por data", "de A a Z", "mais caros primeiro".
-- **Registros para começar**: "beber água, meditar e dormir cedo todos os dias" sugere esses três
-  como os primeiros itens.
-
-O Delfos roda **no seu próprio computador**: não precisa de internet nem de conta, responde na hora
-mesmo em computador fraco, e nada do que você escreve sai do aparelho. Não é um chat: ele só lê o
-nome e o propósito e monta a aba. Se você já tinha mexido em algo, uma leitura nova não passa por
-cima: aparece o botão **Aplicar o que o Delfos entendeu**.
+Para reconstruir o runtime empacotado, consulte
+[dashboard/vendor/webllm/README.md](dashboard/vendor/webllm/README.md).
+A rota de IA legada do backend não é chamada por este fluxo e não é necessária para a IA local.
 
 Abas **com data** entram na agenda dos próximos 30 dias e nos alertas de semana cheia da visão
 geral. Abas de **hábito** (oração, idioma, remédio diário) ganham um botão **Hoje** por item, os
@@ -365,11 +336,10 @@ geral. Abas de **hábito** (oração, idioma, remédio diário) ganham um botão
 
 Na página da aba:
 
-- A **leitura** no alto diz como está a aba; os números, a **meta do período** e o resumo de cada
-  campo (quantos em cada situação, soma de km, média de nota) vêm logo abaixo.
+- **Registros** abre o conteúdo principal. **Visão geral** reúne leitura, indicadores, metas e
+  resumos por campo. **Ajustes** reúne as configurações da aba.
 - **Perguntas do Delfos** oferecem o que falta: definir uma meta, agrupar a lista por um campo.
-- **Personalizar**: muda o propósito, nome, ícone, cor, descrição, meta e agrupamento; o Delfos lê
-  o propósito novo e sugere só os campos que ainda faltam. Acrescenta, nunca apaga o que já existe.
+- **Personalizar**: muda o propósito, nome, ícone, cor, descrição, meta e agrupamento; a geração local é uma escolha explícita. Campos existentes continuam preservados.
   O propósito fica guardado e aparece em **Ajustes da aba**.
 - **Campos desta aba**: adicionar, editar, excluir e reordenar os campos um a um. Além de texto,
   data, número, valor em R$, lista de opções e sim/não, há **nota em estrelas** (1 a 5), **link** e

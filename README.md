@@ -72,6 +72,7 @@ python dashboard/test/editor.browser.py
 python dashboard/test/organizacao.browser.py
 python dashboard/test/configuracoes_ia.browser.py
 python dashboard/test/faculdade_documentos.browser.py
+python dashboard/test/modelos_abas.browser.py
 ```
 
 ## Como abrir
@@ -333,6 +334,30 @@ há algo não salvo. `Ctrl + S` (ou `Cmd + S`) salva na hora.
 ### Criar suas próprias abas
 
 **Nova aba** abre Escolher, Dar nome e Revisar. Um modelo pronto é opcional.
+O catálogo oferece busca por tema ou profissão, filtro por categoria e grupos
+recolhidos. **Aba livre** continua disponível junto dos seis modelos essenciais.
+Os modelos são adicionados ao painel quando você escolhe e cria cada aba.
+
+Os **30 modelos específicos** têm campos, agrupamento e visualização próprios:
+
+| Categoria | Modelos |
+|---|---|
+| Esportes (6) | Corrida; Jiu-jitsu; Boxe e Muay Thai; Ciclismo; Natação; Futebol |
+| Estudos (5) | TCC; Pesquisa científica; Concursos e vestibulares; Idiomas; Cursos e certificações |
+| Saúde e bem-estar (4) | Saúde e cuidados; Alimentação e refeições; Sono e descanso; Hábitos e rotina |
+| Vida pessoal (5) | Religião e espiritualidade; Compromissos familiares; Casa e manutenção; Cuidados com pets; Viagens |
+| Trabalho e profissões (10) | Engenharia; Advocacia; Táxi; Motorista de aplicativo; Medicina e plantões; Trabalho autônomo; Marketing digital; Vendas online; Criação de conteúdo; Aulas particulares |
+
+Por exemplo, Corrida usa distância, tempo e tipo de treino; TCC abre um quadro
+por etapa; Motorista de aplicativo distingue plataforma, ganhos e quilômetros;
+Vendas online organiza os pedidos por situação. Buscar **Uber**, **médico** ou
+**engenheiro** encontra o modelo correspondente. As práticas de religião podem
+ser adaptadas à tradição da pessoa.
+
+Escolher um modelo usa uma estrutura pronta local. Mudar o nome ou o propósito
+mantém os campos escolhidos. Você pode editar, incluir, remover e ordenar os campos
+na revisão; cada aba começa sem registros. Metas ficam disponíveis para configurar.
+
 Na segunda etapa, escolha um dos caminhos:
 
 - **Montar manualmente**: escolha os elementos sem geração automática. Uma aba livre começa

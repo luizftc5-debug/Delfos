@@ -885,7 +885,10 @@ const UI = (() => {
     estilosCarregados.set(src, promessa);
     return promessa;
   }
-  const carregarCriador = () => Promise.all([carregarEstilo("criador.css"), carregarScript("delfos.js").then(() => carregarScript("abas.js"))]);
+  const carregarCriador = () => Promise.all([
+    carregarEstilo("criador.css"),
+    Promise.all([carregarScript("delfos.js"), carregarScript("modelos-abas.js")]).then(() => carregarScript("abas.js")),
+  ]);
 
   /** Baixa o criador antes do clique (ao passar o mouse ou focar o botão), para a janela abrir na hora. */
   function prepararCriador(botao) {

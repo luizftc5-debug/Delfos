@@ -6,6 +6,18 @@ A identidade continua no símbolo, no logotipo, na serifa e nos neutros quentes.
 
 ## Organização da informação
 
+O primeiro passo do criador reúne uma aba livre, seis modelos essenciais e 30
+modelos específicos. Busca e filtro de categoria precedem os grupos recolhidos;
+a busca abre os grupos que contêm resultados. A seleção atual permanece indicada
+mesmo quando o filtro muda. Setas e Home/End percorrem apenas as escolhas visíveis.
+
+`modelos-abas.js` é um catálogo local com estruturas explícitas para cada tema.
+O criador aplica essa estrutura diretamente, preservando-a quando o nome muda.
+Cada chamada retorna uma cópia, e a aba registra seu `modeloOrigem` para referência.
+Os modelos passam pelo mesmo saneamento do criador, com até oito campos e vistas
+compatíveis com agenda e marcação por dia. Não há metas numéricas predefinidas
+nem registros adicionados sem escolha; a geração por IA continua opcional.
+
 A navegação tem dois níveis com funções distintas:
 
 - A barra lateral escolhe uma área da vida: Pessoal, Faculdade, Trabalho ou uma aba própria.

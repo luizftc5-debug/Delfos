@@ -84,6 +84,7 @@ const Abas = (() => {
     out.visual = { vista, ordem: ORDENS.has(v.ordem) || ordemCampo ? v.ordem : "auto" };
     out.proposito = corta(s?.proposito, 2000);
     out.origem = ["delfos", "ia", "manual"].includes(s?.origem) ? s.origem : "manual";
+    out.modeloOrigem = ModelosAbas.obter(s?.modeloOrigem)?.id || "";
     return out;
   }
 
@@ -112,6 +113,13 @@ const Abas = (() => {
    */
   function abrir({ pilar = null } = {}) {
     const editando = !!pilar;
+    const especificos = ModelosAbas.listar();
+    const categorias = [...ModelosAbas.categorias(), { id: "essenciais", nome: "Essenciais" }];
+    const catalogo = [
+      ...MODELOS.map(([nome, ic, descricao]) => ({ nome, ic, descricao, categoria: "essenciais", modeloId: "" })),
+      ...especificos.map(m => ({ nome: m.nome, ic: m.icone.slice(4), descricao: m.descricao, categoria: m.categoria, modeloId: m.id })),
+    ];
+    const botaoModelo = (m) => `<button type="button" class="criacao-modelo${m.nome === "Aba livre" ? " modelo-livre" : ""}" role="radio" aria-label="${esc(m.nome)}" aria-describedby="modelo-descricao-${catalogo.indexOf(m)}" aria-checked="${m.nome === "Aba livre"}" tabindex="${m.nome === "Aba livre" ? 0 : -1}" data-modelo-area="${esc(m.nome)}" data-modelo-id="${esc(m.modeloId)}" data-categoria-modelo="${m.categoria}"><span class="modelo-icone">${icone(m.ic)}</span><span><b>${esc(m.nome)}</b><small id="modelo-descricao-${catalogo.indexOf(m)}">${esc(m.descricao)}</small></span><span class="modelo-selecao" aria-hidden="true"></span></button>`;
     const est = {
       sug: editando
         ? sanear({ ...pilar, meta: pilar.meta || SEM_META, especial: pilar.modelo === "academia" ? "academia" : "", visual: pilar.visual || {}, origem: pilar.sugeridoPor }, pilar.nome)
@@ -125,6 +133,7 @@ const Abas = (() => {
       leitura: null,
       etapa: editando ? 2 : 1,
       modelo: "Aba livre",
+      modeloId: "",
       idCriacao: Store.uid("pil"),
     };
     if (editando) {
@@ -149,10 +158,17 @@ const Abas = (() => {
       <div class="modal-body criacao-corpo">
         <section data-etapa="1" aria-labelledby="cr-escolher">
           <h3 class="criacao-titulo" id="cr-escolher" tabindex="-1">O que vamos organizar?</h3>
-          <p class="criacao-apoio">Escolha um ponto de partida. Você pode adaptar tudo depois.</p>
-          <div class="criacao-modelos" role="radiogroup" aria-label="Ponto de partida">
-            ${MODELOS.map(([nome,ic,desc], i) => `<button type="button" class="criacao-modelo" role="radio" aria-label="${nome}" aria-describedby="modelo-descricao-${i}" aria-checked="${nome === "Aba livre"}" tabindex="${nome === "Aba livre" ? 0 : -1}" data-modelo-area="${nome}"><span class="modelo-icone">${icone(ic)}</span><span><b>${nome}</b><small id="modelo-descricao-${i}">${desc}</small></span><span class="modelo-selecao" aria-hidden="true"></span></button>`).join("")}
+          <p class="criacao-apoio">30 modelos específicos, além dos essenciais. Escolha por tema ou comece com uma aba livre. Tudo pode ser adaptado.</p>
+          <div class="catalogo-filtros">
+            <label class="field" for="cr-busca-modelo">Buscar modelo<input class="input" id="cr-busca-modelo" type="search" placeholder="Corrida, TCC, Uber…" autocomplete="off" /></label>
+            <label class="field" for="cr-categoria-modelo">Categoria<select class="input" id="cr-categoria-modelo"><option value="">Todos os temas</option>${categorias.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("")}</select></label>
           </div>
+          <div class="criacao-catalogo" role="radiogroup" aria-label="Ponto de partida">
+            ${botaoModelo(catalogo.find(m=>m.nome==="Aba livre"))}
+            <p class="catalogo-status" role="status" data-catalogo-status></p>
+            ${categorias.map(c=>`<details class="catalogo-grupo" data-grupo-modelos="${c.id}"><summary>${c.nome}<span data-contagem-modelos></span></summary><div class="criacao-modelos">${catalogo.filter(m=>m.categoria===c.id && m.nome!=="Aba livre").map(botaoModelo).join("")}</div></details>`).join("")}
+          </div>
+          <p class="hint catalogo-selecionado" data-modelo-selecionado>Selecionado: Aba livre.</p>
         </section>
         <section data-etapa="2" aria-labelledby="cr-identidade" hidden>
           <h3 class="criacao-titulo" id="cr-identidade" tabindex="-1">Dê a sua cara.</h3>
@@ -253,6 +269,40 @@ const Abas = (() => {
         const inpNome = $("#cr-nome");
         const inpProp = $("#cr-prop");
         const modelos = [...modal.querySelectorAll("[data-modelo-area]")];
+        const visiveis = () => modelos.filter(b=>b.getClientRects().length);
+        function atualizarFocoModelos() {
+          const oferta = visiveis();
+          const alvo = oferta.find(b=>b.getAttribute("aria-checked")==="true") || oferta[0];
+          modelos.forEach(b=>{b.tabIndex=b===alvo ? 0 : -1;});
+        }
+        let filtrandoModelos = false;
+        function filtrarModelos() {
+          const consulta = $("#cr-busca-modelo").value;
+          const categoria = $("#cr-categoria-modelo").value;
+          const encontrados = new Set(ModelosAbas.buscar(consulta, categoria).map(m=>m.id));
+          const termos = normalizar(consulta).split(" ").filter(Boolean);
+          modelos.forEach(b=>{
+            if(b.dataset.modeloArea==="Aba livre")return;
+            const geral = !b.dataset.modeloId;
+            const dados = catalogo.find(m=>m.nome===b.dataset.modeloArea);
+            b.hidden = geral ? !!(categoria && categoria!=="essenciais") || !termos.every(t=>normalizar(`${dados.nome} ${dados.descricao}`).includes(t)) : !encontrados.has(b.dataset.modeloId);
+          });
+          const filtrando = !!(consulta.trim() || categoria);
+          modal.querySelectorAll("[data-grupo-modelos]").forEach(grupo=>{
+            const quantidade = grupo.querySelectorAll("[data-modelo-area]:not([hidden])").length;
+            grupo.hidden = !quantidade;
+            grupo.querySelector("[data-contagem-modelos]").textContent=quantidade;
+            if(filtrando)grupo.open=true;
+            else if(filtrandoModelos)grupo.open=[...grupo.querySelectorAll("[data-modelo-area]")].some(b=>b.getAttribute("aria-checked")==="true");
+          });
+          const quantidade = modelos.filter(b=>b.dataset.modeloArea!=="Aba livre" && !b.hidden).length;
+          $("[data-catalogo-status]").textContent=quantidade ? `${quantidade} ${quantidade===1 ? "modelo disponível" : "modelos disponíveis"}${filtrando ? " para esta busca" : ""}.` : "Nenhum modelo encontrado. Tente outro termo ou escolha Aba livre.";
+          filtrandoModelos=filtrando;
+          atualizarFocoModelos();
+        }
+        $("#cr-busca-modelo").addEventListener("input",filtrarModelos);
+        $("#cr-categoria-modelo").addEventListener("change",filtrarModelos);
+        modal.querySelectorAll("[data-grupo-modelos]").forEach(g=>g.addEventListener("toggle",atualizarFocoModelos));
         const propositos = {
           Trabalho: `Organizar tarefas, reuniões e entregas. ${Personalizacao.ocupacaoResumo()}`,
           Saúde: "Consultas, exames e retornos com data, local e profissional.",
@@ -270,19 +320,26 @@ const Abas = (() => {
             est.mexeu = false;
             est.pendente = null;
             est.modelo = nome;
+            est.modeloId = botao.dataset.modeloId;
+            est.modo = "manual";
+            est.geracaoChave = "";
+            if(est.modeloId)inpProp.value=ModelosAbas.obter(est.modeloId).proposito;
             aplicarModeloLocal();
           }
           est.modelo = nome;
-          modelos.forEach((b) => { b.setAttribute("aria-checked", String(b === botao)); b.tabIndex = b === botao ? 0 : -1; });
+          modelos.forEach((b) => { b.setAttribute("aria-checked", String(b === botao)); });
+          $("[data-modelo-selecionado]").textContent=`Selecionado: ${nome}.`;
+          atualizarFocoModelos();
         }
         modelos.forEach((b) => b.addEventListener("click", () => escolherModelo(b)));
-        $(".criacao-modelos").addEventListener("keydown", (ev) => {
-          const i = modelos.indexOf(document.activeElement);
+        $(".criacao-catalogo").addEventListener("keydown", (ev) => {
+          const oferta = visiveis();
+          const i = oferta.indexOf(document.activeElement);
           if (i < 0 || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(ev.key)) return;
           ev.preventDefault();
-          const proximo = ev.key === "Home" ? 0 : ev.key === "End" ? modelos.length - 1
-            : (i + (["ArrowRight", "ArrowDown"].includes(ev.key) ? 1 : -1) + modelos.length) % modelos.length;
-          escolherModelo(modelos[proximo]);modelos[proximo].focus();
+          const proximo = ev.key === "Home" ? 0 : ev.key === "End" ? oferta.length - 1
+            : (i + (["ArrowRight", "ArrowDown"].includes(ev.key) ? 1 : -1) + oferta.length) % oferta.length;
+          escolherModelo(oferta[proximo]);oferta[proximo].focus();
         });
         function mostrarEtapa(etapa, focar = true) {
           est.etapa = etapa;
@@ -297,6 +354,7 @@ const Abas = (() => {
           $('[data-acao="criar"]').hidden = etapa !== 3;
           $("[data-etapa-status]").textContent = `Etapa ${editando ? etapa - 1 : etapa} de ${editando ? 2 : 3}`;
           $(".criacao-corpo").scrollTop = 0;
+          if(etapa===1)atualizarFocoModelos();
           if (focar) {
             if (etapa === 2) inpNome.focus({ preventScroll: true });
             else $(`[data-etapa="${etapa}"] h3`).focus({ preventScroll: true });
@@ -571,6 +629,11 @@ const Abas = (() => {
         const marcarMexeu = () => { est.mexeu = true; };
 
         function aplicarModeloLocal() {
+          const pronto = ModelosAbas.obter(est.modeloId);
+          if(pronto) {
+            aplicar(sanear({...pronto,modeloOrigem:pronto.id,proposito:inpProp.value.trim()},inpNome.value.trim()));
+            return;
+          }
           const livre = est.modelo === "Aba livre" && !inpNome.value.trim();
           const r = Delfos.entender({ nome: inpNome.value.trim(), usadas: coresUsadas(pilar?.id), existentes });
           aplicar(sanear({ ...r.sugestao, ...(livre ? { campos: [], descricao: "", naAgenda: false, meta: SEM_META } : {}), proposito: inpProp.value.trim(), origem: "manual" }, inpNome.value.trim()));
@@ -686,6 +749,7 @@ const Abas = (() => {
           aplicar(est.sug);
         }
         mostrarEtapa(est.etapa);
+        filtrarModelos();
         atualizarModo();
       },
     }));
@@ -713,6 +777,7 @@ const Abas = (() => {
       exemploItem: s.exemplos[0] || "",
       visual: academia ? undefined : { vista: s.visual.vista, ordem: ordemValida ? s.visual.ordem : "auto", leitura: true, numeros: true, lateral: true, perguntas: true },
       sugeridoPor: s.origem || "manual",
+      ...(s.modeloOrigem ? { modeloOrigem: s.modeloOrigem } : {}),
       itens,
       ...(academia ? { academia: { configuradoEm: "", objetivo: "", experiencia: "", frequenciaSemanal: 0, divisao: "" }, dias: [] } : {}),
     };

@@ -158,6 +158,7 @@ def testar(base):
             abrir_criador(page)
             assert not page.locator('#cr-nome').is_visible()
             assert not page.locator('[data-campos]').is_visible()
+            if modelo!='Aba livre':page.locator('[data-grupo-modelos="essenciais"] > summary').click()
             page.get_by_role('radio',name=modelo,exact=True).click()
             revisar(page, f'Teste de {modelo}')
             rodape_visivel(page)

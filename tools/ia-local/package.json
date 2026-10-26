@@ -1,0 +1,9 @@
+{
+  "name": "delfos-ia-local-build",
+  "private": true,
+  "scripts": {
+    "build": "esbuild entry.js --bundle --format=esm --platform=browser --minify --legal-comments=linked --outfile=../../dashboard/vendor/webllm/webllm.js"
+  },
+  "dependencies": { "@mlc-ai/web-llm": "0.2.86" },
+  "devDependencies": { "esbuild": "0.25.12" }
+}

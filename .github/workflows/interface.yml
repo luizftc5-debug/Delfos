@@ -42,3 +42,5 @@ jobs:
         run: python dashboard/test/editor.browser.py
       - name: Verificar organização das páginas e criação de abas
         run: python dashboard/test/organizacao.browser.py
+      - name: Verificar configurações e criação com IA local
+        run: python dashboard/test/configuracoes_ia.browser.py

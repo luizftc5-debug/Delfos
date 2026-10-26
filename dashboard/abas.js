@@ -1,8 +1,8 @@
 /* ===========================================================================
    Abas: o criador e o editor das abas do usuário, montadas pelo Delfos.
 
-   A pessoa escreve o nome e o propósito da aba. A cada pausa na digitação o
-   Delfos (delfos.js, a IA do painel, que roda neste aparelho) lê os dois e
+   A pessoa escolhe elementos manualmente ou aciona a IA local no navegador.
+   O modelo de linguagem, carregado só por escolha explícita do usuário,
    devolve a aba montada: ícone, cor, o que é cada registro, campos, meta,
    agrupamento, vista e se entra na agenda ou é marcada por dia. A janela
    divide a criação em escolher, dar nome e revisar. Ajustes são opcionais.
@@ -25,7 +25,7 @@ const Abas = (() => {
   /* ------------------------------- Saneamento ------------------------------- */
 
   const TIPOS = new Set(Store.TIPOS_CAMPO.map((t) => t.valor));
-  const RESERVADOS = new Set(["descricao", "data", "concluido", "id", "extras", "feitos", "criadoEm", "concluidoEm"]);
+  const RESERVADOS = new Set(["descricao", "data", "concluido", "id", "extras", "feitos", "criadoEm", "concluidoEm", "__proto__", "constructor", "prototype"]);
   const VISTAS = [["lista", "Lista", "lista"], ["cartoes", "Cartões", "grade"], ["quadro", "Quadro", "quadro"], ["tabela", "Tabela", "tabela"], ["calendario", "Calendário", "calendario"]];
   const ORDENS = new Set(["auto", "recentes", "data", "az"]);
   const SEM_META = { tipo: "nenhuma", campoId: "", alvo: 0, periodo: "mes" };
@@ -54,7 +54,8 @@ const Abas = (() => {
     const ids = new Set();
     out.campos = (Array.isArray(s?.campos) ? s.campos : []).slice(0, 8).map((x) => {
       const tipo = TIPOS.has(x?.tipo) ? x.tipo : "text";
-      let id = normalizar(x?.id || x?.rotulo).replace(/\s+(\w)/g, (_, l) => l.toUpperCase()).replace(/\s/g, "").slice(0, 24) || "campo";
+      const original = x?.id;
+      let id = typeof original === "string" && /^[a-zA-Z][a-zA-Z0-9_]{0,23}$/.test(original) ? original : normalizar(x?.rotulo || original).replace(/\s+(\w)/g, (_, l) => l.toUpperCase()).replace(/\s/g, "").slice(0, 24) || "campo";
       if (RESERVADOS.has(id)) id = `${id}2`;
       while (ids.has(id)) id = `${id}_`;
       ids.add(id);
@@ -81,8 +82,8 @@ const Abas = (() => {
     if (vista === "calendario" && !out.naAgenda) vista = "lista";
     const ordemCampo = typeof v.ordem === "string" && v.ordem.startsWith("campo:") && out.campos.some((x) => `campo:${x.id}` === v.ordem);
     out.visual = { vista, ordem: ORDENS.has(v.ordem) || ordemCampo ? v.ordem : "auto" };
-    out.proposito = corta(s?.proposito, 400);
-    out.origem = s?.origem === "delfos" ? "delfos" : "local";
+    out.proposito = corta(s?.proposito, 2000);
+    out.origem = ["delfos", "ia", "manual"].includes(s?.origem) ? s.origem : "manual";
     return out;
   }
 
@@ -114,10 +115,12 @@ const Abas = (() => {
     const est = {
       sug: editando
         ? sanear({ ...pilar, meta: pilar.meta || SEM_META, especial: pilar.modelo === "academia" ? "academia" : "", visual: pilar.visual || {}, origem: pilar.sugeridoPor }, pilar.nome)
-        : sanear(Delfos.entender({ nome: "", usadas: coresUsadas() }).sugestao, ""),
+        : sanear({ ...Delfos.entender({ nome: "", usadas: coresUsadas() }).sugestao, campos: [], meta: SEM_META, naAgenda: false, descricao: "", origem: "manual" }, ""),
       escolhidos: new Set(),
       exemplos: new Set(),
       mexeu: false,
+      modo: "manual",
+      geracaoChave: "",
       pendente: null,
       leitura: null,
       etapa: editando ? 2 : 1,
@@ -153,16 +156,24 @@ const Abas = (() => {
         </section>
         <section data-etapa="2" aria-labelledby="cr-identidade" hidden>
           <h3 class="criacao-titulo" id="cr-identidade" tabindex="-1">Dê a sua cara.</h3>
-          <p class="criacao-apoio">Um nome é suficiente para começar. O propósito ajuda a sugerir a estrutura.</p>
+          <p class="criacao-apoio">Escolha como montar a aba. Você revisa tudo antes de criar.</p>
+          <div class="criacao-modos" role="radiogroup" aria-label="Como montar sua aba">
+            <button type="button" role="radio" aria-checked="true" tabindex="0" data-modo="manual"><b>Montar manualmente</b><span>Escolha os campos, a visualização e os recursos.</span></button>
+            <button type="button" role="radio" aria-checked="false" tabindex="-1" data-modo="ia"><b>Deixar Delfos criar</b><span>Descreva o que precisa. A IA monta a estrutura neste aparelho.</span></button>
+          </div>
+          <p class="criacao-local-info" data-info-local hidden>IA local, sem enviar seus textos. O primeiro uso baixa um modelo de centenas de MB e precisa de WebGPU e memória gráfica disponível. O modelo fica em cache quando o navegador permitir.</p>
           <div class="field">
             <label for="cr-nome">Nome da aba</label>
             <input id="cr-nome" type="text" maxlength="40" autocomplete="off" placeholder="Ex.: Corrida" value="${esc(pilar?.nome || "")}" aria-describedby="cr-nome-erro" />
             <span class="criacao-erro" id="cr-nome-erro" hidden>Digite um nome para continuar.</span>
           </div>
           <div class="field">
-            <label for="cr-prop">O que você quer guardar? <span class="muted">Opcional</span></label>
-            <textarea id="cr-prop" rows="3" maxlength="400" placeholder="Ex.: meus treinos, distâncias e próximas provas.">${esc(est.sug.proposito || "")}</textarea>
+            <label for="cr-prop">O que você quer guardar? <span class="muted" data-proposito-opcional>Opcional</span></label>
+            <textarea id="cr-prop" rows="3" maxlength="2000" aria-describedby="cr-prop-erro" placeholder="Ex.: meus treinos, distâncias e próximas provas.">${esc(est.sug.proposito || "")}</textarea>
+            <span class="criacao-erro" id="cr-prop-erro" hidden>Descreva o que deseja organizar para a IA montar sua aba.</span>
           </div>
+          <div class="criacao-ia-status" role="status" data-ia-status hidden><span data-ia-texto></span><progress data-ia-progresso aria-label="Carregamento da IA local"></progress></div>
+          <div class="criacao-ia-erro" data-ia-erro hidden><p role="alert" data-ia-erro-texto></p><button class="btn sm" type="button" data-seguir-manual>Continuar manualmente</button></div>
         </section>
         <section data-etapa="3" aria-labelledby="cr-revisar" hidden>
           <h3 class="criacao-titulo" id="cr-revisar" tabindex="-1">${editando ? "Revise seus ajustes." : "Seu espaço está pronto."}</h3>
@@ -175,11 +186,11 @@ const Abas = (() => {
             <p class="criacao-preview-nota" data-previa-resumo></p>
           </div>
           <div class="delfos-aplicar" data-aplicar hidden>
-            <span>Há uma nova sugestão para o propósito que você escreveu. Seus ajustes foram mantidos.</span>
-            <button type="button" class="btn sm" data-usar>Usar nova sugestão</button>
+            <span>A IA preparou outra estrutura. Seus ajustes atuais foram mantidos; escolha se quer substituí-los.</span>
+            <button type="button" class="btn sm" data-usar>Usar estrutura da IA</button>
           </div>
           <details class="criacao-opcoes" data-estrutura>
-            <summary><span>Campos e visualização</span><small data-resumo-estrutura></small></summary>
+            <summary><span>Elementos e visualização</span><small data-resumo-estrutura></small></summary>
             <div class="criacao-opcoes-corpo">
               <div class="field" data-bloco-vista><label for="cr-vista">Visualização inicial</label><select id="cr-vista" data-vistas aria-label="Vista da página"></select></div>
               <div class="field" data-bloco-campos>
@@ -220,7 +231,7 @@ const Abas = (() => {
             <summary><span>Adicionar registros de exemplo</span><small>Opcional</small></summary>
             <div class="criacao-opcoes-corpo"><p class="hint">Selecione apenas os exemplos que quer guardar na aba.</p><div class="chips" data-exemplos></div></div>
           </details>
-          <details class="criacao-opcoes criacao-explicacao">
+          <details class="criacao-opcoes criacao-explicacao" hidden>
             <summary><span>Sobre a sugestão</span></summary>
             <ul class="delfos-lista criacao-opcoes-corpo" data-entendeu></ul>
           </details>
@@ -232,10 +243,11 @@ const Abas = (() => {
         <button class="btn ghost" data-acao="cancelar" type="button">Cancelar</button>
         <div><button class="btn" data-acao="voltar" type="button" hidden>Voltar</button><button class="btn primary" data-acao="avancar" type="button">Continuar ${icone("direita")}</button><button class="btn primary" data-acao="criar" type="button" hidden>${editando ? "Salvar alterações" : "Criar aba"}</button></div>
       </footer>`;
-    let espera;
+    let controleIA;
+    let pedidoAtual = 0;
     return new Promise((resolve) => UI.abrirModal(html, {
       classe: "criacao",
-      aoFechar: (resultado) => { clearTimeout(espera); resolve(resultado); },
+      aoFechar: (resultado) => { pedidoAtual++; controleIA?.abort(); if (typeof IALocal !== "undefined") IALocal.liberar(); resolve(resultado); },
       aoMontar(modal, fechar) {
         const $ = (sel) => modal.querySelector(sel);
         const inpNome = $("#cr-nome");
@@ -257,7 +269,8 @@ const Abas = (() => {
             inpProp.value = propositos[nome] || "";
             est.mexeu = false;
             est.pendente = null;
-            lerComDelfos();
+            est.modelo = nome;
+            aplicarModeloLocal();
           }
           est.modelo = nome;
           modelos.forEach((b) => { b.setAttribute("aria-checked", String(b === botao)); b.tabIndex = b === botao ? 0 : -1; });
@@ -296,18 +309,109 @@ const Abas = (() => {
           if (!valido) inpNome.focus();
           return valido;
         }
-        $('[data-acao="avancar"]').addEventListener("click", () => {
-          if (est.etapa === 2) {
-            if (!validarNome()) return;
-            clearTimeout(espera);
-            lerComDelfos();
-          }
-          mostrarEtapa(est.etapa + 1);
+        let gerando = false;
+        function pararGeracao() {
+          pedidoAtual++;
+          controleIA?.abort();
+          gerando = false;
+          $("[data-ia-status]").hidden = true;
+          atualizarModo();
+        }
+        function atualizarModo() {
+          modal.querySelectorAll("[data-modo]").forEach((b) => {
+            const ativo = b.dataset.modo === est.modo;
+            b.setAttribute("aria-checked", String(ativo));
+            b.tabIndex = ativo ? 0 : -1;
+          });
+          $("[data-info-local]").hidden = est.modo !== "ia";
+          $("[data-proposito-opcional]").textContent = est.modo === "ia" ? "Obrigatório para a IA" : "Opcional";
+          const bt = $('[data-acao="avancar"]');
+          bt.disabled = gerando;
+          bt.textContent = gerando ? "Preparando sua aba…" : est.etapa === 2 && est.modo === "ia" ? "Gerar minha aba" : "Continuar";
+        }
+        modal.querySelectorAll("[data-modo]").forEach((b) => b.addEventListener("click", () => {
+          pararGeracao();
+          est.modo = b.dataset.modo;
+          $("[data-ia-erro]").hidden = true;
+          $("#cr-prop-erro").hidden = true;
+          inpProp.removeAttribute("aria-invalid");
+          atualizarModo();
+        }));
+        $(".criacao-modos").addEventListener("keydown", (ev) => {
+          if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(ev.key)) return;
+          ev.preventDefault();
+          const proximo = modal.querySelector(`[data-modo="${est.modo === "ia" ? "manual" : "ia"}"]`);
+          proximo.click(); proximo.focus();
         });
-        $('[data-acao="voltar"]').addEventListener("click", () => mostrarEtapa(est.etapa - 1));
+        async function avancar() {
+          if (gerando) return;
+          if (est.etapa === 1) { mostrarEtapa(2); atualizarModo(); return; }
+          if (!validarNome()) return;
+          if (est.modo === "manual") {
+            ler();
+            desenhar();
+            $("[data-estrutura]").open = true;
+            mostrarEtapa(3);
+            return;
+          }
+          if (inpProp.value.trim().length < 10) {
+            $("#cr-prop-erro").hidden = false;
+            inpProp.setAttribute("aria-invalid", "true");
+            inpProp.focus();
+            return;
+          }
+          const chave = JSON.stringify([inpNome.value.trim(), inpProp.value.trim()]);
+          if (est.geracaoChave === chave) { mostrarEtapa(3); return; }
+          controleIA = new AbortController();
+          const meuPedido = ++pedidoAtual;
+          gerando = true;
+          atualizarModo();
+          $("[data-ia-erro]").hidden = true;
+          $("[data-ia-status]").hidden = false;
+          $("[data-ia-texto]").textContent = "Preparando a IA neste aparelho…";
+          $("[data-ia-progresso]").removeAttribute("value");
+          try {
+            await UI.carregarScript("ia-local.js");
+            if (meuPedido !== pedidoAtual || !modal.isConnected) return;
+            const sugestao = await IALocal.gerar({
+              nome: inpNome.value.trim(), proposito: inpProp.value.trim(),
+              camposExistentes: existentes.map(({rotulo,tipo}) => ({rotulo,tipo})),
+              estruturaAtual: { vista: est.sug.visual.vista, campos: (editando ? novosCampos : est.sug.campos).filter(c => est.escolhidos.has(c.id)).map(({rotulo,tipo}) => ({rotulo,tipo})) },
+            }, { signal: controleIA.signal, aoProgresso: (p) => {
+              if (meuPedido !== pedidoAtual || !modal.isConnected) return;
+              $("[data-ia-texto]").textContent = p.fase === "gerar" ? "A IA está organizando seus elementos…" : "Carregando o modelo neste aparelho…";
+              if (p.fase === "carregar" && Number.isFinite(p.progresso)) {
+                $("[data-ia-progresso]").max = 1;
+                $("[data-ia-progresso]").value = Math.max(0, Math.min(1, p.progresso));
+              } else $("[data-ia-progresso]").removeAttribute("value");
+            }});
+            if (meuPedido !== pedidoAtual || !modal.isConnected) return;
+            const sug = sanear({ ...sugestao, proposito: inpProp.value.trim(), origem: "ia" }, inpNome.value.trim());
+            if (est.mexeu) { est.pendente = sug; $("[data-aplicar]").hidden = false; }
+            else aplicar(sug);
+            est.geracaoChave = chave;
+            $("[data-estrutura]").open = false;
+            mostrarEtapa(3);
+          } catch (erro) {
+            if (meuPedido !== pedidoAtual || !modal.isConnected || erro.name === "AbortError") return;
+            $("[data-ia-erro-texto]").textContent = erro.message || "A IA não conseguiu montar a aba. Tente novamente ou continue manualmente.";
+            $("[data-ia-erro]").hidden = false;
+          } finally {
+            if (meuPedido === pedidoAtual && modal.isConnected) {
+              gerando = false;
+              $("[data-ia-status]").hidden = true;
+              atualizarModo();
+            }
+          }
+        }
+        $('[data-acao="avancar"]').addEventListener("click", avancar);
+        $('[data-seguir-manual]').addEventListener("click", () => {
+          pararGeracao(); est.modo = "manual"; atualizarModo(); avancar();
+        });
+        $('[data-acao="voltar"]').addEventListener("click", () => { pararGeracao(); mostrarEtapa(est.etapa - 1); atualizarModo(); });
         $('[data-acao="fechar"]').addEventListener("click", () => fechar(null));
         inpNome.addEventListener("keydown", (ev) => {
-          if (ev.key === "Enter") { ev.preventDefault(); $('[data-acao="avancar"]').click(); }
+          if (ev.key === "Enter") { ev.preventDefault(); avancar(); }
         });
         const pluralRot = (r) => Leituras.pluralizar(r);
         let iconesDesenhados = false;
@@ -413,6 +517,7 @@ const Abas = (() => {
               </span>
               ${travado ? "" : `<input type="checkbox" class="check" data-campo="${esc(x.id)}" ${marcado ? "checked" : ""} ${limite ? "disabled" : ""} aria-label="Incluir ${esc(x.rotulo)}" />`}
               </${tag}>
+              ${travado ? "" : `<span class="campo-ferramentas"><button class="btn ghost sm" type="button" data-campo-editar="${esc(x.id)}" aria-label="Editar ${esc(x.rotulo)}">Editar</button><button class="btn ghost sm icon" type="button" data-campo-mover="${esc(x.id)}" aria-label="Mover ${esc(x.rotulo)} para cima">${icone("acima")}</button><button class="btn ghost sm icon" type="button" data-campo-remover="${esc(x.id)}" aria-label="Remover ${esc(x.rotulo)}">${icone("fechar")}</button></span>`}
             </li>`;
         }
 
@@ -465,22 +570,10 @@ const Abas = (() => {
 
         const marcarMexeu = () => { est.mexeu = true; };
 
-        /** Lê nome e propósito com o Delfos; aplica, ou guarda para o botão se a pessoa já mexeu. */
-        function lerComDelfos() {
-          if (!modal.isConnected) return;
-          const nome = inpNome.value.trim();
-          const proposito = inpProp.value.trim();
-          const r = Delfos.entender({ nome, proposito, usadas: coresUsadas(pilar?.id), existentes });
-          est.leitura = r;
-          desenharLeitura(r);
-          const sug = sanear(r.sugestao, nome);
-          if (est.mexeu) {
-            est.pendente = sug;
-            $("[data-aplicar]").hidden = false;
-          } else {
-            aplicar(sug);
-            $("[data-aplicar]").hidden = true;
-          }
+        function aplicarModeloLocal() {
+          const livre = est.modelo === "Aba livre" && !inpNome.value.trim();
+          const r = Delfos.entender({ nome: inpNome.value.trim(), usadas: coresUsadas(pilar?.id), existentes });
+          aplicar(sanear({ ...r.sugestao, ...(livre ? { campos: [], descricao: "", naAgenda: false, meta: SEM_META } : {}), proposito: inpProp.value.trim(), origem: "manual" }, inpNome.value.trim()));
         }
 
         modal.addEventListener("click", (ev) => {
@@ -495,6 +588,30 @@ const Abas = (() => {
             aplicar(est.pendente);
             est.pendente = null;
             $("[data-aplicar]").hidden = true;
+          }
+        });
+        modal.addEventListener("click", async (ev) => {
+          const editar = ev.target.closest("[data-campo-editar]");
+          const remover = ev.target.closest("[data-campo-remover]");
+          const mover = ev.target.closest("[data-campo-mover]");
+          const lista = editando ? novosCampos : est.sug.campos;
+          if (editar) {
+            const campo = lista.find(c => c.id === editar.dataset.campoEditar);
+            if (!campo) return;
+            const atualizado = await UI.formularioCampo(campo);
+            if (!atualizado || !modal.isConnected) return;
+            ler(); Object.assign(campo, atualizado); marcarMexeu(); desenhar();
+          }
+          if (remover) {
+            const id = remover.dataset.campoRemover;
+            const i = lista.findIndex(c => c.id === id);
+            if (i < 0) return;
+            ler(); lista.splice(i,1); est.escolhidos.delete(id); marcarMexeu(); desenhar();
+          }
+          if (mover) {
+            const i = lista.findIndex(c => c.id === mover.dataset.campoMover);
+            if (i <= 0) return;
+            ler(); [lista[i-1],lista[i]] = [lista[i],lista[i-1]]; marcarMexeu(); desenhar();
           }
         });
         $("[data-adicionar-campo]").addEventListener("click", async () => {
@@ -533,26 +650,21 @@ const Abas = (() => {
           if (q === "#cr-desc" && t) t.textContent = $("#cr-desc").value;
         }));
 
-        // O Delfos lê a cada pausa curta na digitação (não a cada letra):
-        // num computador fraco, digitar nunca espera a leitura.
-        const agendarLeitura = () => {
-          clearTimeout(espera);
-          espera = setTimeout(lerComDelfos, 220);
-        };
         inpNome.addEventListener("input", () => {
+          if (gerando) pararGeracao();
           if (inpNome.value.trim()) { $("#cr-nome-erro").hidden = true; inpNome.setAttribute("aria-invalid", "false"); }
-          const t = $("[data-previa-topo] .previa-nome");
-          if (t) t.textContent = inpNome.value.trim() || "Sua aba";
-          agendarLeitura();
         });
-        inpProp.addEventListener("input", agendarLeitura);
+        inpProp.addEventListener("input", () => {
+          if (gerando) pararGeracao();
+          $("#cr-prop-erro").hidden = true;
+          inpProp.removeAttribute("aria-invalid");
+        });
 
         $('[data-acao="cancelar"]').addEventListener("click", () => fechar(null));
         $('[data-acao="criar"]').addEventListener("click", () => {
           const nome = inpNome.value.trim();
           if (est.etapa !== 3) return;
           if (!nome) { mostrarEtapa(2); validarNome(); return; }
-          clearTimeout(espera);
           ler();
           const botao = $('[data-acao="criar"]');
           botao.disabled = true;
@@ -571,9 +683,10 @@ const Abas = (() => {
           desenhar();
           desenharLeitura(est.sug.proposito ? Delfos.entender({ nome: pilar.nome, proposito: est.sug.proposito, existentes }) : { entendeu: [{ tipo: "dica", texto: "Conte o propósito desta aba e o Delfos sugere campos, meta e o jeito de ver que ainda faltam." }] });
         } else {
-          lerComDelfos();
+          aplicar(est.sug);
         }
         mostrarEtapa(est.etapa);
+        atualizarModo();
       },
     }));
   }
@@ -599,7 +712,7 @@ const Abas = (() => {
       proposito: s.proposito,
       exemploItem: s.exemplos[0] || "",
       visual: academia ? undefined : { vista: s.visual.vista, ordem: ordemValida ? s.visual.ordem : "auto", leitura: true, numeros: true, lateral: true, perguntas: true },
-      sugeridoPor: "delfos",
+      sugeridoPor: s.origem || "manual",
       itens,
       ...(academia ? { academia: { configuradoEm: "", objetivo: "", experiencia: "", frequenciaSemanal: 0, divisao: "" }, dias: [] } : {}),
     };

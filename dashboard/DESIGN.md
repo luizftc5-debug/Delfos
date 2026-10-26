@@ -58,7 +58,7 @@ seletor, sem cinco botões competindo com o título.
 O criador tem três etapas e apenas um assunto visível por vez:
 
 1. Escolher: modelos com ícone, nome e uma linha explicando o uso; Aba livre é uma opção clara.
-2. Dar nome: nome obrigatório e propósito opcional, com exemplos curtos.
+2. Dar nome: nome e escolha explícita entre composição manual e IA local. O propósito é obrigatório para gerar.
 3. Revisar: prévia da estrutura antes de gravar. Campos, vista, agenda, metas e aparência são
    ajustes opcionais, em grupos fechados. Campos próprios podem ser acrescentados nesta etapa.
 
@@ -99,9 +99,27 @@ com o mesmo identificador, sem criar cópias da aba.
 
 `theme.css` mantém os componentes base. `paginas.css` define a composição das páginas e
 `paginas.js` controla as seções. `criador.css` e `abas.js` chegam sob demanda ao abrir o criador.
-Não há framework novo, chamada externa de IA ou alteração do formato persistido nesta versão.
+Não há framework novo nem API de inferência. O modelo aberto roda em um worker WebGPU, carregado sob demanda.
 
 O teste `test/organizacao.browser.py` percorre páginas e seções nos temas claro e escuro,
 em desktop, tablet e celular. Verifica links antigos, teclado, visualizações dos registros,
 sete modelos, campos próprios, edição sem perda de registros e repetição após falha de gravação.
 O teste separado do editor cobre salvamento automático, símbolos, conflitos e recuperação.
+
+## Configurações e IA local
+
+Configurações usa sete categorias por assunto, navegação lateral no desktop e seletor no celular.
+O cabeçalho e o rodapé permanecem visíveis, só o conteúdo rola. Indicadores de uso ficam recolhidos.
+Aparência separa tema e cor dos controles de leitura e desempenho. As preferências mantêm o
+salvamento automático, com retorno de estado verdadeiro em caso de falha de armazenamento.
+
+A criação manual não interpreta a digitação nem aciona o modelo. A pessoa edita, ordena e remove
+elementos na revisão; controles dependentes aparecem apenas quando necessários. No modo IA, o
+download e os requisitos aparecem antes da ação de gerar. Nunca chamar regras prontas de geração
+neural. A proposta é validada como dados antes de entrar na prévia; criação exige confirmação.
+
+`ia-local.js` gerencia cancelamento e ciclo de vida; `ia-local.worker.js` executa o modelo fora da
+thread da interface; `ia-local.modelo.mjs` define e valida o contrato. O bundle está versionado em
+`vendor/webllm` e é reproduzível pelo lockfile em `tools/ia-local`. Os testes de CI usam runtime
+simulado para inferência, exercitando o worker real e o contrato, sem baixar os pesos. Executar o
+modelo real requer validação adicional em aparelho com WebGPU e pesos disponíveis.

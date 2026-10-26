@@ -515,6 +515,7 @@
     const v = visual();
     const r = await UI.formulario({
       titulo: "Layout e exibição",
+      configuracao: true,
       descricao: `Como ${pilar.nome} aparece. Nada do que está cadastrado muda.`,
       icone: UI.icone("ajustes"),
       cor: pilar.cor,

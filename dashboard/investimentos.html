@@ -11,12 +11,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
   <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="paginas.css" />
 </head>
-<body>
+<body class="pagina-organizada pagina-investimentos">
   <div class="app">
-    <nav class="sidebar" id="sidebar"></nav>
+    <nav class="sidebar" id="sidebar">
+    </nav>
     <main class="main">
-      <div class="wrap">
+      <div class="wrap" data-pagina-secoes="investimentos">
+        <nav aria-label="Seções do financeiro" class="familia-paginas">
+          <a href="financeiro.html">Resumo do mês</a>
+          <a href="contas.html">Contas e cartões</a>
+          <a aria-current="page" href="investimentos.html">Investimentos</a>
+        </nav>
         <header class="topbar">
           <div>
             <h1>Investimentos</h1>
@@ -26,53 +33,68 @@
             <button class="btn primary" id="btn-investimento">+ Investimento</button>
           </div>
         </header>
-
-        <nav class="abas" aria-label="Seções do financeiro">
-          <a href="financeiro.html">Resumo do mês</a>
-          <a href="contas.html">Contas e cartões</a>
-          <a href="investimentos.html" aria-current="page">Investimentos</a>
+        <nav aria-label="Seções desta página" class="pagina-secoes" data-navegacao-secoes="" hidden="" role="tablist">
+          <button aria-controls="painel-carteira" data-secao="carteira" id="secao-carteira" role="tab" type="button">Carteira</button>
+          <button aria-controls="painel-distribuicao" data-secao="distribuicao" id="secao-distribuicao" role="tab" type="button">Distribuição</button>
         </nav>
-
-        <div class="grid g4" style="margin-bottom:14px;">
-          <div class="card tinted financeiro">
-            <div class="stat-label">Total aplicado</div>
-            <div class="stat-value num" id="s-aplicado">-</div>
-            <div class="stat-sub" id="s-aplicado-d"></div>
+        <section aria-labelledby="secao-carteira" class="pagina-painel" data-painel="carteira" id="painel-carteira" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Consulte e atualize cada investimento.</p>
+          <div class="painel-conteudo">
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Seus investimentos</h2>
+                <span class="bloco-resumo" id="resumo">
+                </span>
+              </header>
+              <div class="bloco-corpo">
+                <div id="lista">
+                </div>
+              </div>
+            </section>
           </div>
-          <div class="card tinted financeiro">
-            <div class="stat-label">Valor atual</div>
-            <div class="stat-value num" id="s-atual">-</div>
-            <div class="stat-sub" id="s-atual-d"></div>
+        </section>
+        <section aria-labelledby="secao-distribuicao" class="pagina-painel" data-painel="distribuicao" id="painel-distribuicao" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">O resultado e a composição da sua carteira.</p>
+          <div class="painel-conteudo">
+            <div class="grid g4 pagina-indicadores">
+              <div class="card tinted financeiro">
+                <div class="stat-label">Total aplicado</div>
+                <div class="stat-value num" id="s-aplicado">-</div>
+                <div class="stat-sub" id="s-aplicado-d">
+                </div>
+              </div>
+              <div class="card tinted financeiro">
+                <div class="stat-label">Valor atual</div>
+                <div class="stat-value num" id="s-atual">-</div>
+                <div class="stat-sub" id="s-atual-d">
+                </div>
+              </div>
+              <div class="card tinted financeiro">
+                <div class="stat-label">Rentabilidade</div>
+                <div class="stat-value num" id="s-ganho">-</div>
+                <div class="stat-sub" id="s-ganho-d">
+                </div>
+              </div>
+              <div class="card tinted financeiro">
+                <div class="stat-label">Diversificação</div>
+                <div class="stat-value num" id="s-tipos">-</div>
+                <div class="stat-sub" id="s-tipos-d">
+                </div>
+              </div>
+            </div>
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Por tipo</h2>
+                <span class="bloco-resumo" id="por-tipo-resumo">
+                </span>
+              </header>
+              <div class="bloco-corpo">
+                <div id="por-tipo">
+                </div>
+              </div>
+            </section>
           </div>
-          <div class="card tinted financeiro">
-            <div class="stat-label">Rentabilidade</div>
-            <div class="stat-value num" id="s-ganho">-</div>
-            <div class="stat-sub" id="s-ganho-d"></div>
-          </div>
-          <div class="card tinted financeiro">
-            <div class="stat-label">Diversificação</div>
-            <div class="stat-value num" id="s-tipos">-</div>
-            <div class="stat-sub" id="s-tipos-d"></div>
-          </div>
-        </div>
-
-        <div class="gaveteiro">
-          <section class="gaveta" data-gaveta="lista">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Seus investimentos</h2>
-              <span class="gaveta-resumo" id="resumo"></span>
-            </header>
-            <div class="gaveta-corpo"><div id="lista"></div></div>
-          </section>
-
-          <section class="gaveta" data-gaveta="por-tipo">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Por tipo</h2>
-              <span class="gaveta-resumo" id="por-tipo-resumo"></span>
-            </header>
-            <div class="gaveta-corpo"><div id="por-tipo"></div></div>
-          </section>
-        </div>
+        </section>
       </div>
     </main>
   </div>
@@ -82,6 +104,7 @@
   <script src="store.js"></script>
   <script src="personalizacao.js"></script>
   <script src="ui.js"></script>
+  <script src="paginas.js"></script>
   <script src="sessao.js"></script>
   <script src="nuvem.js"></script>
   <script src="financas.js"></script>

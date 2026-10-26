@@ -6,7 +6,7 @@
 const UI = (() => {
   /** Nome e versão do painel — aparecem na marca do alto da barra lateral. */
   const NOME = "Delfos";
-  const VERSAO = "2.3";
+  const VERSAO = "2.4 alpha";
 
   /* -------------------------------- Ícones -------------------------------- */
 
@@ -861,7 +861,19 @@ const UI = (() => {
   }
 
   /** O Delfos (a IA do painel) e o criador de abas, nessa ordem. */
-  const carregarCriador = () => carregarScript("delfos.js").then(() => carregarScript("abas.js"));
+  let estiloCriador;
+  function carregarEstiloCriador() {
+    if (estiloCriador) return estiloCriador;
+    estiloCriador = new Promise((ok, falha) => {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";link.href = "criador.css";
+      link.onload = ok;
+      link.onerror = () => { estiloCriador = null;link.remove();falha(new Error("Não foi possível carregar o criador.")); };
+      document.head.appendChild(link);
+    });
+    return estiloCriador;
+  }
+  const carregarCriador = () => Promise.all([carregarEstiloCriador(), carregarScript("delfos.js").then(() => carregarScript("abas.js"))]);
 
   /** Baixa o criador antes do clique (ao passar o mouse ou focar o botão), para a janela abrir na hora. */
   function prepararCriador(botao) {
@@ -1730,12 +1742,13 @@ const UI = (() => {
     }
     const origem = document.activeElement;
     document.body.appendChild(backdrop);
+    const overflowAnterior = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     const focaveis = () => [...modal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [contenteditable="true"], [tabindex]:not([tabindex="-1"])')]
       .filter((x) => x.offsetParent !== null || x === document.activeElement);
     const fechar = (resultado) => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = overflowAnterior;
       backdrop.remove();
       document.removeEventListener("keydown", onKey);
       // A volta do foco para quem abriu a janela: o teclado não se perde no topo da página.
@@ -3236,6 +3249,7 @@ const UI = (() => {
 
   /** Abre a gaveta onde um elemento mora (um link para #metas, um filtro que leva à planilha). */
   function abrirGavetaDe(el) {
+    if (typeof Organizacao !== "undefined") Organizacao.abrirElemento(el);
     let g = el?.closest?.(".gaveta");
     while (g) {
       abrirGaveta(g, true, { guardar: false });
@@ -3328,7 +3342,7 @@ const UI = (() => {
   function ligarPular() {
     const main = document.querySelector("main.main");
     if (!main || document.querySelector(".pular")) return;
-    if (!main.id) main.id = "conteudo";
+    if (!main.id) main.id = document.getElementById("conteudo") ? "conteudo-principal" : "conteudo";
     main.setAttribute("tabindex", "-1");
     const a = document.createElement("a");
     a.className = "pular";
@@ -3340,6 +3354,7 @@ const UI = (() => {
   function iniciarPagina(ativo, opcoes) {
     tema.iniciar();
     aplicarAparencia();
+    if (typeof Organizacao !== "undefined") Organizacao.iniciar();
     gavetas(document);
     realcarBotoes(document);
     ligarPular();
@@ -3462,7 +3477,7 @@ const UI = (() => {
     paginas, compromissos, conflitos, contagens, mediaDisciplina, notaNecessaria, proximaAvaliacao, resumoProjeto,
     iniciarPagina, montarLayout, tema, toast, formulario, confirmar, abrirModal,
     abrirBackup, abrirPerfil, avatarHTML, iniciais, vazio, barras, colunasMensais, medidor,
-    novaAba, abrirCriadorDeAbas, prepararCriador, carregarScript, camposPilar, redimensionarFoto, camposItemPilar, editorCampos,
+    novaAba, abrirCriadorDeAbas, prepararCriador, carregarScript, formularioCampo, camposPilar, redimensionarFoto, camposItemPilar, editorCampos,
     perguntaDispensada, dispensarPergunta, resposta, renderPerguntas, renderNotas, ordenarNotas, barrasComMeta,
     gavetas, abrirGaveta, abrirGavetaDe, abrirRegistrar, marcaItem, monograma, info,
   };

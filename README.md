@@ -9,7 +9,22 @@ publicado (gratuito, na Cloudflare), o painel passa a exigir **conta** — cada 
 e senha, vê só os próprios dados e os encontra iguais no celular e no computador, com anexos e
 versões anteriores guardados no servidor.
 
-### Novidades da versão 2.3
+### Novidades da versão 2.4 alpha
+
+- **Páginas organizadas por tarefa**: o conteúdo principal abre primeiro. Análises e ajustes
+  ficam em seções próprias, com navegação por teclado e links diretos preservados.
+- **Criação em três etapas**: escolher um modelo, dar nome e revisar. Os campos, a agenda,
+  as metas e a aparência são ajustes opcionais, abertos na revisão quando necessários.
+- **Campos próprios antes de criar**: além das sugestões, você pode adicionar os campos que
+  precisa. A revisão mostra uma prévia da estrutura; exemplos só entram se forem selecionados.
+- **Abas pessoais** separam Registros, Visão geral e Ajustes. Na Academia, Treinos e Evolução.
+  Busca, visualização e filtros têm posições fixas, com filtros extras recolhidos.
+- **Ações junto do conteúdo**: criar resumo na seção Resumos, avaliação em Avaliações,
+  cartão em Cartões e etapa em Etapas.
+- O criador mantém as ações visíveis enquanto seu conteúdo rola. Repetir uma gravação que
+  falhou não cria abas duplicadas.
+
+### Recursos da versão 2.3
 
 - **Agenda com filtros** (visão geral): uma faixa com os sete dias da semana, cada um com quantos
   compromissos tem. Toque num dia para ver só ele; use as setas para trocar de semana, **Hoje** para
@@ -43,6 +58,7 @@ responsividade (também executadas pelo workflow Interface):
 python -m pip install -r dashboard/test/requirements.txt
 python -m playwright install chromium
 python dashboard/test/editor.browser.py
+python dashboard/test/organizacao.browser.py
 ```
 
 ## Como abrir
@@ -75,7 +91,7 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 
 | Onde | O que dá para fazer |
 |---|---|
-| **Visão geral** | A frase do dia no alto e quatro **gavetas**: a **agenda** dos próximos dias (o que está atrasado no topo, as semanas cheias marcadas), o **dinheiro** (saldo, o mês e o que falta pagar), **o que o Delfos notou** em todas as abas e **suas abas**. O botão **+ Registrar** pergunta o que você quer guardar e abre o formulário certo |
+| **Visão geral** | Em Meu dia, agenda e avisos; em Minhas abas, os espaços da sua vida; em Dinheiro, o resumo financeiro. **+ Registrar** abre o formulário adequado |
 | **Financeiro** | O mês lido em voz alta: quanto entrou, saiu e sobrou, **para onde foi o dinheiro**, o **ritmo do mês** comparado ao anterior, gastos fixos e assinaturas detectados, o que falta pagar, metas com "Guardar", e **perguntas** que deixam a leitura do seu jeito (limite do mês, quanto guardar, dia da renda). Também lançar entradas e saídas e **importar o extrato do banco** (PDF, .ofx ou .csv) para não esquecer de lançar |
 | **Contas e cartões** | Cadastrar contas com saldo, cadastrar cartões com fechamento e vencimento. Cada uma abre numa **página própria**, com saldo/fatura, gastos por categoria só dela e a lista de lançamentos |
 | **Investimentos** | Renda fixa, ações, fundos, cripto — o que já aplicou e quanto vale hoje, com rentabilidade calculada e distribuição por tipo |
@@ -86,49 +102,38 @@ Não é preciso editar nenhum arquivo. Tudo se cadastra pelos botões das telas:
 
 > Trabalhos da faculdade e o TCC ficam em **Faculdade**, não em Projetos.
 
-### As gavetas (versões 2.0 a 2.2)
+### Como as páginas se organizam (2.4 alpha)
 
-Cada aba é um **gaveteiro**: a frase do alto, os números da aba num quadro só e, embaixo, as
-**gavetas**, uma para cada assunto (A pagar, Lançamentos, Metas, Prazos, Disciplinas...).
+Cada página tem um nome, uma navegação por tarefa e o conteúdo da seção selecionada.
+A barra lateral escolhe a área da vida; a navegação interna escolhe o que fazer nela.
 
-- **O nome da gaveta já diz o principal**: fechada, ela mostra numa linha o que tem dentro
-  ("R$ 706,30 em 2 contas; a próxima vence em 5 dias"). Aberta, essa linha some, porque o conteúdo
-  já está ali (fica só quando traz um total que não aparece lá dentro, como o de A pagar).
-- **Toque em qualquer ponto da faixa do nome** para abrir ou fechar. O Delfos lembra como você
-  deixou, neste navegador.
-- **O botão de registrar fica na gaveta onde a coisa mora**: "+ Meta" na gaveta Metas, "+ Cartão"
-  em Cartões, "+ Disciplina" em Disciplinas. O registro principal de cada aba continua no alto.
-- O que é análise ou ajuste (Perguntas do Delfos, Ritmo do mês, Ajustes da aba...) fica no fim da
-  página, em **gavetas finas** separadas por um fio, embaixo de um título como "Análises e
-  ajustes" (versão 2.2). Elas começam fechadas, para a página não ficar carregada. Abra quando
-  quiser.
-- **Dentro da gaveta, cada coisa tem o seu quadro** (versão 2.1): à esquerda, um quadradinho colorido
-  diz de relance o que é (a data de um prazo, as iniciais de uma disciplina, o ícone de um material);
-  embaixo do nome vêm as informações, numa frase só; o número que importa fica à direita. Disciplinas,
-  contas, cartões, investimentos e projetos viram **cartões** com o número grande e uma barra (a
-  média contra a mínima, o limite usado, as etapas feitas); tocar no cartão abre a página dele.
-- Na **Visão geral**, o botão **+ Registrar** pergunta *o que você quer registrar* (um lançamento,
-  um compromisso, um prazo, um projeto, um item de uma aba sua) e abre o formulário certo, sem você
-  precisar lembrar em que aba cada coisa fica.
+| Página | Seções |
+|---|---|
+| Visão geral | Meu dia, Minhas abas, Dinheiro |
+| Pessoal | Calendário, Compromissos, Visão geral |
+| Faculdade | Disciplinas, Prazos e agenda, Desempenho, Conexões |
+| Disciplina | Resumos, Avaliações, Prazos, Materiais |
+| Projetos | Projetos, Oportunidades, Resultados |
+| Projeto | Etapas, Financeiro, Anotações, Documentos, Detalhes |
+| Financeiro | Movimentações, A pagar, Planejamento, Análises, Conexões e ajustes |
+| Contas e cartões | Contas, Cartões, Balanço |
+| Conta ou cartão | Movimentações, Saldo e análise |
+| Investimentos | Carteira, Distribuição |
+| Aba criada por você | Registros, Visão geral, Ajustes |
+| Academia | Treinos, Evolução, Ajustes |
 
-### O visual (versão 2.2)
+As listas abrem prontas para usar. Indicadores e gráficos aparecem nas seções de consulta.
+Mudar de seção preserva os filtros. Links antigos, como `financeiro.html#metas`, abrem a seção
+correta, e Voltar/Avançar do navegador acompanham a navegação.
 
-- **A marca**: o símbolo (o D com a coluna) e o logotipo "Delfos" no alto da barra lateral e na
-  entrada, com a frase "O essencial se revela."; o símbolo também é o ícone da aba do navegador.
-  As cores são as da identidade (preto, carvão, grafite, marfim e cinza quente). Para ter o Delfos
-  na tela inicial do celular, abra o painel no navegador e use **Adicionar à tela de início**: o
-  ícone é o símbolo em marfim sobre preto.
-- Em cada aba, **a frase do alto é o título**: o Delfos diz, numa frase só, a coisa mais importante
-  daquela aba (quanto você precisa tirar na disciplina mais apertada, o que está atrasado, quanto
-  resta do limite do mês), na mesma serifa pesada do logotipo. Os números vêm logo embaixo, num
-  quadro, e a frase não os repete.
-- **O número ao lado de cada aba**, na barra lateral, é sempre vermelho e conta só o que já passou
-  da data.
-- **Tema claro**: o fundo vira marfim e o texto, preto. Troque em **Perfil → Aparência → Tema**.
-- **No celular**, as abas ficam numa barra embaixo da tela, ao alcance do polegar. As quatro
-  primeiras aparecem direto; **Mais** abre a lista com todas, o botão de criar aba e o seu perfil.
-- Se preferir a frase do alto na mesma letra do resto, troque em **Perfil → Aparência → Fonte da
-  leitura e dos títulos** (Serifa ou Sem serifa).
+### Identidade e leitura
+
+O símbolo, o logotipo, a serifa Gloock e a paleta preto, carvão, grafite, marfim e cinza quente
+continuam sendo a identidade. Dados e controles usam Funnel Sans, com títulos de seção menores
+que o nome da página. Os ícones de navegação usam um traço e uma cor.
+
+Troque o tema em **Perfil → Aparência → Tema**. No celular, as quatro primeiras abas ficam
+na barra inferior; **Mais** abre todas as áreas, a criação de abas e o perfil.
 
 ### Computador mais simples (modo leve)
 
@@ -281,7 +286,7 @@ A barra de cima tem, em grupos:
   **modo foco** (só o texto) e **exportar** (imprimir/PDF, Word ou texto).
 
 Atalhos de digitação: `- ` vira lista, `1. ` vira lista numerada, `[] ` vira lista de tarefas,
-`---` e Enter vira divisor. O rodapé mostra palavras, caracteres e o tempo de leitura.
+`---` e Enter vira divisor. O rodapé traz a marca e a assinatura do editor.
 
 O texto é salvo sozinho alguns segundos depois que você para de digitar — o indicador no alto diz se
 há algo não salvo. `Ctrl + S` (ou `Cmd + S`) salva na hora.
@@ -292,21 +297,24 @@ há algo não salvo. `Ctrl + S` (ou `Cmd + S`) salva na hora.
 
 ### Criar suas próprias abas
 
-O botão **＋ Nova aba**, embaixo da lista da barra lateral, abre o criador. Escreva o **nome** e,
-na caixa **Propósito da aba**, conte do seu jeito para que ela serve. O **Delfos**, a IA do painel,
-lê os dois e monta a página:
+O botão **＋ Nova aba** na barra lateral (ou em **Mais**, no celular) abre três etapas:
 
-> Plantões. *Quero anotar cada plantão com local, horário, quanto vou receber e se já recebi. Ver
-> no calendário. Meta de R$ 2.000 por mês.*
+1. **Escolher**: Trabalho, Saúde, Academia, Esporte, Religião, Leituras ou Aba livre.
+2. **Dar nome**: escreva um nome. Se quiser, diga o que pretende guardar.
+3. **Revisar**: veja a prévia da estrutura e crie a aba. Você pode voltar para corrigir o nome.
 
-vira uma aba de plantões com os campos Local, Horário (hora), Valor recebido (R$) e Recebido
-(sim/não), que abre no calendário, entra na agenda e acompanha a meta de R$ 2.000 por mês.
+Na revisão, abra apenas o que precisar:
 
-Logo abaixo da caixa aparece **O que o Delfos entendeu**, frase por frase (o assunto, o que é cada
-registro, se tem data ou é de marcar todo dia, os campos, a meta, a vista), com o **porquê** de cada
-escolha em português simples ("Você falou em metas; deixei um valor inicial para você ajustar").
-À direita fica a prévia da página. Tudo dá para mudar antes de criar: desligue um campo, troque a
-vista, abra **Aparência e detalhes** para ícone, cor e descrição.
+- **Campos e visualização**: escolha lista, cartões, quadro, tabela ou calendário e revise
+  os campos. **Adicionar campo** permite incluir informações próprias, até oito campos adicionais.
+- **Agenda e metas**: registros com data, marcação por dia, meta e agrupamento.
+- **Ícone e aparência**: ícone, cor, descrição e nome de cada registro.
+- **Adicionar registros de exemplo**: opcional; nenhum exemplo entra sem ser selecionado.
+- **Sobre a sugestão**: explica como o propósito foi interpretado.
+
+A Academia usa sua estrutura própria de dias, exercícios e cargas. Depois de criar, cada aba
+abre nos registros (ou nos treinos), com análises e ajustes separados. Se você ajustar a estrutura
+à mão, uma nova interpretação do propósito só a substitui ao escolher **Usar nova sugestão**.
 
 **O Delfos interpreta, não copia.** Você escreve do seu jeito e ele traduz:
 

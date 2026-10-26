@@ -40,3 +40,5 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Verificar salvamento automático e editor
         run: python dashboard/test/editor.browser.py
+      - name: Verificar organização das páginas e criação de abas
+        run: python dashboard/test/organizacao.browser.py

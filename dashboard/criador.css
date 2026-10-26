@@ -1,0 +1,115 @@
+/* O criador tem um único assunto por etapa. Apenas o corpo rola; os passos
+   e a ação seguinte permanecem visíveis, inclusive com teclado no celular. */
+.modal.criacao { max-width: 740px; max-height: min(880px, calc(100dvh - 48px)); display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto; overflow: hidden; border-radius: 18px; }
+.criacao > * { min-width: 0; }
+.criacao [hidden] { display: none !important; }
+.criacao .criacao-cabecalho { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 26px 32px 20px; }
+.criacao-assinatura { display: block; font: 11px var(--font); color: var(--texto-3); letter-spacing: .04em; margin-bottom: 9px; }
+.criacao .modal-title { font: 400 28px/1.2 var(--font-voz); letter-spacing: -.025em; margin: 0; }
+.criacao .btn { border-radius: 8px; min-height: 42px; font-size: 13px; box-shadow: none; }
+.criacao .btn.icon { min-width: 40px; }
+.criacao-passos { list-style: none; display: flex; align-items: center; gap: 30px; padding: 18px 32px; margin: 0; border-top: 1px solid var(--linha); border-bottom: 1px solid var(--linha); }
+.criacao-passos li { display: flex; align-items: center; gap: 9px; font: 500 12px var(--font); color: var(--texto-3); }
+.criacao-passos li > span { display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid var(--linha-forte); border-radius: 50%; font-size: 11px; }
+.criacao-passos li[aria-current] { color: var(--texto); }
+.criacao-passos li[aria-current] > span { background: var(--texto); color: var(--sobre-claro); border-color: var(--texto); }
+.criacao-passos li[data-concluido] > span { border-color: var(--texto-3); color: var(--texto); }
+.criacao .criacao-corpo { display: block; padding: 28px 32px 30px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; min-height: 0; }
+.criacao-titulo { font: 400 27px/1.25 var(--font-voz); letter-spacing: -.02em; margin: 0; outline: none; }
+.criacao-titulo:focus-visible { outline: 2px solid var(--destaque); outline-offset: 5px; }
+.criacao-apoio { font: 400 14px/1.6 var(--font); color: var(--texto-3); margin: 10px 0 26px; max-width: 57ch; }
+.criacao-modelos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.criacao-modelo { display: flex; align-items: center; text-align: left; gap: 14px; padding: 18px; min-height: 88px; border: 1px solid var(--linha-forte); border-radius: 10px; background: transparent; color: var(--texto); cursor: pointer; font-family: var(--font); }
+.criacao-modelo:last-child { grid-column: 1 / -1; min-height: 76px; }
+.criacao-modelo > span:nth-child(2) { flex: 1; min-width: 0; }
+.criacao-modelo b { display: block; font-size: 14px; font-weight: 550; }
+.criacao-modelo small { display: block; color: var(--texto-3); font-size: 12px; line-height: 1.45; margin-top: 5px; }
+.modelo-icone { color: var(--texto-2); }
+.modelo-icone .ico { width: 23px; height: 23px; }
+.modelo-selecao { flex: 0 0 16px; height: 16px; border: 1px solid var(--linha-forte); border-radius: 50%; }
+.criacao-modelo[aria-checked="true"] { background: var(--superficie-2); border-color: var(--texto-2); }
+.criacao-modelo[aria-checked="true"] .modelo-selecao { border: 4px solid var(--texto); background: var(--superficie); }
+.criacao-modelo:focus-visible { outline: 2px solid var(--destaque); outline-offset: 3px; }
+.criacao .field { gap: 9px; margin: 0 0 22px; }
+.criacao .field:last-child { margin-bottom: 0; }
+.criacao :is(.field > label, .field > .label) { font-size: 13px; font-weight: 550; display: flex; justify-content: space-between; gap: 10px; }
+.criacao .field > label .muted { font-size: 11px; font-weight: 400; }
+.criacao #cr-nome { font: 400 19px/1.4 var(--font); padding: 14px 16px; letter-spacing: 0; height: auto; border-radius: 8px; }
+.criacao #cr-prop { font: 400 14px/1.6 var(--font); padding: 14px 16px; resize: vertical; min-height: 112px; max-height: 240px; border-radius: 8px; }
+.criacao input[aria-invalid="true"] { border-color: var(--st-critical); }
+.criacao-preview { --preview-fundo: #ece7dd; background: var(--preview-fundo); color: #26231f; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+.criacao-preview-label { display: block; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #6a6257; margin-bottom: 16px; }
+.criacao-preview .previa-topo { gap: 12px; }
+.criacao-preview .previa-icone { width: 30px; height: 30px; border-radius: 0; background: none; color: #5f584e; }
+.criacao-preview .previa-icone .ico { width: 26px; height: 26px; }
+.criacao-preview .previa-nome { font: 400 26px/1.25 var(--font-voz); letter-spacing: -.02em; overflow-wrap: anywhere; }
+.criacao-preview .previa-desc { color: #6a6257; font-size: 12px; line-height: 1.5; margin-top: 5px; }
+.criacao-mini-nav { display: flex; flex-wrap: wrap; gap: 20px; border-bottom: 1px solid #cec7ba; margin-top: 24px; font-size: 11px; color: #746b5e; }
+.criacao-mini-nav > * { padding-bottom: 10px; font-weight: 400; }
+.criacao-mini-nav b { border-bottom: 2px solid #3c3730; color: #26231f; }
+.criacao-mini-lista { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+.criacao-mini-lista span { font-size: 11px; padding: 6px 10px; border: 1px solid #d5cebf; border-radius: 5px; color: #5f574b; }
+.criacao-preview-nota { font-size: 11px; color: #6a6257; line-height: 1.5; margin: 12px 0 0; }
+.criacao-opcoes, .criacao .criador-ajustes { border: 0; border-top: 1px solid var(--linha); margin: 0; padding: 0; }
+.criacao-opcoes > summary, .criacao .criador-ajustes > summary { display: flex; align-items: center; gap: 12px; padding: 17px 0; list-style: none; cursor: pointer; font: 500 13px var(--font); color: var(--texto-2); }
+.criacao-opcoes > summary::-webkit-details-marker { display: none; }
+.criacao-opcoes > summary small { margin-left: auto; color: var(--texto-3); font-size: 11px; font-weight: 400; text-align: right; }
+.criacao-opcoes > summary::after { content: "+"; font-size: 18px; font-weight: 400; color: var(--texto-3); margin-left: auto; }
+.criacao-opcoes > summary:has(small)::after { margin-left: 0; }
+.criacao-opcoes[open] > summary::after { content: "−"; }
+.criacao-opcoes-corpo { padding: 4px 0 24px; }
+.criacao .criacao-opcoes-corpo input, .criacao .criacao-opcoes-corpo select { border-radius: 7px; font-size: 13px; }
+.criacao .criacao-opcoes-corpo input[type="checkbox"] { border-radius: 4px; }
+.criacao .campos-sugeridos { border: 1px solid var(--linha); border-radius: 8px; background: none; }
+.criacao .campos-sugeridos > li { padding: 13px 14px; gap: 12px; align-items: center; }
+.criacao .campo-opcao { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-height: 28px; }
+.criacao label.campo-opcao { cursor: pointer; }
+.criacao .campo-opcao .check { flex-shrink: 0; }
+.criacao .campo-nome { font-size: 13px; font-weight: 550; }
+.criacao .campo-tipo { font-size: 11px; line-height: 1.5; margin-top: 4px; }
+.criacao .badge { font-size: 9px; padding: 1px 5px; background: var(--superficie-2); color: var(--texto-3); }
+.criacao .hint { font-size: 12px; line-height: 1.6; color: var(--texto-3); }
+.criacao [data-adicionar-campo] { align-self: flex-start; margin-top: 8px; }
+.criacao .linha-switch { padding: 12px 0; gap: 20px; }
+.criacao .linha-switch b { font-size: 13px; font-weight: 550; }
+.criacao .linha-switch .muted { display: block; font-size: 12px; margin-top: 5px; line-height: 1.5; }
+.criacao .criacao-meta { display: grid; grid-template-columns: minmax(0, 1fr) 90px 130px; gap: 10px; margin-top: 14px; }
+.criacao-meta > label { display: grid; gap: 8px; min-width: 0; font-size: 11px; color: var(--texto-3); }
+.criacao .criacao-meta :is(input, select) { min-width: 0; width: 100%; }
+.criacao .icones-grade { grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 6px; max-height: 190px; overflow-y: auto; padding: 3px; }
+.criacao .icone-opcao { width: 36px; height: 36px; border-radius: 6px; background: none; }
+.criacao .icone-opcao .ico { width: 20px; height: 20px; }
+.criacao .cores { gap: 10px; flex-wrap: wrap; padding: 3px; }
+.criacao .delfos-aplicar { margin-bottom: 20px; border-radius: 8px; padding: 14px; background: var(--superficie-2); font-size: 12px; line-height: 1.6; }
+.criacao .delfos-aplicar .btn { margin-top: 10px; }
+.criacao .delfos-lista { margin: 0; gap: 10px; }
+.criacao .delfos-item { font-size: 12px; line-height: 1.6; }
+.criacao-explicacao > summary { color: var(--texto-3); font-size: 12px; }
+.criacao .criacao-rodape { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 32px; margin: 0; border-top: 1px solid var(--linha); background: var(--superficie); }
+.criacao-rodape > div { display: flex; gap: 10px; }
+.criacao-erro { color: var(--critical-text); font-size: 12px; line-height: 1.5; }
+@media (hover: hover) { .criacao-modelo:hover { border-color: var(--texto-3); background: var(--superficie-2); } }
+@media (max-width: 640px) {
+  .modal.criacao { max-height: calc(100dvh - 24px); border-radius: 14px; }
+  .criacao .criacao-cabecalho { padding: 22px 20px 18px; }
+  .criacao .modal-title { font-size: 25px; }
+  .criacao-passos { padding: 14px 20px; gap: 12px; }
+  .criacao-passos li { font-size: 11px; gap: 7px; }
+  .criacao .criacao-corpo { padding: 24px 20px; }
+  .criacao-titulo { font-size: 24px; }
+  .criacao-apoio { font-size: 13px; margin-bottom: 22px; }
+  .criacao-modelos { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .criacao-modelo, .criacao-modelo:last-child { min-height: 74px; padding: 14px; }
+  .criacao-modelo small { margin-top: 3px; }
+  .criacao .criacao-rodape { padding: 14px 16px; gap: 8px; }
+  .criacao-rodape > div { gap: 6px; }
+  .criacao .criacao-rodape .btn { min-height: 44px; padding: 10px 12px; font-size: 12px; }
+  .criacao-preview { padding: 20px; }
+  .criacao-preview .previa-nome { font-size: 24px; }
+  .criacao-opcoes > summary { font-size: 12px; }
+  .criacao-opcoes > summary small { font-size: 10px; }
+  .criacao .criacao-meta { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .criacao-meta > label:first-child { grid-column: 1 / -1; }
+  .criacao :is(input[type="text"], input[type="number"], textarea, select) { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .modal.criacao { animation: none; } }

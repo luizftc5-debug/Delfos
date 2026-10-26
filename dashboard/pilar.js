@@ -47,12 +47,16 @@
 
     const etiqueta = $("etiqueta");
     // O ponto do eyebrow leva a cor da aba; o texto fica na tinta normal.
-    etiqueta.textContent = pilar.sugeridoPor === "delfos" ? "Aba criada por você, montada pelo Delfos" : pilar.sugeridoPor === "ia" ? "Aba criada por você, montada com IA" : "Aba criada por você";
+    etiqueta.textContent = "Minha aba";
     etiqueta.style.setProperty("--marca", pilar.cor);
     $("swatch-lista").style.background = pilar.cor;
 
     $("titulo").textContent = pilar.nome;
     const academia = ehAcademia();
+    Organizacao.rotular("registros", academia ? "Treinos" : "Registros");
+    Organizacao.rotular("visao-geral", academia ? "Evolução" : "Visão geral");
+    document.querySelector('[data-ajuste="btn-refazer-questionario"]').hidden = !academia;
+    document.querySelector('[data-ajuste="btn-campos"]').hidden = academia;
     $("subtitulo").textContent =
       pilar.descricao ||
       (academia
@@ -133,7 +137,7 @@
       else if (numero) t.push({ l: `${fmt.escape(numero.campo.rotulo)}, média`, v: fmt.decimal(numero.media), s: `em ${numero.n} ${numero.n === 1 ? rot : Leituras.pluralizar(rot)}` });
     }
     const box = $("bloco-stats");
-    box.className = `grid ${t.length >= 4 ? "g4" : "g3"}`;
+    box.className = `grid pagina-indicadores ${t.length >= 4 ? "g4" : "g3"}`;
     box.innerHTML = t.slice(0, 4).map((x) => `
       <div class="card">
         <div class="stat-label">${x.l}</div>
@@ -180,7 +184,7 @@
     const vistas = vistasDaAba();
     const seg = $("f-vista");
     seg.hidden = vistas.length < 2;
-    seg.innerHTML = vistas.map(([v, r, ic]) => `<button type="button" data-vista="${v}" aria-pressed="${v === vistaAtual()}" title="${r}">${UI.icone(ic)}<span>${r}</span></button>`).join("");
+    seg.innerHTML = vistas.map(([v, r]) => `<option value="${v}" ${v === vistaAtual() ? "selected" : ""}>${r}</option>`).join("");
     const ordem = $("f-ordem");
     const ops = opcoesOrdem();
     const atual = ops.some(([v]) => v === visual().ordem) ? visual().ordem : "auto";
@@ -518,9 +522,9 @@
         { nome: "vista", rotulo: "Ver os registros como", tipo: "select", chips: true, opcoes: vistasDaAba().map(([valor, rot]) => ({ valor, rotulo: rot })) },
         { nome: "ordem", rotulo: "Ordenar", tipo: "select", opcoes: opcoesOrdem().map(([valor, rot]) => ({ valor, rotulo: rot })) },
         { nome: "_s", rotulo: "O que a página mostra", tipo: "secao" },
-        { nome: "leitura", rotulo: "Leitura", tipo: "simNao", rotuloMarcado: "A frase do Delfos no alto" },
+        { nome: "leitura", rotulo: "Leitura", tipo: "simNao", rotuloMarcado: "A leitura do Delfos na seção Visão geral" },
         { nome: "numeros", rotulo: "Números", tipo: "simNao", rotuloMarcado: "A faixa de números" },
-        { nome: "lateral", rotulo: "Coluna lateral", tipo: "simNao", rotuloMarcado: "O que o Delfos notou e os resumos por campo" },
+        { nome: "lateral", rotulo: "Análises", tipo: "simNao", rotuloMarcado: "Observações e resumos na seção Visão geral" },
         { nome: "perguntas", rotulo: "Perguntas", tipo: "simNao", rotuloMarcado: "Perguntas do Delfos" },
         ...(pilar.checkin ? [] : [
           { nome: "_s2", rotulo: "Agenda", tipo: "secao" },
@@ -630,7 +634,7 @@
     box.innerHTML = "";
     // O puxador diz o primeiro resumo em palavras; sem campo para resumir, a gaveta some.
     const r0 = L.resumoCampos[0];
-    box.closest(".gaveta").hidden = !r0;
+    box.closest(".pagina-bloco").hidden = !r0;
     if (r0) {
       $("campos-resumo").textContent =
         r0.tipo === "distribuicao" ? `Por ${r0.campo.rotulo.toLowerCase()}: ${r0.linhas.slice(0, 3).map((l) => `${l.valor} ${l.nome}`).join(", ")}`
@@ -742,13 +746,37 @@
     box.appendChild(card);
   }
 
+  function renderEvolucaoAcademia(lista) {
+    const nEx = lista.reduce((n, d) => n + (d.exercicios || []).length, 0);
+    const series = Object.values(calcularSeriesPorGrupo(lista)).reduce((n, v) => n + v, 0);
+    const stats = $("bloco-stats");
+    stats.classList.remove("hidden");
+    stats.classList.add("academia-indicadores");
+    stats.innerHTML = [["Dias de treino", lista.length], ["Exercícios", nEx], ["Séries cadastradas", series]].map(([rotulo, valor]) =>
+      `<div class="card"><div class="stat-label">${rotulo}</div><div class="stat-value num">${valor}</div></div>`).join("");
+    const resumos = $("resumos-campos");
+    resumos.innerHTML = "";
+    resumos.closest(".pagina-bloco").hidden = false;
+    resumos.closest(".pagina-bloco").querySelector(".bloco-titulo").textContent = "Seu treino em números";
+    $("campos-resumo").textContent = "Resumo dos exercícios que você cadastrou";
+    $("coluna-lado").hidden = false;
+    $("coluna-lado").classList.add("academia-evolucao");
+    $("notas").closest(".pagina-bloco").hidden = true;
+    renderResumoGrupos(resumos, lista);
+    if (!resumos.children.length) resumos.appendChild(UI.vazio({
+      icone: "haltere", titulo: "Acompanhe seu treino aqui",
+      texto: "Cadastre os exercícios e as séries em Treinos para ver a distribuição por grupo muscular.",
+    }));
+  }
+
   function renderAcademia() {
     const box = document.getElementById("academia-conteudo");
     box.innerHTML = "";
-    const dias = pilar.dias || [];
-    const nEx = dias.reduce((t, d) => t + (d.exercicios || []).length, 0);
+    const diasCadastrados = pilar.dias || [];
+    renderEvolucaoAcademia(diasCadastrados);
+    const nEx = diasCadastrados.reduce((t, d) => t + (d.exercicios || []).length, 0);
     document.getElementById("academia-resumo").textContent = !pilar.academia?.configuradoEm ? "Falta o questionário inicial"
-      : dias.length ? `${dias.length === 1 ? "1 dia" : `${dias.length} dias`}, ${nEx === 1 ? "1 exercício" : `${nEx} exercícios`}: ${dias.map((d) => d.nome).join(", ")}`
+      : diasCadastrados.length ? `${diasCadastrados.length === 1 ? "1 dia" : `${diasCadastrados.length} dias`}, ${nEx === 1 ? "1 exercício" : `${nEx} exercícios`}: ${diasCadastrados.map((d) => d.nome).join(", ")}`
       : "Nenhum dia de treino ainda";
 
     if (!pilar.academia?.configuradoEm) {
@@ -777,8 +805,6 @@
       );
       return;
     }
-
-    renderResumoGrupos(box, lista);
 
     lista.forEach((dia) => {
       const card = document.createElement("div");
@@ -1064,10 +1090,8 @@
 
   document.getElementById("btn-item").addEventListener("click", () => novoItem());
   document.getElementById("btn-layout").addEventListener("click", abrirLayout);
-  document.getElementById("f-vista").addEventListener("click", (ev) => {
-    const b = ev.target.closest("[data-vista]");
-    if (!b) return;
-    salvarVisual({ vista: b.dataset.vista });
+  document.getElementById("f-vista").addEventListener("change", (ev) => {
+    salvarVisual({ vista: ev.target.value });
     render();
   });
   document.getElementById("f-ordem").addEventListener("change", (ev) => { salvarVisual({ ordem: ev.target.value }); render(); });
@@ -1096,7 +1120,7 @@
     filtros.busca = ev.target.value;
     renderLista(Leituras.pilar(pilar));
   });
-  document.querySelector(".fin-filtros .busca").insertAdjacentHTML("afterbegin", UI.icone("busca"));
+  document.querySelector(".registros-filtros .busca").insertAdjacentHTML("afterbegin", UI.icone("busca"));
 
   render();
 })();

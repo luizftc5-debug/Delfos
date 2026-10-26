@@ -11,105 +11,139 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
   <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="paginas.css" />
 </head>
-<body>
+<body class="pagina-organizada pagina-projetos">
   <div class="app">
-    <nav class="sidebar" id="sidebar"></nav>
+    <nav class="sidebar" id="sidebar">
+    </nav>
     <main class="main">
-      <div class="wrap">
+      <div class="wrap" data-pagina-secoes="projetos">
         <header class="topbar">
           <div>
             <h1>Projetos</h1>
-            <p class="sub">Iniciativas pessoais que geram renda. Trabalhos da faculdade e o TCC ficam em <a href="faculdade.html">Faculdade</a>.</p>
+            <p class="sub">Da primeira ideia à próxima entrega.</p>
           </div>
           <div class="topbar-actions">
             <button class="btn primary" id="btn-projeto">+ Projeto</button>
           </div>
         </header>
-
-        <p class="leitura" id="leitura"></p>
-
-        <div class="grid g4" style="margin-bottom:14px;">
-          <div class="card tinted projetos">
-            <div class="stat-label">Projetos ativos</div>
-            <div class="stat-value num" id="s-ativos">-</div>
-            <div class="stat-sub" id="s-ativos-d"></div>
+        <nav aria-label="Seções desta página" class="pagina-secoes" data-navegacao-secoes="" hidden="" role="tablist">
+          <button aria-controls="painel-meus-projetos" data-secao="meus-projetos" id="secao-meus-projetos" role="tab" type="button">Projetos</button>
+          <button aria-controls="painel-ideias" data-secao="ideias" id="secao-ideias" role="tab" type="button">Oportunidades</button>
+          <button aria-controls="painel-resultados" data-secao="resultados" id="secao-resultados" role="tab" type="button">Resultados</button>
+        </nav>
+        <section aria-labelledby="secao-meus-projetos" class="pagina-painel" data-painel="meus-projetos" id="painel-meus-projetos" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Acompanhe cada projeto do começo à entrega.</p>
+          <div class="painel-conteudo">
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Seus projetos</h2>
+                <span class="bloco-resumo" id="projetos-resumo">
+                </span>
+              </header>
+              <div class="bloco-corpo">
+                <div id="projetos">
+                </div>
+              </div>
+            </section>
           </div>
-          <div class="card tinted projetos">
-            <div class="stat-label">Renda potencial</div>
-            <div class="stat-value num" id="s-renda">-</div>
-            <div class="stat-sub" id="s-renda-d"></div>
+        </section>
+        <section aria-labelledby="secao-ideias" class="pagina-painel" data-painel="ideias" id="painel-ideias" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Guarde e desenvolva suas próximas ideias.</p>
+          <div class="painel-conteudo">
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Oportunidades de renda</h2>
+                <span class="bloco-resumo" id="oportunidades-resumo">ideias que ainda não viraram projeto</span>
+                <div class="bloco-acoes">
+                  <button class="btn sm" id="btn-oportunidade" type="button">+ Oportunidade</button>
+                </div>
+              </header>
+              <div class="bloco-corpo">
+                <div id="oportunidades">
+                </div>
+              </div>
+            </section>
           </div>
-          <div class="card tinted projetos">
-            <div class="stat-label">Já faturado</div>
-            <div class="stat-value num" id="s-faturado">-</div>
-            <div class="stat-sub" id="s-faturado-d"></div>
-          </div>
-          <div class="card tinted projetos">
-            <div class="stat-label">Etapas concluídas</div>
-            <div class="stat-value num" id="s-etapas">-</div>
-            <div class="stat-sub" id="s-etapas-d"></div>
-          </div>
-        </div>
-
-        <div class="gaveteiro">
-          <section class="gaveta" data-gaveta="projetos">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Seus projetos</h2>
-              <span class="gaveta-resumo" id="projetos-resumo"></span>
-            </header>
-            <div class="gaveta-corpo"><div id="projetos"></div></div>
-          </section>
-
-          <section class="gaveta" data-gaveta="notas">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">O que o Delfos notou</h2>
-              <span class="gaveta-resumo" data-resumo-notas></span>
-            </header>
-            <div class="gaveta-corpo"><ul class="notas" id="notas"></ul></div>
-          </section>
-
-          <section class="gaveta" data-gaveta="oportunidades">
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Oportunidades de renda</h2>
-              <span class="gaveta-resumo" id="oportunidades-resumo">ideias que ainda não viraram projeto</span>
-              <div class="gaveta-acoes"><button class="btn sm" id="btn-oportunidade" type="button">+ Oportunidade</button></div>
-            </header>
-            <div class="gaveta-corpo"><div id="oportunidades"></div></div>
-          </section>
-        </div>
-
-        <!-- 2.2: análises e ajustes, em gavetas finas, abaixo do que pede ação. -->
-        <div class="gaveteiro consulta" role="group" aria-labelledby="consulta-rotulo">
-          <h2 class="consulta-rotulo" id="consulta-rotulo">Análises e ajustes</h2>
-
-          <section class="gaveta" data-gaveta="renda" data-fechada>
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo" id="titulo-renda">Recebido por projeto</h2>
-              <span class="gaveta-resumo" id="renda-resumo">marca na renda estimada</span>
-            </header>
-            <div class="gaveta-corpo"><div id="renda-projetos"></div></div>
-          </section>
-
-          <section class="gaveta" data-gaveta="meses" data-fechada>
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Últimos seis meses</h2>
-              <span class="gaveta-resumo" id="meses-nota"></span>
-            </header>
-            <div class="gaveta-corpo"><div id="renda-meses"></div></div>
-          </section>
-
-          <section class="gaveta" id="sec-perguntas" data-gaveta="perguntas" data-fechada hidden>
-            <header class="gaveta-cab">
-              <h2 class="gaveta-titulo">Perguntas do Delfos</h2>
-              <span class="gaveta-resumo"></span>
-            </header>
-            <div class="gaveta-corpo">
-              <p class="dica-gaveta">Cada resposta deixa a leitura mais sua.</p>
-              <div class="perguntas" id="perguntas"></div>
+        </section>
+        <section aria-labelledby="secao-resultados" class="pagina-painel" data-painel="resultados" id="painel-resultados" role="tabpanel" tabindex="0">
+          <p class="painel-descricao">Recebimentos, progresso e resultados dos seus projetos.</p>
+          <div class="painel-conteudo painel-analises">
+            <p class="leitura" id="leitura">
+            </p>
+            <div class="grid g4 pagina-indicadores">
+              <div class="card tinted projetos">
+                <div class="stat-label">Projetos ativos</div>
+                <div class="stat-value num" id="s-ativos">-</div>
+                <div class="stat-sub" id="s-ativos-d">
+                </div>
+              </div>
+              <div class="card tinted projetos">
+                <div class="stat-label">Renda potencial</div>
+                <div class="stat-value num" id="s-renda">-</div>
+                <div class="stat-sub" id="s-renda-d">
+                </div>
+              </div>
+              <div class="card tinted projetos">
+                <div class="stat-label">Já faturado</div>
+                <div class="stat-value num" id="s-faturado">-</div>
+                <div class="stat-sub" id="s-faturado-d">
+                </div>
+              </div>
+              <div class="card tinted projetos">
+                <div class="stat-label">Etapas concluídas</div>
+                <div class="stat-value num" id="s-etapas">-</div>
+                <div class="stat-sub" id="s-etapas-d">
+                </div>
+              </div>
             </div>
-          </section>
-        </div>
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo" id="titulo-renda">Recebido por projeto</h2>
+                <span class="bloco-resumo" id="renda-resumo">marca na renda estimada</span>
+              </header>
+              <div class="bloco-corpo">
+                <div id="renda-projetos">
+                </div>
+              </div>
+            </section>
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Últimos seis meses</h2>
+                <span class="bloco-resumo" id="meses-nota">
+                </span>
+              </header>
+              <div class="bloco-corpo">
+                <div id="renda-meses">
+                </div>
+              </div>
+            </section>
+            <section class="pagina-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">O que o Delfos notou</h2>
+                <span class="bloco-resumo" data-resumo-notas="">
+                </span>
+              </header>
+              <div class="bloco-corpo">
+                <ul class="notas" id="notas">
+                </ul>
+              </div>
+            </section>
+            <section class="pagina-bloco" hidden="" id="sec-perguntas">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Perguntas do Delfos</h2>
+                <span class="bloco-resumo">
+                </span>
+              </header>
+              <div class="bloco-corpo">
+                <p class="dica-gaveta">Cada resposta deixa a leitura mais sua.</p>
+                <div class="perguntas" id="perguntas">
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
       </div>
     </main>
   </div>
@@ -119,6 +153,7 @@
   <script src="store.js"></script>
   <script src="personalizacao.js"></script>
   <script src="ui.js"></script>
+  <script src="paginas.js"></script>
   <script src="sessao.js"></script>
   <script src="nuvem.js"></script>
   <script src="financas.js"></script>

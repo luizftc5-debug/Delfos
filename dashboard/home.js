@@ -1,4 +1,4 @@
-/* Visão geral: a leitura do dia e o gaveteiro (agenda, dinheiro, o que o Delfos notou, suas abas). */
+/* Visão geral: Meu dia, Minhas abas e Dinheiro. */
 
 (() => {
   UI.iniciarPagina("home");
@@ -68,6 +68,8 @@
     [["sec-topo", "topo"], ["sec-abas", "pilares"], ["sec-notas", "notas"], ["sec-agenda", "agenda"], ["sec-insights", "insights"]]
       .forEach(([id, k]) => { const el = document.getElementById(id); if (el) el.hidden = mostra[k] === false; });
     if (!Personalizacao.abaAtiva("financeiro")) document.getElementById("sec-topo").hidden = true;
+    Organizacao.disponivel("minhas-abas", !document.getElementById("sec-abas").hidden);
+    Organizacao.disponivel("dinheiro", !document.getElementById("sec-topo").hidden);
 
     renderLeitura();
     renderSemana();

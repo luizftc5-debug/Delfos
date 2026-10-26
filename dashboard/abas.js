@@ -5,7 +5,7 @@
    Delfos (delfos.js, a IA do painel, que roda neste aparelho) lê os dois e
    devolve a aba montada: ícone, cor, o que é cada registro, campos, meta,
    agrupamento, vista e se entra na agenda ou é marcada por dia. A janela
-   mostra "O que o Delfos entendeu", frase a frase, e a prévia da página.
+   divide a criação em escolher, dar nome e revisar. Ajustes são opcionais.
 
    Se a pessoa já mexeu em algo à mão, uma leitura nova não passa por cima:
    aparece o botão "Aplicar o que o Delfos entendeu".
@@ -90,6 +90,15 @@ const Abas = (() => {
 
   const NOME_TIPO = Object.fromEntries(Store.TIPOS_CAMPO.map((t) => [t.valor, t.rotulo]));
   const PERIODOS = [["semana", "por semana"], ["mes", "por mês"], ["ano", "por ano"]];
+  const MODELOS = [
+    ["Trabalho", "maleta", "Tarefas, reuniões e entregas"],
+    ["Saúde", "coracao", "Consultas, exames e cuidados"],
+    ["Academia", "haltere", "Dias de treino e exercícios"],
+    ["Esporte", "alvo", "Treinos, provas e resultados"],
+    ["Religião", "sol", "Encontros, leituras e práticas"],
+    ["Leituras", "livro", "Livros, autores e anotações"],
+    ["Aba livre", "mais", "Comece com a sua própria ideia"],
+  ];
   const ICONE_ENTENDEU = { assunto: "alvo", registro: "lista", jeito: "calendario", campos: "tabela", meta: "bandeira", vista: "grade", fora: "fechar", dica: "info", corrigiu: "lapis" };
 
   /** Cores das abas que já existem, para o Delfos não repetir quando dá. */
@@ -111,6 +120,9 @@ const Abas = (() => {
       mexeu: false,
       pendente: null,
       leitura: null,
+      etapa: editando ? 2 : 1,
+      modelo: "Aba livre",
+      idCriacao: Store.uid("pil"),
     };
     if (editando) {
       est.sug.icone = pilar.icone;
@@ -124,122 +136,179 @@ const Abas = (() => {
     (window.requestIdleCallback || ((fn) => setTimeout(fn, 60)))(() => Delfos.aquecer?.());
 
     const html = `
-      <div class="modal-head">
-        <h2 class="modal-title">${editando ? "Personalizar aba" : "Nova aba"}</h2>
-        <p class="modal-desc">${editando
-          ? "Mude o propósito e o Delfos sugere o que falta: campos novos, meta e o jeito de ver. O que já está cadastrado não muda."
-          : "Escolha um ponto de partida ou dê um nome e conte o propósito. O Delfos lê e monta a página; revise os campos e ajuste antes de criar."}</p>
-      </div>
-      <div class="modal-body criador">
-        <div class="criador-col">
-          ${editando ? "" : `<div class="area-modelos" role="group" aria-label="Modelos de abas">${["Trabalho", "Saúde", "Academia", "Esporte", "Religião", "Leituras", "Aba livre"].map((nome) => `<button type="button" class="chip" data-modelo-area="${nome}">${nome}</button>`).join("")}</div>`}
+      <header class="modal-head criacao-cabecalho">
+        <div><span class="criacao-assinatura">Delfos · seu espaço pessoal</span><h2 class="modal-title">${editando ? "Personalizar aba" : "Nova aba"}</h2></div>
+        <button class="btn ghost icon" type="button" data-acao="fechar" aria-label="Fechar criação de aba">${icone("fechar")}</button>
+      </header>
+      <ol class="criacao-passos" aria-label="Etapas da criação">
+        ${["Escolher", "Dar nome", "Revisar"].map((r,i) => `<li data-passo="${i + 1}" ${editando && i === 0 ? "hidden" : ""}><span>${editando ? i : i + 1}</span>${r}</li>`).join("")}
+      </ol>
+      <div class="modal-body criacao-corpo">
+        <section data-etapa="1" aria-labelledby="cr-escolher">
+          <h3 class="criacao-titulo" id="cr-escolher" tabindex="-1">O que vamos organizar?</h3>
+          <p class="criacao-apoio">Escolha um ponto de partida. Você pode adaptar tudo depois.</p>
+          <div class="criacao-modelos" role="radiogroup" aria-label="Ponto de partida">
+            ${MODELOS.map(([nome,ic,desc], i) => `<button type="button" class="criacao-modelo" role="radio" aria-label="${nome}" aria-describedby="modelo-descricao-${i}" aria-checked="${nome === "Aba livre"}" tabindex="${nome === "Aba livre" ? 0 : -1}" data-modelo-area="${nome}"><span class="modelo-icone">${icone(ic)}</span><span><b>${nome}</b><small id="modelo-descricao-${i}">${desc}</small></span><span class="modelo-selecao" aria-hidden="true"></span></button>`).join("")}
+          </div>
+        </section>
+        <section data-etapa="2" aria-labelledby="cr-identidade" hidden>
+          <h3 class="criacao-titulo" id="cr-identidade" tabindex="-1">Dê a sua cara.</h3>
+          <p class="criacao-apoio">Um nome é suficiente para começar. O propósito ajuda a sugerir a estrutura.</p>
           <div class="field">
             <label for="cr-nome">Nome da aba</label>
-            <input id="cr-nome" class="criador-nome" type="text" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Ex.: Plantões, Leituras, Corrida…" value="${esc(pilar?.nome || "")}" />
+            <input id="cr-nome" type="text" maxlength="40" autocomplete="off" placeholder="Ex.: Corrida" value="${esc(pilar?.nome || "")}" aria-describedby="cr-nome-erro" />
+            <span class="criacao-erro" id="cr-nome-erro" hidden>Digite um nome para continuar.</span>
           </div>
           <div class="field">
-            <label for="cr-prop">O que você quer organizar?</label>
-            <textarea id="cr-prop" class="criador-proposito" rows="4" maxlength="400" placeholder="Ex.: anotar cada plantão com local, horário, quanto vou receber e se já recebi. Ver no calendário. Meta de R$ 2.000 por mês…">${esc(est.sug.proposito || "")}</textarea>
-            <span class="hint">Escreva do seu jeito: o que cada registro guarda, se tem data ou é de todo dia, a meta e como quer ver.</span>
+            <label for="cr-prop">O que você quer guardar? <span class="muted">Opcional</span></label>
+            <textarea id="cr-prop" rows="3" maxlength="400" placeholder="Ex.: meus treinos, distâncias e próximas provas.">${esc(est.sug.proposito || "")}</textarea>
           </div>
-          <section class="delfos-leu" aria-live="polite" aria-label="O que o Delfos entendeu">
-            <h3 class="delfos-titulo">${icone("delfos")}O que o Delfos entendeu</h3>
-            <ul class="delfos-lista" data-entendeu></ul>
-            <div class="delfos-aplicar" data-aplicar hidden>
-              <span>Você mexeu em alguns ajustes. A leitura nova não passa por cima deles.</span>
-              <button type="button" class="btn sm" data-usar>Aplicar o que o Delfos entendeu</button>
-            </div>
-          </section>
-          <details class="criador-ajustes" ${editando ? "open" : ""}>
-            <summary>${icone("direita")}Aparência e detalhes</summary>
-            <div class="criador-ajustes-corpo">
-              <div class="field">
-                <span class="label">Ícone</span>
-                <div class="icones-grade" data-icones></div>
+        </section>
+        <section data-etapa="3" aria-labelledby="cr-revisar" hidden>
+          <h3 class="criacao-titulo" id="cr-revisar" tabindex="-1">${editando ? "Revise seus ajustes." : "Seu espaço está pronto."}</h3>
+          <p class="criacao-apoio">${editando ? "Os registros existentes continuam na aba." : "Confira a estrutura. Você pode começar assim e ajustar com o uso."}</p>
+          <div class="criacao-preview" aria-label="Prévia da estrutura">
+            <span class="criacao-preview-label">Sua aba</span>
+            <div class="previa-topo" data-previa-topo></div>
+            <div class="criacao-mini-nav"><b data-mini-registros>Registros</b><span>Visão geral</span><span>Ajustes</span></div>
+            <div class="criacao-mini-lista" data-previa-campos></div>
+            <p class="criacao-preview-nota" data-previa-resumo></p>
+          </div>
+          <div class="delfos-aplicar" data-aplicar hidden>
+            <span>Há uma nova sugestão para o propósito que você escreveu. Seus ajustes foram mantidos.</span>
+            <button type="button" class="btn sm" data-usar>Usar nova sugestão</button>
+          </div>
+          <details class="criacao-opcoes" data-estrutura>
+            <summary><span>Campos e visualização</span><small data-resumo-estrutura></small></summary>
+            <div class="criacao-opcoes-corpo">
+              <div class="field" data-bloco-vista><label for="cr-vista">Visualização inicial</label><select id="cr-vista" data-vistas aria-label="Vista da página"></select></div>
+              <div class="field" data-bloco-campos>
+                <span class="label" data-titulo-campos>Campos</span>
+                <ul class="abas-lista campos-sugeridos" data-campos></ul>
+                <span class="hint" data-hint-campos></span>
+                <button class="btn sm" type="button" data-adicionar-campo>+ Adicionar campo</button>
               </div>
-              <div class="field">
-                <span class="label">Cor</span>
-                <div class="cores" data-cores></div>
-              </div>
-              <div class="field">
-                <label for="cr-desc">Descrição curta <span class="muted">(aparece embaixo do nome)</span></label>
-                <input id="cr-desc" type="text" maxlength="160" autocomplete="off" />
-              </div>
-              <div class="field">
-                <label for="cr-rot">Cada registro é um(a)</label>
-                <input id="cr-rot" type="text" maxlength="30" autocomplete="off" placeholder="livro, treino, plantão…" />
-              </div>
-              <label class="linha-switch"><span><b>Tem data e entra na agenda</b><span class="muted">Aparece nos próximos 30 dias da visão geral.</span></span><input type="checkbox" class="switch" id="cr-agenda" /></label>
-              <label class="linha-switch"><span><b>Marcar por dia</b><span class="muted">Para hábitos: um toque por dia, com sequência.</span></span><input type="checkbox" class="switch" id="cr-checkin" /></label>
+              <p class="hint" data-nota-academia hidden>Seus treinos terão dias, exercícios, séries, repetições e cargas.</p>
             </div>
           </details>
-        </div>
-        <div class="criador-col previa">
-          <div class="previa-topo" data-previa-topo></div>
-          <div class="field" data-bloco-vista>
-            <span class="label">A página abre em</span>
-            <div class="chips" data-vistas role="group" aria-label="Vista da página"></div>
-          </div>
-          <div class="field">
-            <span class="label" data-titulo-campos>Campos</span>
-            <ul class="abas-lista campos-sugeridos" data-campos></ul>
-            <span class="hint" data-hint-campos></span>
-          </div>
-          <div class="field" data-bloco-meta>
-            <span class="label">Meta</span>
-            <div class="meta-linha">
-              <input type="checkbox" class="switch" id="cr-meta-on" aria-label="Usar meta" />
-              <select class="input sm" id="cr-meta-tipo" aria-label="O que conta"></select>
-              <input class="input sm" id="cr-meta-alvo" type="number" min="1" step="1" style="width:90px" aria-label="Quanto" />
-              <select class="input sm" id="cr-meta-periodo" aria-label="Período">${PERIODOS.map(([v, r]) => `<option value="${v}">${r}</option>`).join("")}</select>
+          <details class="criacao-opcoes" data-rotina>
+            <summary><span>Agenda e metas</span><small>Opcional</small></summary>
+            <div class="criacao-opcoes-corpo">
+              <label class="linha-switch"><span><b>Mostrar na agenda</b><span class="muted">Registros com data aparecem no calendário.</span></span><input type="checkbox" class="switch" id="cr-agenda" /></label>
+              <label class="linha-switch"><span><b>Acompanhar por dia</b><span class="muted">Para hábitos e atividades recorrentes.</span></span><input type="checkbox" class="switch" id="cr-checkin" /></label>
+              <div class="field" data-bloco-meta>
+                <label class="linha-switch"><b>Definir uma meta</b><input type="checkbox" class="switch" id="cr-meta-on" /></label>
+                <div class="criacao-meta" data-meta-controles>
+                  <label>Contar<select class="input" id="cr-meta-tipo"></select></label>
+                  <label>Alvo<input class="input" id="cr-meta-alvo" type="number" min="1" max="100000" step="1" /></label>
+                  <label>Período<select class="input" id="cr-meta-periodo">${PERIODOS.map(([v, r]) => `<option value="${v}">${r}</option>`).join("")}</select></label>
+                </div>
+              </div>
+              <div class="field" data-bloco-agrupar><label for="cr-agrupar">Agrupar registros por</label><select id="cr-agrupar"></select></div>
             </div>
-          </div>
-          <div class="field" data-bloco-agrupar>
-            <label for="cr-agrupar">Agrupar a lista por</label>
-            <select id="cr-agrupar"></select>
-          </div>
-          <div class="field" data-bloco-exemplos hidden>
-            <span class="label">Para começar <span class="muted">(opcional)</span></span>
-            <div class="chips" data-exemplos></div>
-          </div>
-          <p class="hint" data-nota-academia hidden>Esta aba abre com a tela de treinos: dias, exercícios do catálogo, cargas e recordes.</p>
-        </div>
+          </details>
+          <details class="criacao-opcoes criador-ajustes">
+            <summary><span>Ícone e aparência</span><small>Personalizar</small></summary>
+            <div class="criacao-opcoes-corpo">
+              <div class="field"><span class="label">Ícone</span><div class="icones-grade" data-icones></div></div>
+              <div class="field"><span class="label">Cor de identificação</span><div class="cores" data-cores></div></div>
+              <div class="field"><label for="cr-desc">Descrição curta</label><input id="cr-desc" type="text" maxlength="160" autocomplete="off" /></div>
+              <div class="field"><label for="cr-rot">Cada registro se chama</label><input id="cr-rot" type="text" maxlength="30" autocomplete="off" placeholder="livro, treino, plantão…" /></div>
+            </div>
+          </details>
+          <details class="criacao-opcoes" data-bloco-exemplos hidden>
+            <summary><span>Adicionar registros de exemplo</span><small>Opcional</small></summary>
+            <div class="criacao-opcoes-corpo"><p class="hint">Selecione apenas os exemplos que quer guardar na aba.</p><div class="chips" data-exemplos></div></div>
+          </details>
+          <details class="criacao-opcoes criacao-explicacao">
+            <summary><span>Sobre a sugestão</span></summary>
+            <ul class="delfos-lista criacao-opcoes-corpo" data-entendeu></ul>
+          </details>
+        </section>
+        <p class="criacao-erro" data-erro-salvar role="alert" hidden></p>
+        <span class="sr" data-etapa-status role="status" aria-live="polite"></span>
       </div>
-      <div class="modal-foot">
-        <button class="btn" data-acao="cancelar" type="button">Cancelar</button>
-        <button class="btn primary" data-acao="criar" type="button">${editando ? "Salvar" : "Criar aba"}</button>
-      </div>`;
-
+      <footer class="modal-foot criacao-rodape">
+        <button class="btn ghost" data-acao="cancelar" type="button">Cancelar</button>
+        <div><button class="btn" data-acao="voltar" type="button" hidden>Voltar</button><button class="btn primary" data-acao="avancar" type="button">Continuar ${icone("direita")}</button><button class="btn primary" data-acao="criar" type="button" hidden>${editando ? "Salvar alterações" : "Criar aba"}</button></div>
+      </footer>`;
+    let espera;
     return new Promise((resolve) => UI.abrirModal(html, {
-      classe: "xwide",
-      aoFechar: resolve,
+      classe: "criacao",
+      aoFechar: (resultado) => { clearTimeout(espera); resolve(resultado); },
       aoMontar(modal, fechar) {
         const $ = (sel) => modal.querySelector(sel);
         const inpNome = $("#cr-nome");
         const inpProp = $("#cr-prop");
-        modal.querySelectorAll("[data-modelo-area]").forEach((b) => b.addEventListener("click", async () => {
-          if (est.mexeu || inpNome.value.trim() || inpProp.value.trim()) {
-            const trocar = await UI.confirmar({ titulo: "Trocar o ponto de partida?", descricao: "Os ajustes desta prévia serão substituídos. Nenhuma aba salva será alterada." });
-            if (!trocar) return;
+        const modelos = [...modal.querySelectorAll("[data-modelo-area]")];
+        const propositos = {
+          Trabalho: `Organizar tarefas, reuniões e entregas. ${Personalizacao.ocupacaoResumo()}`,
+          Saúde: "Consultas, exames e retornos com data, local e profissional.",
+          Academia: "Organizar meus dias de treino, exercícios, cargas e repetições.",
+          Esporte: "Organizar treinos e competições do esporte que pratico.",
+          Religião: "Organizar encontros, leituras e práticas da minha fé.",
+          Leituras: "Livros que quero ler, estou lendo ou já terminei, com autor e comentários.",
+          "Aba livre": "",
+        };
+        function escolherModelo(botao) {
+          const nome = botao.dataset.modeloArea;
+          if (nome !== est.modelo) {
+            inpNome.value = nome === "Aba livre" ? "" : nome;
+            inpProp.value = propositos[nome] || "";
+            est.mexeu = false;
+            est.pendente = null;
+            lerComDelfos();
           }
-          const nome = b.dataset.modeloArea;
-          const propositos = {
-            Trabalho: `Organizar minha rotina profissional, tarefas, reuniões e entregas. ${Personalizacao.ocupacaoResumo()}`,
-            Saúde: "Consultas, exames e retornos com data, local e profissional.",
-            Academia: "Organizar meus dias de treino, exercícios, cargas e repetições.",
-            Esporte: "Organizar treinos e competições. Escreva aqui o esporte que você pratica.",
-            Religião: "Organizar encontros, leituras e práticas da minha fé.",
-            Leituras: "Livros que quero ler, estou lendo ou já terminei, com autor e comentários.",
-            "Aba livre": "",
-          };
-          inpNome.value = nome === "Aba livre" ? "" : nome;
-          inpProp.value = propositos[nome] || "";
-          est.mexeu = false;
-          est.pendente = null;
-          lerComDelfos();
-          if (nome === "Esporte") { inpNome.focus(); inpNome.select(); }
-          else inpProp.focus();
-        }));
+          est.modelo = nome;
+          modelos.forEach((b) => { b.setAttribute("aria-checked", String(b === botao)); b.tabIndex = b === botao ? 0 : -1; });
+        }
+        modelos.forEach((b) => b.addEventListener("click", () => escolherModelo(b)));
+        $(".criacao-modelos").addEventListener("keydown", (ev) => {
+          const i = modelos.indexOf(document.activeElement);
+          if (i < 0 || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(ev.key)) return;
+          ev.preventDefault();
+          const proximo = ev.key === "Home" ? 0 : ev.key === "End" ? modelos.length - 1
+            : (i + (["ArrowRight", "ArrowDown"].includes(ev.key) ? 1 : -1) + modelos.length) % modelos.length;
+          escolherModelo(modelos[proximo]);modelos[proximo].focus();
+        });
+        function mostrarEtapa(etapa, focar = true) {
+          est.etapa = etapa;
+          modal.querySelectorAll("[data-etapa]").forEach((p) => { p.hidden = Number(p.dataset.etapa) !== etapa; });
+          modal.querySelectorAll("[data-passo]").forEach((p) => {
+            const n = Number(p.dataset.passo);
+            p.toggleAttribute("data-concluido", n < etapa);
+            if (n === etapa) p.setAttribute("aria-current", "step"); else p.removeAttribute("aria-current");
+          });
+          $('[data-acao="voltar"]').hidden = etapa === (editando ? 2 : 1);
+          $('[data-acao="avancar"]').hidden = etapa === 3;
+          $('[data-acao="criar"]').hidden = etapa !== 3;
+          $("[data-etapa-status]").textContent = `Etapa ${editando ? etapa - 1 : etapa} de ${editando ? 2 : 3}`;
+          $(".criacao-corpo").scrollTop = 0;
+          if (focar) {
+            if (etapa === 2) inpNome.focus({ preventScroll: true });
+            else $(`[data-etapa="${etapa}"] h3`).focus({ preventScroll: true });
+          }
+        }
+        function validarNome() {
+          const valido = !!inpNome.value.trim();
+          $("#cr-nome-erro").hidden = valido;
+          inpNome.setAttribute("aria-invalid", String(!valido));
+          if (!valido) inpNome.focus();
+          return valido;
+        }
+        $('[data-acao="avancar"]').addEventListener("click", () => {
+          if (est.etapa === 2) {
+            if (!validarNome()) return;
+            clearTimeout(espera);
+            lerComDelfos();
+          }
+          mostrarEtapa(est.etapa + 1);
+        });
+        $('[data-acao="voltar"]').addEventListener("click", () => mostrarEtapa(est.etapa - 1));
+        $('[data-acao="fechar"]').addEventListener("click", () => fechar(null));
+        inpNome.addEventListener("keydown", (ev) => {
+          if (ev.key === "Enter") { ev.preventDefault(); $('[data-acao="avancar"]').click(); }
+        });
         const pluralRot = (r) => Leituras.pluralizar(r);
         let iconesDesenhados = false;
 
@@ -250,7 +319,7 @@ const Abas = (() => {
           const det = $(".criador-ajustes");
           if (!det.open && !iconesDesenhados) return;
           iconesDesenhados = true;
-          const oferta = [...new Set([s.icone, ...UI.ICONES_ABA.map((n) => `svg:${n}`), ...Store.ICONES_PILAR.slice(0, 12)])];
+          const oferta = [...new Set([s.icone, ...UI.ICONES_ABA.map((n) => `svg:${n}`), ])];
           $("[data-icones]").innerHTML = oferta.map((v) => `<button type="button" class="icone-opcao" data-icone="${esc(v)}" aria-pressed="${v === s.icone}" aria-label="Ícone ${esc(v.replace("svg:", ""))}">${UI.iconeAba(v)}</button>`).join("");
           $("[data-cores]").innerHTML = Store.PALETA_PILAR.map((cor) => `<button type="button" class="cor-opcao" data-cor="${esc(cor.valor)}" aria-pressed="${cor.valor === s.cor}" aria-label="Cor ${esc(cor.rotulo)}" style="--c:${esc(cor.valor)}"></button>`).join("");
         }
@@ -268,6 +337,8 @@ const Abas = (() => {
           ["[data-bloco-meta]", "[data-bloco-agrupar]", "[data-bloco-vista]"].forEach((q) => { $(q).hidden = academia; });
           $("#cr-agenda").closest(".linha-switch").hidden = academia;
           $("#cr-checkin").closest(".linha-switch").hidden = academia;
+          $("[data-rotina]").hidden = academia;
+          $("[data-bloco-campos]").hidden = academia;
 
           // Prévia
           const nomeVisto = inpNome.value.trim() || "Sua aba";
@@ -277,7 +348,7 @@ const Abas = (() => {
 
           // Vista
           const vistas = s.checkin ? VISTAS.filter(([v]) => v === "lista" || v === "cartoes") : s.naAgenda ? VISTAS : VISTAS.filter(([v]) => v !== "calendario");
-          $("[data-vistas]").innerHTML = vistas.map(([v, r, ic]) => `<button type="button" class="chip" data-vista="${v}" aria-pressed="${v === s.visual.vista}">${icone(ic)}${r}</button>`).join("");
+          $("[data-vistas]").innerHTML = vistas.map(([v, r]) => `<option value="${v}" ${v === s.visual.vista ? "selected" : ""}>${r}</option>`).join("");
 
           // Campos
           const lista = $("[data-campos]");
@@ -301,6 +372,7 @@ const Abas = (() => {
           const atual = s.meta.tipo === "soma" ? `soma:${s.meta.campoId}` : s.meta.tipo;
           $("#cr-meta-tipo").innerHTML = opcoes.map(([v, r]) => `<option value="${esc(v)}" ${v === atual ? "selected" : ""}>${esc(r)}</option>`).join("");
           $("#cr-meta-on").checked = s.meta.tipo !== "nenhuma";
+          $("[data-meta-controles]").hidden = s.meta.tipo === "nenhuma";
           $("#cr-meta-alvo").value = s.meta.alvo || "";
           $("#cr-meta-periodo").value = s.meta.periodo || "mes";
           ["#cr-meta-tipo", "#cr-meta-alvo", "#cr-meta-periodo"].forEach((q) => { $(q).disabled = s.meta.tipo === "nenhuma"; });
@@ -314,17 +386,33 @@ const Abas = (() => {
           const ex = editando ? [] : s.exemplos || [];
           $("[data-bloco-exemplos]").hidden = academia || !ex.length;
           $("[data-exemplos]").innerHTML = ex.map((e, i) => `<button type="button" class="chip" data-exemplo="${i}" aria-pressed="${est.exemplos.has(i)}">${esc(e)}</button>`).join("");
+          const ativos = editando ? [...existentes, ...novosCampos.filter((x) => est.escolhidos.has(x.id))] : s.campos.filter((x) => est.escolhidos.has(x.id));
+          const vistaRotulo = VISTAS.find(([v]) => v === s.visual.vista)?.[1] || "Lista";
+          $("[data-mini-registros]").textContent = academia ? "Treinos" : "Registros";
+          $("[data-previa-campos]").innerHTML = academia
+            ? `<span>Dia de treino</span><span>Exercícios</span><span>Cargas</span>`
+            : `<span>Nome</span>${s.naAgenda ? "<span>Data</span>" : ""}${ativos.slice(0, 3).map((x) => `<span>${esc(x.rotulo)}</span>`).join("")}${ativos.length > 3 ? `<span>+${ativos.length - 3}</span>` : ""}`;
+          $("[data-previa-resumo]").textContent = academia ? "Seus exercícios serão organizados por dia de treino."
+            : `${vistaRotulo} · ${ativos.length ? `${ativos.length} ${ativos.length === 1 ? "campo adicional" : "campos adicionais"}` : "nome e data"}${s.naAgenda ? " · na agenda" : ""}${s.checkin ? " · marcação diária" : ""}`;
+          $("[data-resumo-estrutura]").textContent = academia ? "Dias de treino" : `${vistaRotulo} · ${ativos.length} campos`;
+          $("[data-adicionar-campo]").disabled = ativos.length >= 8;
+
         }
 
         function linhaCampo(x, marcado, travado) {
+          const quantidade = existentes.length + est.escolhidos.size;
+          const limite = !marcado && quantidade >= 8;
           const detalhe = x.tipo === "select" ? `${NOME_TIPO[x.tipo]}: ${x.opcoes.join(", ")}` : NOME_TIPO[x.tipo] || x.tipo;
+          const tag = travado ? "div" : "label";
           return `
             <li class="${marcado ? "" : "desligada"}">
+              <${tag} class="campo-opcao">
               <span class="campo-linha">
                 <span class="campo-nome">${esc(x.rotulo)}${travado ? ` <span class="badge">atual</span>` : x.sugerido ? ` <span class="badge sugestao">sugestão</span>` : ""}</span>
                 <span class="campo-tipo">${esc(detalhe)}</span>
               </span>
-              ${travado ? "" : `<input type="checkbox" class="switch" data-campo="${esc(x.id)}" ${marcado ? "checked" : ""} aria-label="Incluir ${esc(x.rotulo)}" />`}
+              ${travado ? "" : `<input type="checkbox" class="check" data-campo="${esc(x.id)}" ${marcado ? "checked" : ""} ${limite ? "disabled" : ""} aria-label="Incluir ${esc(x.rotulo)}" />`}
+              </${tag}>
             </li>`;
         }
 
@@ -360,13 +448,14 @@ const Abas = (() => {
         // Grava de volta o que a pessoa mexeu no formulário.
         function ler() {
           const s = est.sug;
+          s.visual.vista = $("[data-vistas]").value || s.visual.vista;
           s.descricao = $("#cr-desc").value.trim();
           s.rotuloItem = $("#cr-rot").value.trim().toLowerCase() || s.rotuloItem;
           s.naAgenda = $("#cr-agenda").checked;
           s.checkin = $("#cr-checkin").checked;
           const tipoSel = $("#cr-meta-tipo").value || "concluidos";
           s.meta = $("#cr-meta-on").checked
-            ? { tipo: tipoSel.startsWith("soma:") ? "soma" : tipoSel, campoId: tipoSel.startsWith("soma:") ? tipoSel.slice(5) : "", alvo: Number($("#cr-meta-alvo").value) || 0, periodo: $("#cr-meta-periodo").value }
+            ? { tipo: tipoSel.startsWith("soma:") ? "soma" : tipoSel, campoId: tipoSel.startsWith("soma:") ? tipoSel.slice(5) : "", alvo: Math.max(0, Math.min(100000, Number($("#cr-meta-alvo").value) || 0)), periodo: $("#cr-meta-periodo").value }
             : { ...SEM_META };
           s.agruparPor = $("#cr-agrupar").value;
           s.proposito = inpProp.value.trim();
@@ -378,17 +467,13 @@ const Abas = (() => {
 
         /** Lê nome e propósito com o Delfos; aplica, ou guarda para o botão se a pessoa já mexeu. */
         function lerComDelfos() {
+          if (!modal.isConnected) return;
           const nome = inpNome.value.trim();
           const proposito = inpProp.value.trim();
           const r = Delfos.entender({ nome, proposito, usadas: coresUsadas(pilar?.id), existentes });
           est.leitura = r;
           desenharLeitura(r);
           const sug = sanear(r.sugestao, nome);
-          if (editando) {
-            aplicar(sug);
-            $("[data-aplicar]").hidden = true;
-            return;
-          }
           if (est.mexeu) {
             est.pendente = sug;
             $("[data-aplicar]").hidden = false;
@@ -402,10 +487,8 @@ const Abas = (() => {
           const ic = ev.target.closest("[data-icone]");
           const cor = ev.target.closest("[data-cor]");
           const exm = ev.target.closest("[data-exemplo]");
-          const vista = ev.target.closest("[data-vista]");
           if (ic) { ler(); est.sug.icone = ic.dataset.icone; marcarMexeu(); desenhar(); }
           if (cor) { ler(); est.sug.cor = cor.dataset.cor; marcarMexeu(); desenhar(); }
-          if (vista) { ler(); est.sug.visual = { ...est.sug.visual, vista: vista.dataset.vista }; marcarMexeu(); desenhar(); }
           if (exm) { const i = Number(exm.dataset.exemplo); est.exemplos.has(i) ? est.exemplos.delete(i) : est.exemplos.add(i); exm.setAttribute("aria-pressed", String(est.exemplos.has(i))); }
           if (ev.target.closest("[data-usar]") && est.pendente) {
             est.mexeu = false;
@@ -413,6 +496,20 @@ const Abas = (() => {
             est.pendente = null;
             $("[data-aplicar]").hidden = true;
           }
+        });
+        $("[data-adicionar-campo]").addEventListener("click", async () => {
+          const campo = await UI.formularioCampo();
+          if (!campo || !modal.isConnected) return;
+          ler();
+          const todos = editando ? [...existentes, ...novosCampos] : est.sug.campos;
+          if (todos.filter((x) => est.escolhidos.has(x.id) || existentes.includes(x)).length >= 8) return;
+          const usados = new Set([...RESERVADOS, ...todos.map((x) => x.id)]);
+          let id = normalizar(campo.rotulo).replace(/\s+(\w)/g, (_, l) => l.toUpperCase()).replace(/\s/g, "").slice(0, 24) || "campo";
+          while (usados.has(id)) id += "_";
+          const novo = { ...campo, id, ativo: true, sugerido: false };
+          if (editando) novosCampos.push(novo); else est.sug.campos.push(novo);
+          est.escolhidos.add(id);
+          marcarMexeu();desenhar();
         });
         $(".criador-ajustes").addEventListener("toggle", desenharIcones);
         modal.addEventListener("change", (ev) => {
@@ -422,7 +519,7 @@ const Abas = (() => {
             ler(); marcarMexeu(); desenhar();
             return;
           }
-          if (ev.target.matches("#cr-meta-on, #cr-checkin, #cr-agenda, #cr-meta-tipo")) {
+          if (ev.target.matches("#cr-meta-on, #cr-checkin, #cr-agenda, #cr-meta-tipo, [data-vistas]")) {
             ler();
             if (ev.target.id === "cr-meta-on" && ev.target.checked && !est.sug.meta.alvo) est.sug.meta.alvo = 10;
             marcarMexeu(); desenhar();
@@ -438,12 +535,12 @@ const Abas = (() => {
 
         // O Delfos lê a cada pausa curta na digitação (não a cada letra):
         // num computador fraco, digitar nunca espera a leitura.
-        let espera;
         const agendarLeitura = () => {
           clearTimeout(espera);
           espera = setTimeout(lerComDelfos, 220);
         };
         inpNome.addEventListener("input", () => {
+          if (inpNome.value.trim()) { $("#cr-nome-erro").hidden = true; inpNome.setAttribute("aria-invalid", "false"); }
           const t = $("[data-previa-topo] .previa-nome");
           if (t) t.textContent = inpNome.value.trim() || "Sua aba";
           agendarLeitura();
@@ -453,10 +550,20 @@ const Abas = (() => {
         $('[data-acao="cancelar"]').addEventListener("click", () => fechar(null));
         $('[data-acao="criar"]').addEventListener("click", () => {
           const nome = inpNome.value.trim();
-          if (!nome) { inpNome.focus(); inpNome.closest(".field").classList.add("tem-erro"); return; }
+          if (est.etapa !== 3) return;
+          if (!nome) { mostrarEtapa(2); validarNome(); return; }
           clearTimeout(espera);
           ler();
-          fechar(editando ? salvarEdicao(pilar, nome, est.sug, novosCampos.filter((x) => est.escolhidos.has(x.id))) : criar(nome, est.sug, est.escolhidos, est.exemplos));
+          const botao = $('[data-acao="criar"]');
+          botao.disabled = true;
+          try {
+            const resultado = editando ? salvarEdicao(pilar, nome, est.sug, novosCampos.filter((x) => est.escolhidos.has(x.id))) : criar(nome, est.sug, est.escolhidos, est.exemplos, est.idCriacao);
+            fechar(resultado);
+          } catch {
+            $("[data-erro-salvar]").hidden = false;
+            $("[data-erro-salvar]").textContent = "Não foi possível salvar no navegador. Libere espaço e tente novamente.";
+            botao.disabled = false;
+          }
         });
 
         if (editando) {
@@ -465,8 +572,8 @@ const Abas = (() => {
           desenharLeitura(est.sug.proposito ? Delfos.entender({ nome: pilar.nome, proposito: est.sug.proposito, existentes }) : { entendeu: [{ tipo: "dica", texto: "Conte o propósito desta aba e o Delfos sugere campos, meta e o jeito de ver que ainda faltam." }] });
         } else {
           lerComDelfos();
-          inpNome.focus();
         }
+        mostrarEtapa(est.etapa);
       },
     }));
   }
@@ -475,7 +582,7 @@ const Abas = (() => {
   const paraGravar = ({ id, rotulo, tipo, opcoes, naLista, obrigatorio }) => ({ id, rotulo, tipo, opcoes, naLista, obrigatorio });
 
   /** Cria a aba a partir da leitura escolhida e abre a página dela. */
-  function criar(nome, s, escolhidos, exemplos) {
+  function criar(nome, s, escolhidos, exemplos, idCriacao) {
     const academia = s.especial === "academia";
     const campos = academia ? [] : s.campos.filter((x) => escolhidos.has(x.id)).map(paraGravar);
     const agora = UI.hojeISO();
@@ -483,25 +590,27 @@ const Abas = (() => {
       id: Store.uid("it"), descricao: s.exemplos[i], data: s.naAgenda ? agora : "", concluido: false, extras: {}, criadoEm: new Date().toISOString(), ...(s.checkin ? { feitos: [] } : {}),
     }));
     const ordemValida = !s.visual.ordem.startsWith("campo:") || campos.some((x) => `campo:${x.id}` === s.visual.ordem);
-    const novo = Store.inserir("pilares", {
-      nome, icone: s.icone, cor: s.cor, descricao: s.descricao,
+    const dados = {
+      id: idCriacao, nome, icone: s.icone, cor: s.cor, descricao: s.descricao,
       modelo: academia ? "academia" : "personalizado",
       campos, naAgenda: academia ? false : s.naAgenda, checkin: academia ? false : s.checkin,
       rotuloItem: s.rotuloItem, agruparPor: campos.some((x) => x.id === s.agruparPor) ? s.agruparPor : "",
-      meta: s.meta.tipo === "nenhuma" || (s.meta.tipo === "soma" && !campos.some((x) => x.id === s.meta.campoId)) ? null : s.meta,
+      meta: s.meta.tipo === "nenhuma" || !(s.meta.alvo > 0) || (s.meta.tipo === "soma" && !campos.some((x) => x.id === s.meta.campoId)) ? null : s.meta,
       proposito: s.proposito,
       exemploItem: s.exemplos[0] || "",
       visual: academia ? undefined : { vista: s.visual.vista, ordem: ordemValida ? s.visual.ordem : "auto", leitura: true, numeros: true, lateral: true, perguntas: true },
       sugeridoPor: "delfos",
       itens,
       ...(academia ? { academia: { configuradoEm: "", objetivo: "", experiencia: "", frequenciaSemanal: 0, divisao: "" }, dias: [] } : {}),
-    });
+    };
+    const novo = Store.achar("pilares", idCriacao) ? Store.atualizar("pilares", idCriacao, dados) : Store.inserir("pilares", dados);
     location.href = `pilar.html?id=${encodeURIComponent(novo.id)}`;
     return novo;
   }
 
   function salvarEdicao(pilar, nome, s, acrescentar) {
-    const campos = [...(pilar.campos || []), ...acrescentar.map(paraGravar)];
+    const atuais = pilar.campos || [];
+    const campos = [...atuais, ...acrescentar.filter((x) => !atuais.some((a) => a.id === x.id)).map(paraGravar)];
     const academia = pilar.modelo === "academia";
     const dados = {
       nome, icone: s.icone, cor: s.cor, descricao: s.descricao, rotuloItem: s.rotuloItem,

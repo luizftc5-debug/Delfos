@@ -6,7 +6,7 @@ A identidade continua no símbolo, no logotipo, na serifa e nos neutros quentes.
 
 ## Organização da informação
 
-O primeiro passo do criador reúne uma aba livre, seis modelos essenciais e 30
+O primeiro passo do criador reúne uma aba livre, seis modelos essenciais e 32
 modelos específicos. Busca e filtro de categoria precedem os grupos recolhidos;
 a busca abre os grupos que contêm resultados. A seleção atual permanece indicada
 mesmo quando o filtro muda. Setas e Home/End percorrem apenas as escolhas visíveis.
@@ -17,6 +17,9 @@ Cada chamada retorna uma cópia, e a aba registra seu `modeloOrigem` para refer�
 Os modelos passam pelo mesmo saneamento do criador, com até oito campos e vistas
 compatíveis com agenda e marcação por dia. Não há metas numéricas predefinidas
 nem registros adicionados sem escolha; a geração por IA continua opcional.
+Estudos e Planejamento semanal são pontos de partida gerais; Saúde e cuidados e
+Casa e manutenção reaproveitam as estruturas existentes. Abas criadas anteriormente
+não são migradas quando o catálogo muda.
 
 A navegação tem dois níveis com funções distintas:
 
@@ -79,9 +82,22 @@ nas seções de desempenho, resultados e resumo, sem empurrar o trabalho princip
 A visão financeira mantém a faixa do mês junto das movimentações, onde os valores ajudam
 a interpretar o extrato. A agenda do dia pode usar uma coluna secundária de avisos no desktop.
 
-Nas abas próprias, busca e visualização permanecem à mão. Ordenação e exibição de concluídos
-ficam em Filtros e ordem. A escolha entre lista, cartões, quadro, tabela e calendário usa um
-seletor, sem cinco botões competindo com o título.
+Nas abas próprias, Registros, Visão geral e Ajustes permanecem no topo. Os registros
+usam uma composição aberta: ação de criar junto do título da tarefa, busca e exibição
+em uma faixa e filtros secundários recolhidos. Uma coleção vazia apresenta um único
+convite de criação; uma busca sem resultados mantém os controles e oferece limpar filtros.
+
+A composição depende do esquema da aba, nunca de seu nome. Hábitos com período do dia
+ficam em grupos verticais, com marcação de hoje sempre visível; histórico fica em Visão
+geral e na apresentação detalhada. Leituras mostram primeiro os livros em andamento,
+sem inventar porcentagens a partir da quantidade total de páginas. Trabalho reúne
+prioridade, contexto e prazo; um quadro escolhido continua sendo quadro. Agrupamentos
+personalizados e valores desconhecidos continuam visíveis. Abas de outros esquemas
+usam o renderizador geral. Compacta e Detalhada conservam os valores salvos lista/cartoes;
+quadro, tabela e calendário permanecem disponíveis onde compatíveis.
+
+Visão geral concentra indicadores e histórico; Ajustes separa Conteúdo e Apresentação,
+com exclusão no final. Abrir uma aba não altera seus campos, registros ou preferências.
 
 ## Criação de abas
 
@@ -101,9 +117,18 @@ Uma interpretação nova do propósito não apaga escolhas manuais: a pessoa dec
 a sugestão. Falha de armazenamento mantém o formulário disponível e permite tentar novamente
 com o mesmo identificador, sem criar cópias da aba.
 
+O criador explica primeiro a intenção: “Conte o que você precisa. O Delfos prepara uma
+página para a sua rotina.” Conte se refere à escrita, sem captação de voz. O primeiro
+preparo e download são informados antes de gerar; Como funciona contém os requisitos e
+detalhes técnicos. Falhas mostram a próxima ação e conservam a alternativa manual.
+
 ## Identidade visual
 
 - Símbolo: D com coluna; usar os vetores existentes, sem redesenhar a marca.
+- Marca completa: `UI.logotipo()` compõe o símbolo D como inicial e os vetores de elfos,
+  sem outro D ao lado. Entrada e boas-vindas usam a mesma composição estática.
+- Versão: linha discreta no alto à direita da região principal, fora do link da marca,
+  no fluxo da página para não cobrir ações, inclusive no celular.
 - Tipografia de marca: Gloock/Georgia nos nomes de página e momentos de orientação.
 - Dados, campos, botões e títulos internos: Funnel Sans/system-ui.
 - Paleta: preto `#0b0b0b`, carvão `#1f1f1f`, grafite `#3a3a3a`, marfim `#ede9e1`, cinza quente
@@ -111,6 +136,17 @@ com o mesmo identificador, sem criar cópias da aba.
 - A prévia no criador usa marfim para separar o exemplo da área de configuração.
 - Cor identifica uma área ou comunica dados e estados. Não usar decoração colorida em cada caixa.
 - Ícones de navegação são monocromáticos, sem fundos ou medalhões. Sempre acompanhados de texto.
+- Rolagem: controles nativos com os neutros do contêiner, trilho discreto e polegar
+  arredondado. O sistema pode ocultar as barras; não substituir a rolagem por JavaScript.
+
+## Movimento
+
+As respostas à ação usam os tempos e curvas existentes: entrada do painel selecionado,
+indicador único de seção, confirmação da marcação diária e atualização de filtros.
+Novos efeitos usam opacidade e transformação; busca responde sem animação a cada tecla.
+Efeitos anteriores são cancelados em trocas rápidas. Gravação e foco não dependem da
+animação. `UI.animar` aplica a mesma política de redução do sistema, perfil e modo leve;
+nessas condições o resultado aparece imediatamente. Não há efeitos contínuos novos.
 
 ## Acessibilidade e adaptação
 

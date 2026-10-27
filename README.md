@@ -338,14 +338,14 @@ O catálogo oferece busca por tema ou profissão, filtro por categoria e grupos
 recolhidos. **Aba livre** continua disponível junto dos seis modelos essenciais.
 Os modelos são adicionados ao painel quando você escolhe e cria cada aba.
 
-Os **30 modelos específicos** têm campos, agrupamento e visualização próprios:
+Os **32 modelos específicos** têm campos, agrupamento e visualização próprios:
 
 | Categoria | Modelos |
 |---|---|
 | Esportes (6) | Corrida; Jiu-jitsu; Boxe e Muay Thai; Ciclismo; Natação; Futebol |
-| Estudos (5) | TCC; Pesquisa científica; Concursos e vestibulares; Idiomas; Cursos e certificações |
+| Estudos (6) | Estudos; TCC; Pesquisa científica; Concursos e vestibulares; Idiomas; Cursos e certificações |
 | Saúde e bem-estar (4) | Saúde e cuidados; Alimentação e refeições; Sono e descanso; Hábitos e rotina |
-| Vida pessoal (5) | Religião e espiritualidade; Compromissos familiares; Casa e manutenção; Cuidados com pets; Viagens |
+| Vida pessoal (6) | Religião e espiritualidade; Compromissos familiares; Planejamento semanal; Casa e manutenção; Cuidados com pets; Viagens |
 | Trabalho e profissões (10) | Engenharia; Advocacia; Táxi; Motorista de aplicativo; Medicina e plantões; Trabalho autônomo; Marketing digital; Vendas online; Criação de conteúdo; Aulas particulares |
 
 Por exemplo, Corrida usa distância, tempo e tipo de treino; TCC abre um quadro

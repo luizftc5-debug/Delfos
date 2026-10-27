@@ -60,6 +60,11 @@ const ModelosAbas = (() => {
       texto("adversario", "Adversário"), texto("local", "Local", true), numero("duracaoMin", "Duração (min)"),
       texto("resultado", "Resultado"), notas(),
     ], { agruparPor: "tipo", visual: { vista: "calendario", ordem: "data" }, busca: ["futsal", "pelada", "jogo", "society"] }),
+    modelo("estudos", "Estudos", "estudos", "livro", "Sessões de estudo, revisões e próximos passos por matéria.", "sessão", [
+      texto("disciplina", "Disciplina", true), texto("assunto", "Assunto", true),
+      opcoes("tipo", "Tipo de estudo", ["Teoria", "Exercícios", "Revisão"]), numero("duracaoMin", "Duração (min)", true),
+      link("material", "Material de estudo"), notas("proximoPasso", "Próximo passo"),
+    ], { agruparPor: "tipo", visual: { vista: "calendario", ordem: "data" }, busca: ["estudo", "estudar", "materia", "disciplina", "revisao", "sessoes de estudo"] }),
     modelo("tcc", "TCC", "estudos", "livro", "Do tema à defesa: etapas, orientações e entregas do trabalho.", "etapa", [
       opcoes("etapa", "Etapa do TCC", ["Tema", "Projeto", "Coleta", "Análise", "Redação", "Revisão", "Defesa"]),
       texto("orientador", "Orientador(a)", true), opcoes("prioridade", "Prioridade", ["Baixa", "Média", "Alta"]),
@@ -112,6 +117,10 @@ const ModelosAbas = (() => {
       texto("pessoa", "Pessoa da família", true), opcoes("tipo", "Tipo", ["Escola", "Saúde", "Encontro", "Viagem", "Aniversário", "Outro"]),
       hora("horario", "Horário", true), texto("local", "Local"), texto("responsavel", "Responsável"), notas("pendencias", "O que preparar"),
     ], { agruparPor: "tipo", visual: { vista: "calendario", ordem: "data" }, busca: ["familia", "familiares", "filhos", "pais", "escola", "aniversario"] }),
+    modelo("planejamento-semanal", "Planejamento semanal", "vida", "calendario", "Prioridades, compromissos e tarefas para organizar sua semana.", "tarefa", [
+      opcoes("area", "Área", ["Pessoal", "Estudos", "Trabalho", "Casa"]), opcoes("prioridade", "Prioridade", ["Alta", "Média", "Baixa"]),
+      hora("horario", "Horário", true), numero("duracaoMin", "Duração (min)"), notas("proximoPasso", "Próximo passo"),
+    ], { agruparPor: "area", visual: { vista: "calendario", ordem: "data" }, busca: ["planejamento", "semana", "agenda semanal", "organizar semana", "tarefas da semana"] }),
     modelo("casa", "Casa e manutenção", "vida", "casa", "Tarefas e reparos da casa por cômodo, situação e responsável.", "tarefa", [
       opcoes("comodo", "Cômodo", ["Casa toda", "Cozinha", "Quarto", "Banheiro", "Sala", "Área externa"]),
       opcoes("situacao", "Situação", ["Planejar", "A fazer", "Em andamento", "Concluído"]),

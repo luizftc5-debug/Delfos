@@ -30,8 +30,6 @@
           <div class="topbar-actions">
             <button class="btn ghost" id="btn-editar-aba" type="button">
             </button>
-            <button class="btn primary" id="btn-item" type="button">
-            </button>
           </div>
         </header>
         <nav aria-label="Seções desta aba" class="pagina-secoes" data-navegacao-secoes="" hidden="" role="tablist">
@@ -60,28 +58,31 @@
               </div>
             </section>
             <div id="secao-itens">
-              <section class="pagina-bloco">
-                <header class="bloco-cabecalho">
-                  <h2 class="bloco-titulo" id="titulo-lista">
+              <section class="registros-trabalho">
+                <header class="registros-cabecalho">
+                  <div>
+                  <h2 class="registros-titulo" id="titulo-lista">
                     <span class="swatch" id="swatch-lista">
                     </span>
                     Itens
                   </h2>
-                  <span class="bloco-resumo" id="lista-resumo">
-                  </span>
-                  <div class="bloco-acoes">
-                    <select aria-label="Visualização dos registros" class="input seletor-vista" id="f-vista">
-                    </select>
+                  <p class="registros-resumo" id="lista-resumo" aria-live="polite">
+                  </p>
                   </div>
+                  <button class="btn primary" id="btn-item" type="button"></button>
                 </header>
-                <div class="bloco-corpo">
-                  <div class="registros-filtros">
+                <div>
+                  <div class="registros-filtros" id="registros-ferramentas">
                     <label class="busca">
                       <input aria-label="Buscar nesta aba" autocomplete="off" class="input" id="f-busca" placeholder="Buscar…" type="search"/>
                     </label>
                     <details class="filtros-opcoes">
                       <summary>Filtros e ordem</summary>
                       <div class="filtros-corpo">
+                        <div class="filtro-grupo">
+                          <span id="rotulo-grupo"></span>
+                          <div class="chips" id="f-grupo" role="group" aria-labelledby="rotulo-grupo"></div>
+                        </div>
                         <select aria-label="Ordenar" class="input" id="f-ordem">
                         </select>
                         <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;">
@@ -90,8 +91,9 @@
                         </label>
                       </div>
                     </details>
-                  </div>
-                  <div class="chips" id="f-grupo">
+                    <label class="registros-vista"><span>Exibição</span>
+                      <select aria-label="Visualização dos registros" class="input seletor-vista" id="f-vista"></select>
+                    </label>
                   </div>
                   <div id="lista">
                   </div>
@@ -107,6 +109,13 @@
             <div class="grid g4 pagina-indicadores" id="bloco-stats">
             </div>
             <div class="painel-analises" id="coluna-lado">
+              <section class="pagina-bloco" id="historico-habitos" hidden>
+                <header class="bloco-cabecalho">
+                  <h2 class="bloco-titulo">Os últimos sete dias</h2>
+                  <span class="bloco-resumo">Seu ritmo, hábito por hábito.</span>
+                </header>
+                <div class="bloco-corpo" id="historico-habitos-conteudo"></div>
+              </section>
               <section class="pagina-bloco">
                 <header class="bloco-cabecalho">
                   <h2 class="bloco-titulo">O que o Delfos notou</h2>
@@ -148,6 +157,7 @@
                 <p class="card-note" id="nota-ajustes" style="margin:0 0 12px;">
                 </p>
                 <div class="ajustes-lista">
+                  <h3 class="ajustes-grupo-titulo">Conteúdo</h3>
                   <div class="ajuste-linha" data-ajuste="btn-editar-aba-2">
                     <div>
                       <b>Identidade da aba</b>
@@ -162,6 +172,7 @@
                     </div>
                     <button class="btn" id="btn-campos">Campos desta aba</button>
                   </div>
+                  <h3 class="ajustes-grupo-titulo">Apresentação</h3>
                   <div class="ajuste-linha" data-ajuste="btn-layout">
                     <div>
                       <b>Exibição e agenda</b>

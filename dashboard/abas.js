@@ -158,9 +158,9 @@ const Abas = (() => {
       <div class="modal-body criacao-corpo">
         <section data-etapa="1" aria-labelledby="cr-escolher">
           <h3 class="criacao-titulo" id="cr-escolher" tabindex="-1">O que vamos organizar?</h3>
-          <p class="criacao-apoio">30 modelos específicos, além dos essenciais. Escolha por tema ou comece com uma aba livre. Tudo pode ser adaptado.</p>
+          <p class="criacao-apoio">${especificos.length} modelos específicos, além dos essenciais. Escolha por tema ou comece com uma aba livre. Tudo pode ser adaptado.</p>
           <div class="catalogo-filtros">
-            <label class="field" for="cr-busca-modelo">Buscar modelo<input class="input" id="cr-busca-modelo" type="search" placeholder="Corrida, TCC, Uber…" autocomplete="off" /></label>
+            <label class="field" for="cr-busca-modelo">Buscar modelo<input class="input" id="cr-busca-modelo" type="search" placeholder="Estudos, saúde, semana, casa…" autocomplete="off" /></label>
             <label class="field" for="cr-categoria-modelo">Categoria<select class="input" id="cr-categoria-modelo"><option value="">Todos os temas</option>${categorias.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("")}</select></label>
           </div>
           <div class="criacao-catalogo" role="radiogroup" aria-label="Ponto de partida">
@@ -172,24 +172,34 @@ const Abas = (() => {
         </section>
         <section data-etapa="2" aria-labelledby="cr-identidade" hidden>
           <h3 class="criacao-titulo" id="cr-identidade" tabindex="-1">Dê a sua cara.</h3>
-          <p class="criacao-apoio">Escolha como montar a aba. Você revisa tudo antes de criar.</p>
+          <p class="criacao-apoio">Conte o que precisa e revise a página antes de começar.</p>
           <div class="criacao-modos" role="radiogroup" aria-label="Como montar sua aba">
-            <button type="button" role="radio" aria-checked="true" tabindex="0" data-modo="manual"><b>Montar manualmente</b><span>Escolha os campos, a visualização e os recursos.</span></button>
-            <button type="button" role="radio" aria-checked="false" tabindex="-1" data-modo="ia"><b>Deixar Delfos criar</b><span>Descreva o que precisa. A IA monta a estrutura neste aparelho.</span></button>
+            <button type="button" role="radio" aria-checked="true" tabindex="0" data-modo="manual"><b>Montar do meu jeito</b><span>Escolha o que deseja acompanhar.</span></button>
+            <button type="button" role="radio" aria-checked="false" tabindex="-1" data-modo="ia"><b>Criar com o Delfos</b><span>Conte o que você precisa. O Delfos prepara uma página para a sua rotina.</span></button>
           </div>
-          <p class="criacao-local-info" data-info-local hidden>IA local, sem enviar seus textos. O primeiro uso baixa um modelo de centenas de MB e precisa de WebGPU e memória gráfica disponível. O modelo fica em cache quando o navegador permitir.</p>
+          <div class="criacao-local-info" data-info-local hidden>
+            <p>O Delfos prepara sua página neste aparelho. No primeiro uso, será necessário baixar alguns arquivos; isso pode levar alguns minutos.</p>
+            <details class="criacao-explicacao">
+              <summary>Como funciona</summary>
+              <p>Seu texto é processado neste aparelho. O primeiro download pode ocupar centenas de MB. Esta opção precisa de um navegador compatível com WebGPU e memória gráfica disponível. Os arquivos podem ficar guardados pelo navegador para os próximos usos; se forem removidos, será preciso baixá-los novamente. Você também pode montar a página do seu jeito.</p>
+            </details>
+          </div>
           <div class="field">
             <label for="cr-nome">Nome da aba</label>
             <input id="cr-nome" type="text" maxlength="40" autocomplete="off" placeholder="Ex.: Corrida" value="${esc(pilar?.nome || "")}" aria-describedby="cr-nome-erro" />
             <span class="criacao-erro" id="cr-nome-erro" hidden>Digite um nome para continuar.</span>
           </div>
           <div class="field">
-            <label for="cr-prop">O que você quer guardar? <span class="muted" data-proposito-opcional>Opcional</span></label>
+            <label for="cr-prop">O que você quer organizar? <span class="muted" data-proposito-opcional>Opcional</span></label>
             <textarea id="cr-prop" rows="3" maxlength="2000" aria-describedby="cr-prop-erro" placeholder="Ex.: meus treinos, distâncias e próximas provas.">${esc(est.sug.proposito || "")}</textarea>
-            <span class="criacao-erro" id="cr-prop-erro" hidden>Descreva o que deseja organizar para a IA montar sua aba.</span>
+            <span class="criacao-erro" id="cr-prop-erro" hidden>Conte um pouco mais para o Delfos preparar sua página.</span>
           </div>
-          <div class="criacao-ia-status" role="status" data-ia-status hidden><span data-ia-texto></span><progress data-ia-progresso aria-label="Carregamento da IA local"></progress></div>
-          <div class="criacao-ia-erro" data-ia-erro hidden><p role="alert" data-ia-erro-texto></p><button class="btn sm" type="button" data-seguir-manual>Continuar manualmente</button></div>
+          <div class="criacao-ia-status" role="status" data-ia-status hidden><span data-ia-texto></span><progress data-ia-progresso aria-label="Preparo do Delfos neste aparelho"></progress></div>
+          <div class="criacao-ia-erro" data-ia-erro hidden>
+            <p role="alert" data-ia-erro-texto></p>
+            <details class="criacao-explicacao" data-ia-erro-detalhes hidden><summary>Detalhes do preparo</summary><p data-ia-erro-detalhe></p></details>
+            <button class="btn sm" type="button" data-seguir-manual>Montar do meu jeito</button>
+          </div>
         </section>
         <section data-etapa="3" aria-labelledby="cr-revisar" hidden>
           <h3 class="criacao-titulo" id="cr-revisar" tabindex="-1">${editando ? "Revise seus ajustes." : "Seu espaço está pronto."}</h3>
@@ -202,7 +212,7 @@ const Abas = (() => {
             <p class="criacao-preview-nota" data-previa-resumo></p>
           </div>
           <div class="delfos-aplicar" data-aplicar hidden>
-            <span>A IA preparou outra estrutura. Seus ajustes atuais foram mantidos; escolha se quer substituí-los.</span>
+            <span>O Delfos preparou outra organização. Seus ajustes foram mantidos; escolha se quer aplicar a sugestão.</span>
             <button type="button" class="btn sm" data-usar>Usar estrutura da IA</button>
           </div>
           <details class="criacao-opcoes" data-estrutura>
@@ -382,10 +392,10 @@ const Abas = (() => {
             b.tabIndex = ativo ? 0 : -1;
           });
           $("[data-info-local]").hidden = est.modo !== "ia";
-          $("[data-proposito-opcional]").textContent = est.modo === "ia" ? "Obrigatório para a IA" : "Opcional";
+          $("[data-proposito-opcional]").textContent = est.modo === "ia" ? "Conte sua ideia para continuar" : "Opcional";
           const bt = $('[data-acao="avancar"]');
           bt.disabled = gerando;
-          bt.textContent = gerando ? "Preparando sua aba…" : est.etapa === 2 && est.modo === "ia" ? "Gerar minha aba" : "Continuar";
+          bt.textContent = gerando ? "Preparando sua página…" : est.etapa === 2 && est.modo === "ia" ? "Preparar minha página" : "Continuar";
         }
         modal.querySelectorAll("[data-modo]").forEach((b) => b.addEventListener("click", () => {
           pararGeracao();
@@ -426,7 +436,7 @@ const Abas = (() => {
           atualizarModo();
           $("[data-ia-erro]").hidden = true;
           $("[data-ia-status]").hidden = false;
-          $("[data-ia-texto]").textContent = "Preparando a IA neste aparelho…";
+          $("[data-ia-texto]").textContent = "Preparando o Delfos neste aparelho…";
           $("[data-ia-progresso]").removeAttribute("value");
           try {
             await UI.carregarScript("ia-local.js");
@@ -437,7 +447,7 @@ const Abas = (() => {
               estruturaAtual: { vista: est.sug.visual.vista, campos: (editando ? novosCampos : est.sug.campos).filter(c => est.escolhidos.has(c.id)).map(({rotulo,tipo}) => ({rotulo,tipo})) },
             }, { signal: controleIA.signal, aoProgresso: (p) => {
               if (meuPedido !== pedidoAtual || !modal.isConnected) return;
-              $("[data-ia-texto]").textContent = p.fase === "gerar" ? "A IA está organizando seus elementos…" : "Carregando o modelo neste aparelho…";
+              $("[data-ia-texto]").textContent = p.fase === "gerar" ? "Organizando sua página…" : "Preparando o Delfos neste aparelho…";
               if (p.fase === "carregar" && Number.isFinite(p.progresso)) {
                 $("[data-ia-progresso]").max = 1;
                 $("[data-ia-progresso]").value = Math.max(0, Math.min(1, p.progresso));
@@ -452,7 +462,11 @@ const Abas = (() => {
             mostrarEtapa(3);
           } catch (erro) {
             if (meuPedido !== pedidoAtual || !modal.isConnected || erro.name === "AbortError") return;
-            $("[data-ia-erro-texto]").textContent = erro.message || "A IA não conseguiu montar a aba. Tente novamente ou continue manualmente.";
+            $("[data-ia-erro-texto]").textContent = erro.mensagemDelfos ? erro.message : "Não foi possível preparar sua página agora. Tente novamente ou monte do seu jeito.";
+            const detalhe = erro.mensagemDelfos ? erro.detalhe || "" : "";
+            $("[data-ia-erro-detalhe]").textContent = detalhe;
+            $("[data-ia-erro-detalhes]").hidden = !detalhe;
+            $("[data-ia-erro-detalhes]").open = false;
             $("[data-ia-erro]").hidden = false;
           } finally {
             if (meuPedido === pedidoAtual && modal.isConnected) {

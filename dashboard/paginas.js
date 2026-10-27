@@ -5,17 +5,38 @@ const Organizacao = (() => {
   let botoes = [];
   let paineis = [];
   let atual = "";
+  let indicador;
+
+  function posicionarIndicador(comMovimento = false) {
+    const botao = botoes.find((b) => b.dataset.secao === atual && !b.hidden);
+    if (!indicador || !botao) return;
+    const faixa = indicador.parentElement;
+    const limite = faixa.getBoundingClientRect();
+    const posicao = botao.getBoundingClientRect();
+    const destino = `translateX(${posicao.left - limite.left + faixa.scrollLeft}px) scaleX(${posicao.width})`;
+    const anterior = getComputedStyle(indicador).transform;
+    indicador.style.transform = destino;
+    if (comMovimento) UI.animar(indicador, [{ transform: anterior }, { transform: destino }]);
+    else indicador.getAnimations?.().forEach((a) => a.cancel());
+  }
 
   function selecionar(chave, { focar = false, url = false } = {}) {
     const botao = botoes.find((b) => b.dataset.secao === chave && !b.hidden);
     if (!botao) return;
+    const anterior = atual;
     atual = chave;
     botoes.forEach((b) => {
       const ativo = b === botao;
       b.setAttribute("aria-selected", String(ativo));
       b.tabIndex = ativo ? 0 : -1;
     });
-    paineis.forEach((p) => { p.hidden = p.dataset.painel !== chave; });
+    paineis.forEach((p) => {
+      p.hidden = p.dataset.painel !== chave;
+      if (p.hidden) p.getAnimations?.().forEach((a) => a.cancel());
+    });
+    const mudou = !!anterior && anterior !== chave;
+    const painel = paineis.find((p) => !p.hidden);
+    if (mudou) UI.animar(painel, [{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "translateY(0)" }]);
     // No celular, a seção selecionada deve continuar visível na faixa rolável.
     // Ajusta só essa faixa, sem deslocar o conteúdo da página.
     const faixa = botao.parentElement;
@@ -23,6 +44,7 @@ const Organizacao = (() => {
     const posicao = botao.getBoundingClientRect();
     if (posicao.left < limite.left) faixa.scrollLeft += posicao.left - limite.left;
     else if (posicao.right > limite.right) faixa.scrollLeft += posicao.right - limite.right;
+    posicionarIndicador(mudou);
     if (url && location.hash !== `#${chave}`) {
       const destino = new URL(location.href);
       destino.hash = chave;
@@ -59,6 +81,17 @@ const Organizacao = (() => {
     paineis = [...raiz.querySelectorAll("[data-painel]")];
     const nav = raiz.querySelector("[data-navegacao-secoes]");
     nav.hidden = false;
+    indicador = document.createElement("span");
+    indicador.className = "pagina-indicador";
+    indicador.setAttribute("aria-hidden", "true");
+    nav.append(indicador);
+    nav.classList.add("com-indicador");
+    if (typeof ResizeObserver === "function") {
+      const redimensionar = new ResizeObserver(() => posicionarIndicador());
+      redimensionar.observe(nav);
+      botoes.forEach((b) => redimensionar.observe(b));
+    }
+    document.fonts?.ready.then(() => posicionarIndicador());
     botoes.forEach((b) => b.addEventListener("click", () => selecionar(b.dataset.secao, { url: true })));
     nav.addEventListener("keydown", (ev) => {
       const visiveis = botoes.filter((b) => !b.hidden);

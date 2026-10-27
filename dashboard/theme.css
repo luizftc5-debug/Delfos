@@ -238,8 +238,20 @@ option { background-color: var(--superficie); color: var(--texto); }
   display: flex;
   flex-direction: column;
   z-index: 20;
+  overflow: hidden;
+}
+
+/* A marca e o perfil ficam visíveis. Só as abas e suas ações rolam. */
+.sidebar > .marca-topo { flex-shrink: 0; }
+.sidebar-scroll {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
   scrollbar-width: thin;
+  padding: 4px 4px 8px;
+  margin: 0 -4px;
 }
 
 /* A marca (2.2): o símbolo (o D com a coluna) e o logotipo lado a lado,
@@ -398,7 +410,7 @@ option { background-color: var(--superficie); color: var(--texto); }
 .nav-nova .ico { width: 18px; height: 18px; margin: 0 1px; }
 .nav-nova:hover { background: var(--superficie); color: var(--texto); }
 
-.sidebar-foot { margin-top: auto; padding-top: 14px; }
+.sidebar-foot { flex-shrink: 0; margin-top: auto; padding-top: 14px; }
 
 /* Quem está usando: fica no pé da barra e abre o perfil. */
 .brand {
@@ -2814,7 +2826,7 @@ body.entrando .main .wrap > .leitura { animation: chegar 620ms var(--ease-saida)
     overflow: visible;
   }
   .marca-topo { padding: 4px 0; }
-  .marca-versao, .sidebar .nav, .sidebar .nav-nova, .sidebar .nav-organizar { display: none; }
+  .marca-versao, .sidebar-scroll, .sidebar .nav, .sidebar .nav-nova, .sidebar .nav-organizar { display: none; }
   .sidebar-foot { margin: 0 0 0 auto; padding: 0; flex-shrink: 0; }
   .brand { padding: 4px; width: auto; border-radius: 14px; }
   .brand-text, .brand-caret { display: none; }

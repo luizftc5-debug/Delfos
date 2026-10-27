@@ -46,5 +46,5 @@ jobs:
         run: python dashboard/test/configuracoes_ia.browser.py
       - name: Verificar fontes, documentos da faculdade e agenda
         run: python dashboard/test/faculdade_documentos.browser.py
-      - name: Verificar os 30 modelos de abas
+      - name: Verificar os modelos de abas
         run: python dashboard/test/modelos_abas.browser.py

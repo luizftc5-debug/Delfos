@@ -114,10 +114,17 @@
 .criacao-modos span { font-size: calc(12px * var(--escala-fonte, 1)); line-height: 1.6; color: var(--texto-3); }
 .criacao-modos button:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
 .criacao-local-info { font-size: calc(12px * var(--escala-fonte, 1)); line-height: 1.7; padding: 14px; margin: 0 0 22px; color: var(--texto-3); background: var(--superficie-2); border-radius: 8px; }
+.criacao-local-info > p { margin: 0; }
+.criacao-local-info .criacao-explicacao { margin-top: 10px; }
+.criacao-explicacao > summary { cursor: pointer; width: fit-content; padding: 4px 0; }
+.criacao-explicacao > summary:focus-visible { outline: 2px solid var(--destaque); outline-offset: 3px; border-radius: 3px; }
+.criacao-explicacao > p { margin: 8px 0 0; line-height: 1.7; }
 .criacao-ia-status { display: grid; gap: 12px; margin-top: 16px; color: var(--texto-2); font-size: calc(13px * var(--escala-fonte, 1)); line-height: 1.6; }
 .criacao-ia-status progress { width: 100%; accent-color: var(--texto); height: 7px; }
 .criacao-ia-erro { margin-top: 16px; border: 1px solid var(--linha-forte); border-radius: 8px; padding: 16px; }
 .criacao-ia-erro p { font-size: calc(13px * var(--escala-fonte, 1)); line-height: 1.6; color: var(--critical-text); margin: 0 0 12px; }
+.criacao-ia-erro .criacao-explicacao { margin-bottom: 12px; }
+.criacao-ia-erro .criacao-explicacao > p { color: var(--texto-3); margin: 8px 0 0; }
 @media (hover: hover) { .criacao-modelo:hover { border-color: var(--texto-3); background: var(--superficie-2); } }
 @media (max-width: 640px) {
   .modal.criacao { max-height: calc(100dvh - 24px); border-radius: 14px; }

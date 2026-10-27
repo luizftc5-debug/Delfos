@@ -35,7 +35,41 @@
   const filtros = { grupo: "todos", busca: "" };
   let verConcluidos = false;
 
+  const normal = (v) => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const campo = (chave, tipo) => (pilar.campos || []).find((c) => c.id === chave && (!tipo || c.tipo === tipo));
+  const contemOpcoes = (c, valores) => c && valores.every((v) => (c.opcoes || []).some((o) => normal(o) === v));
+
+  // O esquema, e não o nome escolhido pela pessoa, determina a composição.
+  function composicao() {
+    if (pilar.checkin && contemOpcoes(campo("momento", "select"), ["manha", "tarde", "noite"])) return "habitos";
+    if (!pilar.checkin && normal(rotulo()) === "livro" && campo("autor", "text") && contemOpcoes(campo("situacao", "select"), ["lendo", "lido"])) return "leituras";
+    if (!pilar.checkin && pilar.naAgenda && campo("contexto") && contemOpcoes(campo("prioridade", "select"), ["alta", "media", "baixa"]) && contemOpcoes(campo("situacao", "select"), ["a fazer", "em andamento", "concluido"])) return "trabalho";
+    return "geral";
+  }
+
+  function guardarFoco() {
+    const el = document.activeElement;
+    if (!el || !$("conteudo").contains(el)) return () => {};
+    const itemId = el.closest("[data-item-id]")?.dataset.itemId;
+    const acao = ["data-hoje", "data-editar", "data-excluir", "data-concluir"].find((a) => el.hasAttribute(a));
+    const grupo = el.dataset.grupo;
+    return () => {
+      if (el.isConnected) return;
+      const item = itemId && [...$("lista").querySelectorAll("[data-item-id]")].find((n) => n.dataset.itemId === itemId);
+      const destino = item && acao ? item.querySelector(`[${acao}]`)
+        : grupo !== undefined ? [...$("f-grupo").querySelectorAll("[data-grupo]")].find((n) => n.dataset.grupo === grupo)
+        : el.id ? document.getElementById(el.id) : null;
+      const detalhes = destino?.closest(".registro-detalhes-corpo");
+      if (detalhes && item) {
+        detalhes.hidden = false;
+        item.querySelector("[data-detalhes]")?.setAttribute("aria-expanded", "true");
+      }
+      (destino || (itemId ? $("f-busca") : null))?.focus({ preventScroll: true });
+    };
+  }
+
   function render() {
+    const restaurarFoco = guardarFoco();
     pilar = Store.achar(CAMINHO, id);
     if (!pilar) return (location.href = "index.html");
 
@@ -95,6 +129,7 @@
     renderFiltros(L);
     renderLista(L);
     renderResumos(L);
+    renderHistorico(L);
     UI.renderNotas($("notas"), L.notas, L.itens.length
       ? "Nada fora do comum por aqui."
       : `Quando houver registros, o Delfos aponta aqui ${pilar.checkin ? "as sequências e o que ficou sem marcar" : pilar.meta ? "o ritmo da meta" : "o que merece atenção"}.`);
@@ -104,6 +139,7 @@
     $("bloco-stats").classList.toggle("hidden", !v.numeros);
     if (!v.perguntas) $("sec-perguntas").hidden = true;
     UI.montarLayout("pilar", { idAtivo: id });
+    restaurarFoco();
   }
 
   const PERIODO = { semana: "da semana", mes: "do mês", ano: "do ano" };
@@ -152,7 +188,10 @@
     const cg = campoGrupo();
     const box = $("f-grupo");
     box.hidden = !cg;
-    if (!cg) { filtros.grupo = "todos"; return; }
+    box.closest(".filtro-grupo").hidden = !cg;
+    if (!cg) { filtros.grupo = "todos"; box.innerHTML = ""; return; }
+    $("rotulo-grupo").textContent = cg.rotulo;
+    if (filtros.grupo !== "todos" && !cg.opcoes.includes(filtros.grupo)) filtros.grupo = "todos";
     box.innerHTML = [["todos", "Tudo"], ...cg.opcoes.map((o) => [o, fmt.capitalizar(o)])]
       .map(([v, r]) => `<button type="button" class="chip" data-grupo="${fmt.escape(v)}" aria-pressed="${v === filtros.grupo}">${fmt.escape(r)}</button>`).join("");
   }
@@ -184,7 +223,7 @@
     const vistas = vistasDaAba();
     const seg = $("f-vista");
     seg.hidden = vistas.length < 2;
-    seg.innerHTML = vistas.map(([v, r]) => `<option value="${v}" ${v === vistaAtual() ? "selected" : ""}>${r}</option>`).join("");
+    seg.innerHTML = vistas.map(([v, r]) => `<option value="${v}" ${v === vistaAtual() ? "selected" : ""}>${composicao() !== "geral" && ["lista", "cartoes"].includes(v) ? v === "lista" ? "Compacta" : "Detalhada" : r}</option>`).join("");
     const ordem = $("f-ordem");
     const ops = opcoesOrdem();
     const atual = ops.some(([v]) => v === visual().ordem) ? visual().ordem : "auto";
@@ -220,12 +259,16 @@
   function renderLista(L) {
     const box = $("lista");
     box.innerHTML = "";
-    $("titulo-lista").lastChild.textContent = fmt.capitalizar(Leituras.pluralizar(rotulo()));
+    const tipo = composicao();
+    box.dataset.composicao = tipo;
+    $("titulo-lista").lastChild.textContent = tipo === "habitos" ? "Hoje" : tipo === "leituras" ? "Sua biblioteca" : tipo === "trabalho" ? "Sua pauta" : fmt.capitalizar(Leituras.pluralizar(rotulo()));
     const feitos = L.itens.filter((i) => i.concluido).length;
     const emAberto = L.itens.length - feitos;
-    $("lista-resumo").textContent = !L.itens.length ? `Nenhum ${rotulo()} ainda`
-      : pilar.checkin ? `${L.itens.length} ${L.itens.length === 1 ? rotulo() : Leituras.pluralizar(rotulo())}`
+    $("lista-resumo").textContent = !L.itens.length ? ""
+      : pilar.checkin ? `${L.itens.filter((c) => (c.feitos || []).includes(UI.hojeISO())).length} de ${L.itens.length} ${Leituras.pluralizar(rotulo())} marcados hoje`
       : `${emAberto} em aberto${feitos ? `, ${feitos} ${feitos === 1 ? "concluído" : "concluídos"}` : ""}`;
+    $("registros-ferramentas").hidden = !L.itens.length;
+    $("btn-item").hidden = !L.itens.length;
     renderControlesVista();
     const vista = vistaAtual();
     box.dataset.vista = vista;
@@ -244,38 +287,117 @@
       .filter((c) => filtros.grupo === "todos" || (c.extras || {})[cg?.id] === filtros.grupo)
       .filter((c) => !busca || (c.descricao || "").toLowerCase().includes(busca) || Object.values(c.extras || {}).some((x) => String(x).toLowerCase().includes(busca))));
 
-    if (vista === "calendario") return renderCalendario(box, visiveis);
-
     if (!visiveis.length) {
+      const semColecao = !L.itens.length;
+      const soConcluidos = !semColecao && !busca && filtros.grupo === "todos" && !verConcluidos && feitos === L.itens.length;
       box.appendChild(UI.vazio({
-        icone: "mais",
-        titulo: L.itens.length ? "Nada com esse filtro" : `Nenhum ${rotulo()} ainda`,
-        texto: L.itens.length ? "Troque o filtro ou marque “ver concluídos”." : pilar.checkin
-          ? `Cadastre cada ${rotulo()} que quer acompanhar; depois é só tocar em Hoje nos dias em que fizer.`
-          : `Cada ${rotulo()} guarda ${(pilar.campos || []).slice(0, 3).map((c) => c.rotulo.toLowerCase()).join(", ") || "nome e data"}${pilar.naAgenda ? " e entra na agenda da visão geral" : ""}.`,
-        rotuloAcao: L.itens.length ? "" : `Adicionar ${rotulo()}`,
-        aoAcionar: novoItem,
+        icone: semColecao ? "mais" : "busca",
+        titulo: semColecao ? tipo === "habitos" ? "Comece com seu primeiro hábito" : tipo === "leituras" ? "Adicione o primeiro livro" : "Tudo começa com um registro" : soConcluidos ? "Tudo concluído por aqui" : "Nenhum resultado para esta busca",
+        texto: semColecao ? pilar.checkin ? "Escolha o que quer cultivar na sua rotina. Depois, marque cada dia em que fizer." : "Adicione o que você quer acompanhar. As informações ficam organizadas aqui." : soConcluidos ? "Seus registros continuam guardados e podem ser consultados quando quiser." : "Experimente outro termo ou limpe os filtros para ver seus registros.",
+        rotuloAcao: semColecao ? `Adicionar ${rotulo()}` : soConcluidos ? "Ver concluídos" : "Limpar filtros",
+        aoAcionar: semColecao ? novoItem : () => {
+          filtros.busca = ""; filtros.grupo = "todos"; $("f-busca").value = "";
+          if (soConcluidos) { verConcluidos = true; $("f-concluidos").checked = true; }
+          render(); $("f-busca").focus({ preventScroll: true });
+        },
       }));
       return;
     }
 
+    if (vista === "calendario") return renderCalendario(box, visiveis);
     if (vista === "quadro") return renderQuadro(box, visiveis);
     if (vista === "tabela") return renderTabela(box, visiveis);
 
-    // Lista e cartões: agrupados pelo campo escolhido quando o filtro está em "Tudo".
-    const grupos = cg && filtros.grupo === "todos"
-      ? [...cg.opcoes, ""].map((val) => [val, visiveis.filter((c) => ((c.extras || {})[cg.id] || "") === val)]).filter(([, l]) => l.length)
-      : [[null, visiveis]];
+    const agrupador = tipo === "trabalho" && (!cg || ["situacao", "prioridade"].includes(cg.id)) ? campo("prioridade", "select") : cg;
+    const grupos = agruparRegistros(visiveis, agrupador, tipo);
     grupos.forEach(([valor, lista]) => {
       const g = document.createElement("div");
-      g.className = "grupo-tempo";
-      if (valor !== null) g.innerHTML = `<h3 class="grupo-tempo-titulo">${fmt.escape(valor ? fmt.capitalizar(valor) : `Sem ${cg.rotulo.toLowerCase()}`)} <span>${lista.length}</span></h3>`;
-      const cont = document.createElement(vista === "cartoes" ? "div" : "ul");
-      cont.className = vista === "cartoes" ? "pilar-cartoes" : "list";
-      lista.forEach((c) => cont.appendChild(vista === "cartoes" ? cartaoItem(c) : linhaItem(c)));
+      g.className = "registros-grupo";
+      if (valor !== null) {
+        const sem = tipo === "habitos" && agrupador?.id === "momento" ? "Sem período" : `Sem ${agrupador.rotulo.toLowerCase()}`;
+        const contagem = pilar.checkin ? `${lista.filter((c) => (c.feitos || []).includes(UI.hojeISO())).length} de ${lista.length}` : lista.length;
+        g.innerHTML = `<header class="registros-grupo-cabecalho"><h3>${fmt.escape(valor ? fmt.capitalizar(valor) : sem)}</h3><span>${contagem}</span></header>`;
+      }
+      const contextual = tipo !== "geral";
+      const cont = document.createElement(!contextual && vista === "cartoes" ? "div" : "ul");
+      cont.className = contextual ? "registros-linhas" : vista === "cartoes" ? "pilar-cartoes" : "list";
+      lista.forEach((c) => cont.appendChild(contextual ? linhaContextual(c, tipo, vista === "cartoes") : vista === "cartoes" ? cartaoItem(c) : linhaItem(c)));
       g.appendChild(cont);
       box.appendChild(g);
     });
+  }
+
+  function agruparRegistros(lista, cg, tipo) {
+    if (!cg) return [[null, lista]];
+    const preferida = tipo === "habitos" && cg.id === "momento" ? ["manha", "tarde", "noite", "qualquer horario", "qualquer hora"]
+      : tipo === "leituras" && cg.id === "situacao" ? ["lendo", "quero ler", "lido", "abandonado"]
+      : tipo === "trabalho" && cg.id === "prioridade" ? ["alta", "media", "baixa"] : [];
+    const valores = [...new Set([...cg.opcoes, ...lista.map((c) => String(c.extras?.[cg.id] || ""))])];
+    if (preferida.length) valores.sort((a, b) => {
+      const rank = (v) => { const n = preferida.indexOf(normal(v)); return n < 0 ? preferida.length : n; };
+      return rank(a) - rank(b);
+    });
+    return valores.map((v) => [v, lista.filter((c) => String(c.extras?.[cg.id] || "") === v)]).filter(([, l]) => l.length);
+  }
+
+  function diasDoHabito(c) {
+    return `<span class="dias7" aria-label="Últimos 7 dias">${Leituras.ultimos7(c.feitos).map((d, k) => `<i class="${d.feito ? "feito" : ""} ${k === 6 ? "hoje" : ""}" title="${fmt.dataPorExtenso(d.iso)}${d.feito ? ", feito" : ""}">${d.dia}</i>`).join("")}</span>`;
+  }
+
+  function linhaContextual(c, tipo, detalhada) {
+    const li = document.createElement("li");
+    li.className = `registro-linha ${c.concluido ? "registro-concluido" : ""}`;
+    li.dataset.itemId = c.id;
+    const hoje = (c.feitos || []).includes(UI.hojeISO());
+    const info = [];
+    const extras = c.extras || {};
+    const ordem = tipo === "habitos" ? ["frequencia", "duracaoMin", "duracao"] : tipo === "leituras" ? ["autor", "avaliacao"] : ["contexto", "prioridade"];
+    for (const chave of ordem) {
+      const f = campo(chave);
+      if (!f || extras[chave] === undefined || extras[chave] === "") continue;
+      const v = valorLegivel(f, extras[chave]);
+      info.push(tipo === "habitos" && f.tipo === "number" ? `${fmt.escape(v)} min` : fmt.escape(v));
+    }
+    const visiveis = new Set([...ordem, campoGrupo()?.id]);
+    for (const f of pilar.campos || []) {
+      if (!f.naLista || visiveis.has(f.id) || f.tipo === "textarea") continue;
+      const v = extras[f.id];
+      if (v !== undefined && v !== "") info.push(linkDe(f, v) || fmt.escape(valorLegivel(f, v)));
+    }
+    const detalhes = (pilar.checkin && c.data ? `<div><dt>Data do registro</dt><dd>${fmt.escape(fmt.dataPorExtenso(c.data))}</dd></div>` : "") + (pilar.campos || []).filter((f) => extras[f.id] !== undefined && extras[f.id] !== "").map((f) => `<div><dt>${fmt.escape(f.rotulo)}</dt><dd>${linkDe(f, extras[f.id]) || fmt.escape(valorLegivel(f, extras[f.id]))}</dd></div>`).join("");
+    const u = UI.urgencia(c.data);
+    li.innerHTML = `
+      ${pilar.checkin ? `<span class="registro-sinal ${hoje ? "marcado" : ""}" aria-hidden="true">${UI.icone(hoje ? "check" : "sol")}</span>` : `<input class="check" type="checkbox" data-concluir ${c.concluido ? "checked" : ""} aria-label="Concluir ${fmt.escape(c.descricao)}"/>`}
+      <div class="registro-informacao"><h4>${fmt.escape(c.descricao)}</h4>${info.length ? `<div class="registro-apoio">${info.map((v) => `<span>${v}</span>`).join("")}</div>` : ""}
+        ${detalhada && pilar.checkin ? `<div class="registro-historico">${diasDoHabito(c)}<span>${Leituras.sequencia(c.feitos) || 0} dias seguidos</span></div>` : ""}
+      </div>
+      ${!pilar.checkin && c.data ? `<span class="registro-prazo badge ${c.concluido ? "feito" : u.nivel}">${fmt.escape(c.concluido ? "concluído" : pilar.naAgenda ? u.rotulo : fmt.dataPorExtenso(c.data))}</span>` : ""}
+      ${pilar.checkin ? `<button class="btn sm registro-marcar ${hoje ? "marcado" : ""}" data-hoje type="button" aria-pressed="${hoje}">${UI.icone(hoje ? "check" : "mais")}${hoje ? "Feito hoje" : "Marcar hoje"}</button>` : ""}
+      <button class="registro-detalhes-toggle" data-detalhes type="button" aria-expanded="false" aria-controls="detalhes-item-${fmt.escape(c.id)}" aria-label="Detalhes de ${fmt.escape(c.descricao)}">Detalhes${UI.icone("abaixo")}</button>
+        <div class="registro-detalhes-corpo" id="detalhes-item-${fmt.escape(c.id)}" hidden>${detalhes ? `<dl>${detalhes}</dl>` : `<p class="card-note">Você pode acrescentar informações ao editar.</p>`}
+          <div class="registro-acoes"><button class="btn sm" data-editar type="button">${UI.icone("editar")}Editar</button><button class="btn ghost sm" data-excluir type="button">${UI.icone("lixeira")}Excluir</button></div>
+        </div>`;
+    li.querySelector("[data-detalhes]").addEventListener("click", (ev) => {
+      const botao = ev.currentTarget;
+      const corpo = li.querySelector(".registro-detalhes-corpo");
+      corpo.hidden = !corpo.hidden;
+      botao.setAttribute("aria-expanded", String(!corpo.hidden));
+      if (!corpo.hidden) UI.animar(corpo, [{ opacity: .5 }, { opacity: 1 }], { tempo: "rapido" });
+    });
+    li.querySelector("[data-hoje]")?.addEventListener("click", () => marcarHoje(c));
+    li.querySelector("[data-concluir]")?.addEventListener("change", (ev) => {
+      Store.subAtualizar(CAMINHO, id, "itens", c.id, { concluido: ev.target.checked, concluidoEm: ev.target.checked ? UI.hojeISO() : "" });
+      render();
+    });
+    li.querySelector("[data-editar]").addEventListener("click", () => editarItem(c));
+    li.querySelector("[data-excluir]").addEventListener("click", () => excluirItem(c));
+    return li;
+  }
+
+  function renderHistorico(L) {
+    const bloco = $("historico-habitos");
+    bloco.hidden = !pilar.checkin || !L.itens.length;
+    $("historico-habitos-conteudo").innerHTML = pilar.checkin ? L.itens.map((c) => `<div class="historico-habito"><span>${fmt.escape(c.descricao)}</span>${diasDoHabito(c)}<span class="card-note">${Leituras.sequencia(c.feitos) || 0} dias seguidos</span></div>`).join("") : "";
   }
 
   /** Um campo formatado para ler (cartão, quadro, tabela); "" quando vazio. */
@@ -299,6 +421,7 @@
 
   function cartaoItem(c) {
     const el = document.createElement("article");
+    el.dataset.itemId = c.id;
     el.className = `pilar-cartao ${c.concluido ? "feito" : ""}`;
     const u = UI.urgencia(c.data);
     const linhas = (pilar.campos || []).map((campo) => {
@@ -544,6 +667,7 @@
 
   function linhaItem(c) {
     const li = document.createElement("li");
+    li.dataset.itemId = c.id;
     const u = UI.urgencia(c.data);
     const acoes = `
       <span class="row-actions ${pilar.checkin ? "fixas" : ""}">
@@ -597,8 +721,18 @@
     const feitos = new Set(c.feitos || []);
     const marcou = !feitos.has(hoje);
     marcou ? feitos.add(hoje) : feitos.delete(hoje);
-    Store.subAtualizar(CAMINHO, id, "itens", c.id, { feitos: [...feitos].sort() });
+    try {
+      Store.subAtualizar(CAMINHO, id, "itens", c.id, { feitos: [...feitos].sort() });
+    } catch {
+      UI.toast("Não foi possível guardar a marcação. Tente novamente.");
+      return;
+    }
     render();
+    const item = [...$("lista").querySelectorAll("[data-item-id]")].find((n) => n.dataset.itemId === c.id);
+    const botao = item?.querySelector("[data-hoje]");
+    if (botao) UI.animar(botao, [{ transform: "scale(.96)", opacity: .7 }, { transform: "scale(1)", opacity: 1 }], { tempo: "rapido" });
+    const dia = item?.querySelector(".dias7 .hoje");
+    if (dia) UI.animar(dia, [{ opacity: .5 }, { opacity: 1 }], { tempo: "rapido" });
     if (marcou) {
       const seq = Leituras.sequencia([...feitos]);
       UI.toast(seq >= 2 ? `${c.descricao}: ${seq} dias seguidos.` : `${c.descricao}: marcado hoje.`);
@@ -1095,7 +1229,10 @@
     salvarVisual({ vista: ev.target.value });
     render();
   });
-  document.getElementById("f-ordem").addEventListener("change", (ev) => { salvarVisual({ ordem: ev.target.value }); render(); });
+  document.getElementById("f-ordem").addEventListener("change", (ev) => {
+    salvarVisual({ ordem: ev.target.value }); render();
+    UI.animar($("lista"), [{ opacity: .65 }, { opacity: 1 }], { tempo: "rapido" });
+  });
   document.getElementById("btn-editar-aba").addEventListener("click", editarAba);
   UI.prepararCriador(document.getElementById("btn-editar-aba"));
   UI.prepararCriador(document.getElementById("btn-editar-aba-2"));
@@ -1116,6 +1253,7 @@
     if (!c) return;
     filtros.grupo = c.dataset.grupo;
     render();
+    UI.animar($("lista"), [{ opacity: .65 }, { opacity: 1 }], { tempo: "rapido" });
   });
   document.getElementById("f-busca").addEventListener("input", (ev) => {
     filtros.busca = ev.target.value;

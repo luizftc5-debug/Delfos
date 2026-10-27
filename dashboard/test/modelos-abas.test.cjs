@@ -14,10 +14,10 @@ function contratosDoPainel() {
   const icones=JSON.parse(ui.match(/const ICONES_ABA = (\[[\s\S]*?\]);/)[1]);
   return {tipos,cores,icones};
 }
-test('30 modelos distintos respeitam os recursos e limites reais do painel',()=>{
+test('32 modelos distintos respeitam os recursos e limites reais do painel',()=>{
   const modelos=catalogo.listar();const {tipos,cores,icones}=contratosDoPainel();
-  assert.equal(modelos.length,30);
-  assert.equal(new Set(modelos.map(m=>m.id)).size,30);assert.equal(new Set(modelos.map(m=>m.nome)).size,30);
+  assert.equal(modelos.length,32);
+  assert.equal(new Set(modelos.map(m=>m.id)).size,32);assert.equal(new Set(modelos.map(m=>m.nome)).size,32);
   const categorias=new Set(catalogo.categorias().map(c=>c.id));
   for(const m of modelos) {
     assert.ok(categorias.has(m.categoria),m.nome);
@@ -50,4 +50,19 @@ test('editar uma cópia não altera o modelo nem outras abas criadas dele',()=>{
   const original=catalogo.obter('corrida');
   assert.equal(original.campos[0].rotulo,'Distância (km)');assert.equal(original.campos.length,5);assert.equal(original.visual.vista,'tabela');
   assert.equal(catalogo.obter('nao-existe'),null);
+});
+test('estudos e planejamento semanal são encontrados sem duplicar Saúde e Casa',()=>{
+  for(const [consulta,id] of [['sessões de estudo','estudos'],['revisao','estudos'],['matéria','estudos'],['agenda semanal','planejamento-semanal'],['organizar semana','planejamento-semanal'],['saude','saude-cuidados'],['casa','casa']]) {
+    assert.ok(catalogo.buscar(consulta).some(m=>m.id===id),consulta);
+  }
+  assert.deepEqual(catalogo.buscar('agenda semanal','estudos'),[]);
+  for(const id of ['estudos','planejamento-semanal']) {
+    const antes=catalogo.obter(id);
+    const editado=catalogo.obter(id);
+    editado.campos.find(c=>c.tipo==='select').opcoes.push('Minha opção');
+    editado.meta.alvo=42;
+    editado.visual.vista='lista';
+    assert.deepEqual(catalogo.obter(id),antes,`${id}: os ajustes de uma aba não alteram o catálogo`);
+  }
+  for(const id of ['saude-cuidados','casa'])assert.equal(catalogo.listar().filter(m=>m.id===id).length,1);
 });

@@ -1,4 +1,4 @@
-"""Cria os 30 modelos pela interface e registra um item real em cada um."""
+"""Cria os 32 modelos pela interface e registra um item real em cada um."""
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -33,10 +33,10 @@ def testar(base):
         page.evaluate('Personalizacao.pular();Store.definirPreferencias({experiencia:{lembretes:{resumoDoDia:false}}})')
         page.goto(base+'/index.html');abrir(page)
         modelos=page.evaluate('ModelosAbas.listar()')
-        assert len(modelos)==30
-        assert page.locator('[data-modelo-id]:not([data-modelo-id=""])').count()==30
-        assert page.locator('[data-modelo-area]').count()==37
-        # O catálogo não cria as 30 abas automaticamente e preserva a aba livre.
+        assert len(modelos)==32
+        assert page.locator('[data-modelo-id]:not([data-modelo-id=""])').count()==32
+        assert page.locator('[data-modelo-area]').count()==39
+        # O catálogo não cria as 32 abas automaticamente e preserva a aba livre.
         assert page.evaluate('Store.lista("pilares").length')==0
         expect(page.get_by_role('radio',name='Aba livre',exact=True)).to_have_attribute('aria-checked','true')
         page.locator('#cr-busca-modelo').fill('Uber')
@@ -45,7 +45,7 @@ def testar(base):
         page.locator('#cr-categoria-modelo').select_option('estudos')
         expect(page.locator('[data-catalogo-status]')).to_contain_text('Nenhum modelo')
         page.locator('#cr-busca-modelo').fill('')
-        assert page.locator('[data-modelo-area]:visible').count()==6
+        assert page.locator('[data-modelo-area]:visible').count()==7
         page.get_by_role('radio',name='TCC',exact=True).focus();page.keyboard.press('Home')
         expect(page.get_by_role('radio',name='Aba livre',exact=True)).to_be_focused()
         page.keyboard.press('End');expect(page.get_by_role('radio',name='Cursos e certificações',exact=True)).to_be_focused()
@@ -87,7 +87,8 @@ def testar(base):
             assert dados['visual']['vista']==modelo['visual']['vista']
             assert [(c['id'],c['tipo'],c['opcoes']) for c in dados['campos']]==[(c['id'],c['tipo'],c['opcoes']) for c in modelo['campos']],modelo['nome']
             # Todos os campos precisam funcionar no formulário do registro.
-            page.locator('#btn-item').click();form=page.locator('.modal.formulario')
+            page.locator('#lista .empty').get_by_role('button',name=f'Adicionar {modelo["rotuloItem"]}',exact=True).click()
+            form=page.locator('.modal.formulario')
             form.locator('[name="descricao"]').fill('Registro de teste')
             if form.locator('[name="data"]').count():form.locator('[name="data"]').fill(page.evaluate('UI.hojeISO()'))
             for campo in modelo['campos']:
@@ -112,12 +113,12 @@ def testar(base):
             page.reload();expect(page.locator('#titulo')).to_contain_text(modelo['nome'])
             assert page.evaluate('Store.achar("pilares",UI.parametro("id")).itens.length')==1
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),modelo['nome']
-        assert page.evaluate('Store.lista("pilares").length')==30
+        assert page.evaluate('Store.lista("pilares").length')==32
         assert not ia,ia
         assert not posts,posts
         assert not erros,erros
         browser.close()
-        print('OK: 30 modelos criados, campos preenchidos, busca, categorias, teclado, temas e celular; sem inferência de IA.')
+        print('OK: 32 modelos criados, campos preenchidos, busca, categorias, teclado, temas e celular; sem inferência de IA.')
 
 if __name__=='__main__':
     root=Path(__file__).resolve().parents[1]

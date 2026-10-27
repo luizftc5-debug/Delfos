@@ -6,6 +6,7 @@ Usa servidor efêmero, dados fictícios e bloqueia requisições externas.
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+import re
 import shutil
 from threading import Thread
 from playwright.sync_api import sync_playwright, expect
@@ -123,6 +124,240 @@ def testar_perfil_fixo(page,base):
     page.locator('#btn-mais-abas').click();page.locator('[data-acao="perfil"]').click()
     expect(page.locator('.configuracoes')).to_be_visible();page.keyboard.press('Escape')
     sem_excesso_horizontal(page)
+
+
+COMPOSICOES = """() => {
+  const visual = {vista:'lista',ordem:'auto',leitura:true,numeros:true,lateral:true,perguntas:true};
+  const campo = (id,rotulo,tipo,opcoes=[]) => ({id,rotulo,tipo,opcoes,naLista:true});
+  const item = (id,descricao,extras={},data='') => ({id,descricao,extras,data,concluido:false,feitos:[]});
+  const habitos = (novo) => ({
+    nome:novo?'Minha rotina':'Pequenos passos',modelo:'personalizado',icone:'svg:sol',cor:'#b57d0a',
+    rotuloItem:'hábito',checkin:true,naAgenda:false,agruparPor:'momento',visual:{...visual},
+    ...(novo?{modeloOrigem:'habitos'}:{}),
+    campos:[campo('momento','Momento do dia','select',novo?['Manhã','Tarde','Noite','Qualquer horário']:['manhã','tarde','noite','qualquer hora']),
+      campo(novo?'duracaoMin':'duracao','Duração (min)','number'),
+      campo(novo?'motivacao':'porque','Por que importa','textarea'),
+      ...(novo?[campo('frequencia','Frequência','text')]:[])],
+    itens:[item('manha','Beber água',{momento:novo?'Manhã':'manhã',[novo?'duracaoMin':'duracao']:5},novo?'':'2025-01-15'),
+      item('noite','Alongar',{momento:novo?'Noite':'noite'}),
+      item('sem-periodo','Meditar',{momento:'madrugada'})]
+  });
+  const antigo=Store.inserir('pilares',habitos(false));
+  const novo=Store.inserir('pilares',habitos(true));
+  const longo=habitos(false);
+  longo.nome='Rotina com muitos hábitos';
+  longo.itens=Array.from({length:30},(_,i)=>item('habito-'+i,'Hábito de teste '+i,{momento:'manhã'}));
+  const extenso=Store.inserir('pilares',longo);
+  const customizado=habitos(false);
+  customizado.nome='Rotina por contexto';customizado.agruparPor='contexto';
+  customizado.campos.push(campo('contexto','Contexto','select',['Casa','Rua']));
+  customizado.itens=[item('em-casa','Alongar em casa',{momento:'manhã',contexto:'Casa'}),item('na-rua','Caminhar',{momento:'tarde',contexto:'Rua'})];
+  const grupos=Store.inserir('pilares',customizado);
+  const livros=Store.inserir('pilares',{
+    nome:'Estante pessoal',modelo:'personalizado',icone:'svg:livro',cor:'#508ac5',rotuloItem:'livro',
+    checkin:false,naAgenda:false,agruparPor:'situacao',visual:{...visual,vista:'cartoes'},
+    campos:[campo('autor','Autor','text'),campo('situacao','Situação','select',['quero ler','lendo','lido','abandonado']),campo('paginas','Páginas','number')],
+    itens:[item('quero-ler','Livro para depois',{autor:'Autora A',situacao:'quero ler',paginas:240}),
+      item('lendo','Livro atual',{autor:'Autora B',situacao:'lendo',paginas:300}),
+      item('lido','Livro terminado',{autor:'Autor C',situacao:'lido',paginas:150})]
+  });
+  const trabalho=Store.inserir('pilares',{
+    nome:'Entregas da equipe',modelo:'personalizado',icone:'svg:maleta',cor:'#5b6b7d',rotuloItem:'tarefa',
+    checkin:false,naAgenda:true,agruparPor:'situacao',visual:{...visual},
+    campos:[campo('situacao','Situação','select',['a fazer','em andamento','concluído']),
+      campo('prioridade','Prioridade','select',['baixa','média','alta']),campo('contexto','Projeto ou equipe','text')],
+    itens:[item('baixa','Organizar arquivo',{situacao:'a fazer',prioridade:'baixa',contexto:'Equipe B'},'2099-01-01'),
+      item('alta-depois','Preparar entrega',{situacao:'a fazer',prioridade:'alta',contexto:'Equipe A'},'2099-02-01'),
+      item('alta-antes','Revisar entrega',{situacao:'em andamento',prioridade:'alta',contexto:'Equipe A'},'2099-01-02'),
+      item('sem-prioridade','Conversar com a equipe',{situacao:'a fazer',contexto:'Equipe C'})]
+  });
+  const geral=Store.inserir('pilares',{
+    nome:'Hábitos e rotina',modelo:'personalizado',icone:'svg:livro',cor:'#508ac5',rotuloItem:'registro',
+    checkin:false,naAgenda:false,visual:{...visual},campos:[campo('comentario','Comentário','textarea')],
+    itens:[item('livre','Meu registro livre',{comentario:'Sem inferir o assunto pelo nome'})]
+  });
+  const vazio=habitos(false);vazio.nome='Rotina para começar';vazio.itens=[];
+  const primeiro=Store.inserir('pilares',vazio);
+  const encerrados=Store.inserir('pilares',{
+    nome:'Registros encerrados',modelo:'personalizado',icone:'svg:livro',cor:'#508ac5',rotuloItem:'registro',
+    checkin:false,naAgenda:false,visual:{...visual},campos:[],
+    itens:[{...item('encerrado','Registro já concluído'),concluido:true}]
+  });
+  return {antigo:antigo.id,novo:novo.id,extenso:extenso.id,grupos:grupos.id,livros:livros.id,trabalho:trabalho.id,
+    geral:geral.id,vazio:primeiro.id,encerrados:encerrados.id};
+}"""
+
+
+def testar_composicoes(page,base):
+    page.set_viewport_size({'width':1440,'height':900})
+    page.goto(f'{base}/index.html')
+    ids=page.evaluate(COMPOSICOES)
+    # Abrir uma aba reconhece campos/capacidades sem regravar seus dados.
+    for chave,composicao in [('antigo','habitos'),('novo','habitos'),('livros','leituras'),('trabalho','trabalho'),('geral','geral')]:
+        antes=page.evaluate('(id)=>Store.achar("pilares",id)',ids[chave])
+        page.goto(f'{base}/pilar.html?id={ids[chave]}')
+        expect(page.locator('#lista')).to_have_attribute('data-composicao',composicao)
+        assert page.evaluate('(id)=>Store.achar("pilares",id)',ids[chave])==antes,chave
+        sem_excesso_horizontal(page)
+    for chave in ['antigo','novo']:
+        page.goto(f'{base}/pilar.html?id={ids[chave]}')
+        # Período desconhecido não pode esconder o registro nem reescrever seu valor.
+        assert page.locator('#lista [data-item-id]').count()==3
+        expect(page.locator('#lista [data-item-id="sem-periodo"]')).to_contain_text('Meditar')
+        assert page.locator('#f-vista option[value="lista"]').inner_text()=='Compacta'
+        assert page.locator('#f-vista option[value="cartoes"]').inner_text()=='Detalhada'
+        antes=page.evaluate('(id)=>Store.achar("pilares",id)',ids[chave])
+        botao=page.locator('#lista [data-item-id="manha"] [data-hoje]')
+        botao.focus();page.keyboard.press('Enter')
+        expect(botao).to_have_attribute('aria-pressed','true')
+        expect(botao).to_be_focused()
+        depois=page.evaluate('(id)=>Store.achar("pilares",id)',ids[chave])
+        hoje=page.evaluate('UI.hojeISO()')
+        assert next(i for i in depois['itens'] if i['id']=='manha')['feitos']==[hoje]
+        next(i for i in depois['itens'] if i['id']=='manha')['feitos']=[]
+        assert depois==antes,'A marcação deve alterar somente os dias do hábito acionado'
+        page.keyboard.press('Enter')
+        expect(botao).to_have_attribute('aria-pressed','false')
+        expect(botao).to_be_focused()
+        assert page.evaluate('(id)=>Store.achar("pilares",id)',ids[chave])==antes
+        if chave=='antigo':
+            # Um hábito convertido pode guardar data, sem disputar a coluna da ação diária.
+            linha=page.locator('#lista [data-item-id="manha"]')
+            assert linha.locator('.registro-prazo').count()==0
+            linha.locator('[data-detalhes]').click()
+            expect(linha.locator('.registro-detalhes-corpo')).to_contain_text('Data do registro')
+            assert page.evaluate('(id)=>Store.achar("pilares",id)',ids[chave])==antes
+            linha.locator('[data-detalhes]').click()
+        # Busca e filtros sobrevivem à troca de seções, sem resultados fictícios.
+        page.locator('#f-busca').fill('não existe nesta rotina')
+        expect(page.locator('#lista')).to_contain_text('Nenhum resultado')
+        page.locator('[data-secao="visao-geral"]').click()
+        page.locator('[data-secao="registros"]').click()
+        expect(page.locator('#f-busca')).to_have_value('não existe nesta rotina')
+        page.get_by_role('button',name='Limpar filtros',exact=True).click()
+        expect(page.locator('#f-busca')).to_have_value('')
+        assert page.locator('#lista [data-item-id]').count()==3
+        page.locator('#f-vista').select_option('cartoes')
+        expect(page.locator('#lista')).to_have_attribute('data-vista','cartoes')
+        assert page.locator('#lista [data-item-id]').count()==3
+    # Um agrupamento escolhido pela pessoa tem prioridade sobre o período do dia.
+    page.goto(f'{base}/pilar.html?id={ids["grupos"]}')
+    grupos=page.locator('#lista h3').all_text_contents()
+    assert any('Casa' in grupo for grupo in grupos),grupos
+    assert any('Rua' in grupo for grupo in grupos),grupos
+    # Um livro de 300 páginas não tem porcentagem de leitura inventada.
+    page.goto(f'{base}/pilar.html?id={ids["livros"]}')
+    assert page.locator('#lista [data-item-id]').first.get_attribute('data-item-id')=='lendo'
+    expect(page.locator('#lista [data-item-id="lendo"]')).to_contain_text('Autora B')
+    assert not page.locator('#lista [role="progressbar"], #lista progress').count()
+    assert '%' not in page.locator('#lista').inner_text()
+    # Detalhes são somente apresentação; seu conteúdo ocupa a linha disponível,
+    # inclusive no celular, e o editor devolve o foco à ação que o abriu.
+    antes=page.evaluate('(id)=>Store.achar("pilares",id)',ids['livros'])
+    linha=page.locator('#lista [data-item-id="lendo"]')
+    detalhes=linha.locator('.registro-detalhes-corpo')
+    alternar=linha.locator('[data-detalhes]')
+    for largura in [1440,320]:
+        page.set_viewport_size({'width':largura,'height':900})
+        alternar.focus();page.keyboard.press('Enter')
+        expect(alternar).to_have_attribute('aria-expanded','true')
+        expect(detalhes).to_be_visible()
+        assert alternar.get_attribute('aria-controls')==detalhes.get_attribute('id')
+        expect(detalhes.locator('dd')).to_contain_text(['Autora B','Lendo','300'])
+        expect(linha.locator('[data-editar]')).to_be_visible()
+        if largura==320:
+            medidas=linha.evaluate('''e=>{
+              const linha=e.getBoundingClientRect(),corpo=e.querySelector('.registro-detalhes-corpo').getBoundingClientRect();
+              return {linha:linha.width,corpo:corpo.width,left:corpo.left,right:corpo.right,tela:innerWidth};
+            }''')
+            assert medidas['corpo']>=medidas['linha']*.8,medidas
+            assert 0<=medidas['left']<medidas['right']<=medidas['tela'],medidas
+            sem_excesso_horizontal(page)
+        assert page.evaluate('(id)=>Store.achar("pilares",id)',ids['livros'])==antes
+        page.keyboard.press('Enter')
+        expect(alternar).to_have_attribute('aria-expanded','false')
+        expect(detalhes).to_be_hidden()
+        assert page.evaluate('(id)=>Store.achar("pilares",id)',ids['livros'])==antes
+    alternar.click()
+    linha.locator('[data-editar]').click()
+    page.locator('.modal.formulario [name="descricao"]').fill('Livro atual revisado')
+    page.locator('.modal.formulario [data-acao="confirmar"]').click()
+    expect(page.locator('.modal.formulario')).to_have_count(0)
+    expect(alternar).to_have_attribute('aria-expanded','true')
+    expect(detalhes).to_be_visible()
+    expect(linha.locator('[data-editar]')).to_be_focused()
+    expect(linha.locator('h4')).to_have_text('Livro atual revisado')
+    next(i for i in antes['itens'] if i['id']=='lendo')['descricao']='Livro atual revisado'
+    assert page.evaluate('(id)=>Store.achar("pilares",id)',ids['livros'])==antes
+    sem_excesso_horizontal(page)
+    page.set_viewport_size({'width':1440,'height':900})
+    # Prioridade vem antes da data; dentro da prioridade a data permanece útil.
+    page.goto(f'{base}/pilar.html?id={ids["trabalho"]}')
+    assert page.locator('#lista [data-item-id]').evaluate_all('(itens)=>itens.map(i=>i.dataset.itemId)')==[
+        'alta-antes','alta-depois','baixa','sem-prioridade']
+    expect(page.locator('#lista [data-item-id="alta-antes"]')).to_contain_text('Equipe A')
+    page.locator('#f-vista').select_option('quadro')
+    expect(page.locator('#lista')).to_have_attribute('data-vista','quadro')
+    assert page.evaluate('(id)=>Store.achar("pilares",id).agruparPor',ids['trabalho'])=='situacao'
+    # Primeira criação não exibe ferramentas sem utilidade; filtros vazios são outro estado.
+    page.goto(f'{base}/pilar.html?id={ids["vazio"]}')
+    expect(page.locator('#f-busca')).to_be_hidden()
+    assert page.locator('#lista [data-item-id]').count()==0
+    assert page.locator('#secao-itens button:visible').filter(has_text=re.compile(r'adicionar|comece',re.I)).count()==1
+    page.goto(f'{base}/pilar.html?id={ids["encerrados"]}')
+    page.get_by_role('button',name=re.compile(r'ver concluídos',re.I)).click()
+    expect(page.locator('#lista')).to_contain_text('Registro já concluído')
+    # Uma marcação no fim da página mantém a ação e a posição após redesenhar.
+    page.goto(f'{base}/pilar.html?id={ids["extenso"]}')
+    alvo=page.locator('#lista [data-item-id="habito-29"] [data-hoje]')
+    alvo.scroll_into_view_if_needed();alvo.focus()
+    rolagem=page.evaluate('window.scrollY')
+    assert rolagem>0
+    page.keyboard.press('Enter')
+    expect(alvo).to_be_focused();expect(alvo).to_have_attribute('aria-pressed','true')
+    assert abs(page.evaluate('window.scrollY')-rolagem)<=2
+    # O mesmo conteúdo se adapta em ambas as aparências, inclusive 320px e fonte maior.
+    page.evaluate('Store.definirPreferencias({experiencia:{tamanho:"grande"}})')
+    for tema in ['dark','light']:
+        page.evaluate('(t)=>UI.tema.definir(t)',tema)
+        for largura in [320,768,1440]:
+            page.set_viewport_size({'width':largura,'height':900})
+            for chave in ['antigo','livros','trabalho','geral','vazio']:
+                page.goto(f'{base}/pilar.html?id={ids[chave]}')
+                sem_excesso_horizontal(page)
+    page.set_viewport_size({'width':1440,'height':1000})
+    return ids
+
+
+def testar_movimento(browser,base,erros):
+    context=browser.new_context(viewport={'width':1440,'height':900},locale='pt-BR',reduced_motion='no-preference')
+    context.route('https://**/*',lambda r:r.abort())
+    page=context.new_page();page.set_default_timeout(7000)
+    page.on('pageerror',lambda e:erros.append(f'movimento: {e}'))
+    try:
+        page.goto(f'{base}/bemvindo.html');page.evaluate(SEMENTE)
+        ids=page.evaluate(COMPOSICOES)
+        page.evaluate('Store.definirPreferencias({experiencia:{movimento:"completo",desempenho:"completo"}})')
+        page.goto(f'{base}/pilar.html?id={ids["novo"]}')
+        # Vários destinos no mesmo instante não deixam dois painéis ou animações antigas ativas.
+        page.evaluate('''()=>{
+          for(let i=0;i<5;i++)for(const secao of ['visao-geral','ajustes','registros'])
+            document.querySelector(`[data-secao="${secao}"]`).click();
+        }''')
+        expect(page.locator('[data-secao="registros"]')).to_have_attribute('aria-selected','true')
+        assert page.locator('[data-painel]:visible').count()==1
+        botao=page.locator('#lista [data-item-id="manha"] [data-hoje]')
+        botao.focus();page.keyboard.press('Enter')
+        expect(botao).to_be_focused();expect(botao).to_have_attribute('aria-pressed','true')
+        page.wait_for_function('''()=>!document.getAnimations().some(a=>
+          a.playState==='running' && a.effect?.target?.closest?.('.pagina-painel,.pagina-secoes'))''')
+        page.locator('[data-secao="registros"]').focus();page.keyboard.press('ArrowRight')
+        expect(page.locator('[data-secao="visao-geral"]')).to_be_focused()
+        page.keyboard.press('End');expect(page.locator('[data-secao="ajustes"]')).to_be_focused()
+        page.keyboard.press('Home');expect(page.locator('[data-secao="registros"]')).to_be_focused()
+        assert page.locator('[data-painel]:visible').count()==1
+    finally:
+        context.close()
 
 
 def testar(base):
@@ -281,6 +516,8 @@ def testar(base):
                 rodape_visivel(page)
             page.keyboard.press('Escape')
             assert not page.locator('.modal.criacao').count()
+        testar_composicoes(page,base)
+        testar_movimento(browser,base,erros)
         # Sem registros: todas as páginas gerais continuam utilizáveis.
         vazio = browser.new_context(viewport={'width':390,'height':840},locale='pt-BR')
         vazio.route('https://**/*',lambda r:r.abort())

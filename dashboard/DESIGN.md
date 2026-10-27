@@ -23,6 +23,11 @@ A navegação tem dois níveis com funções distintas:
 - A barra lateral escolhe uma área da vida: Pessoal, Faculdade, Trabalho ou uma aba própria.
 - As seções da página escolhem uma tarefa: estudar, registrar, consultar resultados ou ajustar.
 
+No computador, a barra lateral ocupa a altura da janela. Marca e perfil ficam fora
+da região rolável: só a lista de abas e suas ações rolam quando falta espaço.
+O perfil permanece no canto inferior esquerdo, inclusive com muitas abas, fonte
+maior e páginas longas. Atualizar o layout preserva a posição da lista.
+
 Cada página abre na tarefa principal. Apenas uma seção aparece por vez. Registros,
 gráficos, perguntas e configurações não devem disputar a mesma sequência vertical.
 Os painéis ficam no DOM para preservar filtros e componentes enquanto a pessoa navega.

@@ -79,6 +79,52 @@ def rodape_visivel(page):
     assert medidas['largura'] <= medidas['conteudo'] + 1, medidas
 
 
+def testar_perfil_fixo(page,base):
+    page.set_viewport_size({'width':1440,'height':900})
+    page.goto(f'{base}/index.html')
+    page.evaluate('''()=>{
+      Store.definirPerfil({nome:'Pessoa de teste com nome longo',curso:'Medicina'});
+      Store.definirPreferencias({experiencia:{tamanho:'grande'}});
+      for(let i=0;i<30;i++)Store.inserir('pilares',{nome:'Área pessoal '+i,icone:'svg:livro',cor:'#508ac5',modelo:'personalizado',campos:[],itens:[]});
+    }''')
+    def posicao():
+        return page.locator('#btn-perfil').evaluate('(e)=>{const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right}}')
+    for tema in ['light','dark']:
+        page.evaluate('(t)=>UI.tema.definir(t)',tema)
+        for largura,altura in [(1440,900),(1280,600),(1024,500),(901,360)]:
+            page.set_viewport_size({'width':largura,'height':altura})
+            page.goto(f'{base}/index.html#minhas-abas')
+            page.wait_for_function('document.querySelector(".sidebar").getBoundingClientRect().height===innerHeight')
+            inicial=posicao()
+            assert inicial['top']>=0 and altura-36<=inicial['bottom']<=altura,(tema,largura,altura,inicial)
+            assert 0<=inicial['left']<inicial['right']<=page.locator('#sidebar').bounding_box()['width']
+            assert page.locator('.sidebar-scroll').evaluate('(e)=>e.scrollHeight>e.clientHeight')
+            page.locator('.sidebar-scroll').hover();page.mouse.wheel(0,1800)
+            page.wait_for_function('document.querySelector(".sidebar-scroll").scrollTop>0')
+            assert posicao()==inicial
+            rolagem=page.locator('.sidebar-scroll').evaluate('(e)=>e.scrollTop')
+            page.evaluate('UI.montarLayout("home")')
+            assert page.locator('.sidebar-scroll').evaluate('(e)=>e.scrollTop')==rolagem
+            page.evaluate('window.scrollTo(0,600)')
+            page.wait_for_function('window.scrollY>0')
+            assert posicao()==inicial
+            page.locator('#btn-perfil').click();expect(page.locator('.configuracoes')).to_be_visible()
+            page.keyboard.press('Escape');expect(page.locator('#btn-perfil')).to_be_focused()
+            page.locator('.sidebar-scroll .nav-item').last.focus()
+            page.keyboard.press('Tab');expect(page.locator('#btn-nova-aba')).to_be_focused()
+            page.keyboard.press('Tab');expect(page.locator('#btn-organizar')).to_be_focused()
+            page.keyboard.press('Tab');expect(page.locator('#btn-perfil')).to_be_focused()
+            assert posicao()==inicial
+    # No celular, o perfil continua acessível pelo Mais da barra fixa.
+    page.set_viewport_size({'width':390,'height':740})
+    page.goto(f'{base}/index.html#minhas-abas')
+    expect(page.locator('.sidebar-scroll')).to_be_hidden()
+    page.evaluate('window.scrollTo(0,document.documentElement.scrollHeight)')
+    page.locator('#btn-mais-abas').click();page.locator('[data-acao="perfil"]').click()
+    expect(page.locator('.configuracoes')).to_be_visible();page.keyboard.press('Escape')
+    sem_excesso_horizontal(page)
+
+
 def testar(base):
     with sync_playwright() as p:
         caminho = shutil.which('chromium') or shutil.which('google-chrome')
@@ -247,6 +293,12 @@ def testar(base):
             for tab in outra.locator('[data-secao]').all():
                 tab.click()
                 sem_excesso_horizontal(outra)
+        # Com poucas abas o perfil também ocupa o rodapé da janela.
+        outra.set_viewport_size({'width':1280,'height':800})
+        outra.goto(f'{base}/index.html')
+        assert outra.locator('#btn-perfil').evaluate('(e)=>{const r=e.getBoundingClientRect();return r.bottom<=innerHeight && r.bottom>=innerHeight-36}')
+        assert outra.locator('.sidebar-scroll').evaluate('(e)=>e.scrollHeight<=e.clientHeight+1')
+        testar_perfil_fixo(page,base)
         assert not erros, erros
         browser.close()
 
@@ -257,7 +309,7 @@ if __name__ == '__main__':
     Thread(target=server.serve_forever,daemon=True).start()
     try:
         testar(f'http://127.0.0.1:{server.server_port}')
-        print('Organização: páginas, teclado, temas, responsividade, sete modelos, campos próprios e recuperação passaram.')
+        print('Organização: páginas, teclado, temas, responsividade, modelos, campos, recuperação e perfil fixo passaram.')
     finally:
         server.shutdown()
         server.server_close()

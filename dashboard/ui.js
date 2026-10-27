@@ -712,6 +712,7 @@ const UI = (() => {
     opcoesAtivas = opcoes;
     const el = document.getElementById("sidebar");
     if (!el) return;
+    const rolagemAnterior = el.querySelector(".sidebar-scroll")?.scrollTop || 0;
     const c = contagens();
     const perfil = Store.estado().perfil || {};
     // Uma aba criada pelo usuário se acende por id próprio; as fixas, pelo
@@ -755,9 +756,11 @@ const UI = (() => {
         ${simbolo()}${logotipo()}
         <span class="marca-versao" aria-hidden="true">${fmt.escape(VERSAO)}</span>
       </a>
-      <nav class="nav" aria-label="Abas do painel">${itens}</nav>
-      <button class="nav-nova" id="btn-nova-aba" type="button">${icone("mais")}Nova aba</button>
-      <button class="btn ghost sm nav-organizar" id="btn-organizar" type="button">Organizar abas</button>
+      <div class="sidebar-scroll">
+        <nav class="nav" aria-label="Abas do painel">${itens}</nav>
+        <button class="nav-nova" id="btn-nova-aba" type="button">${icone("mais")}Nova aba</button>
+        <button class="btn ghost sm nav-organizar" id="btn-organizar" type="button">Organizar abas</button>
+      </div>
       <div class="sidebar-foot">
         <button class="brand" id="btn-perfil" type="button" title="Perfil, tema, abas e conta" aria-label="Perfil e ajustes de ${fmt.escape(perfil.nome || "você")}">
           ${avatarHTML(perfil)}
@@ -776,6 +779,7 @@ const UI = (() => {
       </div>`;
 
     document.documentElement.dataset.barra = "sim";
+    el.querySelector(".sidebar-scroll").scrollTop = rolagemAnterior;
     document.getElementById("btn-perfil").addEventListener("click", () => abrirPerfil());
     document.getElementById("btn-nova-aba").addEventListener("click", novaAba);
     prepararCriador(document.getElementById("btn-nova-aba"));

@@ -339,7 +339,9 @@
     });
   }
 
-  function excluir(caminho, item, rotulo) {
+  async function excluir(caminho, item, rotulo) {
+    const resumos = (item.resumos || []).length;
+    if (resumos && !await UI.confirmar({ titulo: `Excluir ${rotulo.toLowerCase()} "${item.nome}"?`, descricao: `${resumos} ${resumos === 1 ? "resumo também será apagado" : "resumos também serão apagados"} com o projeto.`, rotuloConfirmar: "Excluir", perigo: true })) return;
     const indice = Store.indiceDe(caminho, item.id);
     Store.remover(caminho, item.id);
     render();

@@ -1,5 +1,8 @@
 /* Delfos 2.4 alpha — uma tarefa por seção, uma hierarquia por página.
    A identidade fica na tipografia e na paleta; controles usam texto legível. */
+.resumos-editor-busca { display: block; max-width: 620px; margin-bottom: 20px; }
+[data-resumos-lista] .grow { min-width: 0; overflow-wrap: anywhere; }
+[data-resumos-lista] a { color: inherit; }
 .pagina-organizada {
   --linha: rgba(237, 233, 225, .1);
   --texto-2: #bdb7ae;

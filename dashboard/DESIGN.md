@@ -54,6 +54,23 @@ A ordem segue frequência de uso, proximidade entre conteúdo e controle e revel
 progressiva de opções. Os rótulos descrevem tarefas reconhecíveis, sem exigir que a pessoa
 saiba como o código ou o modelo de dados estão organizados.
 
+## Resumos nas abas
+
+O mesmo editor pode ser usado em qualquer aba. Resumos aparece por padrão nas
+disciplinas, na Faculdade, em Projetos e em modelos de estudo e trabalho. Nas
+abas próprias, a recomendação usa o modelo e os campos de assunto, matéria ou
+contexto; renomear uma aba não muda seu comportamento. Escola e cursinho podem
+usar a estrutura de Estudos ou Concursos e vestibulares. As demais abas oferecem
+Adicionar editor de resumos no cabeçalho ou em Ajustes. Ocultar a seção preserva
+todos os textos e permite reativá-la depois.
+
+Disciplinas mantêm sua coleção original. Abas próprias, projetos, contas e cartões
+guardam os resumos no próprio registro; abas fixas usam cadernos com identidade
+estável. O editor volta para o contexto de origem, conserva o salvamento automático
+e mantém textos, imagens e preferências da folha no backup e na sincronização.
+Excluir uma aba ou registro que contém resumos informa que seus textos também
+serão apagados.
+
 ## Composição
 
 O tamanho de texto é um fator de tipografia (`--escala-fonte`), aplicado nas
@@ -171,6 +188,16 @@ O teste `test/organizacao.browser.py` percorre páginas e seções nos temas cla
 em desktop, tablet e celular. Verifica links antigos, teclado, visualizações dos registros,
 sete modelos, campos próprios, edição sem perda de registros e repetição após falha de gravação.
 O teste separado do editor cobre salvamento automático, símbolos, conflitos e recuperação.
+
+O editor mantém o cabeçalho e a formatação compactos. No celular, as ferramentas
+rolam em sua própria faixa; abrir a busca não empilha os grupos. O rodapé com a
+marca e a assinatura fica fixo em uma faixa discreta, com espaço reservado abaixo
+do documento e respeito à área segura do aparelho. O título é centralizado.
+
+A impressão e o PDF usam apenas o resumo em papel branco, com título principal
+maior e centralizado, sem cabeçalhos, rodapés ou metadados do navegador. Margens
+internas se repetem em cada página. A exportação para Word segue a mesma hierarquia;
+texto, tabelas, imagens e formatação do conteúdo permanecem disponíveis.
 
 ## Configurações e IA local
 

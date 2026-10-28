@@ -1394,10 +1394,11 @@
       : itens().length;
     const rotuloItem = ehAcademia() ? "exercício cadastrado" : ehAlimentacao() ? "alimento do plano" : "item cadastrado";
     const rotuloItens = ehAcademia() ? "exercícios cadastrados" : ehAlimentacao() ? "alimentos do plano" : "itens cadastrados";
+    const resumos = (pilar.resumos || []).length;
     const ok = await UI.confirmar({
       titulo: `Excluir a aba "${pilar.nome}"?`,
-      descricao: quantos
-        ? `Os ${quantos} ${quantos === 1 ? rotuloItem : rotuloItens} nela também serão apagados. Isso não pode ser desfeito depois que você sair da página.`
+      descricao: quantos || resumos
+        ? `${quantos ? `${quantos} ${quantos === 1 ? rotuloItem : rotuloItens}` : ""}${quantos && resumos ? " e " : ""}${resumos ? `${resumos} ${resumos === 1 ? "resumo" : "resumos"}` : ""} ${quantos + resumos === 1 ? "também será apagado" : "também serão apagados"}. Isso não pode ser desfeito depois que você sair da página.`
         : "A aba some da barra lateral. Você pode criar outra a qualquer momento.",
       rotuloConfirmar: "Excluir aba",
       perigo: true,

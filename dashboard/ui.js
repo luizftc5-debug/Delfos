@@ -3811,6 +3811,7 @@ const UI = (() => {
   function iniciarPagina(ativo, opcoes) {
     tema.iniciar();
     aplicarAparencia();
+    if (typeof Resumos !== "undefined") Resumos.iniciar();
     if (typeof Organizacao !== "undefined") Organizacao.iniciar();
     gavetas(document);
     realcarBotoes(document);

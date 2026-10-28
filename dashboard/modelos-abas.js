@@ -64,7 +64,7 @@ const ModelosAbas = (() => {
       texto("disciplina", "Disciplina", true), texto("assunto", "Assunto", true),
       opcoes("tipo", "Tipo de estudo", ["Teoria", "Exercícios", "Revisão"]), numero("duracaoMin", "Duração (min)", true),
       link("material", "Material de estudo"), notas("proximoPasso", "Próximo passo"),
-    ], { agruparPor: "tipo", visual: { vista: "calendario", ordem: "data" }, busca: ["estudo", "estudar", "materia", "disciplina", "revisao", "sessoes de estudo"] }),
+    ], { agruparPor: "tipo", visual: { vista: "calendario", ordem: "data" }, busca: ["estudo", "estudar", "materia", "disciplina", "revisao", "sessoes de estudo", "escola", "colegio", "ensino medio"] }),
     modelo("tcc", "TCC", "estudos", "livro", "Do tema à defesa: etapas, orientações e entregas do trabalho.", "etapa", [
       opcoes("etapa", "Etapa do TCC", ["Tema", "Projeto", "Coleta", "Análise", "Redação", "Revisão", "Defesa"]),
       texto("orientador", "Orientador(a)", true), opcoes("prioridade", "Prioridade", ["Baixa", "Média", "Alta"]),
@@ -79,7 +79,7 @@ const ModelosAbas = (() => {
     modelo("concursos", "Concursos e vestibulares", "estudos", "alvo", "Estudos por disciplina, questões, revisões e simulados.", "estudo", [
       texto("disciplina", "Disciplina", true), opcoes("frente", "Frente de estudo", ["Teoria", "Questões", "Revisão", "Simulado", "Prova"]),
       numero("duracaoMin", "Duração (min)", true), numero("questoes", "Questões feitas"), numero("acertos", "Acertos"), link("material", "Material de estudo"),
-    ], { agruparPor: "frente", visual: { vista: "tabela", ordem: "data" }, busca: ["concurso", "enem", "vestibular", "residencia", "oab"] }),
+    ], { agruparPor: "frente", visual: { vista: "tabela", ordem: "data" }, busca: ["concurso", "enem", "vestibular", "residencia", "oab", "cursinho", "pre vestibular", "pré-vestibular"] }),
     modelo("idiomas", "Idiomas", "estudos", "globo", "Prática de conversação, escuta, leitura, escrita e vocabulário.", "sessão", [
       texto("idioma", "Idioma", true), opcoes("habilidade", "Habilidade", ["Conversação", "Escuta", "Leitura", "Escrita", "Vocabulário"]),
       numero("duracaoMin", "Duração (min)", true), link("recurso", "Recurso ou aula"), notas("aprendizado", "O que aprendi"),

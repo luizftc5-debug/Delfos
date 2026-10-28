@@ -204,8 +204,8 @@ def testar_composicoes(page,base):
         # Período desconhecido não pode esconder o registro nem reescrever seu valor.
         assert page.locator('#lista [data-item-id]').count()==3
         expect(page.locator('#lista [data-item-id="sem-periodo"]')).to_contain_text('Meditar')
-        assert page.locator('#f-vista option[value="lista"]').inner_text()=='Compacta'
-        assert page.locator('#f-vista option[value="cartoes"]').inner_text()=='Detalhada'
+        assert page.locator('#f-vista .vista-opcao[data-valor="lista"]').inner_text().strip()=='Compacta'
+        assert page.locator('#f-vista .vista-opcao[data-valor="cartoes"]').inner_text().strip()=='Detalhada'
         antes=page.evaluate('(id)=>Store.achar("pilares",id)',ids[chave])
         botao=page.locator('#lista [data-item-id="manha"] [data-hoje]')
         botao.focus();page.keyboard.press('Enter')
@@ -237,7 +237,7 @@ def testar_composicoes(page,base):
         page.get_by_role('button',name='Limpar filtros',exact=True).click()
         expect(page.locator('#f-busca')).to_have_value('')
         assert page.locator('#lista [data-item-id]').count()==3
-        page.locator('#f-vista').select_option('cartoes')
+        page.locator('#f-vista .vista-opcao[data-valor="cartoes"]').click()
         expect(page.locator('#lista')).to_have_attribute('data-vista','cartoes')
         assert page.locator('#lista [data-item-id]').count()==3
     # Um agrupamento escolhido pela pessoa tem prioridade sobre o período do dia.
@@ -296,7 +296,7 @@ def testar_composicoes(page,base):
     assert page.locator('#lista [data-item-id]').evaluate_all('(itens)=>itens.map(i=>i.dataset.itemId)')==[
         'alta-antes','alta-depois','baixa','sem-prioridade']
     expect(page.locator('#lista [data-item-id="alta-antes"]')).to_contain_text('Equipe A')
-    page.locator('#f-vista').select_option('quadro')
+    page.locator('#f-vista .vista-opcao[data-valor="quadro"]').click()
     expect(page.locator('#lista')).to_have_attribute('data-vista','quadro')
     assert page.evaluate('(id)=>Store.achar("pilares",id).agruparPor',ids['trabalho'])=='situacao'
     # Primeira criação não exibe ferramentas sem utilidade; filtros vazios são outro estado.
@@ -423,7 +423,7 @@ def testar(base):
         # Todas as visualizações dos registros continuam disponíveis.
         page.goto(f'{base}/pilar.html?id={ids["pilar"]}')
         for vista in ['cartoes','quadro','tabela','calendario','lista']:
-            page.locator('#f-vista').select_option(vista)
+            page.locator(f'#f-vista .vista-opcao[data-valor="{vista}"]').click()
             expect(page.locator('#lista')).to_have_attribute('data-vista',vista)
         page.locator('#f-busca').fill('Viktor')
         assert page.locator('#lista li').count() == 1

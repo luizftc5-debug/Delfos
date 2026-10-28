@@ -105,6 +105,7 @@
     $("leitura").classList.toggle("hidden", academia);
     $("secao-academia").classList.toggle("hidden", !academia);
     $("btn-item").classList.toggle("hidden", academia);
+    prepararRapido();
     $("btn-campos").classList.toggle("hidden", academia);
     $("btn-refazer-questionario").hidden = !academia;
     $("btn-dia").classList.toggle("hidden", !(academia && pilar.academia?.configuradoEm));
@@ -219,15 +220,51 @@
     ];
   }
 
+  // Nas composições próprias (leituras, hábitos, trabalho) lista e cartões
+  // mudam só o quanto cada registro mostra: os nomes dizem isso.
+  const ROTULOS_CONTEXTUAIS = {
+    lista: { nome: "Compacta", curto: "Compacta", frase: "Só o nome e o essencial de cada registro; os detalhes abrem ao tocar.", bom: "ver tudo de relance" },
+    cartoes: { nome: "Detalhada", curto: "Detalhada", frase: "Cada registro com mais informações à mostra.", bom: "acompanhar cada registro de perto" },
+  };
+  const opcoesVista = () => UI.vistas(vistasDaAba().map(([v]) => v), composicao() !== "geral" ? ROTULOS_CONTEXTUAIS : {});
+
+  /** A linha embaixo das ferramentas: o que a forma escolhida faz e como usar. */
+  function dicaVista() {
+    const v = vistaAtual();
+    const def = opcoesVista().find((o) => o.id === v);
+    if (!def) return "";
+    const cg = campoGrupo();
+    const como = v === "quadro"
+      ? cg ? `Uma coluna para cada ${cg.rotulo.toLowerCase()}. Arraste entre as colunas para mudar.` : "Colunas Em aberto e Concluídos. Arraste para concluir."
+      : v === "tabela" ? "Toque no título de uma coluna para ordenar."
+      : v === "calendario" ? "Toque num dia para adicionar um registro nele."
+      : def.frase;
+    return `<b>${fmt.escape(def.nome)}.</b> ${fmt.escape(como)}`;
+  }
+
   function renderControlesVista() {
-    const vistas = vistasDaAba();
-    const seg = $("f-vista");
-    seg.hidden = vistas.length < 2;
-    seg.innerHTML = vistas.map(([v, r]) => `<option value="${v}" ${v === vistaAtual() ? "selected" : ""}>${composicao() !== "geral" && ["lista", "cartoes"].includes(v) ? v === "lista" ? "Compacta" : "Detalhada" : r}</option>`).join("");
+    const box = $("f-vista");
+    const ops = opcoesVista();
+    box.hidden = ops.length < 2;
+    // Só redesenha quando as opções mudam: assim o foco do teclado não se perde.
+    const chave = ops.map((o) => `${o.id}:${o.curto || o.nome}`).join("|");
+    if (box.dataset.chave !== chave) {
+      box.dataset.chave = chave;
+      box.innerHTML = UI.seletorVistasHTML({ nome: "vista", atual: vistaAtual(), opcoes: ops, rotulo: "Como ver os registros", compacto: true });
+      UI.ligarSeletorVistas(box.querySelector("[data-seletor-vistas]"));
+    } else {
+      box.querySelector('input[type="hidden"]').value = vistaAtual();
+      box.querySelectorAll(".vista-opcao").forEach((b) => {
+        const sel = b.dataset.valor === vistaAtual();
+        b.setAttribute("aria-checked", String(sel));
+        b.tabIndex = sel ? 0 : -1;
+      });
+    }
+    $("vista-dica").innerHTML = dicaVista();
     const ordem = $("f-ordem");
-    const ops = opcoesOrdem();
-    const atual = ops.some(([v]) => v === visual().ordem) ? visual().ordem : "auto";
-    ordem.innerHTML = ops.map(([v, r]) => `<option value="${fmt.escape(v)}" ${v === atual ? "selected" : ""}>${fmt.escape(r)}</option>`).join("");
+    const ordens = opcoesOrdem();
+    const atual = ordens.some(([v]) => v === visual().ordem) ? visual().ordem : "auto";
+    ordem.innerHTML = ordens.map(([v, r]) => `<option value="${fmt.escape(v)}" ${v === atual ? "selected" : ""}>${fmt.escape(r)}</option>`).join("");
     ordem.hidden = vistaAtual() === "calendario" || vistaAtual() === "tabela";
   }
 
@@ -268,6 +305,8 @@
       : pilar.checkin ? `${L.itens.filter((c) => (c.feitos || []).includes(UI.hojeISO())).length} de ${L.itens.length} ${Leituras.pluralizar(rotulo())} marcados hoje`
       : `${emAberto} em aberto${feitos ? `, ${feitos} ${feitos === 1 ? "concluído" : "concluídos"}` : ""}`;
     $("registros-ferramentas").hidden = !L.itens.length;
+    $("vista-dica").hidden = !L.itens.length;
+    if (!L.itens.length) document.querySelector(".registros-grupos").hidden = true;
     $("btn-item").hidden = !L.itens.length;
     renderControlesVista();
     const vista = vistaAtual();
@@ -286,6 +325,11 @@
       .filter((c) => incluiConcluidos || !c.concluido)
       .filter((c) => filtros.grupo === "todos" || (c.extras || {})[cg?.id] === filtros.grupo)
       .filter((c) => !busca || (c.descricao || "").toLowerCase().includes(busca) || Object.values(c.extras || {}).some((x) => String(x).toLowerCase().includes(busca))));
+
+    if (!L.itens.length) {
+      box.appendChild(comecoDaAba());
+      return;
+    }
 
     if (!visiveis.length) {
       const semColecao = !L.itens.length;
@@ -325,6 +369,36 @@
       g.appendChild(cont);
       box.appendChild(g);
     });
+  }
+
+  /**
+   * A aba sem nenhum registro: três passos curtos, e o passo do meio já é a
+   * escolha de como ver, com o desenho de cada forma. É ali que se entende a
+   * diferença entre lista, cartões, colunas e planilha, antes de precisar.
+   */
+  function comecoDaAba() {
+    const r = rotulo();
+    const el = document.createElement("div");
+    // "empty": o mesmo papel do estado vazio de antes (e os testes o procuram assim).
+    el.className = "empty comeco-aba";
+    const ops = opcoesVista();
+    el.innerHTML = `
+      <h3 class="comeco-titulo">${pilar.checkin ? "Comece pelo primeiro hábito" : `Comece pelo primeiro ${fmt.escape(r)}`}</h3>
+      <ol class="comeco-passos">
+        <li><b>Escreva o nome no campo acima e aperte Enter.</b> <span>O resto das informações você completa depois, em Detalhes.</span></li>
+        ${ops.length > 1 ? `<li><b>Escolha como ver.</b> <span>Dá para trocar a qualquer momento, no alto da lista.</span>
+          ${UI.seletorVistasHTML({ nome: "vista-comeco", atual: vistaAtual(), opcoes: ops, rotulo: "Como ver os registros" })}</li>` : ""}
+        <li><b>Ajuste o que cada ${fmt.escape(r)} guarda</b> <span>em Ajustes, quando sentir falta de alguma informação.</span></li>
+      </ol>
+      <button class="btn ghost" type="button" data-completo>Abrir o formulário completo</button>`;
+    const grupo = el.querySelector("[data-seletor-vistas]");
+    UI.ligarSeletorVistas(grupo, (v) => {
+      salvarVisual({ vista: v });
+      $("vista-dica").innerHTML = dicaVista();
+      UI.toast(`Seus ${Leituras.pluralizar(r)} vão aparecer em ${opcoesVista().find((o) => o.id === v)?.nome.toLowerCase()}.`);
+    });
+    el.querySelector("[data-completo]").addEventListener("click", () => novoItem());
+    return el;
   }
 
   function agruparRegistros(lista, cg, tipo) {
@@ -643,7 +717,7 @@
       icone: UI.icone("ajustes"),
       cor: pilar.cor,
       campos: [
-        { nome: "vista", rotulo: "Ver os registros como", tipo: "select", chips: true, opcoes: vistasDaAba().map(([valor, rot]) => ({ valor, rotulo: rot })) },
+        { nome: "vista", rotulo: "Como ver os registros", tipo: "vistas", opcoes: opcoesVista() },
         { nome: "ordem", rotulo: "Ordenar", tipo: "select", opcoes: opcoesOrdem().map(([valor, rot]) => ({ valor, rotulo: rot })) },
         { nome: "_s", rotulo: "O que a página mostra", tipo: "secao" },
         { nome: "leitura", rotulo: "Leitura", tipo: "simNao", rotuloMarcado: "A leitura do Delfos na seção Visão geral" },
@@ -1160,10 +1234,10 @@
   };
   const deExtras = (c) => ({ descricao: c.descricao, data: c.data, ...(c.extras || {}) });
 
-  async function novoItem(dataInicial) {
+  async function novoItem(dataInicial, iniciais = {}) {
     const v = await UI.formulario({
       titulo: `Adicionar ${rotulo()}`, descricao: pilar.nome, campos: camposItem(), icone: UI.iconeAba ? UI.iconeAba(pilar.icone) : null, cor: pilar.cor,
-      valores: typeof dataInicial === "string" ? { data: dataInicial } : {},
+      valores: { ...iniciais, ...(typeof dataInicial === "string" ? { data: dataInicial } : {}) },
     });
     if (!v) return;
     Store.subInserir(CAMINHO, id, "itens", { ...paraExtras(v), concluido: false, criadoEm: new Date().toISOString(), ...(pilar.checkin ? { feitos: [] } : {}) });
@@ -1222,6 +1296,52 @@
     Store.remover(CAMINHO, id);
     location.href = "index.html";
   }
+
+  /* Adição rápida: o nome e Enter. Com um filtro do campo de agrupar ligado,
+     o registro já entra nele; se a aba tem campo obrigatório, abre o
+     formulário completo com o nome preenchido. */
+  function prepararRapido() {
+    const r = rotulo();
+    const form = $("registro-rapido");
+    form.hidden = ehAcademia();
+    $("f-rapido").placeholder = pilar.exemploItem ? `Adicionar ${r}, por exemplo: ${pilar.exemploItem}` : `Adicionar ${r}…`;
+    $("rotulo-rapido").textContent = `Adicionar ${r} rapidamente`;
+    const cg = campoGrupo();
+    const destino = cg ? destinoRapido()[cg.id] : "";
+    $("dica-rapido").textContent = destino
+      ? `Enter adiciona em ${fmt.capitalizar(destino)}; os detalhes ficam para depois.`
+      : "Enter adiciona; os detalhes ficam para depois.";
+    form.querySelector(".registro-rapido-ic").innerHTML = UI.iconeAba(pilar.icone, true);
+  }
+
+  // Com um filtro ligado, entra nele; nas colunas por etapa, na primeira coluna.
+  function destinoRapido() {
+    const cg = campoGrupo();
+    if (!cg) return {};
+    if (filtros.grupo !== "todos") return { [cg.id]: filtros.grupo };
+    if (vistaAtual() === "quadro" && cg.opcoes?.length) return { [cg.id]: cg.opcoes[0] };
+    return {};
+  }
+
+  $("registro-rapido").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    const entrada = $("f-rapido");
+    const nome = entrada.value.trim();
+    if (!nome) { entrada.focus(); return; }
+    const extras = destinoRapido();
+    entrada.value = "";
+    if ((pilar.campos || []).some((c) => c.obrigatorio && (extras[c.id] === undefined || extras[c.id] === ""))) {
+      novoItem(null, { descricao: nome, ...extras });
+      return;
+    }
+    const novo = Store.subInserir(CAMINHO, id, "itens", { descricao: nome, data: "", extras, concluido: false, criadoEm: new Date().toISOString(), ...(pilar.checkin ? { feitos: [] } : {}) });
+    render();
+    entrada.focus({ preventScroll: true });
+    UI.toast(`${fmt.capitalizar(rotulo())} cadastrado.`, {
+      acaoRotulo: "Completar",
+      aoAcionar: () => { const c = itens().find((x) => x.id === novo?.id); if (c) editarItem(c); },
+    });
+  });
 
   document.getElementById("btn-item").addEventListener("click", () => novoItem());
   document.getElementById("btn-layout").addEventListener("click", abrirLayout);

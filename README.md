@@ -17,6 +17,24 @@ versões anteriores guardados no servidor.
   revise assuntos, horários, provas e entregas encontrados e inclua na agenda geral.
   O processamento acontece no aparelho; os documentos acompanham o backup e a sincronização da conta.
 
+### Novidades da versão 2.7 alpha
+- **Formas de ver uma aba, explicadas**: Lista, Cartões, Colunas por etapa (o antigo "Quadro") e
+  Planilha (a antiga "Tabela") e Calendário agora aparecem com um desenho em miniatura, uma frase do
+  que fazem e para que servem. O mesmo seletor está no criador de abas, no alto da lista de cada
+  aba e em Ajustes, Layout e exibição. Abaixo da barra, uma linha lembra como usar a forma escolhida.
+- **Página de cada aba mais fácil**: um campo de **adição rápida** (escreva o nome e aperte Enter;
+  os detalhes ficam para depois), o filtro principal (por exemplo, Situação) sempre à vista e, na aba
+  vazia, um começo em três passos que já mostra as formas de ver.
+- **Pessoal com dois eixos**: **Mês**, para compromissos pontuais e datas importantes, e **Rotina
+  da semana**, uma faixa de segunda a domingo para o que se repete (aulas, trabalho, plantões,
+  treino, estudo), com horário, local, tipo, choques de horário e plantão que vira a noite. A rotina
+  não enche o calendário do mês.
+- **Importar de arquivo ou foto**: no calendário e na rotina, traga compromissos de **PDF,
+  PowerPoint, Word, planilha (Excel .xlsx ou CSV), .ics ou uma foto/print** do calendário ou do
+  horário de aulas. O texto da imagem é lido no próprio aparelho (Tesseract, sem enviar nada). O
+  que tem data vai para o mês; o que tem dia da semana, para a rotina. Tudo passa por uma revisão
+  editável antes de entrar, e "Desfazer" remove a importação inteira.
+
 ### Novidades da versão 2.4 alpha
 - **Configurações por assunto**: perfil, abas, visão geral, aparência, leitura,
   rotina e conta. As ações ficam visíveis e as preferências são salvas automaticamente.
@@ -73,6 +91,7 @@ python dashboard/test/organizacao.browser.py
 python dashboard/test/configuracoes_ia.browser.py
 python dashboard/test/faculdade_documentos.browser.py
 python dashboard/test/modelos_abas.browser.py
+python dashboard/test/agenda_rotina.browser.py
 ```
 
 ## Como abrir
@@ -124,7 +143,7 @@ A barra lateral escolhe a área da vida; a navegação interna escolhe o que faz
 | Página | Seções |
 |---|---|
 | Visão geral | Meu dia, Minhas abas, Dinheiro |
-| Pessoal | Calendário, Compromissos, Visão geral |
+| Pessoal | Mês, Rotina da semana, Compromissos, Visão geral |
 | Faculdade | Disciplinas, Prazos e agenda, Desempenho, Conexões |
 | Disciplina | Resumos, Avaliações, Prazos, Materiais, Plano e aulas |
 | Projetos | Projetos, Oportunidades, Resultados |

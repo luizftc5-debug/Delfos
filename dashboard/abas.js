@@ -216,9 +216,9 @@ const Abas = (() => {
             <button type="button" class="btn sm" data-usar>Usar estrutura da IA</button>
           </div>
           <details class="criacao-opcoes" data-estrutura>
-            <summary><span>Elementos e visualização</span><small data-resumo-estrutura></small></summary>
+            <summary><span>Como aparece e o que guarda</span><small data-resumo-estrutura></small></summary>
             <div class="criacao-opcoes-corpo">
-              <div class="field" data-bloco-vista><label for="cr-vista">Visualização inicial</label><select id="cr-vista" data-vistas aria-label="Vista da página"></select></div>
+              <div class="field" data-bloco-vista><span class="label" id="cr-vista-rotulo">Como os registros aparecem</span><div data-vistas-box></div><span class="hint">Dá para trocar a qualquer momento, no alto da lista da aba.</span></div>
               <div class="field" data-bloco-campos>
                 <span class="label" data-titulo-campos>Campos</span>
                 <ul class="abas-lista campos-sugeridos" data-campos></ul>
@@ -524,7 +524,14 @@ const Abas = (() => {
 
           // Vista
           const vistas = s.checkin ? VISTAS.filter(([v]) => v === "lista" || v === "cartoes") : s.naAgenda ? VISTAS : VISTAS.filter(([v]) => v !== "calendario");
-          $("[data-vistas]").innerHTML = vistas.map(([v, r]) => `<option value="${v}" ${v === s.visual.vista ? "selected" : ""}>${r}</option>`).join("");
+          // O seletor com desenho e frase; o campo escondido guarda o valor
+          // (data-vistas), e quem estava com o foco nele continua nele.
+          const caixaVistas = $("[data-vistas-box]");
+          const focoNasVistas = caixaVistas.contains(document.activeElement);
+          caixaVistas.innerHTML = UI.seletorVistasHTML({ nome: "cr-vista", atual: s.visual.vista, opcoes: UI.vistas(vistas.map(([v]) => v)), rotulo: "Como os registros aparecem" });
+          caixaVistas.querySelector('input[type="hidden"]').setAttribute("data-vistas", "");
+          UI.ligarSeletorVistas(caixaVistas.querySelector("[data-seletor-vistas]"));
+          if (focoNasVistas) caixaVistas.querySelector('[aria-checked="true"]')?.focus();
 
           // Campos
           const lista = $("[data-campos]");
@@ -563,14 +570,14 @@ const Abas = (() => {
           $("[data-bloco-exemplos]").hidden = academia || !ex.length;
           $("[data-exemplos]").innerHTML = ex.map((e, i) => `<button type="button" class="chip" data-exemplo="${i}" aria-pressed="${est.exemplos.has(i)}">${esc(e)}</button>`).join("");
           const ativos = editando ? [...existentes, ...novosCampos.filter((x) => est.escolhidos.has(x.id))] : s.campos.filter((x) => est.escolhidos.has(x.id));
-          const vistaRotulo = VISTAS.find(([v]) => v === s.visual.vista)?.[1] || "Lista";
+          const vistaRotulo = UI.vistas([s.visual.vista])[0]?.nome || "Lista";
           $("[data-mini-registros]").textContent = academia ? "Treinos" : "Registros";
           $("[data-previa-campos]").innerHTML = academia
             ? `<span>Dia de treino</span><span>Exercícios</span><span>Cargas</span>`
             : `<span>Nome</span>${s.naAgenda ? "<span>Data</span>" : ""}${ativos.slice(0, 3).map((x) => `<span>${esc(x.rotulo)}</span>`).join("")}${ativos.length > 3 ? `<span>+${ativos.length - 3}</span>` : ""}`;
-          $("[data-previa-resumo]").textContent = academia ? "Seus exercícios serão organizados por dia de treino."
-            : `${vistaRotulo} · ${ativos.length ? `${ativos.length} ${ativos.length === 1 ? "campo adicional" : "campos adicionais"}` : "nome e data"}${s.naAgenda ? " · na agenda" : ""}${s.checkin ? " · marcação diária" : ""}`;
-          $("[data-resumo-estrutura]").textContent = academia ? "Dias de treino" : `${vistaRotulo} · ${ativos.length} campos`;
+          $("[data-previa-resumo]").innerHTML = academia ? "Seus exercícios serão organizados por dia de treino."
+            : `${UI.desenhoVista(s.visual.vista)}<span>${esc(vistaRotulo)}, ${ativos.length ? `${ativos.length} ${ativos.length === 1 ? "campo adicional" : "campos adicionais"}` : "nome e data"}${s.naAgenda ? ", na agenda" : ""}${s.checkin ? ", marcação diária" : ""}</span>`;
+          $("[data-resumo-estrutura]").textContent = academia ? "Dias de treino" : `${vistaRotulo}, ${ativos.length} ${ativos.length === 1 ? "campo" : "campos"}`;
           $("[data-adicionar-campo]").disabled = ativos.length >= 8;
 
         }

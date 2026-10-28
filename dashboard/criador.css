@@ -151,3 +151,8 @@
   .criacao :is(input[type="text"], input[type="number"], textarea, select) { font-size: calc(16px * var(--escala-fonte, 1)); }
 }
 @media (prefers-reduced-motion: reduce) { .modal.criacao { animation: none; } }
+/* A prévia mostra o desenho da forma escolhida (2.7). */
+.criacao-preview-nota:has(.vista-desenho) { display: flex; align-items: center; gap: 12px; }
+.criacao-preview-nota .vista-desenho { width: 48px; height: 30px; color: #4a453d; }
+.criacao-preview-nota .vista-desenho rect.d { opacity: .85; }
+[data-bloco-vista] .seletor-vistas { margin-top: 2px; }

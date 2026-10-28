@@ -1,6 +1,6 @@
 # Delfos — agente de organização pessoal do Luiz
 
-O painel se chama **Delfos** (versão atual: **2.3**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
+O painel se chama **Delfos** (versão atual: **2.7 alpha**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
 em `ui.js`) aparecem no alto da barra lateral (o símbolo e o logotipo, com a versão ao lado), nos
 títulos das abas do navegador e no nome do arquivo de backup exportado. Desde a 2.2 a marca é a do
 quadro novo: o **símbolo** (o D com uma coluna grega dentro, `UI.simbolo()`), o **logotipo** numa
@@ -60,6 +60,8 @@ Aplicação estática multi-página em `dashboard/`, sem build. Dependências ex
 | `projetos.html` + `projetos.js` | Projetos pessoais que geram renda + oportunidades |
 | `projeto.html` + `projeto.js` | Página de um projeto: ficha, etapas, recebimentos, custos, documentos e anotações |
 | `pessoal.html` + `pessoal.js` | Compromissos pessoais: calendário do mês (vista padrão) ou lista, o que se aproxima, lembretes |
+| `rotina.js` | `Rotina`: a rotina da semana do Pessoal (`pessoal.rotina`), faixa de segunda a domingo, formulário, choques e resumo. Ver "Delfos 2.7" |
+| `agenda-arquivo.mjs` | Compromissos e rotina a partir de PDF, Word, PowerPoint, CSV, Excel ou foto (OCR com `vendor/tesseract`). Funções puras testadas em `test/agenda-arquivo.test.cjs`. Ver "Delfos 2.7" |
 | `calendario.js` | `Calendario`: leitura de .ics e de eventos do Google (puras, testáveis com Node), grade do mês, `itensEntre` (tudo com data, de todas as abas), importação com revisão |
 | `lancamento.js` | `Lancamento.abrir`: a janela de novo/editar lançamento (histórico, categorias por uso, parcelas, repetir todo mês) |
 | `pilar.html` + `pilar.js` | Página de uma aba criada pelo usuário, com modelo e campos próprios |
@@ -1104,6 +1106,64 @@ a 360px. A suíte e2e antiga ficou igual à base (Financeiro 7 e Fixos 10, preso
 testes foram escritos, e 1 do calendário); três expectativas mudaram de propósito: o editor não tem
 mais botão Salvar, o link normalizado ganha a barra e "Registrar → Compromisso" abre o formulário na
 própria visão geral.
+
+### Delfos 2.7: as formas de ver, a página da aba e os dois eixos do calendário
+
+Feito sobre a `main` publicada pelo Codex (2.4 a 2.6 alpha, PR 27), sem desfazer nada dela. Pedido do
+Luiz: "cartão, quadro, tabela... não é nada intuitivo"; a página de cada aba mais organizada e fácil
+de mexer; importar compromissos de PDF, PPTX, CSV, Excel ou foto/print; e dois eixos de calendário,
+um mensal (compromissos pontuais) e um da rotina, de segunda a domingo.
+
+- **Formas de ver** (`UI.VISTAS`, `UI.vistas(ids, rotulos)`, `UI.desenhoVista`,
+  `UI.seletorVistasHTML`, `UI.ligarSeletorVistas`, campo `tipo: "vistas"` no `UI.formulario`): cada
+  forma tem nome do dia a dia, frase, "Bom para..." e um desenho SVG 64x40 em `currentColor`.
+  "Quadro" virou **Colunas por etapa** (curto: Etapas) e "Tabela" virou **Planilha**; os valores
+  guardados em `visual.vista` não mudaram. É um `radiogroup` (setas trocam, o campo escondido guarda
+  o valor e dispara `change`). Usado no criador (`[data-vistas-box]`, o escondido leva
+  `data-vistas`, que os testes leem), em `#f-vista` na página da aba (versão `compacto`: ícone e nome)
+  e em "Layout e exibição". Nas composições próprias (leituras, hábitos, trabalho) lista e cartões
+  continuam Compacta e Detalhada (`ROTULOS_CONTEXTUAIS` em `pilar.js`). `#vista-dica` diz como usar a
+  forma escolhida ("Arraste entre as colunas para mudar.").
+- **Página da aba** (`pilar.html`/`pilar.js`): `#registro-rapido` (nome + Enter cria o registro; com
+  filtro do agrupamento ligado entra nele, nas colunas por etapa entra na primeira coluna; campo
+  obrigatório abre o formulário completo já com o nome); o filtro do campo de agrupar
+  (`.registros-grupos`) saiu de dentro de "Filtros e ordem", que virou "Ordem e concluídos"; aba vazia
+  mostra `comecoDaAba()` (classe `empty comeco-aba`): três passos, o segundo é o seletor de formas
+  com desenho e frase. Uma ação de adicionar só (o teste do Codex confere): o botão do começo é "Abrir
+  o formulário completo".
+- **Rotina da semana** (`rotina.js`, estado `pessoal.rotina`, acrescentado em `normalizar` sem mudar
+  a versão do estado, 13): `{ id, titulo, dias: [0..6], hora, horaFim, categoria, local,
+  observacoes, criadoEm, importadoDe? }`. Um registro serve vários dias; editar muda todos, e quem
+  abre pelo bloco de um dia pode "Tirar da quarta" (com desfazer). Categorias com a cor da área
+  (aula/estudo Faculdade, trabalho Projetos, treino/pessoal Pessoal, outro neutro) e o nome sempre
+  escrito; `categoriaProvavel(titulo)` acerta o tipo pelo nome. Término antes do início é plantão
+  que vira a noite (`viraDia`). Choque de horário no mesmo dia é dito em texto. A rotina **não** entra
+  no calendário do mês nem em `UI.compromissos()`: são eixos separados de propósito.
+- **Pessoal**: abas da página **Mês** (`data-secao="calendario"`, o link `#calendario` continua),
+  **Rotina da semana** (`#rotina`), Compromissos, Visão geral. `delfos.pessoal.vista` guarda
+  `calendario`, `lista` ou `rotina`. Faixa `#importar-faixa` no mês, "Importar horário" na rotina,
+  e soltar um arquivo em qualquer dos dois painéis importa.
+- **Importar de arquivo ou foto** (`Calendario.importarArquivo`, `agenda-arquivo.mjs` baixado sob
+  demanda): .ics vai para o leitor de sempre; PDF (pdf.js, palavras com posição), DOCX/PPTX
+  (`documentos.mjs` do Codex; tabela do Word chega com " | "), CSV (`lerCSV`, delimitador e aspas),
+  XLSX (fflate + XML, primeira folha com dados; número de série vira data, fração vira hora) e imagem
+  (Tesseract 7 em `vendor/tesseract`, português `tessdata_fast`, sem CDN; imagem ampliada até 2x, em
+  cinza e invertida se for print escuro; PSM 3 e, sem resultado, PSM 11). Formatos antigos (.xls,
+  .doc, .ppt, .heic) explicam como salvar. A análise reconhece texto corrido (data como cabeçalho do
+  dia, dia da semana como cabeçalho da rotina, "15 Consulta" com o mês no cabeçalho), grade de
+  horário (dias no cabeçalho, horário à esquerda, aulas seguidas juntas, sala embaixo ou em cima),
+  grade de mês (número do dia na célula; sem o mês escrito, a revisão pede o mês) e listas com
+  cabeçalho (inclusive a exportação do Google Agenda, mês/dia). Em PDF e foto, as linhas de um quadro
+  de horário são faixas entre um horário de início e o próximo (`faixasPorHorario`): célula
+  centralizada e nome quebrado em duas linhas ficam na linha certa.
+- **Revisão** (`revisarArquivo`): duas listas editáveis (compromissos com data → mês; rotina → dias
+  da semana em pílulas), repetidos e passados desmarcados, "Texto lido do arquivo" para conferir,
+  "Desfazer" no aviso remove tudo. Depois de importar, a página abre o eixo onde as coisas entraram.
+- **Testes**: `test/agenda-arquivo.test.cjs` (12, Node) e `test/agenda_rotina.browser.py` (rotina,
+  OCR de uma foto gerada na hora, CSV, Excel, .xls, desfazer, recarga, 320 a 1440 px, seletor por
+  teclado), no workflow Interface. Os testes do Codex que usavam o `<select>` de vista passaram a
+  clicar no seletor. Medido: foto do quadro de horário 10/10 aulas em ~1,3 s; foto de grade de mês
+  5/5; PDF com células quebradas 10/10.
 
 ### Delfos 1.8: a marca
 

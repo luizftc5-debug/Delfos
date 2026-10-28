@@ -6,7 +6,7 @@
 const UI = (() => {
   /** Nome do painel e versão exibida no alto da região principal. */
   const NOME = "Delfos";
-  const VERSAO = "2.4 alpha";
+  const VERSAO = "2.7 alpha";
 
   /* -------------------------------- Ícones -------------------------------- */
 
@@ -2035,6 +2035,15 @@ const UI = (() => {
               oculto.dispatchEvent(new Event("change", { bubbles: true }));
             });
           });
+          modal.querySelectorAll("[data-seletor-vistas]").forEach((g) => ligarSeletorVistas(g));
+          modal.querySelectorAll("[data-dias-semana]").forEach((grupo) => grupo.addEventListener("click", (e) => {
+            const b = e.target.closest("button[data-dia]");
+            if (!b) return;
+            b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true"));
+            const oculto = grupo.querySelector("input");
+            oculto.value = [...grupo.querySelectorAll('button[aria-pressed="true"]')].map((x) => x.dataset.dia).join(",");
+            oculto.dispatchEvent(new Event("change", { bubbles: true }));
+          }));
 
           // Dinheiro: formata ao sair do campo e mostra o resultado de uma conta.
           modal.querySelectorAll("[data-dinheiro]").forEach((inp) => {
@@ -2286,6 +2295,21 @@ const UI = (() => {
       case "time":
         controle = `<input type="time" id="${id}" name="${c.nome}" value="${v}" />`;
         break;
+      // Dias da semana, mais de um ao mesmo tempo (a rotina): segunda primeiro.
+      // O valor é "1,3,5" (0 = domingo), guardado num campo escondido.
+      case "diasSemana": {
+        const marcados = String(valor ?? "").split(",").filter((x) => x !== "");
+        const nomes = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+        controle = `<div class="chips dias-semana" role="group" aria-label="${fmt.escape(c.rotulo)}" data-dias-semana>
+            <input type="hidden" name="${c.nome}" value="${fmt.escape(marcados.join(","))}" />
+            ${[1, 2, 3, 4, 5, 6, 0].map((d) => `<button type="button" class="chip" data-dia="${d}" aria-pressed="${marcados.includes(String(d))}" aria-label="${nomes[d]}">${nomes[d].slice(0, 3)}</button>`).join("")}
+          </div>`;
+        break;
+      }
+      // As formas de ver uma aba, com desenho e frase (seletorVistasHTML).
+      case "vistas":
+        controle = seletorVistasHTML({ nome: c.nome, atual: valor, opcoes: c.opcoes || vistas(), rotulo: c.rotulo });
+        break;
       // Nota de 1 a 5. As estrelas vêm de trás para a frente no HTML e a
       // linha é invertida no CSS: assim "a marcada e as seguintes" (~) são
       // exatamente as estrelas à esquerda dela, sem script para acender.
@@ -2319,8 +2343,13 @@ const UI = (() => {
         controle = `<input type="text" id="${id}" name="${c.nome}" value="${v}" placeholder="${fmt.escape(c.placeholder || "")}" autocomplete="off" />`;
     }
 
+    // Grupos de botões (formas de ver, dias da semana) não têm um controle
+    // único para o "for": o nome vai no próprio grupo (aria-label).
+    const rotuloTag = ["vistas", "diasSemana"].includes(c.tipo)
+      ? `<span class="label">${fmt.escape(c.rotulo)}${extraRotulo}</span>`
+      : `<label for="${id}">${fmt.escape(c.rotulo)}${extraRotulo}</label>`;
     return `<div class="field ${largura} ${classe}">
-        <label for="${id}">${fmt.escape(c.rotulo)}${extraRotulo}</label>
+        ${rotuloTag}
         ${controle}
         ${c.dica ? `<span class="hint">${fmt.escape(c.dica)}</span>` : ""}
       </div>`;
@@ -3021,9 +3050,104 @@ const UI = (() => {
     achar(".sidebar .nav").forEach(realceDeslizante);
   }
 
+  /* ------------------------- Formas de ver uma aba --------------------------
+     Os nomes "Quadro" e "Tabela" sozinhos não diziam nada a quem não usa
+     ferramenta de projeto. Cada forma tem um nome do dia a dia, uma frase do
+     que ela faz, para que serve e um desenho em miniatura; o mesmo seletor
+     aparece no criador, na página da aba e em "Layout e exibição". O valor
+     guardado (`visual.vista`) continua o mesmo de sempre. */
+
+  const VISTAS = [
+    { id: "lista", nome: "Lista", icone: "lista", frase: "Um registro embaixo do outro, com o principal de cada um.", bom: "tarefas e o dia a dia" },
+    { id: "cartoes", nome: "Cartões", icone: "grade", frase: "Blocos lado a lado, com mais espaço para cada registro.", bom: "coleções, como livros, filmes e receitas" },
+    { id: "quadro", nome: "Colunas por etapa", curto: "Etapas", icone: "quadro", frase: "Uma coluna para cada situação; arraste o registro de uma coluna para a outra.", bom: "acompanhar o andamento: a fazer, fazendo, feito" },
+    { id: "tabela", nome: "Planilha", icone: "tabela", frase: "Linhas e colunas com todas as informações; toque no título da coluna para ordenar.", bom: "comparar números e valores" },
+    { id: "calendario", nome: "Calendário", icone: "calendario", frase: "Cada registro aparece no seu dia do mês.", bom: "o que tem data marcada" },
+  ];
+
+  // Miniaturas em 64×40, só traço e preenchimento em currentColor: a cor de
+  // destaque entra pelo CSS (`.vista-desenho .d`), na mesma tinta do tema.
+  const DESENHOS_VISTA = {
+    lista: `<rect class="d" x="4" y="5" width="7" height="7" rx="2"/><rect x="15" y="7" width="34" height="3" rx="1.5"/><rect class="f" x="15" y="7" width="20" height="3" rx="1.5"/>
+      <rect x="4" y="17" width="7" height="7" rx="2"/><rect x="15" y="19" width="40" height="3" rx="1.5"/>
+      <rect x="4" y="29" width="7" height="7" rx="2"/><rect x="15" y="31" width="28" height="3" rx="1.5"/>`,
+    cartoes: `<rect class="d" x="4" y="4" width="26" height="15" rx="3"/><rect x="34" y="4" width="26" height="15" rx="3"/>
+      <rect x="4" y="22" width="26" height="15" rx="3"/><rect x="34" y="22" width="26" height="15" rx="3"/>`,
+    quadro: `<rect class="f" x="4" y="4" width="17" height="33" rx="3"/><rect class="f" x="24" y="4" width="17" height="33" rx="3"/><rect class="f" x="44" y="4" width="17" height="33" rx="3"/>
+      <rect class="d" x="6.5" y="8" width="12" height="7" rx="1.5"/><rect x="6.5" y="17.5" width="12" height="7" rx="1.5"/>
+      <rect x="26.5" y="8" width="12" height="7" rx="1.5"/><rect x="46.5" y="8" width="12" height="7" rx="1.5"/><rect x="46.5" y="17.5" width="12" height="7" rx="1.5"/><rect x="46.5" y="27" width="12" height="7" rx="1.5"/>`,
+    tabela: `<rect class="d" x="4" y="4" width="56" height="7" rx="2"/>
+      <rect x="4" y="14" width="18" height="5" rx="1"/><rect x="25" y="14" width="16" height="5" rx="1"/><rect x="44" y="14" width="16" height="5" rx="1"/>
+      <rect x="4" y="22" width="18" height="5" rx="1"/><rect x="25" y="22" width="16" height="5" rx="1"/><rect x="44" y="22" width="16" height="5" rx="1"/>
+      <rect x="4" y="30" width="18" height="5" rx="1"/><rect x="25" y="30" width="16" height="5" rx="1"/><rect x="44" y="30" width="16" height="5" rx="1"/>`,
+    calendario: `<rect x="4" y="4" width="56" height="5" rx="1.5"/>${[0, 1, 2, 3].map((l) => [0, 1, 2, 3, 4, 5, 6].map((c) => `<rect ${(l === 1 && c === 3) || (l === 2 && c === 5) ? 'class="d"' : 'class="f"'} x="${4 + c * 8.1}" y="${12 + l * 6.6}" width="6.6" height="5.2" rx="1"/>`).join("")).join("")}`,
+  };
+
+  function desenhoVista(idVista) {
+    return `<svg class="vista-desenho" viewBox="0 0 64 40" aria-hidden="true" fill="currentColor">${DESENHOS_VISTA[idVista] || ""}</svg>`;
+  }
+
+  /** As formas permitidas, na ordem de sempre, com nomes trocados se a página pedir. */
+  function vistas(ids = null, rotulos = {}) {
+    return VISTAS.filter((v) => !ids || ids.includes(v.id)).map((v) => ({ ...v, ...(rotulos[v.id] || {}) }));
+  }
+
+  /**
+   * O seletor: um grupo de escolha única (setas trocam, Tab sai), com o
+   * desenho, o nome e a frase. `compacto` mostra só ícone e nome curto, para
+   * a barra de ferramentas da página; a frase vai para o `title` e para a
+   * linha de ajuda que a página escreve embaixo.
+   */
+  function seletorVistasHTML({ nome = "vista", atual = "lista", opcoes = vistas(), rotulo = "Como ver os registros", compacto = false } = {}) {
+    const escolhida = opcoes.some((v) => v.id === atual) ? atual : opcoes[0]?.id;
+    return `<div class="seletor-vistas ${compacto ? "compacto" : ""}" role="radiogroup" aria-label="${fmt.escape(rotulo)}" data-seletor-vistas>
+      <input type="hidden" name="${fmt.escape(nome)}" value="${fmt.escape(escolhida || "")}" />
+      ${opcoes.map((v) => {
+        const sel = v.id === escolhida;
+        return `<button type="button" role="radio" class="vista-opcao" data-valor="${v.id}" aria-checked="${sel}" tabindex="${sel ? 0 : -1}" ${compacto ? `title="${fmt.escape(`${v.nome}: ${v.frase}`)}"` : ""}>
+          ${compacto ? icone(v.icone) : desenhoVista(v.id)}
+          <span class="vista-texto">
+            <span class="vista-nome">${fmt.escape(compacto ? v.curto || v.nome : v.nome)}</span>
+            ${compacto ? "" : `<span class="vista-frase">${fmt.escape(v.frase)}</span><span class="vista-bom">Bom para ${fmt.escape(v.bom)}.</span>`}
+          </span>
+        </button>`;
+      }).join("")}
+    </div>`;
+  }
+
+  /** Liga o seletor: clique e setas escolhem; o campo escondido guarda o valor e avisa com "change". */
+  function ligarSeletorVistas(grupo, aoMudar = () => {}) {
+    if (!grupo || grupo.dataset.ligado) return;
+    grupo.dataset.ligado = "sim";
+    const oculto = grupo.querySelector('input[type="hidden"]');
+    const botoes = () => [...grupo.querySelectorAll(".vista-opcao")];
+    const escolher = (b, focar = false) => {
+      botoes().forEach((x) => { const sel = x === b; x.setAttribute("aria-checked", String(sel)); x.tabIndex = sel ? 0 : -1; });
+      if (focar) b.focus();
+      if (oculto.value === b.dataset.valor) return;
+      oculto.value = b.dataset.valor;
+      oculto.dispatchEvent(new Event("change", { bubbles: true }));
+      aoMudar(b.dataset.valor);
+    };
+    grupo.addEventListener("click", (ev) => {
+      const b = ev.target.closest(".vista-opcao");
+      if (b) escolher(b);
+    });
+    grupo.addEventListener("keydown", (ev) => {
+      const lista = botoes();
+      const i = lista.indexOf(document.activeElement);
+      if (i < 0) return;
+      const passo = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[ev.key];
+      const destino = ev.key === "Home" ? 0 : ev.key === "End" ? lista.length - 1 : passo ? (i + passo + lista.length) % lista.length : null;
+      if (destino === null) return;
+      ev.preventDefault();
+      escolher(lista[destino], true);
+    });
+  }
+
   /* ------------------------ Repetição e lembretes -------------------------- */
 
-  const REPETICOES = [["", "Não repete"], ["semanal", "Toda semana"], ["mensal", "Todo mês"], ["anual", "Todo ano"]];
+  const REPETICOES =[["", "Não repete"], ["semanal", "Toda semana"], ["mensal", "Todo mês"], ["anual", "Todo ano"]];
 
   function somarPeriodo(iso, repete, n = 1) {
     const [a, m, d] = iso.split("-").map(Number);
@@ -3643,6 +3767,7 @@ const UI = (() => {
 
   return {
     NOME, VERSAO, logotipo, simbolo, aparelhoFraco, ICONES, ICONES_ABA, icone, iconeAba, iconeDuo, seloAba, movimento, semMovimento, animar, aplicarAparencia, experiencia, abrirAtalhos, realcarBotoes,
+    VISTAS, vistas, desenhoVista, seletorVistasHTML, ligarSeletorVistas,
     REPETICOES, somarPeriodo, ocorrenciasEntre, lembretesAgora, abrirResumoDoDia, textoQuando,
     lerDinheiro, avaliarDinheiro, formatarDinheiroCampo, dataPorExtensoCurta, isoMaisDias, marcaDaPagina,
     fmt, htmlSeguro, linkSeguro, idsImagensEm, resolverImagens, hojeISO, mesAtual, mesAnterior, diasAte, urgencia, chaveSemana, parametro, idade,

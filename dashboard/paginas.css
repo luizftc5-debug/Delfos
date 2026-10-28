@@ -305,3 +305,135 @@
   .bloco-cabecalho { grid-template-columns: minmax(0, 1fr); }
   .bloco-acoes { grid-column: 1; grid-row: auto; justify-content: flex-start; margin-top: 8px; }
 }
+
+/* Aba própria (2.7): adição rápida, filtro principal à vista, a dica da
+   forma escolhida e o começo guiado de uma aba vazia. */
+.registro-rapido {
+  display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; column-gap: 12px; row-gap: 6px;
+  padding: 10px 10px 10px 14px; margin: 0 0 22px;
+  background: var(--superficie); border: 1px solid var(--linha-forte); border-radius: var(--r-md);
+}
+.registro-rapido:focus-within { border-color: var(--texto); box-shadow: 0 0 0 1px var(--texto); }
+.registro-rapido-ic { display: grid; place-items: center; color: var(--tint, var(--texto-3)); }
+.registro-rapido-ic .ico { width: 20px; height: 20px; }
+.registro-rapido .input { border: 0; background: transparent; padding: 8px 0; min-height: 40px; box-shadow: none; }
+.registro-rapido .input:focus { outline: none; }
+.registro-rapido-dica { grid-column: 2 / -1; color: var(--texto-3); font-size: calc(12px * var(--escala-fonte, 1)); margin-top: -4px; }
+.pagina-pilar .registros-grupos { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding: 16px 0 0; }
+.pagina-pilar .registros-grupos > span { margin: 0; color: var(--texto-3); font-size: calc(12.5px * var(--escala-fonte, 1)); }
+.pagina-pilar .registros-grupos #f-grupo:not(:empty) { padding: 0; border: 0; margin: 0; }
+.vista-dica { margin: 14px 0 0; color: var(--texto-3); font-size: calc(12.5px * var(--escala-fonte, 1)); line-height: 1.5; }
+.vista-dica b { color: var(--texto-2); font-weight: 550; }
+.vista-dica:empty { display: none; }
+.comeco-aba { padding: 18px 0 8px; max-width: 760px; }
+.comeco-titulo { margin: 0 0 22px; font: 400 calc(28px * var(--escala-fonte, 1))/1.3 var(--font-voz); }
+.comeco-passos { list-style: none; counter-reset: passo; padding: 0; margin: 0 0 26px; display: grid; gap: 22px; }
+.comeco-passos > li { counter-increment: passo; position: relative; padding-left: 42px; font-size: calc(14px * var(--escala-fonte, 1)); line-height: 1.6; color: var(--texto-3); }
+.comeco-passos > li::before {
+  content: counter(passo); position: absolute; left: 0; top: -1px;
+  width: 26px; height: 26px; display: grid; place-items: center;
+  border: 1px solid var(--linha-forte); border-radius: 50%;
+  color: var(--texto-2); font-size: calc(12px * var(--escala-fonte, 1)); font-variant-numeric: tabular-nums;
+}
+.comeco-passos > li > b { color: var(--texto); font-weight: 550; }
+.comeco-passos .seletor-vistas { margin-top: 14px; }
+@media (max-width: 680px) {
+  .registro-rapido { grid-template-columns: 20px minmax(0, 1fr) auto; column-gap: 10px; padding: 6px 6px 10px 12px; }
+  .registro-rapido .btn { padding-left: 12px; padding-right: 12px; }
+  .registro-rapido-dica { margin-top: 0; }
+  .registro-rapido .input { font-size: calc(16px * var(--escala-fonte, 1)); }
+  .registros-vista { width: 100%; margin-left: 0; }
+  .comeco-titulo { font-size: calc(24px * var(--escala-fonte, 1)); }
+  .comeco-passos > li { padding-left: 36px; }
+}
+
+/* Pessoal (2.7): os dois eixos. O mês para o que é pontual; a rotina, uma
+   faixa de segunda a domingo, para o que se repete. A faixa é o único lugar
+   da página com a voz nos títulos de coluna: é o objeto da seção. */
+.importar-faixa {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  margin: -6px 0 22px; padding: 12px 14px;
+  background: transparent; color: var(--texto-2); text-align: left; font: inherit; cursor: pointer;
+  border: 1px dashed var(--linha-forte); border-radius: var(--r-md);
+}
+.importar-faixa-ic { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; background: var(--s-pessoal-wash); color: var(--s-pessoal); }
+.importar-faixa-ic .ico { width: 18px; height: 18px; }
+.importar-faixa-texto { display: grid; gap: 2px; min-width: 0; flex: 1; font-size: calc(12.5px * var(--escala-fonte, 1)); line-height: 1.5; color: var(--texto-3); }
+.importar-faixa-texto b { color: var(--texto); font-weight: 550; font-size: calc(14px * var(--escala-fonte, 1)); }
+.importar-faixa-acao { flex: none; padding: 8px 12px; border: 1px solid var(--linha-forte); border-radius: 8px; color: var(--texto); font-size: calc(13px * var(--escala-fonte, 1)); }
+.importar-faixa:focus-visible { outline: 2px solid var(--texto); outline-offset: 2px; }
+.pagina-painel.soltando { outline: 2px dashed var(--s-pessoal); outline-offset: 8px; border-radius: var(--r-lg); }
+@media (hover: hover) and (pointer: fine) {
+  .importar-faixa:hover { border-color: var(--texto-3); background: var(--superficie); }
+  .rotina-bloco:hover { background: var(--superficie-3); }
+  .rotina-add:hover { color: var(--texto); border-color: var(--texto-3); }
+}
+
+.rotina-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; }
+.rotina-topo .painel-descricao { flex: 1 1 360px; margin-bottom: 14px; }
+.rotina-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.rotina-resumo { margin: 0 0 20px; color: var(--texto-2); font-size: calc(14px * var(--escala-fonte, 1)); line-height: 1.6; max-width: 72ch; }
+.rotina-resumo b { color: var(--texto); font-weight: 550; }
+.rotina-resumo:empty { display: none; }
+.rotina-vazia { margin: 0 0 22px; max-width: 62ch; color: var(--texto-3); font-size: calc(14px * var(--escala-fonte, 1)); line-height: 1.65; }
+.rotina-vazia-titulo { margin: 0 0 8px; color: var(--texto); font: 400 calc(26px * var(--escala-fonte, 1))/1.3 var(--font-voz); }
+.rotina-vazia b { color: var(--texto-2); }
+.rotina-dica { margin: 18px 0 0; color: var(--texto-3); font-size: calc(12.5px * var(--escala-fonte, 1)); line-height: 1.55; }
+
+.rotina-semana { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--linha); }
+.rotina-dia { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 14px 8px 16px; border-left: 1px solid var(--linha); }
+.rotina-dia:first-child { border-left: 0; padding-left: 0; }
+.rotina-dia:last-child { padding-right: 0; }
+.rotina-dia.hoje { box-shadow: inset 0 2px 0 var(--texto); }
+.rotina-dia-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; min-height: 30px; }
+.rotina-dia-cab h3 { margin: 0; display: flex; align-items: baseline; gap: 7px; min-width: 0; font: 400 calc(19px * var(--escala-fonte, 1))/1.2 var(--font-voz); color: var(--texto); }
+.rotina-dia.fds .rotina-dia-cab h3 { color: var(--texto-2); }
+.rotina-hoje { font: 550 calc(11px * var(--escala-fonte, 1))/1 var(--font); color: var(--sobre-destaque); background: var(--destaque); border-radius: 999px; padding: 3px 7px; }
+.rotina-dia-total { flex: none; color: var(--texto-3); font-size: calc(11.5px * var(--escala-fonte, 1)); font-variant-numeric: tabular-nums; }
+.rotina-blocos { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rotina-bloco {
+  width: 100%; display: grid; gap: 3px; text-align: left; font: inherit; cursor: pointer;
+  padding: 9px 10px 10px 12px; border: 0; border-radius: 10px;
+  background: var(--superficie-2); color: var(--texto);
+  box-shadow: inset 3px 0 0 var(--cor, var(--texto-3));
+  transition: background-color var(--t-rapido) var(--ease-saida);
+}
+.rotina-bloco:focus-visible { outline: 2px solid var(--texto); outline-offset: 2px; }
+.rotina-hora { display: flex; align-items: center; justify-content: space-between; gap: 6px; color: var(--texto-2); font-size: calc(12px * var(--escala-fonte, 1)); font-variant-numeric: tabular-nums; }
+.rotina-titulo { font-weight: 550; font-size: calc(13.5px * var(--escala-fonte, 1)); line-height: 1.35; overflow-wrap: anywhere; }
+.rotina-info { display: flex; flex-wrap: wrap; gap: 0 4px; color: var(--texto-3); font-size: calc(11.5px * var(--escala-fonte, 1)); line-height: 1.45; }
+.rotina-info span:not(:last-child)::after { content: ","; }
+.rotina-agora { font-size: calc(10.5px * var(--escala-fonte, 1)); font-weight: 600; color: var(--sobre-destaque); background: var(--destaque); border-radius: 999px; padding: 1px 6px; }
+.rotina-bloco.agora { box-shadow: inset 3px 0 0 var(--cor, var(--texto-3)), 0 0 0 1px var(--texto); }
+.rotina-choque { color: var(--warning-text); font-size: calc(11.5px * var(--escala-fonte, 1)); line-height: 1.4; }
+.rotina-add {
+  display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; margin-top: 2px;
+  background: transparent; color: var(--texto-3); font: inherit; font-size: calc(12.5px * var(--escala-fonte, 1)); cursor: pointer;
+  border: 1px dashed var(--linha-forte); border-radius: 10px;
+}
+.rotina-add .ico { width: 14px; height: 14px; }
+.rotina-add:focus-visible { outline: 2px solid var(--texto); outline-offset: 2px; }
+
+/* Tela média: a semana rola de lado, um dia por vez encaixado. */
+@media (max-width: 1100px) and (min-width: 681px) {
+  .rotina-semana { grid-template-columns: repeat(7, minmax(150px, 1fr)); overflow-x: auto; scroll-snap-type: x proximity; overscroll-behavior-x: contain; padding-bottom: 6px; }
+  .rotina-dia { scroll-snap-align: start; }
+}
+/* Celular: um dia embaixo do outro, de segunda a domingo. */
+@media (max-width: 680px) {
+  .importar-faixa { flex-wrap: wrap; }
+  .importar-faixa-acao { width: 100%; text-align: center; }
+  .rotina-acoes { width: 100%; }
+  .rotina-acoes .btn { flex: 1 1 0; }
+  .rotina-semana { grid-template-columns: minmax(0, 1fr); }
+  .rotina-dia, .rotina-dia:first-child, .rotina-dia:last-child { border-left: 0; border-bottom: 1px solid var(--linha); padding: 14px 0; }
+  .rotina-dia.hoje { box-shadow: inset 2px 0 0 var(--texto); padding-left: 12px; }
+  .rotina-add { justify-content: flex-start; padding: 0 12px; }
+}
+/* A barra quebra de linha antes de passar da largura: o seletor de formas
+   desce para baixo da busca quando não cabe ao lado. */
+.pagina-pilar .registros-filtros { flex-wrap: wrap; }
+.pagina-pilar .registros-filtros .busca { flex: 1 1 240px; min-width: 0; }
+.registros-vista { max-width: 100%; min-width: 0; }
+.registros-vista .seletor-vistas.compacto { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.registros-trabalho > div > #lista > .empty.comeco-aba { display: block; padding: 18px 0 8px; }

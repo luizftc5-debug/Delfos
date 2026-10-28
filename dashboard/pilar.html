@@ -71,18 +71,21 @@
                   </div>
                   <button class="btn primary" id="btn-item" type="button"></button>
                 </header>
+                <form class="registro-rapido" id="registro-rapido" autocomplete="off">
+                  <label class="sr" for="f-rapido" id="rotulo-rapido">Adicionar rapidamente</label>
+                  <span class="registro-rapido-ic" aria-hidden="true"></span>
+                  <input class="input" id="f-rapido" type="text" maxlength="200" aria-describedby="dica-rapido" enterkeyhint="done" />
+                  <button class="btn sm" id="btn-rapido" type="submit">Adicionar</button>
+                  <span class="registro-rapido-dica" id="dica-rapido"></span>
+                </form>
                 <div>
                   <div class="registros-filtros" id="registros-ferramentas">
                     <label class="busca">
                       <input aria-label="Buscar nesta aba" autocomplete="off" class="input" id="f-busca" placeholder="Buscar…" type="search"/>
                     </label>
                     <details class="filtros-opcoes">
-                      <summary>Filtros e ordem</summary>
+                      <summary>Ordem e concluídos</summary>
                       <div class="filtros-corpo">
-                        <div class="filtro-grupo">
-                          <span id="rotulo-grupo"></span>
-                          <div class="chips" id="f-grupo" role="group" aria-labelledby="rotulo-grupo"></div>
-                        </div>
                         <select aria-label="Ordenar" class="input" id="f-ordem">
                         </select>
                         <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;">
@@ -91,10 +94,13 @@
                         </label>
                       </div>
                     </details>
-                    <label class="registros-vista"><span>Exibição</span>
-                      <select aria-label="Visualização dos registros" class="input seletor-vista" id="f-vista"></select>
-                    </label>
+                    <div class="registros-vista" id="f-vista"></div>
                   </div>
+                  <div class="filtro-grupo registros-grupos">
+                    <span id="rotulo-grupo"></span>
+                    <div class="chips" id="f-grupo" role="group" aria-labelledby="rotulo-grupo"></div>
+                  </div>
+                  <p class="vista-dica" id="vista-dica" aria-live="polite"></p>
                   <div id="lista">
                   </div>
                 </div>

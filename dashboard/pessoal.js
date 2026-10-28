@@ -41,6 +41,7 @@
 
     renderLista(todos);
     renderVista();
+    renderRotina();
     UI.montarLayout("pessoal");
   }
 
@@ -60,12 +61,14 @@
   const ICONE_TIPO = { consulta: "estetoscopio", tarefa: "lista", compromisso: "calendario", recado: "lapis", outro: "pessoal" };
 
   // A vista escolhida fica neste navegador; o link "#calendario" (do resumo do dia) sempre abre o calendário.
-  let vista = Organizacao.atual() === "compromissos" ? "lista" : "calendario";
+  const VISTA_DA_SECAO = { calendario: "calendario", compromissos: "lista", rotina: "rotina" };
+  let vista = VISTA_DA_SECAO[Organizacao.atual()] || "calendario";
   if (!location.hash) {
     try {
-      if (localStorage.getItem("delfos.pessoal.vista") === "lista") {
-        vista = "lista";
-        Organizacao.selecionar("compromissos");
+      const guardada = localStorage.getItem("delfos.pessoal.vista");
+      if (guardada === "lista" || guardada === "rotina") {
+        vista = guardada;
+        Organizacao.selecionar(guardada === "lista" ? "compromissos" : "rotina");
       }
     } catch { /* A seleção também funciona sem armazenamento. */ }
   }
@@ -76,8 +79,8 @@
   }
 
   document.addEventListener("delfos:secao", (ev) => {
-    if (!["calendario", "compromissos"].includes(ev.detail.chave)) return;
-    vista = ev.detail.chave === "calendario" ? "calendario" : "lista";
+    if (!VISTA_DA_SECAO[ev.detail.chave]) return;
+    vista = VISTA_DA_SECAO[ev.detail.chave];
     try { localStorage.setItem("delfos.pessoal.vista", vista); } catch { /* seleção nesta visita */ }
     renderVista();
   });
@@ -149,7 +152,36 @@
     render();
   }
 
-  const importar = (fonte = null) => Calendario.abrirImportacao({ fonte, aoConcluir: render });
+  // Depois de importar, a página abre o eixo onde as coisas entraram.
+  const aoImportar = (r) => {
+    if (r?.destino === "rotina") Organizacao.selecionar("rotina");
+    else if (r?.destino === "calendario") Organizacao.selecionar("calendario");
+    render();
+  };
+  const importar = (fonte = null) => Calendario.abrirImportacao({ fonte, aoConcluir: aoImportar });
+  const importarArquivo = (destino = "", arquivo = null) => Calendario.importarArquivo({ destino, arquivo, aoConcluir: aoImportar });
+
+  /* ------------------------------ Rotina da semana -------------------------- */
+
+  function renderRotina() {
+    Rotina.montar(document.getElementById("rotina"), { aoMudar: render });
+    document.getElementById("rotina-resumo").innerHTML = Rotina.resumo();
+  }
+
+  // Soltar um arquivo no calendário do mês ou na rotina importa direto.
+  ["painel-calendario", "painel-rotina"].forEach((idPainel) => {
+    const painel = document.getElementById(idPainel);
+    const temArquivo = (ev) => [...(ev.dataTransfer?.types || [])].includes("Files");
+    painel.addEventListener("dragover", (ev) => { if (!temArquivo(ev)) return; ev.preventDefault(); painel.classList.add("soltando"); });
+    painel.addEventListener("dragleave", (ev) => { if (!painel.contains(ev.relatedTarget)) painel.classList.remove("soltando"); });
+    painel.addEventListener("drop", (ev) => {
+      if (!temArquivo(ev)) return;
+      ev.preventDefault();
+      painel.classList.remove("soltando");
+      const f = ev.dataTransfer.files?.[0];
+      if (f) importarArquivo(idPainel === "painel-rotina" ? "rotina" : "calendario", f);
+    });
+  });
 
   let filtroTipo = "todos";
 
@@ -298,9 +330,9 @@
     if (!Store.lista(CAMINHO).some((c) => c.origemImport)) q.push({
       id: "importarCalendario",
       texto: "Quer trazer os compromissos de outro calendário?",
-      apoio: "O Delfos lê um arquivo .ics (do Google Agenda, Outlook, iPhone), um .ics guardado no Drive, ou a sua Agenda do Google direto. Você revisa tudo antes de entrar.",
+      apoio: "O Delfos lê PDF, PowerPoint, Word, planilha, .ics ou a foto de um calendário, além da sua Agenda do Google. Você revisa tudo antes de entrar.",
       controle: () => UI.resposta.botoes([
-        ["Arquivo .ics", () => importar("arquivo"), true],
+        ["Arquivo ou foto", () => importarArquivo(), true],
         ["Do Google Drive", () => importar("drive")],
         ["Da Agenda do Google", () => importar("google")],
       ]),
@@ -368,6 +400,10 @@
 
   document.getElementById("btn-compromisso").addEventListener("click", () => novoCompromisso());
   document.getElementById("btn-importar-cal").addEventListener("click", () => importar());
+  document.getElementById("importar-faixa").addEventListener("click", () => importarArquivo("calendario"));
+  document.getElementById("importar-faixa").querySelector(".importar-faixa-ic").innerHTML = UI.icone("importar");
+  document.getElementById("btn-importar-rotina").addEventListener("click", () => importarArquivo("rotina"));
+  document.getElementById("btn-atividade").addEventListener("click", () => Rotina.abrirFormulario({}, render));
   document.getElementById("f-concluidos").addEventListener("change", (ev) => { verConcluidos = ev.target.checked; render(); });
   document.getElementById("f-tipo").addEventListener("click", (ev) => {
     const c = ev.target.closest("[data-tipo]");

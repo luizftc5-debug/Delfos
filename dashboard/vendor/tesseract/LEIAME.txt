@@ -1,0 +1,5 @@
+Tesseract.js 7.0.0 (naptha/tesseract.js) e tesseract.js-core 7.0.0, licença Apache 2.0 (LICENSE e
+LICENSE-core). Dados de português: tessdata_fast (tesseract-ocr/tessdata_fast, Apache 2.0),
+por.traineddata comprimido em gzip. Usados só por agenda-arquivo.mjs para ler o texto de uma foto
+ou print de calendário no próprio navegador. Só os núcleos LSTM entram (o worker escolhe entre
+lstm, simd-lstm e relaxedsimd-lstm conforme o processador); nada é baixado de CDN.

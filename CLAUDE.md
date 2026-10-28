@@ -1,6 +1,6 @@
 # Delfos — agente de organização pessoal do Luiz
 
-O painel se chama **Delfos** (versão atual: **2.7 alpha**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
+O painel se chama **Delfos** (versão atual: **2.8 alpha**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
 em `ui.js`) aparecem no alto da barra lateral (o símbolo e o logotipo, com a versão ao lado), nos
 títulos das abas do navegador e no nome do arquivo de backup exportado. Desde a 2.2 a marca é a do
 quadro novo: o **símbolo** (o D com uma coluna grega dentro, `UI.simbolo()`), o **logotipo** numa
@@ -62,6 +62,9 @@ Aplicação estática multi-página em `dashboard/`, sem build. Dependências ex
 | `pessoal.html` + `pessoal.js` | Compromissos pessoais: calendário do mês (vista padrão) ou lista, o que se aproxima, lembretes |
 | `rotina.js` | `Rotina`: a rotina da semana do Pessoal (`pessoal.rotina`), faixa de segunda a domingo, formulário, choques e resumo. Ver "Delfos 2.7" |
 | `agenda-arquivo.mjs` | Compromissos e rotina a partir de PDF, Word, PowerPoint, CSV, Excel ou foto (OCR com `vendor/tesseract`). Funções puras testadas em `test/agenda-arquivo.test.cjs`. Ver "Delfos 2.7" |
+| `alimentacao.js` | `Alimentacao`: a tela da aba pronta "Alimentação" (plano por refeição, kcal de hoje contra a meta, fora do plano, objetivos, evolução, importação da dieta). Ver "Delfos 2.8" |
+| `dieta.mjs` | A dieta a partir de texto ou tabela, a tabela de referência (TACO/USDA), estimativa de kcal e macros, correção de OCR. Funções puras, `test/dieta.test.cjs` |
+| `planilha.mjs` | Gerador de .xlsx no navegador (estilos, mesclas, data de verdade, texto rico) e as planilhas da rotina e do mês. `test/planilha.test.cjs` |
 | `calendario.js` | `Calendario`: leitura de .ics e de eventos do Google (puras, testáveis com Node), grade do mês, `itensEntre` (tudo com data, de todas as abas), importação com revisão |
 | `lancamento.js` | `Lancamento.abrir`: a janela de novo/editar lançamento (histórico, categorias por uso, parcelas, repetir todo mês) |
 | `pilar.html` + `pilar.js` | Página de uma aba criada pelo usuário, com modelo e campos próprios |
@@ -1164,6 +1167,60 @@ um mensal (compromissos pontuais) e um da rotina, de segunda a domingo.
   teclado), no workflow Interface. Os testes do Codex que usavam o `<select>` de vista passaram a
   clicar no seletor. Medido: foto do quadro de horário 10/10 aulas em ~1,3 s; foto de grade de mês
   5/5; PDF com células quebradas 10/10.
+
+### Delfos 2.8: arrastar as abas, Excel e a aba Alimentação
+
+Pedido do Luiz: caixa sozinha na última linha de uma grade ocupando a largura toda; "Minhas abas"
+reordenável segurando e arrastando, com movimento fluido; uma aba pronta "Alimentação" (kcal do dia,
+objetivos, importar a dieta de PDF/foto/CSV/Excel e o Delfos calcular); e a rotina e o calendário do
+mês exportados numa planilha do Excel organizada e estilizada.
+
+- **Caixa sozinha em largura total** (`paginas.css`): em `.painel-dupla`/`.painel-analises`, o
+  último filho visível em posição ímpar ganha `grid-column: 1 / -1`. Usa `:nth-child(odd of S)` e
+  `:nth-last-child(1 of S)` com S = visível e que não é `.leitura`/`.pagina-indicadores`; nenhuma
+  página precisou mudar.
+- **Reordenar arrastando** (`UI.ordenarArrastando(lista, { chave, aoSoltar, alca })`, genérico):
+  com o mouse, segurar a linha inteira e mover (ignora campos, botões e links); no toque, só pela
+  alça `.ordem-alca` (`touch-action: none` nela), porque tocar no resto da linha tem de continuar
+  rolando: com segurar-e-arrastar na linha, o navegador começava a rolar e cancelava o ponteiro
+  (testado com eventos de toque de verdade). A linha sobe com sombra e segue o ponteiro, as
+  vizinhas abrem espaço com transição, a área rola sozinha perto da borda, e ao soltar tudo assenta
+  por FLIP (`UI.posicoes`/`UI.deslizarDe`, também usados nas setas). Com "reduzir movimento", sem
+  animação. Em "Minhas abas" (perfil), salva `ordemAbas` e remonta a barra na hora; as setas
+  continuam para o teclado.
+- **Excel** (`planilha.mjs`, baixado sob demanda): `criarXLSX(folhas)` monta o OOXML (fflate),
+  com estilos deduplicados, mesclas, larguras, linha congelada, paisagem, data como número de série
+  com `dd/mm/yyyy` e texto rico. `planilhaRotina` = quadro de horário (faixas × segunda a domingo,
+  cor clara por tipo, legenda escrita) + "Lista" com horas por tipo; `planilhaMes` = calendário
+  segunda a domingo (dia em negrito, hoje e fim de semana tingidos) + "Lista" com data de verdade.
+  Botões: "Baixar em Excel" na Rotina da semana (`Rotina.exportar`) e no calendário do mês
+  (`Calendario.exportarMes`, o mês exibido, todas as abas via `itensEntre`). Conferido com
+  openpyxl e LibreOffice.
+- **Aba pronta "Alimentação"** (`modelo: "alimentacao"`, tela própria como a academia; essencial no
+  criador, `ESPECIAIS` em `abas.js`). Guarda `alimentacao` (objetivo, objetivos, metas de kcal e
+  macros), `plano` (refeições com alimentos, kcal, P/C/G, `estimado`, substituições) e `diario`
+  (por data: refeições marcadas "Comi" e o que entrou fora do plano). `normalizar` garante os três.
+  Tela: placar de hoje (kcal na voz, barra da meta, macros), plano em cartões por refeição, "Fora do
+  plano, hoje" (texto livre com quantidade, estimado), objetivos; "Evolução" = 7 dias contra a meta.
+  Fica fora da agenda, do Registrar e de "O que o Delfos notou" da visão geral.
+- **Ler a dieta** (`dieta.mjs` + `lerArquivo` de `agenda-arquivo.mjs`, que virou genérico e é
+  reaproveitado): títulos de refeição com horário, alimentos com quantidade, "ou ..." como
+  substituição, "+" e "com 2 ovos" separando itens, "Total/Meta/VET" como meta do dia; tabelas com
+  cabeçalho (refeição, alimento, quantidade, kcal, macros). OCR: correção conservadora (palavra
+  desconhecida vira conhecida: "0vos", "Logurte"; "1209" vira "120g" só com alimento conhecido e
+  nunca ano). Revisão editável antes de salvar (substituir ou acrescentar, usar a meta lida),
+  desfazer.
+- **Calorias estimadas, com honestidade**: só quando o arquivo não traz a kcal e a quantidade dá base
+  (gramas, ml, unidade conhecida, colher de sopa/chá; xícara e copo só para líquido). Tabela por 100 g
+  da TACO (NEPA/Unicamp, 4ª ed.), alguns da USDA e médias de rótulo (whey, granola), marcados na
+  fonte. O item fica "estimado"; sem base, "sem calorias" para a pessoa completar. A tela diz que o
+  Delfos organiza a dieta definida pela pessoa ou pelo nutricionista, não prescreve.
+- **Testes**: `test/dieta.test.cjs` (5), `test/planilha.test.cjs` (2), `test/alimentacao_planilhas.browser.py`
+  (criar pelo criador, importar CSV, desfazer, metas, "Comi", fora do plano, evolução, 320 a 1440 px,
+  os dois Excel, a caixa em largura total, arrastar com mouse e com toque). O teste de modelos do
+  Codex conta 40 botões (8 essenciais). `organizacao.browser.py` tem uma verificação de posição do
+  perfil depois de rolar com a roda do mouse que falha às vezes também sem estas mudanças (1 em 4
+  na base): instabilidade do próprio teste.
 
 ### Delfos 1.8: a marca
 

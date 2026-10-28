@@ -50,3 +50,5 @@ jobs:
         run: python dashboard/test/modelos_abas.browser.py
       - name: Verificar rotina, importação de arquivo e formas de ver
         run: python dashboard/test/agenda_rotina.browser.py
+      - name: Verificar Alimentação, planilhas do Excel e reordenar arrastando
+        run: python dashboard/test/alimentacao_planilhas.browser.py

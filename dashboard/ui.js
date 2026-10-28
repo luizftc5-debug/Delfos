@@ -6,7 +6,7 @@
 const UI = (() => {
   /** Nome do painel e versão exibida no alto da região principal. */
   const NOME = "Delfos";
-  const VERSAO = "2.7 alpha";
+  const VERSAO = "2.8 alpha";
 
   /* -------------------------------- Ícones -------------------------------- */
 
@@ -44,6 +44,8 @@ const UI = (() => {
     esquerda: '<path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"/>',
     direita: '<path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"/>',
     abaixo: '<path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/>',
+    arrastar: '<path d="M104,60A12,12,0,1,1,92,48,12,12,0,0,1,104,60Zm60,12a12,12,0,1,0-12-12A12,12,0,0,0,164,72ZM92,116a12,12,0,1,0,12,12A12,12,0,0,0,92,116Zm72,0a12,12,0,1,0,12,12A12,12,0,0,0,164,116ZM92,184a12,12,0,1,0,12,12A12,12,0,0,0,92,184Zm72,0a12,12,0,1,0,12,12A12,12,0,0,0,164,184Z"/>',
+    planilha: '<path d="M200,24H72A16,16,0,0,0,56,40V64H40A16,16,0,0,0,24,80v96a16,16,0,0,0,16,16H56v24a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V40A16,16,0,0,0,200,24Zm-40,80h40v48H160Zm40-16H160V80a16,16,0,0,0-16-16V40h56ZM72,40h56V64H72ZM40,80H144v79.83s0,.11,0,.17,0,.11,0,.17V176H40ZM72,192h56v24H72Zm72,24V192a16,16,0,0,0,16-16v-8h40v48ZM65.85,146.88,81.59,128,65.85,109.12a8,8,0,0,1,12.3-10.24L92,115.5l13.85-16.62a8,8,0,1,1,12.3,10.24L102.41,128l15.74,18.88a8,8,0,0,1-12.3,10.24L92,140.5,78.15,157.12a8,8,0,0,1-12.3-10.24Z"/>',
     acima: '<path d="M213.66,165.66a8,8,0,0,1-11.32,0L128,91.31,53.66,165.66a8,8,0,0,1-11.32-11.32l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,213.66,165.66Z"/>',
     busca: '<path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/>',
     editar: '<path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"/>',
@@ -1199,7 +1201,8 @@ const UI = (() => {
       const fixa = fixas[pg.id];
       const iconeHTML = seloAba(pg);
       const pilar = fixa ? null : Store.achar("pilares", pg.id.slice(6));
-      return `<li class="${(fixa && !fixa.ativo) || pilar?.oculta ? "desligada" : ""}" data-aba-id="${fmt.escape(pg.id)}">
+      return `<li class="${(fixa && !fixa.ativo) || pilar?.oculta ? "desligada" : ""}" data-aba-id="${fmt.escape(pg.id)}" title="Segure e arraste para mudar a ordem">
+          <span class="ordem-alca" aria-hidden="true">${icone("arrastar")}</span>
           <span class="ordem-setas">
             <button type="button" class="btn ghost sm icon" data-mover="-1" aria-label="Subir ${fmt.escape(pg.rotulo)}" ${i === 0 ? "disabled" : ""}>${icone("acima")}</button>
             <button type="button" class="btn ghost sm icon" data-mover="1" aria-label="Descer ${fmt.escape(pg.rotulo)}" ${i === lista.length - 1 ? "disabled" : ""}>${icone("abaixo")}</button>
@@ -1354,7 +1357,7 @@ const UI = (() => {
 
         <div class="ajuste">
           <div class="ajuste-titulo">Abas e ordem</div>
-          <p class="ajuste-texto">Use as setas para ordenar. As quatro primeiras são atalhos no celular. Ocultar preserva os registros e a agenda.</p>
+          <p class="ajuste-texto">Segure e arraste uma aba para mudar a ordem (no celular, arraste pela alça de pontinhos; pelo teclado, use as setas). As quatro primeiras são atalhos no celular. Ocultar preserva os registros e a agenda.</p>
           <ul class="abas-lista" data-abas>${linhasAbas()}</ul>
         </div>
 
@@ -1582,7 +1585,20 @@ const UI = (() => {
         }));
         modal.querySelector('[data-acao="atalhos"]')?.addEventListener("click", () => { fechar(null); abrirAtalhos(); });
 
-        // Ordem das abas: as setas trocam a aba de lugar com a vizinha.
+        // Ordem das abas: segurar e arrastar a linha (mouse ou toque longo), ou as setas, pelo teclado.
+        ordenarArrastando(modal.querySelector("[data-abas]"), {
+          chave: "abaId",
+          aoSoltar(ids) {
+            salvarXp({ ordemAbas: ids });
+            // Só acerta as setas (a primeira não sobe, a última não desce); as linhas já estão no lugar.
+            modal.querySelectorAll("[data-abas] li[data-aba-id]").forEach((li, i, todos) => {
+              li.querySelector('[data-mover="-1"]').disabled = i === 0;
+              li.querySelector('[data-mover="1"]').disabled = i === todos.length - 1;
+            });
+            montarLayout(paginaAtiva, opcoesAtivas);
+          },
+        });
+        // As setas trocam a aba de lugar com a vizinha.
         modal.querySelector("[data-abas]").addEventListener("click", (ev) => {
           const b = ev.target.closest("[data-mover]");
           if (!b) return;
@@ -1593,7 +1609,9 @@ const UI = (() => {
           if (i < 0 || j < 0 || j >= ids.length) return;
           [ids[i], ids[j]] = [ids[j], ids[i]];
           salvarXp({ ordemAbas: ids });
+          const antes = posicoes(ul, "abaId");
           ul.innerHTML = linhasAbas();
+          deslizarDe(ul, "abaId", antes);
           ul.querySelector(`li[data-aba-id="${CSS.escape(ids[j])}"] [data-mover="${b.dataset.mover}"]`)?.focus();
           montarLayout(paginaAtiva, opcoesAtivas);
         });
@@ -2903,6 +2921,146 @@ const UI = (() => {
     animacao.addEventListener("cancel", limpar, { once: true });
     return animacao;
   }
+  /**
+   * FLIP: anima cada elemento da posição antiga até a nova depois de a lista
+   * ser redesenhada. `antes` vem de `posicoes(lista, chave)` tirado antes.
+   */
+  function posicoes(lista, chave) {
+    return new Map([...lista.children].map((el) => [el.dataset[chave], el.getBoundingClientRect().top]));
+  }
+  function deslizarDe(lista, chave, antes) {
+    if (semMovimento()) return;
+    [...lista.children].forEach((el) => {
+      const de = antes.get(el.dataset[chave]);
+      if (de === undefined) return;
+      const dy = de - el.getBoundingClientRect().top;
+      if (Math.abs(dy) < 1) return;
+      el.animate([{ transform: `translateY(${dy}px)` }, { transform: "translateY(0)" }], { duration: 300, easing: "cubic-bezier(0.22, 1, 0.36, 1)" });
+    });
+  }
+
+  /**
+   * Reordenar uma lista arrastando: com o mouse, basta segurar a linha e
+   * mover; no toque, arrastar pela alça (`alca`, sem rolagem nela), porque
+   * tocar no resto da linha precisa continuar rolando a lista. A linha segue o ponteiro, as vizinhas abrem espaço com
+   * transição, e ao soltar tudo assenta no lugar. Campos, botões e links
+   * dentro da linha continuam funcionando normalmente. `aoSoltar(ids)` recebe
+   * a ordem nova pelo `data-<chave>` de cada linha. Para teclado, as páginas
+   * mantêm botões de subir e descer.
+   */
+  function ordenarArrastando(lista, { chave, aoSoltar, alca = ".ordem-alca", ignorar = "input, button, a, select, textarea, label" }) {
+    if (!lista || lista.dataset.arrastavel) return;
+    lista.dataset.arrastavel = "sim";
+    let arrasto = null;
+    const rolavel = (el) => {
+      for (let p = el.parentElement; p; p = p.parentElement) {
+        const o = getComputedStyle(p).overflowY;
+        if ((o === "auto" || o === "scroll") && p.scrollHeight > p.clientHeight) return p;
+      }
+      return document.scrollingElement;
+    };
+    lista.addEventListener("touchmove", (ev) => { if (arrasto?.ativo) ev.preventDefault(); }, { passive: false });
+    lista.addEventListener("pointerdown", (ev) => {
+      if (ev.button !== 0 || ev.target.closest(ignorar)) return;
+      const item = ev.target.closest(`[data-${chave.replace(/[A-Z]/g, (l) => `-${l.toLowerCase()}`)}]`);
+      if (!item || item.parentElement !== lista) return;
+      const toque = ev.pointerType !== "mouse";
+      if (toque && !ev.target.closest(alca)) return; // no toque, só pela alça
+      const itens = [...lista.children];
+      const caixa = rolavel(lista);
+      arrasto = {
+        item, itens, caixa, ativo: false, x: ev.clientX, y: ev.clientY, py: ev.clientY,
+        rolagem: caixa.scrollTop, origem: itens.indexOf(item), destino: itens.indexOf(item), id: ev.pointerId,
+        toque, timer: 0, quadro: 0,
+      };
+      ev.preventDefault(); // sem seleção de texto nem rolagem
+      if (toque) comecar();
+    });
+    const comecar = () => {
+      const a = arrasto;
+      if (!a || a.ativo) return;
+      a.ativo = true;
+      a.rects = a.itens.map((el) => el.getBoundingClientRect());
+      const r = a.rects[a.origem];
+      const prox = a.rects[a.origem + 1] || a.rects[a.origem - 1];
+      a.passo = prox ? Math.abs(prox.top - r.top) : r.height;
+      try { a.item.setPointerCapture(a.id); } catch { /* o ponteiro pode já ter saído */ }
+      a.item.classList.add("arrastando");
+      lista.classList.add("ordenando");
+      document.documentElement.classList.add("arrastando-algo");
+      a.itens.forEach((el) => { if (el !== a.item) el.style.transition = semMovimento() ? "none" : "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)"; });
+      navigator.vibrate?.(10);
+      rolarSozinho();
+    };
+    const mover = () => {
+      const a = arrasto;
+      const dy = a.py - a.y + (a.caixa.scrollTop - a.rolagem);
+      a.item.style.transform = `translateY(${dy}px) scale(1.015)`;
+      const centro = a.rects[a.origem].top + a.rects[a.origem].height / 2 + dy;
+      let destino = a.origem;
+      a.rects.forEach((r, k) => {
+        const meio = r.top + r.height / 2;
+        if (k > a.origem && centro > meio) destino = Math.max(destino, k);
+        if (k < a.origem && centro < meio) destino = Math.min(destino, k);
+      });
+      a.destino = destino;
+      a.itens.forEach((el, k) => {
+        if (el === a.item) return;
+        const desce = k < a.origem && k >= destino;
+        const sobe = k > a.origem && k <= destino;
+        el.style.transform = desce ? `translateY(${a.passo}px)` : sobe ? `translateY(${-a.passo}px)` : "";
+      });
+    };
+    // Perto da borda de cima ou de baixo da área que rola, a lista anda sozinha.
+    const rolarSozinho = () => {
+      const a = arrasto;
+      if (!a?.ativo) return;
+      const r = a.caixa === document.scrollingElement ? { top: 0, bottom: innerHeight } : a.caixa.getBoundingClientRect();
+      const borda = 48;
+      const v = a.py < r.top + borda ? -Math.ceil((r.top + borda - a.py) / 4) : a.py > r.bottom - borda ? Math.ceil((a.py - (r.bottom - borda)) / 4) : 0;
+      if (v) { a.caixa.scrollTop += v; mover(); }
+      a.quadro = requestAnimationFrame(rolarSozinho);
+    };
+    lista.addEventListener("pointermove", (ev) => {
+      const a = arrasto;
+      if (!a || ev.pointerId !== a.id) return;
+      a.py = ev.clientY;
+      if (!a.ativo) {
+        if (Math.hypot(ev.clientX - a.x, ev.clientY - a.y) <= 4) return;
+        comecar();
+      }
+      ev.preventDefault();
+      mover();
+    });
+    const soltar = (ev) => {
+      const a = arrasto;
+      if (!a || (ev && ev.pointerId !== a.id)) return;
+      clearTimeout(a.timer);
+      cancelAnimationFrame(a.quadro);
+      arrasto = null;
+      if (!a.ativo) return;
+      const atrasoClique = (e) => { e.stopPropagation(); e.preventDefault(); };
+      window.addEventListener("click", atrasoClique, { capture: true, once: true });
+      setTimeout(() => window.removeEventListener("click", atrasoClique, { capture: true }), 0);
+      const antes = new Map(a.itens.map((el) => [el, el.getBoundingClientRect().top]));
+      a.itens.forEach((el) => { el.style.transition = "none"; el.style.transform = ""; });
+      a.item.classList.remove("arrastando");
+      lista.classList.remove("ordenando");
+      document.documentElement.classList.remove("arrastando-algo");
+      if (a.destino !== a.origem) lista.insertBefore(a.item, a.destino > a.origem ? a.itens[a.destino].nextSibling : a.itens[a.destino]);
+      // Assenta: cada linha sai de onde estava na tela e desliza para o lugar.
+      if (!semMovimento()) a.itens.forEach((el) => {
+        const dy = antes.get(el) - el.getBoundingClientRect().top;
+        if (Math.abs(dy) >= 1) el.animate([{ transform: `translateY(${dy}px)` }, { transform: "translateY(0)" }], { duration: el === a.item ? 260 : 200, easing: "cubic-bezier(0.22, 1, 0.36, 1)" });
+      });
+      a.itens.forEach((el) => { el.style.transition = ""; });
+      if (a.destino !== a.origem) aoSoltar([...lista.children].map((el) => el.dataset[chave]), a.item);
+    };
+    lista.addEventListener("pointerup", soltar);
+    lista.addEventListener("pointercancel", soltar);
+    lista.addEventListener("lostpointercapture", (ev) => { if (arrasto?.ativo && ev.pointerId === arrasto.id) soltar(ev); });
+  }
+
   if (typeof matchMedia === "function") {
     matchMedia("(prefers-reduced-motion: reduce)").addEventListener?.("change", () => {
       if (semMovimento()) cancelarAnimacoes();
@@ -3450,7 +3608,7 @@ const UI = (() => {
       if (base) return { ...base, id: p.id, aba: p.rotulo, href: `${p.href}?novo=${base.novo}`, selo: seloAba(p, "registrar-selo") };
       if (!p.id.startsWith("pilar:")) return null;
       const pl = (e.pilares || []).find((x) => x.id === p.id.slice(6));
-      if (!pl || pl.modelo === "academia") return null;
+      if (!pl || pl.modelo === "academia" || pl.modelo === "alimentacao") return null;
       return {
         id: p.id, aba: pl.nome, href: `${p.href}&novo=item`, selo: seloAba(p, "registrar-selo"),
         rotulo: pl.rotuloItem ? fmt.capitalizar(pl.rotuloItem) : `Registro em ${pl.nome}`,
@@ -3767,6 +3925,7 @@ const UI = (() => {
 
   return {
     NOME, VERSAO, logotipo, simbolo, aparelhoFraco, ICONES, ICONES_ABA, icone, iconeAba, iconeDuo, seloAba, movimento, semMovimento, animar, aplicarAparencia, experiencia, abrirAtalhos, realcarBotoes,
+    ordenarArrastando, posicoes, deslizarDe,
     VISTAS, vistas, desenhoVista, seletorVistasHTML, ligarSeletorVistas,
     REPETICOES, somarPeriodo, ocorrenciasEntre, lembretesAgora, abrirResumoDoDia, textoQuando,
     lerDinheiro, avaliarDinheiro, formatarDinheiroCampo, dataPorExtensoCurta, isoMaisDias, marcaDaPagina,

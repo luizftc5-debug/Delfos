@@ -39,6 +39,9 @@ const Abas = (() => {
     return Store.ICONES_PILAR.includes(v);
   }
 
+  // Abas prontas com tela própria: no lugar de campos e registros, a tela delas.
+  const ESPECIAIS = ["academia", "alimentacao"];
+
   /** Corta o que veio do Delfos para o que o painel sabe desenhar. */
   function sanear(s, nome) {
     const base = Delfos.entender({ nome }).sugestao;
@@ -50,7 +53,7 @@ const Abas = (() => {
     out.rotuloItem = corta(s?.rotuloItem, 30).toLowerCase() || base.rotuloItem;
     out.naAgenda = typeof s?.naAgenda === "boolean" ? s.naAgenda : base.naAgenda;
     out.checkin = typeof s?.checkin === "boolean" ? s.checkin : false;
-    out.especial = s?.especial === "academia" ? "academia" : "";
+    out.especial = ESPECIAIS.includes(s?.especial) ? s.especial : "";
     const ids = new Set();
     out.campos = (Array.isArray(s?.campos) ? s.campos : []).slice(0, 8).map((x) => {
       const tipo = TIPOS.has(x?.tipo) ? x.tipo : "text";
@@ -96,6 +99,7 @@ const Abas = (() => {
     ["Trabalho", "maleta", "Tarefas, reuniões e entregas"],
     ["Saúde", "coracao", "Consultas, exames e cuidados"],
     ["Academia", "haltere", "Dias de treino e exercícios"],
+    ["Alimentação", "prato", "Dieta, calorias do dia e objetivos"],
     ["Esporte", "alvo", "Treinos, provas e resultados"],
     ["Religião", "sol", "Encontros, leituras e práticas"],
     ["Leituras", "livro", "Livros, autores e anotações"],
@@ -122,7 +126,7 @@ const Abas = (() => {
     const botaoModelo = (m) => `<button type="button" class="criacao-modelo${m.nome === "Aba livre" ? " modelo-livre" : ""}" role="radio" aria-label="${esc(m.nome)}" aria-describedby="modelo-descricao-${catalogo.indexOf(m)}" aria-checked="${m.nome === "Aba livre"}" tabindex="${m.nome === "Aba livre" ? 0 : -1}" data-modelo-area="${esc(m.nome)}" data-modelo-id="${esc(m.modeloId)}" data-categoria-modelo="${m.categoria}"><span class="modelo-icone">${icone(m.ic)}</span><span><b>${esc(m.nome)}</b><small id="modelo-descricao-${catalogo.indexOf(m)}">${esc(m.descricao)}</small></span><span class="modelo-selecao" aria-hidden="true"></span></button>`;
     const est = {
       sug: editando
-        ? sanear({ ...pilar, meta: pilar.meta || SEM_META, especial: pilar.modelo === "academia" ? "academia" : "", visual: pilar.visual || {}, origem: pilar.sugeridoPor }, pilar.nome)
+        ? sanear({ ...pilar, meta: pilar.meta || SEM_META, especial: ESPECIAIS.includes(pilar.modelo) ? pilar.modelo : "", visual: pilar.visual || {}, origem: pilar.sugeridoPor }, pilar.nome)
         : sanear({ ...Delfos.entender({ nome: "", usadas: coresUsadas() }).sugestao, campos: [], meta: SEM_META, naAgenda: false, descricao: "", origem: "manual" }, ""),
       escolhidos: new Set(),
       exemplos: new Set(),
@@ -317,6 +321,7 @@ const Abas = (() => {
           Trabalho: `Organizar tarefas, reuniões e entregas. ${Personalizacao.ocupacaoResumo()}`,
           Saúde: "Consultas, exames e retornos com data, local e profissional.",
           Academia: "Organizar meus dias de treino, exercícios, cargas e repetições.",
+          Alimentação: "Acompanhar minha dieta por refeição, as calorias de cada dia e meus objetivos.",
           Esporte: "Organizar treinos e competições do esporte que pratico.",
           Religião: "Organizar encontros, leituras e práticas da minha fé.",
           Leituras: "Livros que quero ler, estou lendo ou já terminei, com autor e comentários.",
@@ -508,8 +513,12 @@ const Abas = (() => {
           $("#cr-rot").value = s.rotuloItem || "";
           $("#cr-agenda").checked = !!s.naAgenda;
           $("#cr-checkin").checked = !!s.checkin;
-          const academia = s.especial === "academia";
+          // Academia e Alimentação têm tela própria: sem campos, vista, meta nem agenda aqui.
+          const academia = !!s.especial;
           $("[data-nota-academia]").hidden = !academia;
+          $("[data-nota-academia]").textContent = s.especial === "alimentacao"
+            ? "Sua dieta terá refeições, alimentos, calorias e macros, com a meta do dia, e dá para importar o plano de um PDF, foto ou planilha."
+            : "Seus treinos terão dias, exercícios, séries, repetições e cargas.";
           ["[data-bloco-meta]", "[data-bloco-agrupar]", "[data-bloco-vista]"].forEach((q) => { $(q).hidden = academia; });
           $("#cr-agenda").closest(".linha-switch").hidden = academia;
           $("#cr-checkin").closest(".linha-switch").hidden = academia;
@@ -571,13 +580,15 @@ const Abas = (() => {
           $("[data-exemplos]").innerHTML = ex.map((e, i) => `<button type="button" class="chip" data-exemplo="${i}" aria-pressed="${est.exemplos.has(i)}">${esc(e)}</button>`).join("");
           const ativos = editando ? [...existentes, ...novosCampos.filter((x) => est.escolhidos.has(x.id))] : s.campos.filter((x) => est.escolhidos.has(x.id));
           const vistaRotulo = UI.vistas([s.visual.vista])[0]?.nome || "Lista";
-          $("[data-mini-registros]").textContent = academia ? "Treinos" : "Registros";
-          $("[data-previa-campos]").innerHTML = academia
+          $("[data-mini-registros]").textContent = s.especial === "alimentacao" ? "Hoje e dieta" : academia ? "Treinos" : "Registros";
+          $("[data-previa-campos]").innerHTML = s.especial === "alimentacao"
+            ? `<span>Refeições</span><span>Alimentos</span><span>Calorias</span><span>Metas</span>`
+            : academia
             ? `<span>Dia de treino</span><span>Exercícios</span><span>Cargas</span>`
             : `<span>Nome</span>${s.naAgenda ? "<span>Data</span>" : ""}${ativos.slice(0, 3).map((x) => `<span>${esc(x.rotulo)}</span>`).join("")}${ativos.length > 3 ? `<span>+${ativos.length - 3}</span>` : ""}`;
-          $("[data-previa-resumo]").innerHTML = academia ? "Seus exercícios serão organizados por dia de treino."
+          $("[data-previa-resumo]").innerHTML = s.especial === "alimentacao" ? "Seu plano alimentar por refeição, com as calorias de hoje contra a meta." : academia ? "Seus exercícios serão organizados por dia de treino."
             : `${UI.desenhoVista(s.visual.vista)}<span>${esc(vistaRotulo)}, ${ativos.length ? `${ativos.length} ${ativos.length === 1 ? "campo adicional" : "campos adicionais"}` : "nome e data"}${s.naAgenda ? ", na agenda" : ""}${s.checkin ? ", marcação diária" : ""}</span>`;
-          $("[data-resumo-estrutura]").textContent = academia ? "Dias de treino" : `${vistaRotulo}, ${ativos.length} ${ativos.length === 1 ? "campo" : "campos"}`;
+          $("[data-resumo-estrutura]").textContent = s.especial === "alimentacao" ? "Refeições e calorias" : academia ? "Dias de treino" : `${vistaRotulo}, ${ativos.length} ${ativos.length === 1 ? "campo" : "campos"}`;
           $("[data-adicionar-campo]").disabled = ativos.length >= 8;
 
         }
@@ -623,6 +634,8 @@ const Abas = (() => {
             desenhar();
             return;
           }
+          // A aba pronta "Alimentação" tem tela própria, seja qual for o nome escrito.
+          if (est.modelo === "Alimentação") Object.assign(sug, { especial: "alimentacao", icone: "svg:prato", rotuloItem: "refeição", naAgenda: false, checkin: false, campos: [], descricao: "Sua dieta por refeição, as calorias de cada dia e os seus objetivos." });
           est.sug = sug;
           est.escolhidos = new Set(sug.campos.filter((x) => x.ativo !== false).map((x) => x.id));
           est.exemplos = new Set();
@@ -781,7 +794,8 @@ const Abas = (() => {
 
   /** Cria a aba a partir da leitura escolhida e abre a página dela. */
   function criar(nome, s, escolhidos, exemplos, idCriacao) {
-    const academia = s.especial === "academia";
+    const alimentacao = s.especial === "alimentacao";
+    const academia = s.especial === "academia" || alimentacao; // sem campos, registros nem vista
     const campos = academia ? [] : s.campos.filter((x) => escolhidos.has(x.id)).map(paraGravar);
     const agora = UI.hojeISO();
     const itens = academia ? [] : [...exemplos].map((i) => ({
@@ -790,7 +804,7 @@ const Abas = (() => {
     const ordemValida = !s.visual.ordem.startsWith("campo:") || campos.some((x) => `campo:${x.id}` === s.visual.ordem);
     const dados = {
       id: idCriacao, nome, icone: s.icone, cor: s.cor, descricao: s.descricao,
-      modelo: academia ? "academia" : "personalizado",
+      modelo: s.especial || "personalizado",
       campos, naAgenda: academia ? false : s.naAgenda, checkin: academia ? false : s.checkin,
       rotuloItem: s.rotuloItem, agruparPor: campos.some((x) => x.id === s.agruparPor) ? s.agruparPor : "",
       meta: s.meta.tipo === "nenhuma" || !(s.meta.alvo > 0) || (s.meta.tipo === "soma" && !campos.some((x) => x.id === s.meta.campoId)) ? null : s.meta,
@@ -800,7 +814,8 @@ const Abas = (() => {
       sugeridoPor: s.origem || "manual",
       ...(s.modeloOrigem ? { modeloOrigem: s.modeloOrigem } : {}),
       itens,
-      ...(academia ? { academia: { configuradoEm: "", objetivo: "", experiencia: "", frequenciaSemanal: 0, divisao: "" }, dias: [] } : {}),
+      ...(s.especial === "academia" ? { academia: { configuradoEm: "", objetivo: "", experiencia: "", frequenciaSemanal: 0, divisao: "" }, dias: [] } : {}),
+      ...(alimentacao ? { alimentacao: { objetivo: "", objetivos: "", metaKcal: null, metaProteina: null, metaCarbo: null, metaGordura: null }, plano: [], diario: {} } : {}),
     };
     const novo = Store.achar("pilares", idCriacao) ? Store.atualizar("pilares", idCriacao, dados) : Store.inserir("pilares", dados);
     location.href = `pilar.html?id=${encodeURIComponent(novo.id)}`;
@@ -810,7 +825,7 @@ const Abas = (() => {
   function salvarEdicao(pilar, nome, s, acrescentar) {
     const atuais = pilar.campos || [];
     const campos = [...atuais, ...acrescentar.filter((x) => !atuais.some((a) => a.id === x.id)).map(paraGravar)];
-    const academia = pilar.modelo === "academia";
+    const academia = ESPECIAIS.includes(pilar.modelo);
     const dados = {
       nome, icone: s.icone, cor: s.cor, descricao: s.descricao, rotuloItem: s.rotuloItem,
       naAgenda: academia ? pilar.naAgenda : s.naAgenda,

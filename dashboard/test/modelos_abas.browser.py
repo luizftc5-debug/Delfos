@@ -35,7 +35,7 @@ def testar(base):
         modelos=page.evaluate('ModelosAbas.listar()')
         assert len(modelos)==32
         assert page.locator('[data-modelo-id]:not([data-modelo-id=""])').count()==32
-        assert page.locator('[data-modelo-area]').count()==39
+        assert page.locator('[data-modelo-area]').count()==40  # 32 modelos específicos e 8 essenciais (com Alimentação)
         # O catálogo não cria as 32 abas automaticamente e preserva a aba livre.
         assert page.evaluate('Store.lista("pilares").length')==0
         expect(page.get_by_role('radio',name='Aba livre',exact=True)).to_have_attribute('aria-checked','true')

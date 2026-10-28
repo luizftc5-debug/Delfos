@@ -57,6 +57,9 @@
                 </div>
               </div>
             </section>
+            <section class="hidden" id="secao-alimentacao" aria-label="Alimentação de hoje e plano alimentar">
+              <div id="alimentacao-conteudo"></div>
+            </section>
             <div id="secao-itens">
               <section class="registros-trabalho">
                 <header class="registros-cabecalho">
@@ -114,6 +117,13 @@
             </p>
             <div class="grid g4 pagina-indicadores" id="bloco-stats">
             </div>
+            <section class="pagina-bloco hidden" id="alimentacao-evolucao-bloco">
+              <header class="bloco-cabecalho">
+                <h2 class="bloco-titulo">Os últimos sete dias</h2>
+                <span class="bloco-resumo">Calorias de cada dia contra a meta.</span>
+              </header>
+              <div class="bloco-corpo" id="alimentacao-evolucao"></div>
+            </section>
             <div class="painel-analises" id="coluna-lado">
               <section class="pagina-bloco" id="historico-habitos" hidden>
                 <header class="bloco-cabecalho">
@@ -228,6 +238,7 @@
   <script src="financas.js"></script>
   <script src="leituras.js"></script>
   <script src="calendario.js"></script>
+  <script src="alimentacao.js"></script>
   <script src="pilar.js"></script>
 </body>
 </html>

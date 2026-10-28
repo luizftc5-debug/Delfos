@@ -217,5 +217,19 @@ const Rotina = (() => {
     UI.toast(`Tirada da ${NOMES[dia].toLowerCase()}. Continua nos outros dias.`, { acaoRotulo: "Desfazer", aoAcionar: () => { Store.atualizar(CAMINHO, a.id, { dias: antes }); aoMudar(); } });
   }
 
-  return { CAMINHO, CATEGORIAS, NOMES, categoria, categoriaProvavel, doDia, resumo, montar, abrirFormulario };
+  /** A rotina numa planilha do Excel: quadro de horário de segunda a domingo e a lista, com horas por tipo. */
+  async function exportar() {
+    if (!lista().length) return UI.toast("A rotina ainda está vazia: adicione ou importe as atividades antes.");
+    try {
+      const { planilhaRotina, baixar } = await import("./planilha.mjs");
+      const nome = (Store.estado().perfil?.nome || "").trim().split(/\s+/)[0] || "";
+      baixar(planilhaRotina(lista(), { hoje: UI.hojeISO(), nome }), "Delfos - Rotina da semana.xlsx");
+      UI.toast("Planilha da rotina baixada. Abra no Excel, Google Planilhas ou Numbers.");
+    } catch (e) {
+      console.error(e);
+      UI.toast("Não deu para montar a planilha agora. Tente de novo.");
+    }
+  }
+
+  return { exportar, CAMINHO, CATEGORIAS, NOMES, categoria, categoriaProvavel, doDia, resumo, montar, abrirFormulario };
 })();

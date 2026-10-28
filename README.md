@@ -17,6 +17,18 @@ versões anteriores guardados no servidor.
   revise assuntos, horários, provas e entregas encontrados e inclua na agenda geral.
   O processamento acontece no aparelho; os documentos acompanham o backup e a sincronização da conta.
 
+### Novidades da versão 2.8 alpha
+- **Aba pronta "Alimentação"**: o plano alimentar por refeição, as calorias e os macros de hoje
+  contra a meta (marque **Comi** em cada refeição), o que você comeu fora do plano, seus objetivos e
+  a evolução da semana. **Importe a dieta** de um PDF, foto ou print, planilha do Excel ou CSV: o
+  Delfos lê as refeições e os alimentos, soma as calorias e, quando o arquivo não traz, estima pela
+  Tabela TACO (Unicamp), sempre marcado como estimado e com revisão antes de salvar.
+- **Excel**: "Baixar em Excel" na Rotina da semana (quadro de horário de segunda a domingo, com cores
+  por tipo e as horas da semana) e no calendário do mês (o mês em grade e a lista com datas).
+- **Minhas abas**: segure e arraste para mudar a ordem (no celular, pela alça de pontinhos), com a
+  animação acompanhando o movimento. As setas continuam para o teclado.
+- Quando uma caixa sobra sozinha na última linha de uma grade, ela ocupa a largura toda.
+
 ### Novidades da versão 2.7 alpha
 - **Formas de ver uma aba, explicadas**: Lista, Cartões, Colunas por etapa (o antigo "Quadro") e
   Planilha (a antiga "Tabela") e Calendário agora aparecem com um desenho em miniatura, uma frase do
@@ -92,6 +104,7 @@ python dashboard/test/configuracoes_ia.browser.py
 python dashboard/test/faculdade_documentos.browser.py
 python dashboard/test/modelos_abas.browser.py
 python dashboard/test/agenda_rotina.browser.py
+python dashboard/test/alimentacao_planilhas.browser.py
 ```
 
 ## Como abrir

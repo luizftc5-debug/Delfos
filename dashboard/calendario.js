@@ -202,6 +202,27 @@ const Calendario = (() => {
   let mesVisto = null; // { ano, mes }
 
   /**
+   * O mês exibido numa planilha do Excel: o calendário (segunda a domingo,
+   * com o que tem em cada dia, de todas as abas) e a lista com data de
+   * verdade. Montada aqui no aparelho por planilha.mjs, baixada na hora.
+   */
+  async function exportarMes(ano, mes) {
+    if (ano === undefined) { const h = new Date(); ({ ano, mes } = mesVisto || { ano: h.getFullYear(), mes: h.getMonth() }); }
+    try {
+      const { planilhaMes, baixar } = await import("./planilha.mjs");
+      const pad = (n) => String(n).padStart(2, "0");
+      const fimMes = new Date(ano, mes + 1, 0).getDate();
+      const mapa = itensEntre(`${ano}-${pad(mes + 1)}-01`, `${ano}-${pad(mes + 1)}-${pad(fimMes)}`);
+      const nome = new Date(ano, mes, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+      baixar(planilhaMes(mapa, ano, mes, { hoje: UI.hojeISO() }), `Delfos - ${fmt.capitalizar(nome)}.xlsx`);
+      UI.toast(`Planilha de ${nome} baixada. Abra no Excel, Google Planilhas ou Numbers.`);
+    } catch (e) {
+      console.error(e);
+      UI.toast("Não deu para montar a planilha agora. Tente de novo.");
+    }
+  }
+
+  /**
    * Desenha o calendário em `box`. `aoMudar` é chamado depois de qualquer
    * gravação (novo compromisso, concluir, importar), para a página se refazer.
    */
@@ -224,6 +245,7 @@ const Calendario = (() => {
           <button type="button" class="btn ghost sm icon" data-cal="1" aria-label="Próximo mês">›</button>
           <button type="button" class="btn ghost sm" data-cal="hoje">Hoje</button>
         </div>
+        <button type="button" class="btn ghost sm cal-excel" data-cal-excel title="Baixar ${fmt.escape(nomeMes)} numa planilha do Excel">${UI.icone("planilha")}Baixar em Excel</button>
         <span class="card-note">${doMes ? `${doMes} ${doMes === 1 ? "coisa marcada" : "coisas marcadas"} neste mês` : "nada marcado neste mês"}</span>
       </div>
       <div class="cal-grade" role="grid" aria-label="${fmt.escape(nomeMes)}">
@@ -245,6 +267,7 @@ const Calendario = (() => {
         }).join("")}
       </div>`;
 
+    box.querySelector("[data-cal-excel]")?.addEventListener("click", () => exportarMes(ano, mes));
     box.querySelectorAll("[data-cal]").forEach((b) => b.addEventListener("click", () => {
       const v = b.dataset.cal;
       if (v === "hoje") { const h = new Date(); mesVisto = { ano: h.getFullYear(), mes: h.getMonth() }; }
@@ -767,7 +790,7 @@ const Calendario = (() => {
     });
   }
 
-  return { parseICS, deEventoGoogle, gradeDoMes, lerDataICS, desdobrar, itensEntre, montar, abrirImportacao, importarArquivo, ACEITOS };
+  return { parseICS, deEventoGoogle, gradeDoMes, lerDataICS, desdobrar, itensEntre, montar, abrirImportacao, importarArquivo, ACEITOS, exportarMes };
 })();
 
 if (typeof module !== "undefined") module.exports = Calendario;

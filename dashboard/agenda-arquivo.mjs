@@ -675,6 +675,27 @@ const cancelado = () => new DOMException("Cancelado", "AbortError");
  * segundos). Um .ics não passa por aqui: o calendário já tem leitor próprio.
  */
 export async function lerArquivoAgenda(file, { aoProgresso = () => {}, signal, ano } = {}) {
+  const opcoes = ano ? { ano } : {};
+  return lerArquivo(file, {
+    aoProgresso, signal,
+    posicionado: (palavras) => analisarPosicionado(palavras, opcoes),
+    linhas: (linhas) => analisarLinhas(linhas, opcoes),
+    tabela: (linhas) => analisarTabela(linhas, opcoes),
+    achou: (r) => r.eventos.length + r.rotina.length,
+  });
+}
+
+/** Linhas de texto de palavras com posição, com " | " onde há um vão largo (colunas). */
+export const palavrasEmLinhas = (palavras) => agruparEmLinhas(palavras).map(textoDaLinha);
+
+/**
+ * Lê qualquer formato aceito e entrega o conteúdo à análise de quem chamou:
+ * `posicionado(palavras)` para PDF e imagem, `tabela(linhas de células)` para
+ * planilha e Word com tabela, `linhas(texto por linha)` para o resto. `achou(r)`
+ * conta o que a análise reconheceu (na imagem, decide se vale a segunda
+ * leitura do OCR). Devolve { tipo, ...resultado da análise, texto }.
+ */
+export async function lerArquivo(file, { aoProgresso = () => {}, signal, posicionado, linhas: porLinhas, tabela: porTabela, achou }) {
   if (!file?.size) throw new Error("O arquivo está vazio.");
   if (file.size > LIMITE_MB * 1024 * 1024) throw new Error(`Use um arquivo de até ${LIMITE_MB} MB.`);
   const nome = file.name || "arquivo";
@@ -683,13 +704,12 @@ export async function lerArquivoAgenda(file, { aoProgresso = () => {}, signal, a
     const dica = { xls: "Abra no Excel e salve como .xlsx ou .csv", doc: "Salve como .docx ou PDF", ppt: "Salve como .pptx ou PDF", heic: "Tire um print da foto ou exporte como JPEG", heif: "Exporte como JPEG", odt: "Salve como .docx ou PDF", ods: "Salve como .xlsx ou .csv", odp: "Salve como .pptx ou PDF" }[ext];
     throw new Error(`Esse formato (.${ext}) não é lido aqui. ${dica} e tente de novo.`);
   }
-  const opcoes = ano ? { ano } : {};
   if (FORMATOS.imagem.test(nome) || /^image\//.test(file.type)) {
-    let melhor = null;
+    let melhor = null, nMelhor = -1;
     await lerImagem(file, { aoProgresso, signal }, (palavras) => {
-      const r = { tipo: "imagem", ...analisarPosicionado(palavras, opcoes), texto: agruparEmLinhas(palavras).map(textoDaLinha).join("\n") };
-      const n = r.eventos.length + r.rotina.length;
-      if (!melhor || n > melhor.eventos.length + melhor.rotina.length) melhor = r;
+      const r = { tipo: "imagem", ...posicionado(palavras), texto: palavrasEmLinhas(palavras).join("\n") };
+      const n = achou(r);
+      if (n > nMelhor) { melhor = r; nMelhor = n; }
       return n > 0;
     });
     return melhor;
@@ -698,8 +718,7 @@ export async function lerArquivoAgenda(file, { aoProgresso = () => {}, signal, a
     aoProgresso("Lendo o PDF…");
     const palavras = await lerPDF(file, signal);
     if (!palavras.length) throw new Error("Este PDF não tem texto selecionável (é uma imagem). Tire um print da página e importe a imagem.");
-    const texto = agruparEmLinhas(palavras).map(textoDaLinha).join("\n");
-    return { tipo: "documento", ...analisarPosicionado(palavras, opcoes), texto };
+    return { tipo: "documento", ...posicionado(palavras), texto: palavrasEmLinhas(palavras).join("\n") };
   }
   if (/\.(docx|pptx)$/i.test(nome)) {
     aoProgresso("Lendo o documento…");
@@ -707,18 +726,17 @@ export async function lerArquivoAgenda(file, { aoProgresso = () => {}, signal, a
     const { texto } = await lerDocumento(file, { signal });
     // Tabelas do Word chegam com " | " entre as células, na posição certa.
     const linhas = texto.split(/\n+/).filter((l) => l.trim());
-    const tabela = linhas.some((l) => l.split("|").length >= 4) ? analisarTabela(linhas.map((l) => (l.includes("|") ? l.split("|") : [l])), opcoes) : analisarLinhas(linhas, opcoes);
-    return { tipo: "documento", ...tabela, texto };
+    const r = linhas.some((l) => l.split("|").length >= 4) ? porTabela(linhas.map((l) => (l.includes("|") ? l.split("|") : [l]))) : porLinhas(linhas);
+    return { tipo: "documento", ...r, texto };
   }
   if (/\.xlsx$/i.test(nome)) {
     aoProgresso("Lendo a planilha…");
     const linhas = await lerXLSX(file);
-    return { tipo: "planilha", ...analisarTabela(linhas, opcoes), texto: linhas.slice(0, 200).map((l) => l.join(" | ")).join("\n") };
+    return { tipo: "planilha", ...porTabela(linhas), texto: linhas.slice(0, 200).map((l) => l.join(" | ")).join("\n") };
   }
   if (FORMATOS.planilha.test(nome) || /^text\//.test(file.type)) {
     const texto = await textoComCharset(file);
-    const linhas = lerCSV(texto);
-    return { tipo: "planilha", ...analisarTabela(linhas, opcoes), texto: texto.slice(0, 20000) };
+    return { tipo: "planilha", ...porTabela(lerCSV(texto)), texto: texto.slice(0, 20000) };
   }
   throw new Error("Formato não reconhecido. Use PDF, Word (.docx), PowerPoint (.pptx), planilha (.csv ou .xlsx), um .ics ou uma imagem (PNG, JPEG).");
 }

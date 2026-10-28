@@ -4140,3 +4140,26 @@ span.info.bem { color: var(--success-text); }
   .revisar-quando > select { flex: 1 1 100%; width: 100%; }
   .dias-semana .chip { min-width: 0; flex: 1 1 0; padding-left: 4px; padding-right: 4px; }
 }
+
+/* Reordenar arrastando (2.8): a linha que se move sobe, ganha sombra e segue o
+   ponteiro; as vizinhas abrem espaço deslizando. Com "reduzir movimento",
+   tudo troca de lugar sem animação. */
+.ordem-alca { display: grid; place-items: center; flex-shrink: 0; width: 18px; align-self: stretch; color: var(--texto-3); cursor: grab; opacity: .7; touch-action: none; }
+@media (pointer: coarse) { .ordem-alca { width: 36px; margin: -8px 0 -8px -6px; opacity: 1; } }
+.ordem-alca .ico { width: 16px; height: 16px; }
+[data-arrastavel] > li { cursor: grab; touch-action: pan-y; }
+[data-arrastavel] > li :is(input, button, a, select) { cursor: auto; }
+[data-arrastavel] > li :is(button, a) { cursor: pointer; }
+[data-arrastavel].ordenando > li { will-change: transform; }
+[data-arrastavel] > li.arrastando {
+  position: relative; z-index: 3; cursor: grabbing;
+  background: var(--superficie-2); border-radius: var(--r-md);
+  box-shadow: var(--shadow-lift), 0 0 0 1px var(--linha-forte);
+  transition: box-shadow 160ms var(--ease-saida);
+}
+[data-arrastavel] > li.arrastando .ordem-alca { color: var(--texto); opacity: 1; }
+:root.arrastando-algo, :root.arrastando-algo * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
+@media (hover: hover) and (pointer: fine) {
+  [data-arrastavel] > li:hover .ordem-alca { opacity: 1; color: var(--texto-2); }
+}
+.revisar-arquivo > .notice { margin: 0; }

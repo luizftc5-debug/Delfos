@@ -61,6 +61,10 @@
 .painel-dia { grid-template-columns: minmax(0, 1fr) 310px; }
 .painel-dia:has(> #sec-agenda[hidden]), .painel-dia:has(> #sec-notas[hidden]) { grid-template-columns: minmax(0, 1fr); }
 .painel-agenda { grid-template-columns: minmax(0, 1fr) 290px; }
+/* Numa grade de duas colunas, a caixa que sobra sozinha na última linha
+   ocupa a largura toda em vez de deixar um buraco ao lado (2.8). Só contam as
+   caixas visíveis: leitura e números já ocupam a linha inteira. */
+:is(.painel-dupla, .painel-analises) > :nth-last-child(1 of :not([hidden], .hidden, .leitura, .pagina-indicadores)):nth-child(odd of :not([hidden], .hidden, .leitura, .pagina-indicadores)) { grid-column: 1 / -1; }
 .painel-conteudo > .leitura,
 .painel-conteudo > .pagina-indicadores { grid-column: 1 / -1; }
 .pagina-organizada .leitura, .pagina-organizada .leitura[data-tam] { max-width: 90ch; font:400 calc(16px * var(--escala-fonte, 1))/1.65 var(--font); color: var(--texto-2); letter-spacing: 0; margin: 0; }
@@ -437,3 +441,71 @@
 .registros-vista { max-width: 100%; min-width: 0; }
 .registros-vista .seletor-vistas.compacto { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .registros-trabalho > div > #lista > .empty.comeco-aba { display: block; padding: 18px 0 8px; }
+
+/* Aba pronta "Alimentação" (2.8): o placar de hoje, o plano por refeição,
+   o que entrou fora do plano e os objetivos. */
+#secao-alimentacao { min-width: 0; }
+.ali-hoje { padding: 4px 0 26px; border-bottom: 1px solid var(--linha); margin-bottom: 26px; }
+.ali-hoje-cab, .ali-sec-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; }
+.ali-titulo { margin: 0; font: 550 calc(19px * var(--escala-fonte, 1))/1.35 var(--font); letter-spacing: -.015em; }
+.ali-hoje .ali-titulo::first-letter { text-transform: uppercase; }
+.ali-apoio { margin: 6px 0 0; color: var(--texto-3); font-size: calc(13px * var(--escala-fonte, 1)); line-height: 1.6; max-width: 72ch; }
+.ali-apoio b { color: var(--texto-2); font-weight: 550; }
+.ali-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.ali-placar { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 14px 28px; margin-top: 22px; }
+.ali-kcal { display: flex; align-items: baseline; gap: 10px; grid-row: span 2; }
+.ali-kcal .voz { font: 400 calc(52px * var(--escala-fonte, 1))/1 var(--font-voz); color: var(--texto); }
+.ali-kcal > span:last-child { color: var(--texto-3); font-size: calc(14px * var(--escala-fonte, 1)); }
+.ali-barra { height: 8px; }
+.ali-macros { display: flex; flex-wrap: wrap; gap: 10px 28px; }
+.ali-macro { display: grid; grid-template-columns: auto auto; align-items: baseline; gap: 2px 8px; min-width: 120px; font-size: calc(13px * var(--escala-fonte, 1)); }
+.ali-macro > span { grid-column: 1 / -1; color: var(--texto-3); font-size: calc(12px * var(--escala-fonte, 1)); }
+.ali-macro b { font-weight: 550; font-variant-numeric: tabular-nums; }
+.ali-macro small { color: var(--texto-3); }
+.ali-macro-barra { grid-column: 1 / -1; display: block; height: 3px; border-radius: 3px; background: var(--track); overflow: hidden; margin-top: 4px; }
+.ali-macro-barra > i { display: block; height: 100%; background: var(--texto-2); }
+.ali-comeco { padding: 8px 0 28px; text-align: left; align-items: flex-start; border: 0; background: none; }
+.ali-comeco p { max-width: 62ch; color: var(--texto-3); font-size: calc(14px * var(--escala-fonte, 1)); line-height: 1.7; margin: 0 0 18px; }
+.ali-plano, .ali-extras, .ali-objetivos { margin-bottom: 30px; }
+.ali-refeicoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 12px; margin-top: 16px; }
+.ali-refeicao { background: var(--superficie-2); border-radius: var(--r-md); padding: 12px 14px 10px; min-width: 0; box-shadow: inset 3px 0 0 transparent; transition: box-shadow var(--t-rapido) var(--ease-saida); }
+.ali-refeicao.comi { box-shadow: inset 3px 0 0 var(--st-good); }
+.ali-refeicao > header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--linha); }
+.ali-comi { display: inline-flex; align-items: center; gap: 6px; color: var(--texto-3); font-size: calc(12px * var(--escala-fonte, 1)); cursor: pointer; }
+.ali-refeicao.comi .ali-comi { color: var(--success-text); }
+.ali-refeicao-nome { display: flex; align-items: baseline; gap: 8px; min-width: 0; padding: 4px 0; background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ali-refeicao-nome b { font-weight: 550; font-size: calc(15px * var(--escala-fonte, 1)); overflow-wrap: anywhere; }
+.ali-refeicao-nome span { color: var(--texto-3); font-size: calc(12px * var(--escala-fonte, 1)); font-variant-numeric: tabular-nums; }
+.ali-refeicao-kcal { display: grid; justify-items: end; font-weight: 550; font-variant-numeric: tabular-nums; font-size: calc(14px * var(--escala-fonte, 1)); }
+.ali-refeicao-kcal small { font-weight: 400; font-size: calc(11px * var(--escala-fonte, 1)); }
+.ali-itens { list-style: none; margin: 0; padding: 0; }
+.ali-item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 4px 10px; padding: 8px 0; border-bottom: 1px solid var(--linha); }
+.ali-item:last-child { border-bottom: 0; }
+.ali-item-texto { display: grid; gap: 2px; min-width: 0; }
+.ali-item-nome { font-size: calc(14px * var(--escala-fonte, 1)); overflow-wrap: anywhere; }
+.ali-qtd, .ali-item-info { color: var(--texto-3); font-size: calc(12px * var(--escala-fonte, 1)); }
+.ali-item-kcal { display: grid; justify-items: end; font-variant-numeric: tabular-nums; font-size: calc(13px * var(--escala-fonte, 1)); white-space: nowrap; }
+.ali-item-kcal small { color: var(--texto-3); font-size: calc(10.5px * var(--escala-fonte, 1)); }
+.ali-item .row-actions { opacity: 1; }
+.ali-mais { margin-top: 6px; }
+.ali-extras .ali-itens { margin-top: 10px; max-width: 720px; }
+.ali-extra-form { display: grid; grid-template-columns: minmax(0, 1fr) 140px auto; gap: 8px; margin-top: 14px; max-width: 720px; }
+.ali-objetivos p { margin: 8px 0 0; font-size: calc(14px * var(--escala-fonte, 1)); line-height: 1.6; }
+.ali-objetivos-texto { white-space: pre-wrap; color: var(--texto-2); max-width: 72ch; }
+.ali-nota { color: var(--texto-3); font-size: calc(12px * var(--escala-fonte, 1)); line-height: 1.6; max-width: 80ch; margin: 0; }
+.ali-usar-meta { display: flex; align-items: center; gap: 8px; }
+.ali-modo { max-width: 460px; }
+.ali-rev-refeicao { display: inline-block; width: auto; min-width: 180px; font: inherit; }
+.ali-rev-hora { display: inline-block; width: 120px; font-size: calc(13px * var(--escala-fonte, 1)); }
+.ali-rev-qtd { width: 180px; }
+.ali-rev-kcal { width: 110px; }
+@media (max-width: 680px) {
+  .ali-placar { grid-template-columns: minmax(0, 1fr); }
+  .ali-kcal { grid-row: auto; }
+  .ali-kcal .voz { font-size: calc(42px * var(--escala-fonte, 1)); }
+  .ali-extra-form { grid-template-columns: minmax(0, 1fr) 110px; }
+  .ali-extra-form .btn { grid-column: 1 / -1; }
+  .ali-rev-refeicao { width: 100%; min-width: 0; }
+  .ali-rev-qtd, .ali-rev-kcal { flex: 1 1 120px; width: auto; }
+}
+.ali-evolucao-barras { margin-top: 18px; }

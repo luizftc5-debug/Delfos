@@ -27,6 +27,7 @@
 
   const itens = () => (Store.achar(CAMINHO, id) || {}).itens || [];
   const ehAcademia = () => pilar.modelo === "academia";
+  const ehAlimentacao = () => pilar.modelo === "alimentacao";
 
   /* --------------------------------- Render --------------------------------- */
 
@@ -87,34 +88,49 @@
 
     $("titulo").textContent = pilar.nome;
     const academia = ehAcademia();
-    Organizacao.rotular("registros", academia ? "Treinos" : "Registros");
-    Organizacao.rotular("visao-geral", academia ? "Evolução" : "Visão geral");
+    const alimentacao = ehAlimentacao();
+    // As abas prontas com tela própria (academia, alimentação) escondem a lista genérica.
+    const propria = academia || alimentacao;
+    Organizacao.rotular("registros", academia ? "Treinos" : alimentacao ? "Hoje e dieta" : "Registros");
+    Organizacao.rotular("visao-geral", propria ? "Evolução" : "Visão geral");
     document.querySelector('[data-ajuste="btn-refazer-questionario"]').hidden = !academia;
-    document.querySelector('[data-ajuste="btn-campos"]').hidden = academia;
+    document.querySelector('[data-ajuste="btn-campos"]').hidden = propria;
     $("subtitulo").textContent =
       pilar.descricao ||
       (academia
         ? "Seus dias de treino, com carga, repetições e recorde de cada exercício."
+        : alimentacao ? "Sua dieta por refeição, as calorias de hoje e os seus objetivos."
         : pilar.checkin ? "Marque cada dia em que fez; o Delfos conta as sequências." : pilar.naAgenda ? "Com data, cada registro entra na agenda da visão geral." : "Registros que se acompanham, fora da agenda.");
 
     $("btn-editar-aba").innerHTML = `${UI.icone("ajustes")}Personalizar`;
     $("btn-item").textContent = `+ ${fmt.capitalizar(rotulo())}`;
 
-    $("bloco-stats").classList.toggle("hidden", academia);
-    $("secao-itens").classList.toggle("hidden", academia);
-    $("leitura").classList.toggle("hidden", academia);
+    $("bloco-stats").classList.toggle("hidden", propria);
+    $("secao-itens").classList.toggle("hidden", propria);
+    $("leitura").classList.toggle("hidden", propria);
     $("secao-academia").classList.toggle("hidden", !academia);
-    $("btn-item").classList.toggle("hidden", academia);
+    $("secao-alimentacao").classList.toggle("hidden", !alimentacao);
+    $("alimentacao-evolucao-bloco").classList.toggle("hidden", !alimentacao);
+    $("coluna-lado").classList.toggle("hidden", alimentacao);
+    $("btn-item").classList.toggle("hidden", propria);
     prepararRapido();
-    $("btn-campos").classList.toggle("hidden", academia);
+    $("btn-campos").classList.toggle("hidden", propria);
     $("btn-refazer-questionario").hidden = !academia;
     $("btn-dia").classList.toggle("hidden", !(academia && pilar.academia?.configuradoEm));
     $("nota-ajustes").textContent = academia
       ? "Esta aba foi criada por você. Renomeá-la, trocar ícone e cor, ou refazer o questionário não mexe nos dias já montados; excluí-la apaga também os dias e exercícios cadastrados."
+      : alimentacao ? "Esta aba foi criada por você. Renomeá-la ou trocar ícone e cor não mexe na dieta; excluí-la apaga também o plano alimentar, as metas e os registros de cada dia."
       : "Esta aba foi criada por você. Personalizar (propósito, ícone, cor, meta, agrupamento, campos sugeridos pelo Delfos) não mexe no que já está cadastrado; excluí-la apaga também todos os registros dela.";
     const prop = $("proposito-aba");
     prop.hidden = !pilar.proposito;
     prop.querySelector("span").textContent = pilar.proposito || "";
+
+    if (alimentacao) {
+      $("sec-perguntas").hidden = true;
+      Alimentacao.montar({ pilar, box: $("alimentacao-conteudo"), evolucao: $("alimentacao-evolucao"), aoMudar: render });
+      UI.montarLayout("pilar", { idAtivo: id });
+      return;
+    }
 
     if (academia) {
       $("swatch-academia").style.background = pilar.cor;
@@ -1281,9 +1297,10 @@
   async function excluirAba() {
     const quantos = ehAcademia()
       ? dias().reduce((n, d) => n + d.exercicios.length, 0)
+      : ehAlimentacao() ? Alimentacao.resumoHoje(pilar).itens
       : itens().length;
-    const rotuloItem = ehAcademia() ? "exercício cadastrado" : "item cadastrado";
-    const rotuloItens = ehAcademia() ? "exercícios cadastrados" : "itens cadastrados";
+    const rotuloItem = ehAcademia() ? "exercício cadastrado" : ehAlimentacao() ? "alimento do plano" : "item cadastrado";
+    const rotuloItens = ehAcademia() ? "exercícios cadastrados" : ehAlimentacao() ? "alimentos do plano" : "itens cadastrados";
     const ok = await UI.confirmar({
       titulo: `Excluir a aba "${pilar.nome}"?`,
       descricao: quantos
@@ -1303,7 +1320,7 @@
   function prepararRapido() {
     const r = rotulo();
     const form = $("registro-rapido");
-    form.hidden = ehAcademia();
+    form.hidden = ehAcademia() || ehAlimentacao();
     $("f-rapido").placeholder = pilar.exemploItem ? `Adicionar ${r}, por exemplo: ${pilar.exemploItem}` : `Adicionar ${r}…`;
     $("rotulo-rapido").textContent = `Adicionar ${r} rapidamente`;
     const cg = campoGrupo();

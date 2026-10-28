@@ -403,6 +403,9 @@
   document.getElementById("importar-faixa").addEventListener("click", () => importarArquivo("calendario"));
   document.getElementById("importar-faixa").querySelector(".importar-faixa-ic").innerHTML = UI.icone("importar");
   document.getElementById("btn-importar-rotina").addEventListener("click", () => importarArquivo("rotina"));
+  const btnExcel = document.getElementById("btn-excel-rotina");
+  btnExcel.insertAdjacentHTML("afterbegin", UI.icone("planilha"));
+  btnExcel.addEventListener("click", () => Rotina.exportar());
   document.getElementById("btn-atividade").addEventListener("click", () => Rotina.abrirFormulario({}, render));
   document.getElementById("f-concluidos").addEventListener("change", (ev) => { verConcluidos = ev.target.checked; render(); });
   document.getElementById("f-tipo").addEventListener("click", (ev) => {

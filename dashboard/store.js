@@ -624,6 +624,15 @@ const Store = (() => {
       // exercícios do catálogo). Uma aba desse modelo sem `academia` ainda
       // não passou pelo questionário inicial — a presença de `academia` é a
       // marca que impede essa conversão de rodar de novo.
+      // 2.8: a aba pronta "Alimentação" guarda metas, plano e o diário de cada
+      // dia; sem eles (aba vinda de um backup mexido), começa vazia.
+      if (pil.modelo === "alimentacao") {
+        pil.alimentacao = pil.alimentacao && typeof pil.alimentacao === "object" ? pil.alimentacao : { objetivo: "", objetivos: "", metaKcal: null };
+        pil.plano = Array.isArray(pil.plano) ? pil.plano : [];
+        pil.diario = pil.diario && typeof pil.diario === "object" && !Array.isArray(pil.diario) ? pil.diario : {};
+        pil.naAgenda = false;
+      }
+
       if (pil.modelo === "academia" && !pil.academia) {
         pil.academia = { configuradoEm: "", objetivo: "", experiencia: "", frequenciaSemanal: 0, divisao: "" };
         pil.dias = Array.isArray(pil.dias) ? pil.dias : [];

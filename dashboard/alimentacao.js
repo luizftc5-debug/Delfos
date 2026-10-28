@@ -17,6 +17,7 @@ const Alimentacao = (() => {
   const OBJETIVOS = ["", "Perder peso", "Manter o peso", "Ganhar massa muscular", "Comer melhor", "Outro"];
   const uid = (p) => Store.uid(p);
   let dieta = null; // dieta.mjs, carregado na primeira vez
+  const datas = new Map(); // data escolhida, preservada entre os checks desta visita
   const carregarDieta = async () => (dieta ||= await import("./dieta.mjs"));
 
   const num = (v) => (v === null || v === undefined || v === "" || !Number.isFinite(Number(v)) ? null : Number(v));
@@ -37,12 +38,30 @@ const Alimentacao = (() => {
     const a = { objetivo: "", objetivos: "", metaKcal: null, metaProteina: null, metaCarbo: null, metaGordura: null, ...(pilar.alimentacao || {}) };
     return { a, plano: Array.isArray(pilar.plano) ? pilar.plano : [], diario: pilar.diario && typeof pilar.diario === "object" ? pilar.diario : {} };
   }
-  const salvar = (pilar, patch) => Store.atualizar(CAMINHO, pilar.id, patch);
+  function salvar(pilar, patch) {
+    // Uma mudança no plano não pode reescrever o que já foi consumido.
+    if (patch.plano) {
+      const atual = Store.achar(CAMINHO, pilar.id);
+      const { plano, diario } = dados(atual);
+      const porId = new Map(plano.map(r => [r.id, r]));
+      const congelado = Object.fromEntries(Object.entries(diario).map(([iso, d]) => {
+        const registros = { ...(d.registros || {}) };
+        for (const id of d.feitas || []) {
+          const r = porId.get(id);
+          if (r && !registros[id]) registros[id] = JSON.parse(JSON.stringify(r));
+        }
+        return [iso, { ...d, registros }];
+      }));
+      patch = { ...patch, diario: patch.diario || congelado };
+    }
+    return Store.atualizar(CAMINHO, pilar.id, patch);
+  }
   const doDia = (diario, iso) => ({ feitas: [], extras: [], ...(diario[iso] || {}) });
 
   /** O que se comeu num dia: refeições marcadas mais o que entrou fora do plano. */
   function consumoDe(plano, dia) {
-    const comidos = plano.filter((r) => dia.feitas.includes(r.id)).flatMap((r) => r.itens);
+    const porId = new Map(plano.map(r => [r.id, r]));
+    const comidos = [...new Set(dia.feitas)].flatMap(id => (dia.registros?.[id] || porId.get(id))?.itens || []);
     return somar([...comidos, ...dia.extras]);
   }
 
@@ -50,7 +69,7 @@ const Alimentacao = (() => {
 
   function montar({ pilar, box, evolucao, aoMudar }) {
     const { a, plano, diario } = dados(pilar);
-    const hoje = UI.hojeISO();
+    const hoje = datas.get(pilar.id) || UI.hojeISO();
     const dia = doDia(diario, hoje);
     const consumo = consumoDe(plano, dia);
     const totalPlano = somar(plano.flatMap((r) => r.itens));
@@ -64,7 +83,7 @@ const Alimentacao = (() => {
       <div class="ali-hoje">
         <div class="ali-hoje-cab">
           <div>
-            <h2 class="ali-titulo">Hoje, ${fmt.escape(new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }))}</h2>
+            <h2 class="ali-titulo">${hoje === UI.hojeISO() ? "Hoje, " : ""}${fmt.escape(new Date(`${hoje}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }))}</h2>
             <p class="ali-apoio">${meta ? (resta >= 0 ? `Faltam <b>${kcalTxt(resta)}</b> para a meta do dia.` : `<span class="atencao">${kcalTxt(-resta)} acima da meta do dia.</span>`) : `Defina uma meta de calorias em <b>Objetivos e metas</b> para acompanhar o dia.`}</p>
           </div>
           <div class="ali-acoes">
@@ -73,11 +92,15 @@ const Alimentacao = (() => {
           </div>
         </div>
         <div class="ali-placar">
-          <div class="ali-kcal"><span class="voz num">${fmt.decimal(Math.round(consumo.kcal), 0)}</span><span>${meta ? `de ${fmt.decimal(meta, 0)} kcal` : "kcal hoje"}</span></div>
+          <div class="ali-kcal"><span class="voz num">${fmt.decimal(Math.round(consumo.kcal), 0)}</span><span>${meta ? `de ${fmt.decimal(meta, 0)} kcal` : "kcal nesta data"}</span></div>
           ${meta ? `<div class="meter-track ali-barra" role="progressbar" aria-label="Calorias de hoje" aria-valuemin="0" aria-valuemax="${meta}" aria-valuenow="${Math.round(consumo.kcal)}"><div class="meter-fill" style="width:${pct}%; background:${resta < 0 ? "var(--st-warning)" : fmt.escape(pilar.cor)}"></div></div>` : ""}
           <div class="ali-macros">${macro("Proteína", consumo.proteina, a.metaProteina)}${macro("Carboidrato", consumo.carbo, a.metaCarbo)}${macro("Gordura", consumo.gordura, a.metaGordura)}</div>
         </div>
       </div>
+
+      <div class="ali-data"><label for="ali-data">Data</label><input class="input" type="date" id="ali-data" value="${hoje}" />
+        <button class="btn ghost sm" type="button" data-ali="ontem">Ontem</button><button class="btn ghost sm" type="button" data-ali="hoje">Hoje</button>
+        <span class="card-note">Cada data guarda seus próprios checks e alimentos.</span></div>
 
       ${vazio ? `<div class="empty ali-comeco">
         <h3 class="comeco-titulo">Monte sua dieta</h3>
@@ -87,14 +110,16 @@ const Alimentacao = (() => {
       <section class="ali-plano" aria-labelledby="ali-plano-t">
         <header class="ali-sec-cab">
           <div><h2 class="ali-titulo" id="ali-plano-t">Plano alimentar</h2>
-          <p class="ali-apoio">${kcalTxt(totalPlano.kcal)} no plano${(() => { const d = totalPlano.kcal ? distribuicao(totalPlano) : null; return d ? `; proteína ${d.proteina}%, carboidrato ${d.carbo}%, gordura ${d.gordura}% das calorias` : ""; })()}${totalPlano.incompletos ? `. <span class="atencao">${totalPlano.incompletos} sem calorias</span>` : ""}. Marque <b>Comi</b> em cada refeição de hoje.</p></div>
+          <p class="ali-apoio">${kcalTxt(totalPlano.kcal)} no plano${(() => { const d = totalPlano.kcal ? distribuicao(totalPlano) : null; return d ? `; proteína ${d.proteina}%, carboidrato ${d.carbo}%, gordura ${d.gordura}% das calorias` : ""; })()}${totalPlano.incompletos ? `. <span class="atencao">${totalPlano.incompletos} sem calorias</span>` : ""}. Suas refeições de rotina: marque <b>Comi</b> na data escolhida. Alterar a rotina preserva os checks anteriores.</p></div>
           <button class="btn sm" type="button" data-ali="refeicao">+ Refeição</button>
         </header>
-        <div class="ali-refeicoes">${plano.map((r) => refeicaoHTML(r, dia)).join("")}</div>
+        <div class="ali-refeicoes">${plano.filter(r => !r.inicio || r.inicio <= hoje || dia.feitas.includes(r.id)).map((r) => refeicaoHTML(r, dia, hoje)).join("")}</div>
       </section>`}
 
+      ${dia.feitas.some(id => !plano.some(r => r.id === id) && dia.registros?.[id]) ? `<section class="ali-extras"><h2 class="ali-titulo">Refeições do histórico</h2><p class="ali-apoio">Consumidas nesta data e retiradas do plano atual.</p>${dia.feitas.filter(id => !plano.some(r => r.id === id) && dia.registros?.[id]).map(id => refeicaoHTML(dia.registros[id], dia, hoje, true)).join("")}</section>` : ""}
+
       <section class="ali-extras" aria-labelledby="ali-extras-t">
-        <header class="ali-sec-cab"><div><h2 class="ali-titulo" id="ali-extras-t">Fora do plano, hoje</h2>
+        <header class="ali-sec-cab"><div><h2 class="ali-titulo" id="ali-extras-t">${hoje === UI.hojeISO() ? "Fora do plano, hoje" : "Fora do plano nesta data"}</h2>
         <p class="ali-apoio">O que você comeu além do plano. Com a quantidade (por exemplo, 150 g ou 2 unidades), o Delfos estima as calorias pela Tabela TACO.</p></div></header>
         <form class="ali-extra-form" data-extra autocomplete="off">
           <label class="sr" for="ali-extra-nome">O que você comeu</label>
@@ -114,21 +139,24 @@ const Alimentacao = (() => {
       const b = ev.target.closest("[data-ali]");
       if (!b) return;
       const acao = b.dataset.ali;
+      if (acao === "hoje" || acao === "ontem") { datas.set(pilar.id, UI.isoMaisDias(acao === "ontem" ? -1 : 0)); aoMudar(); return; }
       const r = plano.find((x) => x.id === b.dataset.refeicao);
       if (acao === "importar") return importar(pilar, aoMudar);
       if (acao === "objetivos") return editarObjetivos(pilar, aoMudar);
-      if (acao === "refeicao") return editarRefeicao(pilar, null, aoMudar);
-      if (acao === "editar-refeicao") return editarRefeicao(pilar, r, aoMudar);
+      if (acao === "refeicao") return editarRefeicao(pilar, null, aoMudar, hoje);
+      if (acao === "editar-refeicao") return editarRefeicao(pilar, r, aoMudar, hoje);
       if (acao === "novo-item") return editarItem(pilar, r, null, aoMudar);
       if (acao === "editar-item") return editarItem(pilar, r, r.itens.find((i) => i.id === b.dataset.item), aoMudar);
       if (acao === "excluir-item") return excluirItem(pilar, r, b.dataset.item, aoMudar);
-      if (acao === "excluir-extra") return excluirExtra(pilar, b.dataset.item, aoMudar);
+      if (acao === "editar-extra") return editarExtra(pilar, b.dataset.item, aoMudar, hoje);
+      if (acao === "excluir-extra") return excluirExtra(pilar, b.dataset.item, aoMudar, hoje);
     };
     box.onchange = (ev) => {
       const c = ev.target.closest("[data-comi]");
-      if (c) marcarComi(pilar, c.dataset.comi, c.checked, aoMudar);
+      if (c) marcarComi(pilar, c.dataset.comi, c.checked, aoMudar, hoje);
+      if (ev.target.id === "ali-data" && ev.target.value && ev.target.validity.valid) { datas.set(pilar.id, ev.target.value); aoMudar(); }
     };
-    box.querySelector("[data-extra]").onsubmit = (ev) => { ev.preventDefault(); adicionarExtra(pilar, ev.target, aoMudar); };
+    box.querySelector("[data-extra]").onsubmit = (ev) => { ev.preventDefault(); adicionarExtra(pilar, ev.target, aoMudar, hoje); };
     carregarDieta().catch(() => {}); // aquece o módulo das contas
     if (evolucao) montarEvolucao(pilar, evolucao);
   }
@@ -139,19 +167,21 @@ const Alimentacao = (() => {
     return t ? { proteina: Math.round((kP / t) * 100), carbo: Math.round((kC / t) * 100), gordura: Math.round((kG / t) * 100) } : null;
   }
 
-  function refeicaoHTML(r, dia) {
-    const t = somar(r.itens);
+  function refeicaoHTML(r, dia, iso = UI.hojeISO(), historica = false) {
     const comi = dia.feitas.includes(r.id);
+    const registrada = comi && dia.registros?.[r.id] || r;
+    const t = somar(registrada.itens);
     return `<article class="ali-refeicao ${comi ? "comi" : ""}">
       <header>
-        <label class="ali-comi"><input type="checkbox" class="check" data-comi="${fmt.escape(r.id)}" ${comi ? "checked" : ""} aria-label="Comi ${fmt.escape(r.nome)} hoje" /><span>Comi</span></label>
-        <button type="button" class="ali-refeicao-nome" data-ali="editar-refeicao" data-refeicao="${fmt.escape(r.id)}">
+        <label class="ali-comi"><input type="checkbox" class="check" data-comi="${fmt.escape(r.id)}" ${comi ? "checked" : ""} aria-label="Comi ${fmt.escape(r.nome)} ${iso === UI.hojeISO() ? "hoje" : `em ${fmt.data(iso)}`}" /><span>Comi</span></label>
+        <button type="button" class="ali-refeicao-nome" ${historica ? "disabled" : `data-ali="editar-refeicao" data-refeicao="${fmt.escape(r.id)}"`}>
           <b>${fmt.escape(r.nome)}</b>${r.hora ? `<span>${fmt.escape(r.hora)}</span>` : ""}
         </button>
         <span class="ali-refeicao-kcal">${kcalTxt(t.kcal)}${t.incompletos ? `<small class="atencao">${t.incompletos} sem kcal</small>` : ""}</span>
       </header>
-      <ul class="ali-itens">${r.itens.map((i) => itemHTML(i, "plano", r.id)).join("")}</ul>
-      <button type="button" class="btn ghost sm ali-mais" data-ali="novo-item" data-refeicao="${fmt.escape(r.id)}">+ Alimento</button>
+      ${comi ? `<p class="ali-apoio">Valores guardados no check desta data. Editar a rotina vale para os próximos checks.</p>` : ""}
+      <ul class="ali-itens">${registrada.itens.map((i) => itemHTML(i, historica || !r.itens.some(x => x.id === i.id) ? "historico" : "plano", r.id)).join("")}</ul>
+      ${historica ? "" : `<button type="button" class="btn ghost sm ali-mais" data-ali="novo-item" data-refeicao="${fmt.escape(r.id)}">+ Alimento</button>`}
     </article>`;
   }
 
@@ -166,7 +196,7 @@ const Alimentacao = (() => {
       <span class="row-actions">
         ${onde === "plano" ? `<button class="btn ghost sm icon" type="button" data-ali="editar-item" data-refeicao="${fmt.escape(refeicaoId)}" data-item="${fmt.escape(i.id)}" aria-label="Editar ${fmt.escape(i.alimento)}">${UI.icone("editar")}</button>
         <button class="btn ghost sm icon" type="button" data-ali="excluir-item" data-refeicao="${fmt.escape(refeicaoId)}" data-item="${fmt.escape(i.id)}" aria-label="Excluir ${fmt.escape(i.alimento)}">${UI.icone("lixeira")}</button>`
-        : `<button class="btn ghost sm icon" type="button" data-ali="excluir-extra" data-item="${fmt.escape(i.id)}" aria-label="Excluir ${fmt.escape(i.alimento)}">${UI.icone("lixeira")}</button>`}
+        : onde === "historico" ? "" : `<button class="btn ghost sm icon" type="button" data-ali="editar-extra" data-item="${fmt.escape(i.id)}" aria-label="Editar ${fmt.escape(i.alimento)}">${UI.icone("editar")}</button><button class="btn ghost sm icon" type="button" data-ali="excluir-extra" data-item="${fmt.escape(i.id)}" aria-label="Excluir ${fmt.escape(i.alimento)}">${UI.icone("lixeira")}</button>`}
       </span>
     </li>`;
   }
@@ -193,18 +223,23 @@ const Alimentacao = (() => {
 
   /* -------------------------------- Ações ---------------------------------- */
 
-  function marcarComi(pilar, refeicaoId, comi, aoMudar) {
-    const { diario } = dados(Store.achar(CAMINHO, pilar.id));
-    const hoje = UI.hojeISO();
+  function marcarComi(pilar, refeicaoId, comi, aoMudar, hoje = UI.hojeISO()) {
+    const { plano, diario } = dados(Store.achar(CAMINHO, pilar.id));
     const d = doDia(diario, hoje);
     d.feitas = comi ? [...new Set([...d.feitas, refeicaoId])] : d.feitas.filter((x) => x !== refeicaoId);
+    d.registros = { ...(d.registros || {}) };
+    if (comi) { const r = plano.find(x => x.id === refeicaoId); if (r) d.registros[refeicaoId] = JSON.parse(JSON.stringify(r)); }
+    else delete d.registros[refeicaoId];
     salvar(pilar, { diario: { ...diario, [hoje]: d } });
     aoMudar();
   }
 
-  async function adicionarExtra(pilar, form, aoMudar) {
+  async function adicionarExtra(pilar, form, aoMudar, hoje = UI.hojeISO()) {
+    if (form.dataset.salvando) return;
     const texto = form.alimento.value.trim();
     if (!texto) { form.alimento.focus(); return; }
+    form.dataset.salvando = "sim";
+    try {
     const D = await carregarDieta();
     const lido = D.itemDeTexto(texto) || { alimento: texto, quantidade: "", kcal: null };
     const kcalDigitado = num(form.kcal.value);
@@ -212,18 +247,18 @@ const Alimentacao = (() => {
     delete item.fonte;
     const atual = Store.achar(CAMINHO, pilar.id);
     const { diario } = dados(atual);
-    const hoje = UI.hojeISO();
     const d = doDia(diario, hoje);
     d.extras = [...d.extras, item];
     salvar(pilar, { diario: { ...diario, [hoje]: d } });
     UI.toast(item.kcal === null ? "Adicionado sem calorias: diga a quantidade (150 g, 2 unidades) ou as kcal para entrar na conta." : `Adicionado: ${kcalTxt(item.kcal)}${item.estimado ? ", estimado pela TACO" : ""}.`);
     aoMudar();
     document.getElementById("ali-extra-nome")?.focus();
+    } catch (e) { UI.toast(e?.message || "Não foi possível salvar. Tente novamente."); }
+    finally { delete form.dataset.salvando; }
   }
 
-  function excluirExtra(pilar, itemId, aoMudar) {
+  function excluirExtra(pilar, itemId, aoMudar, hoje = UI.hojeISO()) {
     const { diario } = dados(Store.achar(CAMINHO, pilar.id));
-    const hoje = UI.hojeISO();
     const antes = doDia(diario, hoje);
     salvar(pilar, { diario: { ...diario, [hoje]: { ...antes, extras: antes.extras.filter((x) => x.id !== itemId) } } });
     aoMudar();
@@ -253,15 +288,45 @@ const Alimentacao = (() => {
     aoMudar();
   }
 
-  async function editarRefeicao(pilar, r, aoMudar) {
+  async function editarExtra(pilar, itemId, aoMudar, iso) {
+    const { diario } = dados(Store.achar(CAMINHO, pilar.id));
+    const item = doDia(diario, iso).extras.find(i => i.id === itemId);
+    if (!item) return;
+    const v = await UI.formulario({ titulo: "Editar alimento", cor: pilar.cor, icone: UI.icone("prato"),
+      campos: [
+        { nome: "alimento", rotulo: "Alimento", tipo: "text", obrigatorio: true },
+        { nome: "quantidade", rotulo: "Quantidade", tipo: "text" },
+        { nome: "kcal", rotulo: "Calorias (kcal)", tipo: "number", min: 0, max: 5000 },
+        { nome: "data", rotulo: "Data", tipo: "date", obrigatorio: true },
+      ], valores: { ...item, kcal: item.kcal ?? "", data: iso },
+    });
+    if (!v) return;
+    const atual = dados(Store.achar(CAMINHO, pilar.id)).diario;
+    const origem = doDia(atual, iso), destino = v.data === iso ? origem : doDia(atual, v.data);
+    const mudouAlimento = v.alimento !== item.alimento || v.quantidade !== (item.quantidade || "");
+    const novo = { ...item, ...(mudouAlimento ? { proteina: null, carbo: null, gordura: null, gramas: null } : {}), alimento: v.alimento, quantidade: v.quantidade, kcal: num(v.kcal), estimado: item.estimado && !mudouAlimento && num(v.kcal) === num(item.kcal) };
+    const patch = { ...atual, [iso]: { ...origem, extras: origem.extras.filter(i => i.id !== itemId) } };
+    patch[v.data] = { ...destino, extras: [...destino.extras.filter(i => i.id !== itemId), novo] };
+    salvar(pilar, { diario: patch });
+    aoMudar();
+  }
+
+  async function editarRefeicao(pilar, r, aoMudar, iso = UI.hojeISO()) {
     const { plano } = dados(pilar);
     const v = await UI.formulario({
       titulo: r ? "Editar refeição" : "Nova refeição", icone: UI.icone("prato"), cor: pilar.cor,
       campos: [
         { nome: "nome", rotulo: "Refeição", tipo: "text", obrigatorio: true, placeholder: "Ex.: Café da manhã, Almoço, Pré-treino" },
         { nome: "hora", rotulo: "Horário", tipo: "time" },
+        { nome: "inicio", rotulo: r ? "Repetir a partir de" : "Data", tipo: "date", valorPadrao: r ? "" : iso, obrigatorio: !r },
+        ...(!r ? [
+          { nome: "alimento", rotulo: "Alimento", tipo: "textarea", placeholder: "Ex.: pão com ovo, mamão, uva" },
+          { nome: "kcal", rotulo: "Calorias (kcal)", tipo: "number", min: 0, max: 5000, dica: "Total dos alimentos desta refeição. Opcional." },
+          { nome: "rotina", rotulo: "Alimentação de rotina", tipo: "simNao", valorPadrao: true, dica: "Repete a mesma refeição? Deixe marcado para dar o check em cada data." },
+        ] : []),
       ],
-      valores: r || {},
+      valores: r ? { ...r, inicio: r.inicio || "" } : {},
+      validar: v => !r && !v.rotina && !v.alimento ? { campo: "alimento", mensagem: "Informe o alimento desta refeição." } : null,
       ...(r ? { rotuloExcluir: "Excluir refeição", aoExcluir: () => {
         const antes = plano;
         salvar(pilar, { plano: plano.filter((x) => x.id !== r.id) });
@@ -270,8 +335,17 @@ const Alimentacao = (() => {
       } } : {}),
     });
     if (!v) return;
-    const novo = r ? plano.map((x) => (x.id === r.id ? { ...x, nome: v.nome, hora: v.hora || "" } : x)) : [...plano, { id: uid("rf"), nome: v.nome, hora: v.hora || "", itens: [] }];
+    const item = v.alimento ? { id: uid("al"), alimento: v.alimento, quantidade: "", kcal: num(v.kcal), proteina: null, carbo: null, gordura: null, estimado: false } : null;
+    if (!r && !v.rotina) {
+      if (!item) { UI.toast("Informe um alimento para registrar a refeição nesta data."); return; }
+      const { diario } = dados(Store.achar(CAMINHO, pilar.id));
+      const dia = doDia(diario, v.inicio);
+      salvar(pilar, { diario: { ...diario, [v.inicio]: { ...dia, extras: [...dia.extras, { ...item, refeicao: v.nome }] } } });
+      datas.set(pilar.id, v.inicio); aoMudar(); return;
+    }
+    const novo = r ? plano.map((x) => (x.id === r.id ? { ...x, nome: v.nome, hora: v.hora || "", inicio: v.inicio } : x)) : [...plano, { id: uid("rf"), nome: v.nome, hora: v.hora || "", inicio: v.inicio, itens: item ? [item] : [] }];
     salvar(pilar, { plano: ordenarPorHora(novo) });
+    if (!r) datas.set(pilar.id, v.inicio);
     aoMudar();
   }
 

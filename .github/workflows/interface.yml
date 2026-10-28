@@ -28,7 +28,7 @@ jobs:
 
   editor:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -52,3 +52,12 @@ jobs:
         run: python dashboard/test/agenda_rotina.browser.py
       - name: Verificar Alimentação, planilhas do Excel e reordenar arrastando
         run: python dashboard/test/alimentacao_planilhas.browser.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verificar alimentos de rotina e os acompanhamentos dos modelos
+        run: |
+          npm install --prefix "$RUNNER_TEMP/delfos-browser" playwright
+          export DELFOS_PLAYWRIGHT="$RUNNER_TEMP/delfos-browser/node_modules/playwright"
+          export DELFOS_BROWSER_PATH="$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
+          node dashboard/test/experiencia.browser.cjs

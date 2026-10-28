@@ -48,7 +48,7 @@ test('editar uma cópia não altera o modelo nem outras abas criadas dele',()=>{
   const corrida=catalogo.obter('corrida');
   corrida.campos[0].rotulo='Meu campo';corrida.campos.pop();corrida.visual.vista='lista';
   const original=catalogo.obter('corrida');
-  assert.equal(original.campos[0].rotulo,'Distância (km)');assert.equal(original.campos.length,5);assert.equal(original.visual.vista,'tabela');
+  assert.equal(original.campos[0].rotulo,'Distância (km)');assert.equal(original.campos.length,6);assert.equal(original.visual.vista,'tabela');
   assert.equal(catalogo.obter('nao-existe'),null);
 });
 test('estudos e planejamento semanal são encontrados sem duplicar Saúde e Casa',()=>{

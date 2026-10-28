@@ -28,13 +28,17 @@
   const itens = () => (Store.achar(CAMINHO, id) || {}).itens || [];
   const ehAcademia = () => pilar.modelo === "academia";
   const ehAlimentacao = () => pilar.modelo === "alimentacao";
+  const ehRotinaAlimentar = c => Acompanhamento.alimentar(pilar) && c.extras?.rotina === true;
 
   /* --------------------------------- Render --------------------------------- */
 
   const $ = (x) => document.getElementById(x);
   const rotulo = () => (pilar.rotuloItem || "item").toLowerCase();
   const filtros = { grupo: "todos", busca: "" };
+  filtros.periodo = "todos";
+  let dataRotina = UI.hojeISO();
   let verConcluidos = false;
+  const comparadorTexto = new Intl.Collator("pt-BR", { numeric: true, sensitivity: "base" });
 
   const normal = (v) => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
   const campo = (chave, tipo) => (pilar.campos || []).find((c) => c.id === chave && (!tipo || c.tipo === tipo));
@@ -73,6 +77,9 @@
     const restaurarFoco = guardarFoco();
     pilar = Store.achar(CAMINHO, id);
     if (!pilar) return (location.href = "index.html");
+    // Mantém ids e valores antigos. A apresentação do modelo da imagem recebe
+    // alimento, calorias e rotina sem converter nem apagar seus registros.
+    if (Acompanhamento.alimentar(pilar)) pilar = { ...pilar, campos: Acompanhamento.camposAlimentacao(pilar) };
 
     document.title = `${pilar.nome} · ${UI.NOME}`;
     // A cor da aba é um hex do usuário, então entra como variável na página
@@ -114,6 +121,12 @@
     $("coluna-lado").classList.toggle("hidden", alimentacao);
     $("btn-item").classList.toggle("hidden", propria);
     prepararRapido();
+    const modelo = ModelosAbas.obter(pilar.modeloOrigem);
+    $("dica-modelo").textContent = modelo?.orientacao || Acompanhamento.orientacao(pilar);
+    $("dica-modelo").hidden = !$("dica-modelo").textContent;
+    const novos = novosCamposModelo();
+    $("ajuste-modelo").hidden = propria || !novos.length;
+    $("resumo-novos-campos").textContent = novos.map(c => c.rotulo).join(", ") + ". Seus campos atuais serão preservados.";
     $("btn-campos").classList.toggle("hidden", propria);
     $("btn-refazer-questionario").hidden = !academia;
     $("btn-dia").classList.toggle("hidden", !(academia && pilar.academia?.configuradoEm));
@@ -147,6 +160,8 @@
     renderLista(L);
     renderResumos(L);
     renderHistorico(L);
+    renderRotinaAlimentar();
+    renderAcompanhamento();
     UI.renderNotas($("notas"), L.notas, L.itens.length
       ? "Nada fora do comum por aqui."
       : `Quando houver registros, o Delfos aponta aqui ${pilar.checkin ? "as sequências e o que ficou sem marcar" : pilar.meta ? "o ritmo da meta" : "o que merece atenção"}.`);
@@ -165,6 +180,7 @@
     const t = [];
     const rot = rotulo();
     if (pilar.checkin) t.push({ l: fmt.capitalizar(Leituras.pluralizar(rot)), v: L.itens.length, s: "acompanhados por dia" });
+    else if (Acompanhamento.alimentar(pilar)) t.push({ l: "Refeições cadastradas", v: L.itens.length, s: "Checks de rotina separados por data" });
     else t.push({ l: "Em aberto", v: L.abertos.length, s: `${L.itens.length} ${L.itens.length === 1 ? "registro" : "registros"} no total` });
     if (pilar.checkin) {
       const hoje = L.checkin.filter((x) => x.hoje).length;
@@ -200,6 +216,61 @@
   }
 
   const campoGrupo = () => (pilar.campos || []).find((c) => c.id === pilar.agruparPor && c.tipo === "select");
+
+  function novosCamposModelo() {
+    const modelo = ModelosAbas.obter(pilar.modeloOrigem);
+    return (modelo?.campos || []).filter(c => !(pilar.campos || []).some(atual => atual.id === c.id)).slice(0, Math.max(0, 8 - (pilar.campos || []).length));
+  }
+
+  function renderAcompanhamento() {
+    const { indicadores, lembretes } = Acompanhamento.analisar(pilar, UI.hojeISO());
+    const bloco = $("acompanhamento-modelo");
+    bloco.hidden = !indicadores.length && !lembretes.length;
+    $("acompanhamento-conteudo").innerHTML = `${indicadores.length ? `<dl class="acompanhamento-numeros">${indicadores.map(i => `<div><dt>${fmt.escape(i.rotulo)}</dt><dd>${i.unidade === "R$" ? fmt.moeda(i.valor) : `${fmt.decimal(i.valor, 1)} ${fmt.escape(i.unidade)}`}</dd>${i.dica ? `<p class="card-note">${fmt.escape(i.dica)}</p>` : ""}</div>`).join("")}</dl>` : ""}${lembretes.length ? `<h3 class="section-title">Próximas datas dos registros</h3><ul class="list">${lembretes.map(l => `<li><button class="btn ghost sm" data-retomar="${fmt.escape(l.itemId)}">${fmt.escape(l.nome)}</button><span class="meta">${fmt.escape(l.rotulo)} · ${fmt.data(l.data)}</span></li>`).join("")}</ul>` : ""}`;
+    $("acompanhamento-conteudo").onclick = ev => {
+      const b = ev.target.closest("[data-retomar]");
+      const c = b && itens().find(i => i.id === b.dataset.retomar);
+      if (c) editarItem(c);
+    };
+  }
+
+  function renderRotinaAlimentar() {
+    const box = $("rotina-alimentar");
+    box.hidden = !Acompanhamento.alimentar(pilar);
+    if (box.hidden) return;
+    const rotina = itens().filter(c => (c.extras?.rotina === true || (c.feitos || []).includes(dataRotina)) && (!c.data || c.data <= dataRotina || (c.feitos || []).includes(dataRotina)));
+    const marcadas = rotina.filter(c => (c.feitos || []).includes(dataRotina));
+    const calorias = marcadas.reduce((s, c) => s + (Number(Acompanhamento.registroAlimentar(c, dataRotina).calorias) || 0), 0);
+    const linhas = rotina.map(c => {
+      const registro = Acompanhamento.registroAlimentar(c, dataRotina);
+      const kcal = registro.calorias === null || registro.calorias === undefined || registro.calorias === ""
+        ? "calorias não informadas" : `${fmt.decimal(registro.calorias, 0)} kcal`;
+      return `<li><label class="rotina-refeicao">
+        <input type="checkbox" class="check" data-rotina="${fmt.escape(c.id)}" ${(c.feitos || []).includes(dataRotina) ? "checked" : ""} />
+        <span><b>${fmt.escape(registro.nome || c.descricao)}</b><span class="meta">${fmt.escape(registro.alimento)} · ${kcal}</span></span>
+      </label></li>`;
+    }).join("");
+    box.innerHTML = `<header class="bloco-cabecalho"><div>
+        <h2 class="bloco-titulo">Alimentação de rotina</h2>
+        <p class="bloco-resumo">${marcadas.length} de ${rotina.length} ${rotina.length === 1 ? "refeição marcada" : "refeições marcadas"} · ${fmt.decimal(calorias, 0)} kcal informadas</p>
+      </div></header><div class="bloco-corpo">
+      <div class="ali-data"><label for="rotina-data">Data</label><input class="input" type="date" id="rotina-data" value="${dataRotina}" /><button class="btn ghost sm" data-rotina-hoje type="button">Hoje</button></div>
+      ${rotina.length ? `<ul class="list">${linhas}</ul>` : `<p class="card-note">No cadastro da refeição, informe o alimento e ative <b>Alimentação de rotina</b>. Ela aparecerá aqui a partir da data cadastrada, pronta para dar o check a cada dia.</p>`}
+      </div>`;
+    box.onchange = ev => {
+      if (ev.target.id === "rotina-data") { if (ev.target.value && ev.target.validity.valid) { dataRotina = ev.target.value; renderRotinaAlimentar(); $("rotina-data").focus({ preventScroll: true }); } return; }
+      const c = itens().find(i => i.id === ev.target.dataset.rotina);
+      if (!c) return;
+      const feitos = new Set(c.feitos || []), registros = { ...(c.registrosRotina || {}) };
+      if (ev.target.checked) { feitos.add(dataRotina); registros[dataRotina] = { nome: c.descricao, alimento: c.extras?.ingredientes || "", calorias: c.extras?.calorias ?? null }; }
+      else { feitos.delete(dataRotina); delete registros[dataRotina]; }
+      try { Store.subAtualizar(CAMINHO, id, "itens", c.id, { feitos: [...feitos].sort(), registrosRotina: registros }); }
+      catch { ev.target.checked = !ev.target.checked; UI.toast("Não foi possível guardar o check. Tente novamente."); return; }
+      renderRotinaAlimentar();
+      [...box.querySelectorAll("[data-rotina]")].find(b => b.dataset.rotina === c.id)?.focus({ preventScroll: true });
+    };
+    box.onclick = ev => { if (ev.target.closest("[data-rotina-hoje]")) { dataRotina = UI.hojeISO(); renderRotinaAlimentar(); } };
+  }
 
   function renderFiltros() {
     const cg = campoGrupo();
@@ -292,7 +363,7 @@
     if (vazioA || vazioB) return vazioA - vazioB; // vazio sempre no fim
     const r = typeof va === "number" || typeof vb === "number" ? Number(va) - Number(vb)
       : typeof va === "boolean" ? Number(va) - Number(vb)
-      : String(va).localeCompare(String(vb), "pt-BR", { numeric: true, sensitivity: "base" });
+      : comparadorTexto.compare(String(va), String(vb));
     return asc ? r : -r;
   }
 
@@ -317,7 +388,7 @@
     $("titulo-lista").lastChild.textContent = tipo === "habitos" ? "Hoje" : tipo === "leituras" ? "Sua biblioteca" : tipo === "trabalho" ? "Sua pauta" : fmt.capitalizar(Leituras.pluralizar(rotulo()));
     const feitos = L.itens.filter((i) => i.concluido).length;
     const emAberto = L.itens.length - feitos;
-    $("lista-resumo").textContent = !L.itens.length ? ""
+    $("lista-resumo").textContent = Acompanhamento.alimentar(pilar) && L.itens.length ? `${L.itens.length} registros · ${L.itens.filter(ehRotinaAlimentar).length} de rotina (check por data acima)` : !L.itens.length ? ""
       : pilar.checkin ? `${L.itens.filter((c) => (c.feitos || []).includes(UI.hojeISO())).length} de ${L.itens.length} ${Leituras.pluralizar(rotulo())} marcados hoje`
       : `${emAberto} em aberto${feitos ? `, ${feitos} ${feitos === 1 ? "concluído" : "concluídos"}` : ""}`;
     $("registros-ferramentas").hidden = !L.itens.length;
@@ -337,8 +408,10 @@
     // No quadro sem campo de agrupar, as colunas são "em aberto" e "concluídos":
     // os concluídos precisam estar lá. No calendário, também.
     const incluiConcluidos = verConcluidos || pilar.checkin || vista === "calendario" || (vista === "quadro" && !cg);
+    const hoje = UI.hojeISO(), fimPeriodo = UI.isoMaisDias(6), mes = UI.mesAtual();
     const visiveis = ordenar(L.itens
-      .filter((c) => incluiConcluidos || !c.concluido)
+      .filter(c => filtros.periodo === "todos" || filtros.periodo === "sem-data" && !c.data || filtros.periodo === "hoje" && c.data === hoje || filtros.periodo === "proximos" && c.data >= hoje && c.data <= fimPeriodo || filtros.periodo === "mes" && c.data?.startsWith(mes))
+      .filter((c) => incluiConcluidos || !c.concluido || ehRotinaAlimentar(c))
       .filter((c) => filtros.grupo === "todos" || (c.extras || {})[cg?.id] === filtros.grupo)
       .filter((c) => !busca || (c.descricao || "").toLowerCase().includes(busca) || Object.values(c.extras || {}).some((x) => String(x).toLowerCase().includes(busca))));
 
@@ -356,7 +429,7 @@
         texto: semColecao ? pilar.checkin ? "Escolha o que quer cultivar na sua rotina. Depois, marque cada dia em que fizer." : "Adicione o que você quer acompanhar. As informações ficam organizadas aqui." : soConcluidos ? "Seus registros continuam guardados e podem ser consultados quando quiser." : "Experimente outro termo ou limpe os filtros para ver seus registros.",
         rotuloAcao: semColecao ? `Adicionar ${rotulo()}` : soConcluidos ? "Ver concluídos" : "Limpar filtros",
         aoAcionar: semColecao ? novoItem : () => {
-          filtros.busca = ""; filtros.grupo = "todos"; $("f-busca").value = "";
+          filtros.busca = ""; filtros.grupo = "todos"; filtros.periodo = "todos"; $("f-periodo").value = "todos"; $("f-busca").value = "";
           if (soConcluidos) { verConcluidos = true; $("f-concluidos").checked = true; }
           render(); $("f-busca").focus({ preventScroll: true });
         },
@@ -427,7 +500,9 @@
       const rank = (v) => { const n = preferida.indexOf(normal(v)); return n < 0 ? preferida.length : n; };
       return rank(a) - rank(b);
     });
-    return valores.map((v) => [v, lista.filter((c) => String(c.extras?.[cg.id] || "") === v)]).filter(([, l]) => l.length);
+    const porGrupo = new Map(valores.map(v => [v, []]));
+    for (const c of lista) porGrupo.get(String(c.extras?.[cg.id] || "")).push(c);
+    return valores.map(v => [v, porGrupo.get(v)]).filter(([, l]) => l.length);
   }
 
   function diasDoHabito(c) {
@@ -510,6 +585,7 @@
   }
 
   function cartaoItem(c) {
+    const rotina = ehRotinaAlimentar(c);
     const el = document.createElement("article");
     el.dataset.itemId = c.id;
     el.className = `pilar-cartao ${c.concluido ? "feito" : ""}`;
@@ -523,7 +599,7 @@
     const nota = (pilar.campos || []).find((campo) => campo.tipo === "textarea" && (c.extras || {})[campo.id]);
     el.innerHTML = `
       <header>
-        ${pilar.checkin ? "" : `<input type="checkbox" class="check" ${c.concluido ? "checked" : ""} aria-label="Marcar como concluído" />`}
+        ${rotina ? `<span class="badge">Rotina</span>` : pilar.checkin ? "" : `<input type="checkbox" class="check" ${c.concluido ? "checked" : ""} aria-label="Marcar como concluído" />`}
         ${UI.marcaItem({ glifo: pilar.icone, classe: "pequena", nivel: c.concluido ? "feito" : "" })}
         <h4 class="${c.concluido ? "strike" : ""}">${fmt.escape(c.descricao)}</h4>
         <span class="row-actions">
@@ -534,7 +610,7 @@
       ${linhas ? `<dl>${linhas}</dl>` : ""}
       ${nota ? `<p class="pilar-cartao-nota">${fmt.escape(String(nota && c.extras[nota.id]).slice(0, 220))}</p>` : ""}
       <footer>
-        ${c.data ? `<span class="badge ${c.concluido ? "feito" : pilar.naAgenda ? u.nivel : "futuro"}">${c.concluido ? "concluído" : pilar.naAgenda ? u.rotulo : fmt.dataPorExtenso(c.data)}</span>` : c.concluido ? `<span class="badge feito">concluído</span>` : ""}
+        ${rotina ? `<span class="card-note">Check por data em Alimentação de rotina</span>` : c.data ? `<span class="badge ${c.concluido ? "feito" : pilar.naAgenda ? u.nivel : "futuro"}">${c.concluido ? "concluído" : pilar.naAgenda ? u.rotulo : fmt.dataPorExtenso(c.data)}</span>` : c.concluido ? `<span class="badge feito">concluído</span>` : ""}
         ${pilar.checkin ? `<span class="card-note">${Leituras.sequencia(c.feitos) || 0} ${Leituras.sequencia(c.feitos) === 1 ? "dia seguido" : "dias seguidos"}</span><button class="btn sm ${(c.feitos || []).includes(UI.hojeISO()) ? "marcado" : ""}" type="button" data-hoje>${(c.feitos || []).includes(UI.hojeISO()) ? "Feito hoje" : "Hoje"}</button>` : ""}
       </footer>`;
     el.querySelector("input.check")?.addEventListener("change", (ev) => {
@@ -613,6 +689,7 @@
 
   /** Tabela: todos os campos lado a lado; o cabeçalho ordena. */
   function renderTabela(box, visiveis) {
+    const porId = new Map(visiveis.map(c => [c.id, c]));
     const cols = [
       { chave: "descricao", rotulo: fmt.capitalizar(rotulo()) },
       ...(pilar.checkin ? [] : [{ chave: "data", rotulo: "Data", tipo: "date" }]),
@@ -628,7 +705,7 @@
             ${cols.map((c) => `<th class="${numerico(c.tipo) ? "num" : ""}"><button type="button" data-ordenar="${fmt.escape(c.chave)}" aria-sort="${tabelaOrdem?.chave === c.chave ? (tabelaOrdem.asc ? "ascending" : "descending") : "none"}">${fmt.escape(c.rotulo)}${tabelaOrdem?.chave === c.chave ? (tabelaOrdem.asc ? " ↑" : " ↓") : ""}</button></th>`).join("")}
           </tr></thead>
           <tbody>${linhas.map((c) => `<tr data-item="${fmt.escape(c.id)}" class="${c.concluido ? "feito" : ""}">
-            <td class="col-check"><input type="checkbox" class="check" ${c.concluido ? "checked" : ""} aria-label="Marcar como concluído" /></td>
+            <td class="col-check">${ehRotinaAlimentar(c) ? `<span class="badge">Rotina</span>` : `<input type="checkbox" class="check" ${c.concluido ? "checked" : ""} aria-label="Marcar como concluído" />`}</td>
             ${cols.map((col) => {
               if (col.chave === "descricao") return `<td><button type="button" class="tabela-nome" data-editar>${fmt.escape(c.descricao)}</button></td>`;
               if (col.chave === "data") return `<td class="num">${c.data ? fmt.escape(fmt.data(c.data)) : ""}</td>`;
@@ -644,9 +721,9 @@
       renderTabela(box, visiveis);
     }));
     box.querySelectorAll("tbody tr").forEach((tr) => {
-      const c = visiveis.find((x) => x.id === tr.dataset.item);
+      const c = porId.get(tr.dataset.item);
       tr.querySelector("[data-editar]").addEventListener("click", () => editarItem(c));
-      tr.querySelector("input.check").addEventListener("change", (ev) => {
+      tr.querySelector("input.check")?.addEventListener("change", (ev) => {
         Store.subAtualizar(CAMINHO, id, "itens", c.id, { concluido: ev.target.checked, concluidoEm: ev.target.checked ? UI.hojeISO() : "" });
         render();
       });
@@ -780,15 +857,16 @@
         ${acoes}`;
       li.querySelector("[data-hoje]").addEventListener("click", () => marcarHoje(c));
     } else {
-      const badge = pilar.naAgenda && c.data
+      const rotina = ehRotinaAlimentar(c);
+      const badge = rotina ? `<span class="badge">Rotina</span>` : pilar.naAgenda && c.data
         ? `<span class="badge ${c.concluido ? "feito" : u.nivel}">${c.concluido ? "concluído" : u.rotulo}</span>`
         : c.concluido ? `<span class="badge feito">concluído</span>` : "";
       // A marca: a data, quando a aba é de agenda; senão, o ícone da aba.
-      const marca = pilar.naAgenda && c.data
+      const marca = rotina ? UI.marcaItem({ glifo: pilar.icone }) : pilar.naAgenda && c.data
         ? UI.marcaItem({ data: c.data, nivel: c.concluido ? "feito" : ["atrasado", "hoje", "urgente"].includes(u.nivel) ? u.nivel : "" })
         : UI.marcaItem({ glifo: pilar.icone, nivel: c.concluido ? "feito" : "" });
       li.innerHTML = `
-        <input type="checkbox" class="check" ${c.concluido ? "checked" : ""} aria-label="Marcar como concluído" />
+        ${rotina ? "" : `<input type="checkbox" class="check" ${c.concluido ? "checked" : ""} aria-label="Marcar como concluído" />`}
         ${marca}
         <span class="grow">
           <span class="title ${c.concluido ? "strike" : ""}">${fmt.escape(c.descricao)}</span>
@@ -796,7 +874,7 @@
         </span>
         ${badge}
         ${acoes}`;
-      li.querySelector("input").addEventListener("change", (ev) => {
+      li.querySelector("input")?.addEventListener("change", (ev) => {
         Store.subAtualizar(CAMINHO, id, "itens", c.id, { concluido: ev.target.checked, concluidoEm: ev.target.checked ? UI.hojeISO() : "" });
         render();
       });
@@ -977,17 +1055,23 @@
     const stats = $("bloco-stats");
     stats.classList.remove("hidden");
     stats.classList.add("academia-indicadores");
-    stats.innerHTML = [["Dias de treino", lista.length], ["Exercícios", nEx], ["Séries cadastradas", series]].map(([rotulo, valor]) =>
+    const inicio = UI.isoMaisDias(-6), hoje = UI.hojeISO();
+    const sessoes = lista.reduce((s, d) => s + new Set((d.feitos || []).filter(iso => iso >= inicio && iso <= hoje)).size, 0);
+    stats.innerHTML = [["Dias de treino", lista.length], ["Exercícios", nEx], ["Séries cadastradas", series], ["Sessões nos últimos 7 dias", sessoes]].map(([rotulo, valor]) =>
       `<div class="card"><div class="stat-label">${rotulo}</div><div class="stat-value num">${valor}</div></div>`).join("");
     const resumos = $("resumos-campos");
     resumos.innerHTML = "";
     resumos.closest(".pagina-bloco").hidden = false;
     resumos.closest(".pagina-bloco").querySelector(".bloco-titulo").textContent = "Seu treino em números";
-    $("campos-resumo").textContent = "Resumo dos exercícios que você cadastrou";
+    $("campos-resumo").textContent = "Exercícios cadastrados e sessões que você marcou";
     $("coluna-lado").hidden = false;
     $("coluna-lado").classList.add("academia-evolucao");
     $("notas").closest(".pagina-bloco").hidden = true;
     renderResumoGrupos(resumos, lista);
+    const historico = document.createElement("div");
+    historico.className = "academia-historico";
+    historico.innerHTML = `<h3 class="section-title">Checks dos últimos sete dias</h3><ul class="list">${lista.map(d => `<li><span class="grow">${fmt.escape(d.nome)}</span>${diasDoHabito(d)}</li>`).join("")}</ul>`;
+    resumos.append(historico);
     if (!resumos.children.length) resumos.appendChild(UI.vazio({
       icone: "haltere", titulo: "Acompanhe seu treino aqui",
       texto: "Cadastre os exercícios e as séries em Treinos para ver a distribuição por grupo muscular.",
@@ -1040,6 +1124,7 @@
           ${UI.marcaItem({ icone: "haltere" })}
           <h3 class="card-title">${fmt.escape(dia.nome)}<small>${dia.exercicios.length} ${dia.exercicios.length === 1 ? "exercício" : "exercícios"}</small></h3>
           <span class="row-actions" style="opacity:1;">
+            <button class="btn sm ${(dia.feitos || []).includes(UI.hojeISO()) ? "marcado" : ""}" type="button" data-treinei aria-pressed="${(dia.feitos || []).includes(UI.hojeISO())}">${(dia.feitos || []).includes(UI.hojeISO()) ? "Treino feito hoje" : "Treinei hoje"}</button>
             <button class="btn ghost sm" data-renomear>Renomear</button>
             <button class="btn ghost sm" data-excluir-dia>Excluir dia</button>
           </span>
@@ -1077,6 +1162,16 @@
       }
 
       card.querySelector("[data-renomear]").addEventListener("click", () => renomearDia(dia));
+      card.querySelector("[data-treinei]").addEventListener("click", () => {
+        const atual = (Store.achar(CAMINHO, id).dias || []).find(d => d.id === dia.id);
+        if (!atual) return;
+        const feitos = new Set(atual.feitos || []), hoje = UI.hojeISO();
+        feitos.has(hoje) ? feitos.delete(hoje) : feitos.add(hoje);
+        Store.subAtualizar(CAMINHO, id, "dias", dia.id, { feitos: [...feitos].sort() });
+        render();
+        const botao = [...$("academia-conteudo").querySelectorAll("[data-treinei]")][lista.findIndex(d => d.id === dia.id)];
+        botao?.focus({ preventScroll: true });
+      });
       card.querySelector("[data-excluir-dia]").addEventListener("click", () => excluirDia(dia));
       card.querySelector("[data-add-exercicio]").addEventListener("click", () => abrirExercicioForm(dia));
       box.appendChild(card);
@@ -1254,6 +1349,7 @@
     const v = await UI.formulario({
       titulo: `Adicionar ${rotulo()}`, descricao: pilar.nome, campos: camposItem(), icone: UI.iconeAba ? UI.iconeAba(pilar.icone) : null, cor: pilar.cor,
       valores: { ...iniciais, ...(typeof dataInicial === "string" ? { data: dataInicial } : {}) },
+      validar: v => Acompanhamento.validar(pilar, v),
     });
     if (!v) return;
     Store.subInserir(CAMINHO, id, "itens", { ...paraExtras(v), concluido: false, criadoEm: new Date().toISOString(), ...(pilar.checkin ? { feitos: [] } : {}) });
@@ -1262,7 +1358,7 @@
   }
 
   async function editarItem(c) {
-    const v = await UI.formulario({ titulo: `Editar ${rotulo()}`, campos: camposItem(), valores: deExtras(c), icone: UI.iconeAba ? UI.iconeAba(pilar.icone) : null, cor: pilar.cor, rotuloExcluir: "Excluir", aoExcluir: () => excluirItem(c) });
+    const v = await UI.formulario({ titulo: `Editar ${rotulo()}`, campos: camposItem(), valores: deExtras(c), icone: UI.iconeAba ? UI.iconeAba(pilar.icone) : null, cor: pilar.cor, rotuloExcluir: "Excluir", aoExcluir: () => excluirItem(c), validar: v => Acompanhamento.validar(pilar, v) });
     if (!v) return;
     Store.subAtualizar(CAMINHO, id, "itens", c.id, paraExtras(v));
     UI.toast("Atualizado.");
@@ -1362,6 +1458,13 @@
 
   document.getElementById("btn-item").addEventListener("click", () => novoItem());
   document.getElementById("btn-layout").addEventListener("click", abrirLayout);
+  $("btn-atualizar-modelo").addEventListener("click", () => {
+    const novos = novosCamposModelo();
+    if (!novos.length) return;
+    Store.atualizar(CAMINHO, id, { campos: [...pilar.campos, ...novos] });
+    render(); UI.toast("Campos sugeridos adicionados. Seus dados e ajustes foram preservados.");
+  });
+  $("f-periodo").addEventListener("change", ev => { filtros.periodo = ev.target.value; render(); });
   document.getElementById("f-vista").addEventListener("change", (ev) => {
     salvarVisual({ vista: ev.target.value });
     render();
@@ -1375,7 +1478,7 @@
   UI.prepararCriador(document.getElementById("btn-editar-aba-2"));
   document.getElementById("btn-editar-aba-2").addEventListener("click", editarAba);
   document.getElementById("btn-campos").addEventListener("click", async () => {
-    await UI.editorCampos(pilar.id);
+    await UI.editorCampos(pilar.id, Acompanhamento.alimentar(pilar) ? pilar.campos : undefined);
     render();
   });
   document.getElementById("btn-excluir-aba").addEventListener("click", excluirAba);

@@ -343,6 +343,16 @@ const Delfos = (() => {
       agruparPor: "situacao", meta: SEM_META, exemplos: [] } },
   ];
 
+  // Apoios opcionais aos modelos essenciais. Não altera abas já cadastradas.
+  const APOIOS_ESSENCIAIS = {
+    leitura: [c("paginasLidas", "Página atual", "number", [], true), c("retomarEm", "Retomar em", "date")],
+    "saúde e consultas": [c("preparo", "Preparo ou orientação recebida", "textarea"), c("retornoEm", "Retorno em", "date")],
+    "rotina profissional": [c("tempoPrevistoMin", "Tempo previsto (min)", "number"), c("proximoPasso", "Próximo passo", "textarea")],
+    esporte: [c("proximoFoco", "Foco do próximo treino", "text")],
+    "fé e espiritualidade": [c("intencao", "Intenção ou próximo passo", "text")],
+  };
+  for (const assunto of ASSUNTOS) assunto.tpl.campos.push(...(APOIOS_ESSENCIAIS[assunto.nome] || []).slice(0, 8 - assunto.tpl.campos.length));
+
   /* ------------------------- Conhecimento: campos -------------------------- */
 
   // Cada conceito: os gatilhos (frases sem acento) que o fazem aparecer e o

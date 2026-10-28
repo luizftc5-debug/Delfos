@@ -295,8 +295,10 @@ const Leituras = (() => {
     const itens = p.itens || [];
     const abertos = itens.filter((i) => !i.concluido);
     const concluidos = itens.filter((i) => i.concluido);
-    const atrasados = p.naAgenda ? abertos.filter((i) => i.data && UI.diasAte(i.data) < 0) : [];
-    const semana = p.naAgenda ? abertos.filter((i) => i.data && UI.diasAte(i.data) >= 0 && UI.diasAte(i.data) <= 7).sort((a, b) => a.data.localeCompare(b.data)) : [];
+    const alimentar = p.modeloOrigem === "alimentacao" || (p.campos || []).some(c => c.id === "refeicao") && (p.campos || []).some(c => c.id === "ingredientes");
+    const agendados = alimentar ? abertos.filter(i => i.extras?.rotina !== true) : abertos;
+    const atrasados = p.naAgenda ? agendados.filter((i) => i.data && UI.diasAte(i.data) < 0) : [];
+    const semana = p.naAgenda ? agendados.filter((i) => i.data && UI.diasAte(i.data) >= 0 && UI.diasAte(i.data) <= 7).sort((a, b) => a.data.localeCompare(b.data)) : [];
     const rot = (p.rotuloItem || "item").toLowerCase();
     const rots = pluralizar(rot);
     const mes = UI.mesAtual();
@@ -319,7 +321,9 @@ const Leituras = (() => {
       if (c.tipo === "number" || c.tipo === "estrelas") {
         const nums = vals.map(Number).filter((v) => !Number.isNaN(v));
         if (!nums.length) return null;
-        return { campo: c, tipo: "numero", media: nums.reduce((s, v) => s + v, 0) / nums.length, total: nums.reduce((s, v) => s + v, 0), n: nums.length, max: Math.max(...nums) };
+        let total = 0, max = -Infinity;
+        for (const n of nums) { total += n; if (n > max) max = n; }
+        return { campo: c, tipo: "numero", media: total / nums.length, total, n: nums.length, max };
       }
       if (c.tipo === "simNao") return { campo: c, tipo: "simNao", sim: vals.filter(Boolean).length, n: itens.length };
       return null;

@@ -101,6 +101,7 @@ def testar(base):
                 elif tipo=='number':entrada.fill('12.5' if campo['id']=='distanciaKm' else '12')
                 elif tipo=='dinheiro':entrada.fill('12,50')
                 elif tipo=='time':entrada.fill('08:30')
+                elif tipo=='date':entrada.fill(page.evaluate('UI.hojeISO()'))
                 elif tipo=='link':entrada.fill('https://example.com/referencia')
                 else:entrada.fill('Informação de teste')
             form.locator('[data-acao="confirmar"]').click();form.wait_for(state='detached')

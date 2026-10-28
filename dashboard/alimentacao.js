@@ -96,7 +96,7 @@ const Alimentacao = (() => {
           <span class="card-note">${feitas} de ${configuradas.length} ${configuradas.length === 1 ? "refeição com alimentos marcada" : "refeições com alimentos marcadas"}</span></div>
         ${vazio ? `<p class="ali-apoio ali-primeiro-plano"><b>Monte sua dieta:</b> ${plano.length ? "Use Adicionar alimento em cada refeição para informar os alimentos, as quantidades e as calorias." : "Use Adicionar refeição para começar seu plano diário."} Você também pode importar um arquivo para revisar.</p>` : ""}
         <div class="rotina-semana ali-grade-plano">${ativas.map(r => refeicaoHTML(r, dia, hoje)).join("")}</div>
-        <p class="rotina-dica">${kcalTxt(totalPlano.kcal)} no plano${totalPlano.incompletos ? ` · ${totalPlano.incompletos} ${totalPlano.incompletos === 1 ? "alimento sem calorias informadas" : "alimentos sem calorias informadas"}` : ""}. Marque <b>Comi</b> quando fizer a refeição. Você pode editar o nome e o horário de cada uma.</p>
+        <p class="rotina-dica">${kcalTxt(totalPlano.kcal)} no plano${(() => { const d = totalPlano.kcal ? distribuicao(totalPlano) : null; return d ? `; proteína ${d.proteina}%, carboidrato ${d.carbo}%, gordura ${d.gordura}% das calorias` : ""; })()}${totalPlano.incompletos ? ` · ${totalPlano.incompletos} ${totalPlano.incompletos === 1 ? "alimento sem calorias informadas" : "alimentos sem calorias informadas"}` : ""}. Marque <b>Comi</b> quando fizer a refeição. Você pode editar o nome e o horário de cada uma.</p>
       </section>
       <div class="ali-hoje">
         <div class="ali-hoje-cab">

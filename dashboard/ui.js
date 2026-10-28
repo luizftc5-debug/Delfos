@@ -549,7 +549,9 @@ const UI = (() => {
 
     // Abas criadas pelo usuário: mesma forma de item, cor e rótulo próprios.
     (e.pilares || []).forEach((pil) => {
+      const alimentar = pil.modeloOrigem === "alimentacao" || (pil.campos || []).some(c => c.id === "refeicao") && (pil.campos || []).some(c => c.id === "ingredientes");
       (pil.itens || []).forEach((it) => {
+        if (alimentar && it.extras?.rotina === true) return; // o check diário não é um prazo vencido
         if (!it.data || (!incluirConcluidos && it.concluido)) return;
         itens.push({
           id: it.id, titulo: it.descricao, data: it.data,
@@ -904,7 +906,7 @@ const UI = (() => {
   }
   const carregarCriador = () => Promise.all([
     carregarEstilo("criador.css"),
-    Promise.all([carregarScript("delfos.js"), carregarScript("modelos-abas.js")]).then(() => carregarScript("abas.js")),
+    Promise.all([carregarScript("delfos.js"), typeof ModelosAbas === "undefined" ? carregarScript("modelos-abas.js") : Promise.resolve()]).then(() => carregarScript("abas.js")),
   ]);
 
   /** Baixa o criador antes do clique (ao passar o mouse ou focar o botão), para a janela abrir na hora. */
@@ -1015,10 +1017,10 @@ const UI = (() => {
    * reordenar. Cada ação salva e reabre o próprio modal, o mesmo padrão de
    * abrirPerfil ao trocar a foto.
    */
-  function editorCampos(pilarId) {
+  function editorCampos(pilarId, camposApresentados) {
     const pilar = Store.achar("pilares", pilarId);
     if (!pilar) return;
-    const campos = pilar.campos || [];
+    const campos = camposApresentados || pilar.campos || [];
 
     const linhaCampo = (c, i) => {
       const tipoRotulo = Store.TIPOS_CAMPO.find((t) => t.valor === c.tipo)?.rotulo || c.tipo;

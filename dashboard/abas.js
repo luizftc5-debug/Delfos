@@ -63,7 +63,7 @@ const Abas = (() => {
       while (ids.has(id)) id = `${id}_`;
       ids.add(id);
       const opcoes = tipo === "select" ? [...new Set((Array.isArray(x?.opcoes) ? x.opcoes : []).map((o) => corta(o, 40)).filter(Boolean))].slice(0, 8) : [];
-      return { id, rotulo: corta(x?.rotulo, 40) || id, tipo: tipo === "select" && opcoes.length < 2 ? "text" : tipo, opcoes, naLista: !!x?.naLista, obrigatorio: !!x?.obrigatorio, sugerido: !!x?.sugerido, ativo: x?.ativo !== false };
+      return { id, rotulo: corta(x?.rotulo, 40) || id, tipo: tipo === "select" && opcoes.length < 2 ? "text" : tipo, opcoes, naLista: !!x?.naLista, obrigatorio: !!x?.obrigatorio, sugerido: !!x?.sugerido, ativo: x?.ativo !== false, dica: corta(x?.dica, 200) };
     });
     const selects = out.campos.filter((x) => x.tipo === "select").map((x) => x.id);
     out.agruparPor = selects.includes(s?.agruparPor) ? s.agruparPor : "";
@@ -790,7 +790,7 @@ const Abas = (() => {
   }
 
   /** O campo como a aba o guarda: sem os selos do criador (sugerido, ativo), que só valem enquanto a janela está aberta. */
-  const paraGravar = ({ id, rotulo, tipo, opcoes, naLista, obrigatorio }) => ({ id, rotulo, tipo, opcoes, naLista, obrigatorio });
+  const paraGravar = ({ id, rotulo, tipo, opcoes, naLista, obrigatorio, dica }) => ({ id, rotulo, tipo, opcoes, naLista, obrigatorio, ...(dica ? { dica } : {}) });
 
   /** Cria a aba a partir da leitura escolhida e abre a página dela. */
   function criar(nome, s, escolhidos, exemplos, idCriacao) {

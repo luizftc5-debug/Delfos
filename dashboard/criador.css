@@ -130,8 +130,8 @@
   .modal.criacao { max-height: calc(100dvh - 24px); border-radius: 14px; }
   .criacao .criacao-cabecalho { padding: 22px 20px 18px; }
   .criacao .modal-title { font-size: calc(25px * var(--escala-fonte, 1)); }
-  .criacao-passos { padding: 14px 20px; gap: 12px; }
-  .criacao-passos li { font-size: calc(11px * var(--escala-fonte, 1)); gap: 7px; }
+  .criacao-passos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 14px 20px; gap: 8px; }
+  .criacao-passos li { min-width: 0; flex-direction: column; align-items: flex-start; font-size: calc(11px * var(--escala-fonte, 1)); gap: 6px; }
   .criacao .criacao-corpo { padding: 24px 20px; }
   .criacao-titulo { font-size: calc(24px * var(--escala-fonte, 1)); }
   .criacao-apoio { font-size: calc(13px * var(--escala-fonte, 1)); margin-bottom: 22px; }

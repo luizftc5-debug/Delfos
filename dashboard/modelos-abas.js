@@ -94,11 +94,13 @@ const ModelosAbas = (() => {
       texto("profissional", "Profissional", true), texto("local", "Local", true), hora("horario", "Horário"),
       notas("preparo", "Preparo ou orientação recebida"), link("documento", "Pedido ou resultado"),
     ], { agruparPor: "tipo", visual: { vista: "calendario", ordem: "data" }, busca: ["saude", "consulta", "exames", "terapia", "vacinas", "dentista"] }),
-    modelo("alimentacao", "Alimentação e refeições", "saude", "prato", "Cardápio e preparo das refeições, com ingredientes e receitas.", "refeição", [
+    modelo("alimentacao", "Alimentação e refeições", "saude", "prato", "O que você comeu, calorias e refeições de rotina com check por dia.", "refeição", [
       opcoes("refeicao", "Refeição", ["Café da manhã", "Almoço", "Lanche", "Jantar", "Ceia"]),
       opcoes("preparo", "Preparo", ["Planejar", "Comprar ingredientes", "Preparar", "Pronto"]),
-      notas("ingredientes", "Ingredientes"), numero("porcoes", "Porções"), link("receita", "Receita"), notas(),
-    ], { agruparPor: "preparo", visual: { vista: "quadro", ordem: "data" }, busca: ["cardapio", "marmita", "refeicoes", "receitas", "cozinhar", "nutricao"] }),
+      { ...notas("ingredientes", "Alimento"), naLista: true, dica: "Escreva o que comeu: pão com ovo, mamão, uva…" },
+      numero("porcoes", "Porções"), link("receita", "Receita"), notas(),
+      numero("calorias", "Calorias (kcal)", true), simNao("rotina", "Alimentação de rotina", true),
+    ], { agruparPor: "refeicao", visual: { vista: "lista", ordem: "data" }, busca: ["cardapio", "marmita", "refeicoes", "receitas", "cozinhar", "nutricao"] }),
     modelo("sono", "Sono e descanso", "saude", "lua", "Registro de noites, horários e fatores que influenciam o descanso.", "noite", [
       hora("deitar", "Hora de deitar", true), hora("acordar", "Hora de acordar", true), numero("horasDormidas", "Horas dormidas", true),
       opcoes("qualidade", "Qualidade", ["Ruim", "Regular", "Boa", "Ótima"], false),
@@ -186,16 +188,59 @@ const ModelosAbas = (() => {
       numero("duracaoMin", "Duração (min)"), notas("conteudo", "Conteúdo da aula"), dinheiro("valor", "Valor (R$)"), simNao("pago", "Pago"),
     ], { visual: { vista: "calendario", ordem: "data" }, busca: ["professor", "professora", "aula particular", "reforco", "tutoria", "alunos"] }),
   ];
+  // Todos opcionais: não criam metas, registros ou orientações de saúde.
+  // Aplicados apenas a novas abas; abas existentes podem incorporá-los em Ajustes.
+  const MELHORIAS = {
+    corrida: ["Registre distância e duração para comparar seu ritmo; anote como se sentiu.", [opcoes("esforco", "Esforço percebido", ["Leve", "Moderado", "Intenso"])]],
+    "jiu-jitsu": ["Anote uma técnica e o que quer praticar no próximo treino.", [texto("proximoFoco", "Foco do próximo treino", true)]],
+    lutas: ["Guarde o feedback e leve um foco claro para o próximo treino.", [texto("proximoFoco", "Foco do próximo treino", true)]],
+    ciclismo: ["Distância e duração mostram sua velocidade média; registre como foi o pedal.", [notas("sensacao", "Como foi o pedal")]],
+    natacao: ["Distância e duração permitem acompanhar o ritmo por 100 metros.", [texto("proximoFoco", "Foco da próxima sessão")]],
+    futebol: ["Registre sua participação e o que quer melhorar na próxima partida.", [texto("posicao", "Posição", true)]],
+    estudos: ["Defina o próximo passo e uma data de revisão para retomar o assunto.", [campo("revisarEm", "Revisar em", "date")]],
+    tcc: ["Registre a próxima entrega combinada e o retorno da orientação.", [notas("feedback", "Retorno da orientação")]],
+    "pesquisa-cientifica": ["Guarde a decisão da atividade e a próxima ação da pesquisa.", [notas("decisao", "Decisão ou resultado")]],
+    concursos: ["Questões e acertos mostram o aproveitamento; anote os erros para revisar.", [notas("revisar", "Erros e assuntos para revisar")]],
+    idiomas: ["Guarde expressões novas e um foco para a próxima prática.", [notas("proximoPasso", "O que praticar depois")]],
+    cursos: ["Registre a próxima aula e mantenha o certificado junto do curso.", [texto("proximaAula", "Próxima aula ou módulo", true)]],
+    "saude-cuidados": ["Leve suas perguntas à consulta e guarde a data do retorno informado pelo profissional.", [campo("retornoEm", "Retorno em", "date"), notas("perguntas", "Perguntas para o profissional")]],
+    alimentacao: ["Registre os alimentos e as calorias. Ative Alimentação de rotina para marcar a mesma refeição em cada data.", []],
+    sono: ["A duração pode ser calculada pelos horários; registre despertares para contextualizar a noite.", [numero("despertares", "Despertares durante a noite")]],
+    habitos: ["Comece com uma versão pequena do hábito e associe-a a algo que já faz.", [texto("gatilho", "Depois de qual atividade?"), texto("versaoMinima", "Versão mínima do hábito")]],
+    religiao: ["Guarde uma reflexão e a intenção para o próximo encontro ou prática.", [texto("intencao", "Intenção ou próximo passo")]],
+    familia: ["Combine o responsável e confira o que precisa levar antes do compromisso.", [notas("levar", "O que levar")]],
+    "planejamento-semanal": ["Escolha o próximo passo e estime o tempo para organizar uma semana possível.", [texto("dependencia", "Depende de quem ou do quê?")]],
+    casa: ["Registre o reparo e a próxima manutenção para não perder o acompanhamento.", [campo("proximaManutencao", "Próxima manutenção", "date")]],
+    pets: ["Guarde a orientação recebida e a data do próximo cuidado.", [campo("proximoCuidado", "Próximo cuidado em", "date")]],
+    viagens: ["Confira o que falta confirmar e deixe os documentos da reserva à mão.", [texto("contato", "Contato da reserva")]],
+    engenharia: ["Registre o impedimento que precisa ser resolvido para a entrega avançar.", [texto("impedimento", "Impedimento atual", true)]],
+    advocacia: ["Registre a próxima providência e confira os prazos na fonte oficial do processo.", [notas("proximaAcao", "Próxima providência")]],
+    taxi: ["Compare receita, custos informados e tempo para entender o resultado dos turnos.", [texto("manutencao", "Manutenção ou ocorrência")]],
+    "motorista-app": ["Compare ganhos e custos registrados por hora e por quilômetro.", [dinheiro("outrosCustos", "Outros custos (R$)")]],
+    medicina: ["Organize a escala e a previsão de recebimento de cada plantão.", [campo("receberEm", "Previsão de recebimento", "date")]],
+    autonomo: ["Combine a próxima entrega e registre a previsão de recebimento.", [campo("receberEm", "Previsão de recebimento", "date")]],
+    marketing: ["Relacione investimento e conversões e registre o próximo teste da campanha.", [texto("proximoTeste", "Próximo teste")]],
+    "vendas-online": ["Acompanhe o envio pela previsão de entrega e pelo rastreio.", [campo("entregaEm", "Entrega prevista", "date")]],
+    conteudo: ["Guarde a chamada para ação e o que aprendeu com cada publicação.", [texto("chamada", "Chamada para ação")]],
+    "aulas-particulares": ["Registre a tarefa combinada e acompanhe as aulas que ainda não foram pagas.", [notas("tarefa", "Tarefa para a próxima aula")]],
+  };
+  for (const m of MODELOS) {
+    const [orientacao, adicoes] = MELHORIAS[m.id];
+    m.orientacao = orientacao;
+    m.campos.push(...adicoes.slice(0, 8 - m.campos.length));
+  }
   const normalizar = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   const copiar = x => JSON.parse(JSON.stringify(x));
+  const porId = new Map(MODELOS.map(m => [m.id, m]));
+  const indice = MODELOS.map(m => ({ modelo: m, texto: normalizar([m.nome, m.descricao, CATEGORIAS.find(c=>c.id===m.categoria).nome, ...(m.busca || [])].join(" ")) }));
   function buscar(consulta = "", categoria = "") {
     const palavras = normalizar(consulta).split(" ").filter(Boolean);
-    return MODELOS.filter(m => (!categoria || m.categoria === categoria) && palavras.every(p => normalizar([m.nome,m.descricao,CATEGORIAS.find(c=>c.id===m.categoria).nome,...(m.busca || [])].join(" ")).includes(p))).map(copiar);
+    return indice.filter(({modelo: m, texto}) => (!categoria || m.categoria === categoria) && palavras.every(p => texto.includes(p))).map(({modelo}) => copiar(modelo));
   }
   return {
     categorias: () => copiar(CATEGORIAS),
     listar: () => copiar(MODELOS),
-    obter: id => { const m=MODELOS.find(x=>x.id===id);return m ? copiar(m) : null; },
+    obter: id => { const m=porId.get(id);return m ? copiar(m) : null; },
     buscar,
   };
 })();

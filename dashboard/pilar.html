@@ -61,6 +61,7 @@
               <div id="alimentacao-conteudo"></div>
             </section>
             <div id="secao-itens">
+              <section class="pagina-bloco" id="rotina-alimentar" hidden></section>
               <section class="registros-trabalho">
                 <header class="registros-cabecalho">
                   <div>
@@ -71,6 +72,7 @@
                   </h2>
                   <p class="registros-resumo" id="lista-resumo" aria-live="polite">
                   </p>
+                  <p class="card-note" id="dica-modelo" hidden></p>
                   </div>
                   <button class="btn primary" id="btn-item" type="button"></button>
                 </header>
@@ -89,6 +91,8 @@
                     <details class="filtros-opcoes">
                       <summary>Ordem e concluídos</summary>
                       <div class="filtros-corpo">
+                        <label for="f-periodo">Período dos registros</label>
+                        <select class="input" id="f-periodo"><option value="todos">Todas as datas</option><option value="hoje">Hoje</option><option value="proximos">Próximos 7 dias</option><option value="mes">Este mês</option><option value="sem-data">Sem data</option></select>
                         <select aria-label="Ordenar" class="input" id="f-ordem">
                         </select>
                         <label class="card-note" style="display:flex; align-items:center; gap:6px; cursor:pointer;">
@@ -125,6 +129,10 @@
               <div class="bloco-corpo" id="alimentacao-evolucao"></div>
             </section>
             <div class="painel-analises" id="coluna-lado">
+              <section class="pagina-bloco" id="acompanhamento-modelo" hidden>
+                <header class="bloco-cabecalho"><h2 class="bloco-titulo">Seu acompanhamento</h2><span class="bloco-resumo">Calculado a partir do que você registrou.</span></header>
+                <div class="bloco-corpo" id="acompanhamento-conteudo"></div>
+              </section>
               <section class="pagina-bloco" id="historico-habitos" hidden>
                 <header class="bloco-cabecalho">
                   <h2 class="bloco-titulo">Os últimos sete dias</h2>
@@ -188,6 +196,7 @@
                     </div>
                     <button class="btn" id="btn-campos">Campos desta aba</button>
                   </div>
+                  <div class="ajuste-linha" id="ajuste-modelo" hidden><div><b>Novos campos do modelo</b><p id="resumo-novos-campos"></p></div><button class="btn" type="button" id="btn-atualizar-modelo">Adicionar campos sugeridos</button></div>
                   <h3 class="ajustes-grupo-titulo">Apresentação</h3>
                   <div class="ajuste-linha" data-ajuste="btn-layout">
                     <div>
@@ -238,6 +247,8 @@
   <script src="financas.js"></script>
   <script src="leituras.js"></script>
   <script src="calendario.js"></script>
+  <script src="modelos-abas.js"></script>
+  <script src="acompanhamento.js"></script>
   <script src="alimentacao.js"></script>
   <script src="pilar.js"></script>
 </body>

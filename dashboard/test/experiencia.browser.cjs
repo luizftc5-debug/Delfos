@@ -26,6 +26,20 @@ async function main() {
     const page = await ctx.newPage(), erros = [];
     page.setDefaultTimeout(10000);
     page.on('pageerror', e => erros.push(e.message));
+    const conferirLargura = async nome => {
+      // O produto mantém as transições completas: mede o layout final, sem
+      // confundir um quadro intermediário da animação com seu tamanho final.
+      await page.evaluate(() => document.fonts.ready);
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      await page.waitForFunction(() => document.getAnimations().every(a => a.playState !== 'running' || !Number.isFinite(a.effect?.getComputedTiming().endTime)), null, { timeout: 5000 });
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      if (!await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)) {
+        const medidas = await page.evaluate(() => ({ largura: innerWidth, excesso: document.documentElement.scrollWidth, elementos: [...document.querySelectorAll('main *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1).map(e => ({ tag: e.tagName, classe: e.className, texto: e.textContent.slice(0, 60), direita: e.getBoundingClientRect().right })).slice(0, 15) }));
+        console.error({ nome, ...medidas });
+        if (process.env.DELFOS_QA_DIR) { fs.mkdirSync(process.env.DELFOS_QA_DIR, { recursive: true }); await page.screenshot({ path: path.join(process.env.DELFOS_QA_DIR, 'excesso.png'), fullPage: true }); }
+        assert.fail(`Excesso de largura: ${nome}`);
+      }
+    };
     await page.goto(base + '/bemvindo.html');
     await page.evaluate(() => { Personalizacao.pular(); Store.definirPreferencias({ experiencia: { lembretes: { resumoDoDia: false } } }); });
     const hoje = await page.evaluate(() => UI.hojeISO()), ontem = await page.evaluate(() => UI.isoMaisDias(-1));
@@ -172,7 +186,7 @@ async function main() {
       await page.locator('[data-secao="visao-geral"]').click();
       for (const largura of [320, 390, 768, 1440]) {
         await page.setViewportSize({ width: largura, height: 900 });
-        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${m.nome}: ${largura}`);
+        await conferirLargura(`${m.nome}: ${largura}`);
       }
     }
     if (!process.argv.includes('--sem-catalogo')) console.log('OK: 32 modelos criados pela interface, todos os campos e datas persistidos, 320–1440 px.');
@@ -189,11 +203,7 @@ async function main() {
         await abrir(id);
         for (const largura of [320, 390, 768, 1440]) {
           await page.setViewportSize({ width: largura, height: 900 });
-          if (!await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)) {
-            console.error(await page.evaluate(() => ({ titulo: document.title, largura: innerWidth, excesso: document.documentElement.scrollWidth, elementos: [...document.querySelectorAll('main *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1).map(e => ({ tag: e.tagName, classe: e.className, texto: e.textContent.slice(0, 60), direita: e.getBoundingClientRect().right })).slice(0, 15) })));
-            if (process.env.DELFOS_QA_DIR) { fs.mkdirSync(process.env.DELFOS_QA_DIR, { recursive: true }); await page.screenshot({ path: path.join(process.env.DELFOS_QA_DIR, 'excesso.png'), fullPage: true }); }
-            assert.fail(`${tema}: ${id}: ${largura}`);
-          }
+          await conferirLargura(`${tema}: ${id}: ${largura}`);
         }
       }
     }

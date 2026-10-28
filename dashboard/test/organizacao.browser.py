@@ -102,6 +102,19 @@ def testar_perfil_fixo(page,base):
             assert page.locator('.sidebar-scroll').evaluate('(e)=>e.scrollHeight>e.clientHeight')
             page.locator('.sidebar-scroll').hover();page.mouse.wheel(0,1800)
             page.wait_for_function('document.querySelector(".sidebar-scroll").scrollTop>0')
+            # wheel retorna antes de a rolagem terminar. Meça a posição apenas
+            # depois de ela se manter estável; a remontagem deve preservá-la exatamente.
+            page.locator('.sidebar-scroll').evaluate('''async e => {
+              await new Promise(resolve => {
+                let anterior=e.scrollTop, estavel=0;
+                const medir=()=>{
+                  const atual=e.scrollTop;
+                  estavel=atual===anterior ? estavel+1 : 0; anterior=atual;
+                  if(estavel>=4)resolve();else requestAnimationFrame(medir);
+                };
+                requestAnimationFrame(medir);
+              });
+            }''')
             assert posicao()==inicial
             rolagem=page.locator('.sidebar-scroll').evaluate('(e)=>e.scrollTop')
             page.evaluate('UI.montarLayout("home")')

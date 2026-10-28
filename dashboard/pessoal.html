@@ -25,17 +25,23 @@
             <p class="sub">Seus compromissos, tarefas e tempo livre.</p>
           </div>
           <div class="topbar-actions">
-            <button class="btn" id="btn-importar-cal">Importar calendário</button>
+            <button class="btn" id="btn-importar-cal">Importar</button>
             <button class="btn primary" id="btn-compromisso">+ Compromisso</button>
           </div>
         </header>
         <nav aria-label="Seções desta página" class="pagina-secoes" data-navegacao-secoes="" hidden="" role="tablist">
-          <button aria-controls="painel-calendario" data-secao="calendario" id="secao-calendario" role="tab" type="button">Calendário</button>
+          <button aria-controls="painel-calendario" data-secao="calendario" id="secao-calendario" role="tab" type="button">Mês</button>
+          <button aria-controls="painel-rotina" data-secao="rotina" id="secao-rotina" role="tab" type="button">Rotina da semana</button>
           <button aria-controls="painel-compromissos" data-secao="compromissos" id="secao-compromissos" role="tab" type="button">Compromissos</button>
           <button aria-controls="painel-visao-geral" data-secao="visao-geral" id="secao-visao-geral" role="tab" type="button">Visão geral</button>
         </nav>
         <section aria-labelledby="secao-calendario" class="pagina-painel" data-painel="calendario" id="painel-calendario" role="tabpanel" tabindex="0">
-          <p class="painel-descricao">Veja seus dias e encontre um horário livre.</p>
+          <p class="painel-descricao">Compromissos pontuais e datas importantes: consultas, provas, plantões, viagens. O que se repete toda semana fica em Rotina da semana.</p>
+          <button class="importar-faixa" id="importar-faixa" type="button">
+            <span class="importar-faixa-ic" aria-hidden="true"></span>
+            <span class="importar-faixa-texto"><b>Trazer de um arquivo ou foto</b><span>PDF, PowerPoint, Word, planilha (Excel ou CSV), .ics, ou um print do calendário. Você confere tudo antes de entrar.</span></span>
+            <span class="importar-faixa-acao">Escolher arquivo</span>
+          </button>
           <div class="painel-conteudo painel-agenda">
             <section class="card calendario" id="calendario">
             </section>
@@ -52,6 +58,18 @@
               </div>
             </section>
           </div>
+        </section>
+        <section aria-labelledby="secao-rotina" class="pagina-painel" data-painel="rotina" id="painel-rotina" role="tabpanel" tabindex="0">
+          <div class="rotina-topo">
+            <p class="painel-descricao">O que se repete toda semana, de segunda a domingo: aulas, trabalho, plantões, treino, estudo. Fica separado dos compromissos do mês.</p>
+            <div class="rotina-acoes">
+              <button class="btn" id="btn-importar-rotina" type="button">Importar horário</button>
+              <button class="btn primary" id="btn-atividade" type="button">+ Atividade</button>
+            </div>
+          </div>
+          <p class="rotina-resumo" id="rotina-resumo" aria-live="polite"></p>
+          <div id="rotina"></div>
+          <p class="rotina-dica">O horário de aulas pode vir de uma foto do quadro, de um print do portal ou do PDF da faculdade: use <b>Importar horário</b> ou solte o arquivo aqui.</p>
         </section>
         <section aria-labelledby="secao-compromissos" class="pagina-painel" data-painel="compromissos" id="painel-compromissos" role="tabpanel" tabindex="0">
           <p class="painel-descricao">Acompanhe suas tarefas, consultas e recados.</p>
@@ -154,6 +172,7 @@
   <script src="config.js"></script>
   <script src="google-integration.js"></script>
   <script src="calendario.js"></script>
+  <script src="rotina.js"></script>
   <script src="pessoal.js"></script>
 </body>
 </html>

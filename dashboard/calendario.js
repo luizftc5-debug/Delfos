@@ -306,7 +306,7 @@ const Calendario = (() => {
   /* ------------------------------ Importação -------------------------------- */
 
   const FONTES = [
-    ["arquivo", "Arquivo .ics", "Exportado do Google Agenda, Outlook, iPhone ou de outro app. É lido só neste navegador."],
+    ["arquivo", "Arquivo ou foto", "PDF, PowerPoint, Word, planilha (Excel ou CSV), .ics, ou a foto/print de um calendário ou do horário de aulas. Lido só neste aparelho."],
     ["drive", "Arquivo .ics no Google Drive", "Escolha um calendário que você guardou no Drive."],
     ["google", "Google Agenda", "Traz os eventos da sua agenda do Google, do mês passado até um ano à frente."],
   ];
@@ -329,7 +329,7 @@ const Calendario = (() => {
       <div class="modal-body">
         <div class="fonte-lista">
           ${FONTES.map(([id, nome, txt]) => `<button type="button" class="fonte-opcao" data-fonte="${id}" ${id !== "arquivo" && !temGoogle ? "disabled" : ""}>
-            <span class="fonte-ic">${UI.icone(id === "arquivo" ? "arquivo" : id === "drive" ? "nuvem" : "calendario")}</span>
+            <span class="fonte-ic">${UI.icone(id === "arquivo" ? "importar" : id === "drive" ? "nuvem" : "calendario")}</span>
             <span class="grow"><strong>${nome}</strong><span>${txt}</span></span>
           </button>`).join("")}
         </div>
@@ -358,19 +358,7 @@ const Calendario = (() => {
   }
 
   function lerDe(fonte, aoConcluir) {
-    if (fonte === "arquivo") {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".ics,text/calendar";
-      input.addEventListener("change", async () => {
-        const f = input.files?.[0];
-        if (!f) return;
-        const texto = await f.text();
-        revisar(parseICS(texto), { origem: "arquivo", nome: f.name, aoConcluir });
-      });
-      input.click();
-      return;
-    }
+    if (fonte === "arquivo") return importarArquivo({ aoConcluir });
     if (typeof googleComConexao !== "function") {
       UI.toast("A conexão com o Google não está disponível nesta página.");
       return;
@@ -525,7 +513,261 @@ const Calendario = (() => {
     });
   }
 
-  return { parseICS, deEventoGoogle, gradeDoMes, lerDataICS, desdobrar, itensEntre, montar, abrirImportacao };
+  /* ----------------------- Arquivo ou foto (2.7) ---------------------------
+     PDF, Word, PowerPoint, planilha, .ics ou imagem. A leitura mora em
+     agenda-arquivo.mjs (baixado só aqui); esta parte escolhe o arquivo, mostra
+     o andamento e abre a revisão em dois eixos: o que tem data vai para o
+     calendário do mês; o que tem dia da semana, para a rotina. */
+
+  const ACEITOS = ".ics,.pdf,.docx,.pptx,.csv,.tsv,.txt,.xlsx,.xls,.doc,.ppt,.png,.jpg,.jpeg,.webp,.bmp,.gif,.heic,image/*,text/calendar";
+
+  /** Abre o seletor de arquivo (ou usa o arquivo solto na página) e importa. */
+  function importarArquivo({ aoConcluir = () => {}, destino = "", arquivo = null } = {}) {
+    if (arquivo) return lerArquivo(arquivo, { aoConcluir, destino });
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ACEITOS;
+    input.addEventListener("change", () => { const f = input.files?.[0]; if (f) lerArquivo(f, { aoConcluir, destino }); });
+    input.click();
+  }
+
+  async function lerArquivo(file, { aoConcluir, destino }) {
+    if (/\.(ics|ical|ifb)$/i.test(file.name) || file.type === "text/calendar") {
+      try { return revisar(parseICS(await file.text()), { origem: "arquivo", nome: file.name, aoConcluir }); }
+      catch { return UI.toast("Não deu para ler esse .ics."); }
+    }
+    const controle = new AbortController();
+    let atualizar = () => {};
+    let fecharProgresso = () => {};
+    UI.abrirModal(`
+      <div class="modal-head com-marca">
+        <span class="modal-ic" style="--ic-cor:var(--s-pessoal)">${UI.icone("importar")}</span>
+        <div class="modal-head-texto">
+          <h2 class="modal-title">Lendo ${fmt.escape(file.name)}</h2>
+          <p class="modal-desc">Tudo acontece neste aparelho; o arquivo não é enviado a lugar nenhum.</p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <p class="leitura-arquivo-status" role="status" data-status>Abrindo o arquivo…</p>
+        <progress class="leitura-arquivo-barra" data-barra aria-label="Andamento da leitura"></progress>
+      </div>
+      <div class="modal-foot"><span class="modal-foot-espaco"></span><button class="btn" type="button" data-acao="cancelar">Cancelar</button></div>`, {
+      classe: "formulario",
+      aoFechar: () => controle.abort(),
+      aoMontar(modal, fechar) {
+        fecharProgresso = () => fechar(null);
+        modal.querySelector('[data-acao="cancelar"]').addEventListener("click", () => fechar(null));
+        atualizar = (frase, fracao) => {
+          if (frase) modal.querySelector("[data-status]").textContent = frase;
+          const barra = modal.querySelector("[data-barra]");
+          if (typeof fracao === "number" && fracao > 0) barra.value = fracao; else barra.removeAttribute("value");
+        };
+      },
+    });
+    try {
+      const { lerArquivoAgenda } = await import("./agenda-arquivo.mjs");
+      const resultado = await lerArquivoAgenda(file, { signal: controle.signal, aoProgresso: (f, n) => atualizar(f, n) });
+      if (controle.signal.aborted) return;
+      fecharProgresso();
+      revisarArquivo(resultado, { nome: file.name, aoConcluir, destino });
+    } catch (e) {
+      if (controle.signal.aborted || e?.name === "AbortError") return;
+      fecharProgresso();
+      console.error(e);
+      UI.toast(e?.message || "Não deu para ler esse arquivo.", { duracao: 8000 });
+    }
+  }
+
+  const norm = (s) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const DIAS_CURTOS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+  const DIAS_NOMES = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+
+  /**
+   * A revisão: duas listas editáveis (nome, data ou dias, horário), cada linha
+   * com a caixa de importar. Repetidos e passados vêm desmarcados. Com uma
+   * grade de mês sem o mês escrito, a pessoa escolhe o mês e as datas mudam.
+   */
+  function revisarArquivo(r, { nome, aoConcluir, destino }) {
+    const hoje = UI.hojeISO();
+    const existentes = Store.lista(CAMINHO);
+    const chaves = new Set(existentes.map((c) => `${c.data}|${norm(c.descricao)}`));
+    const rotinaAtual = Store.lista("pessoal.rotina");
+    const chavesRotina = new Set(rotinaAtual.flatMap((a) => (a.dias || []).map((d) => `${d}|${a.hora || ""}|${norm(a.titulo)}`)));
+    const eventos = r.eventos.map((e) => {
+      const repetido = chaves.has(`${e.data}|${norm(e.titulo)}`);
+      const passado = e.data < hoje;
+      return { ...e, repetido, passado, marcado: !repetido && !passado };
+    });
+    const rotina = r.rotina.map((a) => {
+      const repetido = a.dias.every((d) => chavesRotina.has(`${d}|${a.hora || ""}|${norm(a.titulo)}`));
+      return { ...a, repetido, marcado: !repetido, categoria: typeof Rotina !== "undefined" ? Rotina.categoriaProvavel(a.titulo) : "outro" };
+    });
+    const nada = !eventos.length && !rotina.length;
+    let verPassados = false;
+    const mesValor = r.mesGrade ? `${r.mesGrade.ano}-${String(r.mesGrade.mes).padStart(2, "0")}` : "";
+    const categorias = typeof Rotina !== "undefined" ? Rotina.CATEGORIAS : [{ id: "outro", nome: "Outro" }];
+
+    UI.abrirModal(`
+      <div class="modal-head com-marca">
+        <span class="modal-ic" style="--ic-cor:var(--s-pessoal)">${UI.icone("calendario")}</span>
+        <div class="modal-head-texto">
+          <h2 class="modal-title">${nada ? "Nada reconhecido no arquivo" : "Confira antes de importar"}</h2>
+          <p class="modal-desc">${fmt.escape(nome)}. ${nada ? "O texto lido está logo abaixo, para você conferir." : "Corrija o que o Delfos leu errado e desmarque o que não quiser."}</p>
+        </div>
+      </div>
+      <div class="modal-body revisar-arquivo">
+        ${(r.avisos || []).map((a) => `<p class="notice info">${fmt.escape(a)}</p>`).join("")}
+        ${eventos.length ? `<section class="revisar-grupo" data-grupo="eventos" aria-labelledby="rv-ev">
+          <header class="revisar-cab">
+            <div><h3 id="rv-ev">${UI.icone("calendario")}Compromissos com data</h3><p>Vão para o calendário do mês, como compromissos pontuais.</p></div>
+            ${mesValor ? `<label class="revisar-mes">Mês do calendário <input type="month" class="input" data-mes value="${mesValor}" /></label>` : ""}
+          </header>
+          <div class="importar-cal-barra">
+            ${eventos.some((e) => e.passado) ? `<label class="card-note"><input type="checkbox" class="check" data-passados /> mostrar os que já passaram (${eventos.filter((e) => e.passado).length})</label>` : ""}
+            <span class="modal-foot-espaco"></span>
+            <button type="button" class="btn ghost sm" data-todos="eventos">Marcar todos</button>
+            <button type="button" class="btn ghost sm" data-nenhum="eventos">Desmarcar todos</button>
+          </div>
+          <ul class="revisar-linhas" data-lista="eventos"></ul>
+        </section>` : ""}
+        ${rotina.length ? `<section class="revisar-grupo" data-grupo="rotina" aria-labelledby="rv-ro">
+          <header class="revisar-cab">
+            <div><h3 id="rv-ro">${UI.icone("relogio")}Rotina da semana</h3><p>Repetem toda semana, nos dias marcados. Vão para a Rotina, fora do calendário do mês.</p></div>
+          </header>
+          <div class="importar-cal-barra">
+            <span class="modal-foot-espaco"></span>
+            <button type="button" class="btn ghost sm" data-todos="rotina">Marcar todos</button>
+            <button type="button" class="btn ghost sm" data-nenhum="rotina">Desmarcar todos</button>
+          </div>
+          <ul class="revisar-linhas" data-lista="rotina"></ul>
+        </section>` : ""}
+        ${r.texto ? `<details class="revisar-texto" ${nada ? "open" : ""}><summary>Texto lido do arquivo</summary><pre>${fmt.escape(String(r.texto).slice(0, 6000))}</pre></details>` : ""}
+      </div>
+      <div class="modal-foot">
+        <span class="modal-atalho" data-resumo></span>
+        <span class="modal-foot-espaco"></span>
+        <button class="btn" type="button" data-acao="fechar">${nada ? "Fechar" : "Cancelar"}</button>
+        ${nada ? "" : `<button class="btn primary" type="button" data-acao="ok">Importar</button>`}
+      </div>`, {
+      classe: "formulario wide revisar-arquivo-modal",
+      aoMontar(modal, fechar) {
+        const $ = (q) => modal.querySelector(q);
+        const visiveisEventos = () => eventos.filter((e) => verPassados || !e.passado);
+        const resumo = () => {
+          const ne = eventos.filter((e) => e.marcado).length, nr = rotina.filter((a) => a.marcado).length;
+          const partes = [ne ? `${ne} ${ne === 1 ? "compromisso" : "compromissos"}` : "", nr ? `${nr} na rotina` : ""].filter(Boolean);
+          $("[data-resumo]").textContent = partes.join(" e ") || "Nada marcado";
+          const ok = $('[data-acao="ok"]');
+          if (ok) { ok.disabled = !(ne + nr); ok.textContent = ne + nr ? `Importar ${ne + nr}` : "Importar"; }
+        };
+        const linhaEvento = (e) => {
+          const i = eventos.indexOf(e);
+          return `<li class="${e.marcado ? "" : "desmarcada"}">
+            <input type="checkbox" class="check" data-marca="eventos:${i}" ${e.marcado ? "checked" : ""} aria-label="Importar ${fmt.escape(e.titulo)}" />
+            <div class="revisar-campos">
+              <input class="input revisar-titulo" data-campo="eventos:${i}:titulo" value="${fmt.escape(e.titulo)}" aria-label="Nome" maxlength="140" />
+              <div class="revisar-quando">
+                <input class="input" type="date" data-campo="eventos:${i}:data" value="${fmt.escape(e.data)}" aria-label="Data" />
+                <input class="input" type="time" data-campo="eventos:${i}:hora" value="${fmt.escape(e.hora || "")}" aria-label="Começa" />
+                <input class="input" type="time" data-campo="eventos:${i}:horaFim" value="${fmt.escape(e.horaFim || "")}" aria-label="Termina" />
+              </div>
+              ${e.repetido || e.local ? `<span class="revisar-nota">${[e.repetido ? "já está no Delfos" : "", e.local ? fmt.escape(e.local) : ""].filter(Boolean).join(", ")}</span>` : ""}
+            </div>
+          </li>`;
+        };
+        const linhaRotina = (a, i) => `<li class="${a.marcado ? "" : "desmarcada"}">
+            <input type="checkbox" class="check" data-marca="rotina:${i}" ${a.marcado ? "checked" : ""} aria-label="Importar ${fmt.escape(a.titulo)}" />
+            <div class="revisar-campos">
+              <input class="input revisar-titulo" data-campo="rotina:${i}:titulo" value="${fmt.escape(a.titulo)}" aria-label="Nome" maxlength="140" />
+              <div class="revisar-quando">
+                <div class="chips dias-semana mini" role="group" aria-label="Dias da semana">${[1, 2, 3, 4, 5, 6, 0].map((d) => `<button type="button" class="chip mini" data-dia="rotina:${i}:${d}" aria-pressed="${a.dias.includes(d)}" aria-label="${DIAS_NOMES[d]}">${DIAS_CURTOS[d]}</button>`).join("")}</div>
+                <input class="input" type="time" data-campo="rotina:${i}:hora" value="${fmt.escape(a.hora || "")}" aria-label="Começa" />
+                <input class="input" type="time" data-campo="rotina:${i}:horaFim" value="${fmt.escape(a.horaFim || "")}" aria-label="Termina" />
+                <select class="input" data-campo="rotina:${i}:categoria" aria-label="Tipo">${categorias.map((c) => `<option value="${c.id}" ${c.id === a.categoria ? "selected" : ""}>${c.nome}</option>`).join("")}</select>
+              </div>
+              ${a.repetido || a.local ? `<span class="revisar-nota">${[a.repetido ? "já está na rotina" : "", a.local ? fmt.escape(a.local) : ""].filter(Boolean).join(", ")}</span>` : ""}
+            </div>
+          </li>`;
+        const desenhar = () => {
+          const ue = $('[data-lista="eventos"]');
+          if (ue) {
+            const vis = visiveisEventos();
+            ue.innerHTML = vis.length ? vis.slice(0, 300).map(linhaEvento).join("") : `<li class="revisar-vazio">Todos já passaram. Marque "mostrar os que já passaram" para vê-los.</li>`;
+          }
+          const ur = $('[data-lista="rotina"]');
+          if (ur) ur.innerHTML = rotina.map(linhaRotina).join("");
+          resumo();
+        };
+        modal.addEventListener("change", (ev) => {
+          const m = ev.target.dataset.marca;
+          if (m) {
+            const [g, i] = m.split(":");
+            (g === "eventos" ? eventos : rotina)[+i].marcado = ev.target.checked;
+            ev.target.closest("li").classList.toggle("desmarcada", !ev.target.checked);
+            return resumo();
+          }
+          if (ev.target.matches("[data-passados]")) { verPassados = ev.target.checked; return desenhar(); }
+          if (ev.target.matches("[data-mes]")) {
+            const [ano, mes] = ev.target.value.split("-").map(Number);
+            if (!ano || !mes) return;
+            eventos.forEach((e) => {
+              if (!e.diaDoMes) return;
+              const iso = `${ano}-${String(mes).padStart(2, "0")}-${String(e.diaDoMes).padStart(2, "0")}`;
+              if (!Number.isNaN(Date.parse(iso)) && new Date(`${iso}T12:00:00`).getDate() === e.diaDoMes) { e.data = iso; e.passado = iso < hoje; }
+            });
+            return desenhar();
+          }
+        });
+        modal.addEventListener("input", (ev) => {
+          const c = ev.target.dataset.campo;
+          if (!c) return;
+          const [g, i, campo] = c.split(":");
+          (g === "eventos" ? eventos : rotina)[+i][campo] = ev.target.value;
+        });
+        modal.addEventListener("click", (ev) => {
+          const dia = ev.target.closest("[data-dia]");
+          if (dia) {
+            const [, i, d] = dia.dataset.dia.split(":");
+            const a = rotina[+i];
+            a.dias = a.dias.includes(+d) ? a.dias.filter((x) => x !== +d) : [...a.dias, +d];
+            dia.setAttribute("aria-pressed", String(a.dias.includes(+d)));
+            return;
+          }
+          const todos = ev.target.closest("[data-todos]");
+          const nenhum = ev.target.closest("[data-nenhum]");
+          if (todos || nenhum) {
+            const g = (todos || nenhum).dataset.todos || (todos || nenhum).dataset.nenhum;
+            (g === "eventos" ? visiveisEventos() : rotina).forEach((x) => { x.marcado = !!todos; });
+            desenhar();
+          }
+        });
+        $('[data-acao="fechar"]').addEventListener("click", () => fechar(null));
+        $('[data-acao="ok"]')?.addEventListener("click", () => {
+          const okHora = (h) => /^\d{2}:\d{2}$/.test(h || "");
+          const idsEv = eventos.filter((e) => e.marcado && e.titulo.trim() && e.data).map((e) => Store.inserir(CAMINHO, {
+            descricao: e.titulo.trim(), data: e.data, hora: okHora(e.hora) ? e.hora : "", horaFim: okHora(e.horaFim) && e.horaFim > e.hora ? e.horaFim : "",
+            tipo: "compromisso", local: e.local || "", observacoes: e.observacoes || "", repete: "", importante: false, lembrete: "",
+            concluido: e.data < hoje, origemImport: `arquivo:${nome}`, importadoDe: "arquivo",
+          })?.id).filter(Boolean);
+          const idsRo = rotina.filter((a) => a.marcado && a.titulo.trim() && a.dias.length).map((a) => Store.inserir("pessoal.rotina", {
+            titulo: a.titulo.trim(), dias: [...a.dias].sort(), hora: okHora(a.hora) ? a.hora : "", horaFim: okHora(a.horaFim) && a.horaFim > a.hora ? a.horaFim : "",
+            categoria: a.categoria || "outro", local: a.local || "", observacoes: "", importadoDe: "arquivo", criadoEm: new Date().toISOString(),
+          })?.id).filter(Boolean);
+          fechar(null);
+          aoConcluir({ destino: idsRo.length && !idsEv.length ? "rotina" : idsEv.length && !idsRo.length ? "calendario" : destino });
+          const partes = [idsEv.length ? `${idsEv.length} ${idsEv.length === 1 ? "compromisso" : "compromissos"} no calendário` : "", idsRo.length ? `${idsRo.length} ${idsRo.length === 1 ? "atividade" : "atividades"} na rotina` : ""].filter(Boolean);
+          UI.toast(`Importado: ${partes.join(" e ")}.`, {
+            acaoRotulo: "Desfazer",
+            aoAcionar: () => { idsEv.forEach((id) => Store.remover(CAMINHO, id)); idsRo.forEach((id) => Store.remover("pessoal.rotina", id)); aoConcluir({}); },
+          });
+        });
+        desenhar();
+        if (destino === "rotina") $('[data-grupo="rotina"]')?.scrollIntoView({ block: "start" });
+      },
+    });
+  }
+
+  return { parseICS, deEventoGoogle, gradeDoMes, lerDataICS, desdobrar, itensEntre, montar, abrirImportacao, importarArquivo, ACEITOS };
 })();
 
 if (typeof module !== "undefined") module.exports = Calendario;

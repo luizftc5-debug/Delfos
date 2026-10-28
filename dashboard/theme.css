@@ -1139,7 +1139,7 @@ table.sheet tbody tr:focus-within .row-actions { opacity: 1; }
 .modal-body > .form-secao:first-child { margin-top: 0; padding-top: 0; border-top: none; }
 
 .field { display: flex; flex-direction: column; gap: 7px; }
-.field label { font-size: calc(13.5px * var(--escala-fonte, 1)); font-weight: 500; color: var(--texto-2); }
+.field label, .field > .label { font-size: calc(13.5px * var(--escala-fonte, 1)); font-weight: 500; color: var(--texto-2); }
 .field label .muted { font-weight: 400; }
 .field .hint { font-size: calc(13px * var(--escala-fonte, 1)); color: var(--texto-3); line-height: 1.5; }
 
@@ -4056,3 +4056,87 @@ span.info.bem { color: var(--success-text); }
 
 /* Organizar as abas: o botão discreto logo abaixo de "Nova aba". */
 .nav-organizar { width: 100%; justify-content: flex-start; margin-top: 4px; color: var(--texto-3); }
+
+/* Formas de ver uma aba (2.7): desenho, nome e para que serve. O mesmo
+   seletor no criador, em "Layout e exibição" e no começo de uma aba vazia;
+   a versão compacta é a barra de ferramentas da lista. */
+.seletor-vistas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 168px), 1fr)); gap: 10px; }
+.vista-opcao {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  padding: 14px 14px 15px; min-width: 0;
+  background: transparent; color: var(--texto-2);
+  border: 1px solid var(--linha-forte); border-radius: var(--r-md);
+  font: inherit; text-align: left; cursor: pointer;
+  transition: border-color var(--t-rapido) var(--ease-saida), background-color var(--t-rapido) var(--ease-saida);
+}
+.vista-desenho { width: 64px; height: 40px; flex-shrink: 0; color: var(--texto-3); }
+.vista-desenho rect { opacity: .32; }
+.vista-desenho rect.f { opacity: .13; }
+.vista-desenho rect.d { opacity: .62; }
+.vista-texto { display: grid; gap: 4px; min-width: 0; }
+.vista-nome { color: var(--texto); font-weight: 550; font-size: calc(14px * var(--escala-fonte, 1)); line-height: 1.3; }
+.vista-frase { font-size: calc(12.5px * var(--escala-fonte, 1)); line-height: 1.5; }
+.vista-bom { font-size: calc(12px * var(--escala-fonte, 1)); line-height: 1.45; color: var(--texto-3); }
+.vista-opcao[aria-checked="true"] { border-color: var(--texto); background: var(--superficie-2); box-shadow: inset 0 0 0 1px var(--texto); }
+.vista-opcao[aria-checked="true"] .vista-desenho { color: var(--texto); }
+.vista-opcao[aria-checked="true"] .vista-desenho rect.d { opacity: 1; }
+.vista-opcao:focus-visible { outline: 2px solid var(--texto); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  .vista-opcao:hover { border-color: var(--texto-3); background: var(--superficie-2); }
+}
+
+.seletor-vistas.compacto {
+  display: inline-flex; gap: 2px; padding: 3px;
+  border: 1px solid var(--linha-forte); border-radius: var(--r-md);
+}
+.seletor-vistas.compacto .vista-opcao {
+  flex-direction: row; align-items: center; gap: 6px;
+  min-height: 34px; padding: 6px 11px; border: 0; border-radius: 7px; white-space: nowrap;
+}
+.seletor-vistas.compacto .vista-opcao .ico { width: 16px; height: 16px; }
+.seletor-vistas.compacto .vista-nome { color: inherit; font-weight: 500; font-size: calc(12.5px * var(--escala-fonte, 1)); }
+.seletor-vistas.compacto .vista-opcao[aria-checked="true"] { background: var(--superficie-3); color: var(--texto); box-shadow: none; }
+@media (max-width: 680px) {
+  .seletor-vistas.compacto { display: flex; width: 100%; }
+  .seletor-vistas.compacto .vista-opcao { flex: 1 1 0; flex-direction: column; gap: 3px; padding: 7px 2px; min-height: 48px; }
+  .seletor-vistas.compacto .vista-nome { font-size: calc(11px * var(--escala-fonte, 1)); }
+  .seletor-vistas:not(.compacto) { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .seletor-vistas:not(.compacto) .vista-opcao { flex-direction: row; align-items: center; gap: 14px; padding: 12px 14px; }
+}
+
+/* Importar de um arquivo (2.7): andamento e revisão em dois eixos. */
+.leitura-arquivo-status { margin: 0 0 12px; color: var(--texto-2); font-size: calc(14px * var(--escala-fonte, 1)); line-height: 1.5; }
+.leitura-arquivo-barra { width: 100%; height: 6px; accent-color: var(--texto); }
+.revisar-arquivo { display: grid; gap: 22px; }
+.revisar-grupo { display: grid; gap: 10px; min-width: 0; }
+.revisar-cab { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px 18px; flex-wrap: wrap; }
+.revisar-cab h3 { display: flex; align-items: center; gap: 8px; margin: 0; font: 400 calc(19px * var(--escala-fonte, 1))/1.3 var(--font-voz); }
+.revisar-cab h3 .ico { width: 18px; height: 18px; color: var(--s-pessoal); }
+.revisar-cab p { margin: 4px 0 0; color: var(--texto-3); font-size: calc(12.5px * var(--escala-fonte, 1)); line-height: 1.5; }
+.revisar-mes { display: grid; gap: 4px; color: var(--texto-2); font-size: calc(12.5px * var(--escala-fonte, 1)); }
+.revisar-mes .input { min-height: 38px; }
+.revisar-linhas { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.revisar-linhas > li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; align-items: start; padding: 10px 12px; border-radius: 10px; background: var(--superficie-2); }
+.revisar-linhas > li.desmarcada { opacity: .55; }
+.revisar-linhas > li > .check { margin-top: 11px; }
+.revisar-linhas .revisar-vazio { display: block; background: none; color: var(--texto-3); font-size: calc(13px * var(--escala-fonte, 1)); }
+.revisar-campos { display: grid; gap: 8px; min-width: 0; }
+.revisar-campos .input { min-height: 38px; padding-top: 6px; padding-bottom: 6px; }
+.revisar-titulo { font-weight: 550; }
+.revisar-quando { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.revisar-quando input[type="date"] { width: 160px; }
+.revisar-quando input[type="time"] { width: 132px; }
+.revisar-quando select { width: auto; min-width: 120px; }
+.revisar-nota { color: var(--texto-3); font-size: calc(12px * var(--escala-fonte, 1)); }
+.revisar-texto summary { cursor: pointer; color: var(--texto-2); font-size: calc(13px * var(--escala-fonte, 1)); }
+.revisar-texto pre { margin: 10px 0 0; max-height: 240px; overflow: auto; padding: 12px; border-radius: 10px; background: var(--superficie-2); color: var(--texto-2); font: calc(12px * var(--escala-fonte, 1))/1.55 var(--font); white-space: pre-wrap; overflow-wrap: anywhere; }
+.dias-semana { gap: 4px; }
+.dias-semana .chip { min-width: 44px; justify-content: center; }
+.dias-semana.mini .chip { min-width: 0; padding: 3px 8px; }
+@media (max-width: 680px) {
+  .revisar-linhas > li { padding: 10px; gap: 10px; }
+  .revisar-quando input[type="date"] { width: 100%; }
+  .revisar-quando > input[type="time"] { flex: 1 1 0; width: 0; min-width: 0; }
+  .revisar-quando > select { flex: 1 1 100%; width: 100%; }
+  .dias-semana .chip { min-width: 0; flex: 1 1 0; padding-left: 4px; padding-right: 4px; }
+}

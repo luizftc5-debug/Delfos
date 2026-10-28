@@ -87,7 +87,7 @@ def testar(base):
             assert dados['visual']['vista']==modelo['visual']['vista']
             assert [(c['id'],c['tipo'],c['opcoes']) for c in dados['campos']]==[(c['id'],c['tipo'],c['opcoes']) for c in modelo['campos']],modelo['nome']
             # Todos os campos precisam funcionar no formulário do registro.
-            page.locator('#lista .empty').get_by_role('button',name=f'Adicionar {modelo["rotuloItem"]}',exact=True).click()
+            page.locator('#lista .empty').get_by_role('button',name='Abrir o formulário completo',exact=True).click()
             form=page.locator('.modal.formulario')
             form.locator('[name="descricao"]').fill('Registro de teste')
             if form.locator('[name="data"]').count():form.locator('[name="data"]').fill(page.evaluate('UI.hojeISO()'))

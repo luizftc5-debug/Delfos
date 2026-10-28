@@ -48,3 +48,5 @@ jobs:
         run: python dashboard/test/faculdade_documentos.browser.py
       - name: Verificar os modelos de abas
         run: python dashboard/test/modelos_abas.browser.py
+      - name: Verificar rotina, importação de arquivo e formas de ver
+        run: python dashboard/test/agenda_rotina.browser.py

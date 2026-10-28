@@ -345,7 +345,7 @@ const Store = (() => {
       faculdade: { disciplinas: [], prazos: [] },
       projetos: [],
       oportunidades: [],
-      pessoal: { compromissos: [] },
+      pessoal: { compromissos: [], rotina: [] },
       pilares: [], // abas criadas pelo próprio usuário — ver PALETA_PILAR
     };
   }
@@ -583,6 +583,10 @@ const Store = (() => {
     out.oportunidades = Array.isArray(e.oportunidades) ? e.oportunidades : [];
     // v4 → v5: aba nova para compromissos pessoais (consultas, tarefas, recados).
     out.pessoal = { compromissos: e.pessoal?.compromissos || [] };
+    // 2.7: a rotina da semana (aulas, trabalho, treino), separada dos
+    // compromissos pontuais do mês. Cada atividade guarda os dias da semana
+    // em que acontece (0 = domingo … 6 = sábado), não uma data.
+    out.pessoal.rotina = Array.isArray(e.pessoal?.rotina) ? e.pessoal.rotina : [];
 
     // v6 → v7: o usuário pode criar as próprias abas da barra lateral.
     out.pilares = (Array.isArray(e.pilares) ? e.pilares : []).map((p) => {

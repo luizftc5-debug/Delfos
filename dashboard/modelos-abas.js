@@ -94,13 +94,8 @@ const ModelosAbas = (() => {
       texto("profissional", "Profissional", true), texto("local", "Local", true), hora("horario", "Horário"),
       notas("preparo", "Preparo ou orientação recebida"), link("documento", "Pedido ou resultado"),
     ], { agruparPor: "tipo", visual: { vista: "calendario", ordem: "data" }, busca: ["saude", "consulta", "exames", "terapia", "vacinas", "dentista"] }),
-    modelo("alimentacao", "Alimentação e refeições", "saude", "prato", "O que você comeu, calorias e refeições de rotina com check por dia.", "refeição", [
-      opcoes("refeicao", "Refeição", ["Café da manhã", "Almoço", "Lanche", "Jantar", "Ceia"]),
-      opcoes("preparo", "Preparo", ["Planejar", "Comprar ingredientes", "Preparar", "Pronto"]),
-      { ...notas("ingredientes", "Alimento"), naLista: true, dica: "Escreva o que comeu: pão com ovo, mamão, uva…" },
-      numero("porcoes", "Porções"), link("receita", "Receita"), notas(),
-      numero("calorias", "Calorias (kcal)", true), simNao("rotina", "Alimentação de rotina", true),
-    ], { agruparPor: "refeicao", visual: { vista: "lista", ordem: "data" }, busca: ["cardapio", "marmita", "refeicoes", "receitas", "cozinhar", "nutricao"] }),
+    modelo("alimentacao", "Alimentação e refeições", "saude", "prato", "Plano diário por refeição, com alimentos, quantidades, calorias e check por data.", "refeição", [],
+      { especial: "alimentacao", naAgenda: false, busca: ["cardapio", "marmita", "refeicoes", "receitas", "cozinhar", "nutricao"] }),
     modelo("sono", "Sono e descanso", "saude", "lua", "Registro de noites, horários e fatores que influenciam o descanso.", "noite", [
       hora("deitar", "Hora de deitar", true), hora("acordar", "Hora de acordar", true), numero("horasDormidas", "Horas dormidas", true),
       opcoes("qualidade", "Qualidade", ["Ruim", "Regular", "Boa", "Ótima"], false),

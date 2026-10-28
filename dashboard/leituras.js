@@ -418,7 +418,8 @@ const Leituras = (() => {
     if (ativa("faculdade")) areas.push(...comArea(faculdade().notas, Personalizacao.rotuloAba("faculdade"), "var(--s-faculdade)"));
     if (ativa("projetos")) areas.push(...comArea(projetos().notas, Personalizacao.rotuloAba("projetos"), "var(--s-projetos)"));
     if (ativa("pessoal")) areas.push(...comArea(pessoal().notas, Personalizacao.rotuloAba("pessoal"), "var(--s-pessoal)"));
-    (e.pilares || []).filter((p) => p.modelo !== "academia" && p.modelo !== "alimentacao").forEach((p) => areas.push(...comArea(pilar(p).notas, p.nome, p.cor)));
+    (e.pilares || []).filter((p) => p.modelo !== "academia" && p.modelo !== "alimentacao" && p.modeloOrigem !== "alimentacao" &&
+      !((p.campos || []).some(c => c.id === "refeicao") && (p.campos || []).some(c => c.id === "ingredientes"))).forEach((p) => areas.push(...comArea(pilar(p).notas, p.nome, p.cor)));
     // Só o que pede ação sobe para a visão geral; o "bom" e o "info" ficam nas abas.
     return UI.ordenarNotas(areas.filter((n) => n.tipo === "alerta" || n.tipo === "atencao"), max);
   }

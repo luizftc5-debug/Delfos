@@ -551,7 +551,7 @@ const UI = (() => {
     (e.pilares || []).forEach((pil) => {
       const alimentar = pil.modeloOrigem === "alimentacao" || (pil.campos || []).some(c => c.id === "refeicao") && (pil.campos || []).some(c => c.id === "ingredientes");
       (pil.itens || []).forEach((it) => {
-        if (alimentar && it.extras?.rotina === true) return; // o check diário não é um prazo vencido
+        if (alimentar) return; // registros alimentares têm acompanhamento por data no plano diário
         if (!it.data || (!incluirConcluidos && it.concluido)) return;
         itens.push({
           id: it.id, titulo: it.descricao, data: it.data,
@@ -3610,7 +3610,8 @@ const UI = (() => {
       if (base) return { ...base, id: p.id, aba: p.rotulo, href: `${p.href}?novo=${base.novo}`, selo: seloAba(p, "registrar-selo") };
       if (!p.id.startsWith("pilar:")) return null;
       const pl = (e.pilares || []).find((x) => x.id === p.id.slice(6));
-      if (!pl || pl.modelo === "academia" || pl.modelo === "alimentacao") return null;
+      if (!pl || pl.modelo === "academia" || pl.modelo === "alimentacao" || pl.modeloOrigem === "alimentacao" ||
+        (pl.campos || []).some(c => c.id === "refeicao") && (pl.campos || []).some(c => c.id === "ingredientes")) return null;
       return {
         id: p.id, aba: pl.nome, href: `${p.href}&novo=item`, selo: seloAba(p, "registrar-selo"),
         rotulo: pl.rotuloItem ? fmt.capitalizar(pl.rotuloItem) : `Registro em ${pl.nome}`,

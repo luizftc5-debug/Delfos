@@ -35,7 +35,7 @@ def testar(base, pasta):
         page.locator('#cr-busca-modelo').fill('Alimentação')
         page.get_by_role('radio',name='Alimentação',exact=True).click()
         page.locator('[data-acao="avancar"]').click();page.locator('[data-acao="avancar"]').click()
-        expect(page.locator('[data-previa-campos]')).to_contain_text('Calorias')
+        expect(page.locator('[data-previa-campos]')).to_contain_text('Alimentos e calorias')
         page.get_by_role('button',name='Criar aba').click()
         page.wait_for_url('**/pilar.html?id=*')
         pid=page.evaluate('Store.lista("pilares")[0].id')
@@ -43,7 +43,7 @@ def testar(base, pasta):
         assert aba['modelo']=='alimentacao' and aba['naAgenda'] is False and aba['plano']==[] and aba['campos']==[],aba
         expect(page.locator('#alimentacao-conteudo')).to_contain_text('Monte sua dieta')
         expect(page.locator('#secao-itens')).to_be_hidden()
-        expect(page.locator('[data-secao="registros"]')).to_have_text('Hoje e dieta')
+        expect(page.locator('[data-secao="registros"]')).to_have_text('Plano diário')
 
         # Importar a dieta de uma planilha: kcal do arquivo respeitada, as que faltam estimadas.
         with page.expect_file_chooser() as fc: page.locator('#alimentacao-conteudo [data-ali="importar"]').first.click()
@@ -53,12 +53,14 @@ def testar(base, pasta):
         expect(page.locator('.revisar-arquivo-modal')).to_contain_text('sem calorias')
         page.locator('[data-acao="ok"]').click()
         plano=page.evaluate('(id)=>Store.achar("pilares",id).plano',pid)
+        assert len(plano)==4,plano
+        plano=[r for r in plano if r['itens']]
         assert [r['nome'] for r in plano]==['Café da manhã','Almoço'],plano
         assert [i['kcal'] for i in plano[0]['itens']]==[150,146],plano[0]
         assert [i['kcal'] for i in plano[1]['itens']]==[192,263,None],plano[1]
-        # Desfazer devolve o plano vazio; importar de novo para seguir.
+        # Desfazer devolve as refeições vazias; importar de novo para seguir.
         page.get_by_role('button',name='Desfazer').last.click()
-        assert page.evaluate('(id)=>Store.achar("pilares",id).plano',pid)==[]
+        assert not page.evaluate('(id)=>Store.achar("pilares",id).plano.some(r=>r.itens.length)',pid)
         with page.expect_file_chooser() as fc: page.locator('#alimentacao-conteudo [data-ali="importar"]').first.click()
         fc.value.set_files(str(pasta/'dieta.csv'))
         page.locator('[data-acao="ok"]').click()

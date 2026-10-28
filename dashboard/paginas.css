@@ -510,6 +510,32 @@
 }
 .ali-evolucao-barras { margin-top: 18px; }
 
+/* O plano diário segue a mesma composição aberta da rotina da semana. */
+.ali-grade-plano { grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); margin-top: 22px; row-gap: 18px; }
+.ali-grade-plano .ali-coluna { padding-inline: 14px; gap: 12px; transition: box-shadow var(--t-rapido) var(--ease-saida); }
+.ali-coluna.comi { box-shadow: inset 0 2px 0 var(--st-good); }
+.ali-coluna .rotina-dia-cab { align-items: flex-start; }
+.ali-coluna .rotina-dia-cab h3 { width: 100%; }
+.ali-nome-plano { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.ali-nome-plano:disabled { opacity: 1; cursor: default; }
+.ali-nome-plano:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 4px; }
+.ali-coluna-resumo { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ali-adicionar-alimento { margin-top: auto; }
+.ali-registro-nota { margin: 0; color: var(--texto-3); font-size: calc(11px * var(--escala-fonte, 1)); line-height: 1.5; }
+.ali-primeiro-plano { max-width: 80ch; margin-top: 18px; }
+.ali-coluna .ali-item { grid-template-columns: minmax(0, 1fr) auto; }
+.ali-coluna .ali-item .row-actions { grid-column: 1 / -1; justify-content: flex-end; }
+.ali-coluna .ali-item-nome { overflow-wrap: anywhere; }
+.ali-registros-antigos { margin-block: 28px; border-top: 1px solid var(--linha); padding-top: 18px; }
+.ali-registros-antigos summary { cursor: pointer; font-weight: 550; }
+.ali-registros-antigos dl { margin: 12px 0; display: grid; gap: 8px; }
+.ali-registros-antigos dt { color: var(--texto-3); font-size: calc(12px * var(--escala-fonte, 1)); }
+.ali-registros-antigos dd { margin: 3px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .ali-grade-plano { grid-template-columns: minmax(0, 1fr); }
+  .ali-grade-plano .ali-coluna { padding: 16px 0; border-left: 0; border-bottom: 1px solid var(--linha); }
+}
+
 /* Os novos acompanhamentos usam as superfícies e a tipografia existentes. */
 .ali-data { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-block: 16px; }
 .ali-data .input { width: min(100%, 180px); min-width: 0; }

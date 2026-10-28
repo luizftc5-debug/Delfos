@@ -27,7 +27,7 @@
 
   const itens = () => (Store.achar(CAMINHO, id) || {}).itens || [];
   const ehAcademia = () => pilar.modelo === "academia";
-  const ehAlimentacao = () => pilar.modelo === "alimentacao";
+  const ehAlimentacao = () => PlanoAlimentar.ehAba(pilar);
   const ehRotinaAlimentar = c => Acompanhamento.alimentar(pilar) && c.extras?.rotina === true;
 
   /* --------------------------------- Render --------------------------------- */
@@ -77,9 +77,6 @@
     const restaurarFoco = guardarFoco();
     pilar = Store.achar(CAMINHO, id);
     if (!pilar) return (location.href = "index.html");
-    // Mantém ids e valores antigos. A apresentação do modelo da imagem recebe
-    // alimento, calorias e rotina sem converter nem apagar seus registros.
-    if (Acompanhamento.alimentar(pilar)) pilar = { ...pilar, campos: Acompanhamento.camposAlimentacao(pilar) };
 
     document.title = `${pilar.nome} · ${UI.NOME}`;
     // A cor da aba é um hex do usuário, então entra como variável na página
@@ -98,12 +95,12 @@
     const alimentacao = ehAlimentacao();
     // As abas prontas com tela própria (academia, alimentação) escondem a lista genérica.
     const propria = academia || alimentacao;
-    Organizacao.rotular("registros", academia ? "Treinos" : alimentacao ? "Hoje e dieta" : "Registros");
+    Organizacao.rotular("registros", academia ? "Treinos" : alimentacao ? "Plano diário" : "Registros");
     Organizacao.rotular("visao-geral", propria ? "Evolução" : "Visão geral");
     document.querySelector('[data-ajuste="btn-refazer-questionario"]').hidden = !academia;
     document.querySelector('[data-ajuste="btn-campos"]').hidden = propria;
     $("subtitulo").textContent =
-      pilar.descricao ||
+      (alimentacao ? "Seu plano alimentar por refeição, com alimentos, quantidades, calorias e check a cada dia." : pilar.descricao) ||
       (academia
         ? "Seus dias de treino, com carga, repetições e recorde de cada exercício."
         : alimentacao ? "Sua dieta por refeição, as calorias de hoje e os seus objetivos."

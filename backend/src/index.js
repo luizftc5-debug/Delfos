@@ -5,16 +5,18 @@
    as contas e os dados de cada uma:
 
    - Contas: cadastro com e-mail e senha (a senha nunca chega aqui — ver
-     contas.js), sessões de 90 dias, troca de senha, exclusão da conta.
+     contas.js) ou Google, sessões de 12 h ou 30 dias, troca de senha, exclusão.
    - Sincronização: o mesmo estado em todos os aparelhos da pessoa.
    - Anexos na nuvem: PDFs e imagens dos resumos.
    - Versões anteriores: cópias automáticas para desfazer uma sobrescrita.
 
-   Rotas (todas sob /api; só saude, cadastro e entrar dispensam sessão):
+   Rotas (todas sob /api; saúde e as rotas de autenticação dispensam sessão):
 
      GET  /api/saude                  no ar? o cadastro pede convite? a IA está ligada?
      POST /api/cadastro               { email, chave, convite?, manter? } → { token, usuario, codigoRecuperacao }
      POST /api/entrar                 { email, chave, manter? } → { token, usuario }
+     POST /api/google/desafio         → { nonce, expiraEm } para o botão Google
+     POST /api/google                 { credencial, nonce, criarConta?, chaveVinculo? } → sessão
      POST /api/recuperar              { email, codigo, chaveNova } — esqueceu a senha
      POST /api/sair                   encerra a sessão deste aparelho
      GET  /api/conta                  e-mail, datas e uso de anexos
@@ -35,13 +37,14 @@
 
 import { baixarArquivo, enviarArquivo, listarArquivos } from "./arquivos.js";
 import {
-  cadastrar, entrar, excluirConta, exigirSessao, novoCodigoRecuperacao, obterConta, recuperar, sair,
+  cadastrar, desafioGoogle, entrar, entrarComGoogle, excluirConta, exigirSessao, novoCodigoRecuperacao, obterConta, recuperar, sair,
   sairDosOutros, trocarSenha,
 } from "./contas.js";
 import { gravarEstado, guardarCopia, listarVersoes, obterEstado, obterVersao } from "./estado.js";
 import { iaLigada, sugerirAba } from "./ia.js";
 import { limpar } from "./limpeza.js";
 import { ErroHttp, json } from "./respostas.js";
+import { googleClientId } from "./google.js";
 
 // Só `default` pode ser exportado: o Worker trata toda exportação nomeada como handler.
 const VERSAO_API = "2";
@@ -78,11 +81,13 @@ async function rotear(request, env) {
     return json({ servico: "Delfos API", versao: VERSAO_API, documentacao: "backend/README.md no repositório" });
   }
   if (caminho === "/api/saude" && metodo === "GET") {
-    return json({ ok: true, versao: VERSAO_API, cadastro: env.CODIGO_CONVITE ? "convite" : "aberto", ia: iaLigada(env) });
+    return json({ ok: true, versao: VERSAO_API, cadastro: env.CODIGO_CONVITE ? "convite" : "aberto", ia: iaLigada(env), google: { clientId: googleClientId(env) } });
   }
   if (caminho === "/api/cadastro" && metodo === "POST") return cadastrar(request, env);
   if (caminho === "/api/entrar" && metodo === "POST") return entrar(request, env);
   if (caminho === "/api/recuperar" && metodo === "POST") return recuperar(request, env);
+  if (caminho === "/api/google/desafio" && metodo === "POST") return desafioGoogle(request, env);
+  if (caminho === "/api/google" && metodo === "POST") return entrarComGoogle(request, env);
 
   // Daqui para baixo, só com sessão — e só com os dados do dono dela.
   if (!caminho.startsWith("/api/")) throw new ErroHttp(404, "Rota não encontrada.");

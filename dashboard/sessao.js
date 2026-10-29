@@ -7,6 +7,9 @@
    só no navegador — é o que permite publicar o servidor sem trancar ninguém
    fora dos próprios dados no meio do caminho.
 
+   Google: o ID token é conferido pelo servidor e trocado pela mesma sessão
+   abaixo. A credencial do Google nunca é guardada nos armazenamentos.
+
    Toda vez que o navegador é aberto de novo, o painel pede para entrar — a
    menos que a pessoa marque "Manter conectado":
    - sem marcar, o token vai para o sessionStorage (some quando o navegador
@@ -235,6 +238,23 @@ const Sessao = (() => {
     return guardarSessao(r);
   }
 
+  /** Prepara o nonce que o botão oficial do Google inclui no ID token. */
+  function desafioGoogle() {
+    return pedir("POST", "/api/google/desafio", { publica: true, tipo: "application/json", corpo: {} });
+  }
+
+  /** A credencial do Google fica apenas na memória deste fluxo de entrada.
+   * Quem já tinha conta confirma a senha para vincular, preservando seu id.
+   */
+  async function entrarComGoogle({ credencial, nonce, manter = false, convite, criarConta = false, emailVinculo, senhaVinculo }) {
+    const chaveVinculo = senhaVinculo ? await derivarChave(emailVinculo, senhaVinculo) : undefined;
+    const r = await pedir("POST", "/api/google", {
+      publica: true, tipo: "application/json",
+      corpo: { credencial, nonce, manter, convite: convite || undefined, criarConta, chaveVinculo, dispositivo: nomeDoAparelho() },
+    });
+    return { usuario: guardarSessao(r), novaConta: r.novaConta === true, nome: r.nome || "", codigoRecuperacao: r.codigoRecuperacao || "" };
+  }
+
   /** Esqueceu a senha: código de recuperação + senha nova. Devolve { usuario, codigoRecuperacao } (o novo). */
   async function recuperar({ email, codigo, senha, manter = false }) {
     const chaveNova = await derivarChave(email, senha);
@@ -292,7 +312,7 @@ const Sessao = (() => {
   /** Para onde voltar depois de entrar — só páginas do próprio painel. */
   function destinoDepoisDeEntrar() {
     const volta = new URLSearchParams(location.search).get("volta") || "";
-    return /^[a-z]+\.html(\?[\w=&%.-]*)?$/.test(volta) && !volta.startsWith("entrar.html") ? volta : "index.html";
+    return /^[a-z]+\.html(\?[\w=&%.-]*)?$/.test(volta) && !/^(entrar|inicio)\.html(?:\?|$)/.test(volta) ? volta : "index.html";
   }
 
   /* ---------------------- Sessão entre abas abertas ----------------------
@@ -311,7 +331,7 @@ const Sessao = (() => {
     // Saiu da conta em outra aba: esta também deixa de estar dentro.
     if (m.tipo === "saiu") {
       try { sessionStorage.removeItem(KEY); } catch { /* nada */ }
-      if (!/(^|\/)entrar\.html$/.test(location.pathname)) location.replace("entrar.html?saiu=1");
+      if (!/(^|\/)(entrar|inicio)\.html$/.test(location.pathname)) location.replace("entrar.html?saiu=1");
     }
   });
 
@@ -334,7 +354,7 @@ const Sessao = (() => {
   // esconde tudo e vai para a entrada. `saindo` avisa UI.iniciarPagina para
   // não disputar o redirecionamento (com o assistente de boas-vindas, p.ex.).
   let saindo = false;
-  const naEntrada = /(^|\/)entrar\.html$/.test(location.pathname);
+  const naEntrada = /(^|\/)(entrar|inicio)\.html$/.test(location.pathname);
   if (ativo() && !logado() && !naEntrada) {
     saindo = true;
     document.documentElement.style.visibility = "hidden";
@@ -348,7 +368,7 @@ const Sessao = (() => {
     ativo, logado, usuario, api, nomeDoAparelho, normalizarEmail,
     saindo: () => saindo,
     pedir, ErroApi, problemaNaSenha,
-    saude, cadastrar, entrar, recuperar, novoCodigoRecuperacao, sair, conta, trocarSenha, sairDosOutros, excluirConta,
+    saude, cadastrar, entrar, desafioGoogle, entrarComGoogle, recuperar, novoCodigoRecuperacao, sair, conta, trocarSenha, sairDosOutros, excluirConta,
     mantido: () => !!ler().manter,
     irParaEntrar, destinoDepoisDeEntrar,
   };

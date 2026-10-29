@@ -17,6 +17,9 @@ ORIGENS = "https://luizftc5-debug.github.io,http://localhost:8000,http://127.0.0
 # Espaço de anexos por conta, em MB. O banco gratuito do D1 tem 500 MB no
 # total, somando todas as contas — suba com cuidado.
 COTA_ANEXOS_MB = "100"
+# Identificador público do cliente Web Google já usado pelo Delfos. Login usa
+# somente identidade (sem acesso ao Calendar/Drive); não há client secret aqui.
+GOOGLE_CLIENT_ID = "351001418438-cs79h9gvk37247kk77vimlfltfgog5sk.apps.googleusercontent.com"
 
 [[d1_databases]]
 binding = "DB"

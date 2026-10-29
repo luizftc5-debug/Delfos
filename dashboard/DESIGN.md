@@ -31,6 +31,24 @@ da região rolável: só a lista de abas e suas ações rolam quando falta espa�
 O perfil permanece no canto inferior esquerdo, inclusive com muitas abas, fonte
 maior e páginas longas. Atualizar o layout preserva a posição da lista.
 
+A entrada pública fica em `inicio.html`, também acessível pela raiz do site;
+`index.html` do dashboard continua sendo o painel pessoal. A apresentação usa
+os desenhos existentes da marca e as mesmas fontes e cores, com acessos claros
+para entrar e criar conta. Quem já usa dados locais mantém uma alternativa de
+acesso enquanto as contas remotas não estiverem configuradas.
+
+A entrada com Google usa o botão oficial de identidade, separado das permissões
+de Agenda e Drive. A disponibilidade vem do servidor; uma interface sem servidor
+informa isso e não simula autenticação. Vincular um e-mail que já tem conta exige
+a senha atual do Delfos, conservando o identificador e os dados dessa conta.
+
+No computador, o controle ao lado da marca recolhe a barra para uma faixa de
+ícones das abas ativas. O símbolo D substitui o logotipo completo e o perfil
+mostra apenas a foto ou as iniciais. Nomes acessíveis e dicas de cada ícone
+continuam disponíveis; expandir devolve nomes, contadores e ações da barra.
+A escolha acompanha as preferências e o backup. No celular, a marca e a
+navegação inferior mantêm a composição existente, independentemente dessa escolha.
+
 Cada página abre na tarefa principal. Apenas uma seção aparece por vez. Registros,
 gráficos, perguntas e configurações não devem disputar a mesma sequência vertical.
 Os painéis ficam no DOM para preservar filtros e componentes enquanto a pessoa navega.
@@ -193,6 +211,8 @@ O editor mantém o cabeçalho e a formatação compactos. No celular, as ferrame
 rolam em sua própria faixa; abrir a busca não empilha os grupos. O rodapé com a
 marca e a assinatura fica fixo em uma faixa discreta, com espaço reservado abaixo
 do documento e respeito à área segura do aparelho. O título é centralizado.
+O rodapé reserva 44 px no computador e 46 px no celular, com a frase
+“Seu editor sem distrações” ao lado da marca.
 
 A impressão e o PDF usam apenas o resumo em papel branco, com título principal
 maior e centralizado, sem cabeçalhos, rodapés ou metadados do navegador. Margens

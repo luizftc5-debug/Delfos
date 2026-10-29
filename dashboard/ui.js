@@ -710,12 +710,26 @@ const UI = (() => {
   let paginaAtiva = "home";
   let opcoesAtivas = {};
 
+  function aplicarEstadoBarra() {
+    const recolhida = experiencia().barraLateralRecolhida === true;
+    document.documentElement.dataset.barraRecolhida = recolhida ? "sim" : "nao";
+    const botao = document.getElementById("btn-recolher-sidebar");
+    if (botao && botao.getAttribute("aria-expanded") !== String(!recolhida)) {
+      const rotulo = recolhida ? "Expandir barra lateral" : "Recolher barra lateral";
+      botao.setAttribute("aria-label", rotulo);
+      botao.setAttribute("aria-expanded", String(!recolhida));
+      botao.title = rotulo;
+      botao.innerHTML = icone(recolhida ? "direita" : "esquerda");
+    }
+  }
+
   function montarLayout(ativo, opcoes = {}) {
     const { idAtivo = "" } = opcoes;
     paginaAtiva = ativo;
     opcoesAtivas = opcoes;
     const el = document.getElementById("sidebar");
     if (!el) return;
+    aplicarEstadoBarra();
     const rolagemAnterior = el.querySelector(".sidebar-scroll")?.scrollTop || 0;
     const c = contagens();
     const perfil = Store.estado().perfil || {};
@@ -727,7 +741,7 @@ const UI = (() => {
       const aberto = p.id === grupoAtivo;
       const subs = aberto ? subItens(p.id, ativo, idAtivo) : [];
       return `
-        <a class="nav-item ${aberto ? "active" : ""}" href="${p.href}"${aberto ? ' aria-current="page"' : ""}>
+        <a class="nav-item ${aberto ? "active" : ""}" href="${p.href}" aria-label="${fmt.escape(p.rotulo)}" title="${fmt.escape(p.rotulo)}"${aberto ? ' aria-current="page"' : ""}>
           ${seloAba(p)}
           <span class="nav-label">${fmt.escape(p.rotulo)}</span>
           ${contaHTML(c[p.id], "nav-count")}
@@ -756,10 +770,13 @@ const UI = (() => {
     };
 
     el.innerHTML = `
-      <a class="marca-topo" href="index.html" aria-label="${fmt.escape(NOME)}, visão geral" translate="no">
-        ${logotipo()}
-      </a>
-      <div class="sidebar-scroll">
+      <div class="sidebar-cabecalho">
+        <a class="marca-topo" href="index.html" aria-label="${fmt.escape(NOME)}, visão geral" translate="no">
+          ${logotipo("marca-expandida")}${simbolo("marca-recolhida")}
+        </a>
+        <button class="sidebar-recolher" id="btn-recolher-sidebar" type="button" aria-controls="sidebar-abas" aria-expanded="true" aria-label="Recolher barra lateral" title="Recolher barra lateral">${icone("esquerda")}</button>
+      </div>
+      <div class="sidebar-scroll" id="sidebar-abas">
         <nav class="nav" aria-label="Abas do painel">${itens}</nav>
         <button class="nav-nova" id="btn-nova-aba" type="button">${icone("mais")}Nova aba</button>
         <button class="btn ghost sm nav-organizar" id="btn-organizar" type="button">Organizar abas</button>
@@ -794,7 +811,21 @@ const UI = (() => {
     }
 
     document.documentElement.dataset.barra = "sim";
+    aplicarEstadoBarra();
     el.querySelector(".sidebar-scroll").scrollTop = rolagemAnterior;
+    document.getElementById("btn-recolher-sidebar").addEventListener("click", () => {
+      const anterior = experiencia().barraLateralRecolhida === true;
+      try {
+        Store.definirPreferencias({ experiencia: { barraLateralRecolhida: !anterior } });
+        aplicarEstadoBarra();
+        window.dispatchEvent(new Event("resize"));
+      } catch (err) {
+        // O Store pode ter mudado a memória antes de a persistência falhar.
+        Store.estado().preferencias.experiencia.barraLateralRecolhida = anterior;
+        aplicarEstadoBarra();
+        toast(err.message);
+      }
+    });
     document.getElementById("btn-perfil").addEventListener("click", () => abrirPerfil());
     document.getElementById("btn-nova-aba").addEventListener("click", novaAba);
     prepararCriador(document.getElementById("btn-nova-aba"));
@@ -1837,6 +1868,7 @@ const UI = (() => {
     h.dataset.leve = modoLeve(xp.desempenho) ? "sim" : "nao";
     h.dataset.voz = xp.voz || "serifa";
     h.dataset.contadores = xp.contadores === false ? "nao" : "sim";
+    aplicarEstadoBarra();
     if (semMovimento()) cancelarAnimacoes();
   }
 

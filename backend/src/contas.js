@@ -25,7 +25,8 @@
    SHA-256 dele; usá-lo gera outro e derruba todas as sessões.
    =========================================================================== */
 
-import { ErroHttp, agora, json, textoCurto } from "./respostas.js";
+import { ErroHttp, agora, json, lerCorpoLimitado, textoCurto } from "./respostas.js";
+import { googleClientId, verificarGoogle } from "./google.js";
 
 const enc = new TextEncoder();
 
@@ -42,6 +43,8 @@ const LIMITES = {
   "entrar-email": [15 * MINUTO, 10],
   "entrar-ip": [15 * MINUTO, 30],
   "cadastro-ip": [60 * MINUTO, 5],
+  "google-ip": [15 * MINUTO, 30],
+  "google-desafio-ip": [5 * MINUTO, 30],
 };
 
 /* ------------------------------ Utilidades -------------------------------- */
@@ -266,6 +269,102 @@ export async function entrar(request, env) {
   return json({ ...sessao, usuario: { id: u.id, email: u.email } });
 }
 
+/* ----------------------- Entrar com uma conta Google ----------------------- */
+
+function exigirGoogle(request, env) {
+  const clientId = googleClientId(env);
+  if (!clientId) throw new ErroHttp(503, "O login com o Google ainda não está disponível neste painel.");
+  const origem = request.headers.get("Origin");
+  const permitidas = String(env.ORIGENS || "").split(",").map(s => s.trim()).filter(Boolean);
+  if (!origem || !permitidas.includes(origem)) throw new ErroHttp(403, "Origem não autorizada para entrar com o Google.");
+  return { clientId, origem };
+}
+
+/** POST /api/google/desafio — nonce aleatório, de uso único e sem cookies. */
+export async function desafioGoogle(request, env) {
+  const { origem } = exigirGoogle(request, env), ip = ipDe(request);
+  await conferirLimite(env.DB, "google-desafio-ip", ip);
+  const nonce = b64url(aleatorio(32)), expira = Date.now() + 5 * MINUTO;
+  await env.DB.batch([
+    env.DB.prepare("INSERT INTO google_desafios (nonce_hash, origem, expira_em) VALUES (?, ?, ?)").bind(await sha256Hex(nonce), origem, expira),
+    registrarTentativa(env.DB, "google-desafio-ip", ip),
+  ]);
+  return json({ nonce, expiraEm: new Date(expira).toISOString() });
+}
+
+/** POST /api/google { credencial, nonce, criarConta?, convite?, chaveVinculo? }
+ * O e-mail só localiza uma conta antiga; nunca é autorização para vinculá-la.
+ * Quem já tinha senha precisa confirmá-la antes de associar seu Google sub.
+ */
+export async function entrarComGoogle(request, env) {
+  const { clientId, origem } = exigirGoogle(request, env), db = env.DB, ip = ipDe(request);
+  await conferirLimite(db, "google-ip", ip);
+  await registrarTentativa(db, "google-ip", ip).run();
+  let corpo;
+  try { corpo = JSON.parse(new TextDecoder().decode(await lerCorpoLimitado(request, 16384, "Resposta do Google longa demais."))); }
+  catch (e) { if (e instanceof ErroHttp) throw e; throw new ErroHttp(400, "Corpo da requisição não é JSON."); }
+  if (!corpo || typeof corpo !== "object" || Array.isArray(corpo) || typeof corpo.nonce !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(corpo.nonce)) {
+    throw new ErroHttp(400, "Reinicie o login com o Google para continuar.");
+  }
+  const nonceHash = await sha256Hex(corpo.nonce);
+  const desafio = await db.prepare("SELECT origem, expira_em, usado FROM google_desafios WHERE nonce_hash = ?").bind(nonceHash).first();
+  if (!desafio || desafio.origem !== origem || desafio.usado || desafio.expira_em <= Date.now()) {
+    throw new ErroHttp(410, "Esta tentativa de login expirou. Entre com o Google novamente.");
+  }
+  const google = await verificarGoogle(corpo.credencial, clientId, corpo.nonce);
+  validarEmail(google.email);
+  let u = await db.prepare("SELECT u.id, u.email FROM identidades_google g JOIN usuarios u ON u.id = g.usuario_id WHERE g.sub = ?").bind(google.sub).first();
+  let novaConta = false, codigo = "", vincular = false;
+  if (!u) {
+    u = await db.prepare("SELECT id, email, senha_sal, senha_hash FROM usuarios WHERE email = ?").bind(google.email).first();
+    if (u) {
+      const jaVinculada = await db.prepare("SELECT sub FROM identidades_google WHERE usuario_id = ?").bind(u.id).first();
+      if (jaVinculada) throw new ErroHttp(409, "Este e-mail já está associado a outra conta Google. Entre com a conta original.");
+      if (!corpo.chaveVinculo) {
+        throw new ErroHttp(409, "Este e-mail já tem uma conta Delfos. Confirme a senha dessa conta para entrar com o Google e manter seus dados.", { vincularGoogle: true, email: google.email });
+      }
+      await conferirLimite(db, "entrar-email", u.email);
+      await conferirSenha(db, u, corpo.chaveVinculo, request);
+      vincular = true;
+    } else {
+      if (corpo.criarConta !== true) throw new ErroHttp(409, "Esta conta Google ainda não tem uma conta Delfos. Escolha Criar conta para continuar.", { criarContaGoogle: true, email: google.email });
+      await conferirLimite(db, "cadastro-ip", ip);
+      if (env.CODIGO_CONVITE && !iguaisTempoConstante(String(corpo.convite || "").trim(), String(env.CODIGO_CONVITE).trim())) {
+        await registrarTentativa(db, "cadastro-ip", ip).run();
+        throw new ErroHttp(403, "Código de convite inválido.");
+      }
+      u = { id: crypto.randomUUID(), email: google.email };
+      novaConta = true; codigo = novoCodigo();
+    }
+  }
+  // Só consome ao completar a autenticação: a confirmação de senha ou de
+  // cadastro pode repetir o mesmo nonce. A escrita condicional impede replay.
+  const consumido = await db.prepare("UPDATE google_desafios SET usado = 1 WHERE nonce_hash = ? AND usado = 0 AND expira_em > ? AND origem = ?")
+    .bind(nonceHash, Date.now(), origem).run();
+  if (consumido.meta?.changes !== 1) throw new ErroHttp(410, "Esta tentativa de login já foi utilizada. Entre com o Google novamente.");
+  try {
+    if (novaConta) {
+      const sal = b64url(aleatorio(16)), quando = agora();
+      // Não existe uma senha padrão. O valor aleatório não sai do servidor;
+      // o código de recuperação permite definir uma senha no fluxo existente.
+      const aleatoria = b64url(aleatorio(32));
+      await db.batch([
+        db.prepare(`INSERT INTO usuarios (id, email, senha_sal, senha_hash, senha_algoritmo, criado_em, senha_trocada_em, recuperacao_hash, recuperacao_gerada_em)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(u.id, u.email, sal, await hashDaChave(aleatoria, sal), "google:sem-senha", quando, quando, await hashCodigo(codigo), quando),
+        db.prepare("INSERT INTO identidades_google (sub, usuario_id, criado_em) VALUES (?, ?, ?)").bind(google.sub, u.id, quando),
+        registrarTentativa(db, "cadastro-ip", ip),
+      ]);
+    } else if (vincular) {
+      await db.prepare("INSERT INTO identidades_google (sub, usuario_id, criado_em) VALUES (?, ?, ?)").bind(google.sub, u.id, agora()).run();
+    }
+  } catch (e) {
+    if (/UNIQUE/i.test(String(e?.message || e))) throw new ErroHttp(409, "A conta foi alterada em outra tentativa. Entre novamente para continuar.");
+    throw e;
+  }
+  const sessao = await criarSessao(db, u.id, corpo.dispositivo, corpo.manter);
+  return json({ ...sessao, usuario: { id: u.id, email: u.email }, novaConta, nome: google.nome, ...(codigo ? { codigoRecuperacao: codigo } : {}) }, novaConta ? 201 : 200);
+}
+
 /**
  * POST /api/recuperar { email, codigo, chaveNova, manter? }
  * Esqueceu a senha: o código de recuperação troca a senha, é consumido (vem
@@ -401,6 +500,7 @@ export async function excluirConta(request, env, usuario) {
     db.prepare("DELETE FROM arquivos WHERE usuario_id = ?").bind(uid),
     db.prepare("DELETE FROM sessoes WHERE usuario_id = ?").bind(uid),
     db.prepare("DELETE FROM tentativas WHERE chave = ?").bind(`entrar-email:${usuario.email}`),
+    db.prepare("DELETE FROM identidades_google WHERE usuario_id = ?").bind(uid),
     db.prepare("DELETE FROM usuarios WHERE id = ?").bind(uid),
   ]);
   return json({ ok: true });

@@ -45,6 +45,20 @@ test("backup recusa exportação silenciosa sem os anexos", async () => {
   await assert.rejects(store.exportar(), /backup completo/);
 });
 
+test("preferência da barra recolhida acompanha perfil, backup e restauração sem alterar abas", async () => {
+  const { store } = ambiente();
+  assert.equal(store.estado().preferencias.experiencia.barraLateralRecolhida, false);
+  const p = store.inserir("pilares", { nome: "Meus estudos", campos: [], itens: [{ id: "r", descricao: "Revisar" }] });
+  store.definirPreferencias({ experiencia: { barraLateralRecolhida: true } });
+  store.definirPerfil({ nome: "Pessoa de teste" });
+  const backup = await store.exportar();
+  await store.importar(backup);
+  assert.equal(store.estado().preferencias.experiencia.barraLateralRecolhida, true);
+  assert.equal(store.achar("pilares", p.id).itens[0].descricao, "Revisar");
+  store.definirPreferencias({ experiencia: { tamanho: "grande" } });
+  assert.equal(store.estado().preferencias.experiencia.barraLateralRecolhida, true);
+});
+
 test("plano de ensino preserva dados manuais e não duplica a agenda ao repetir após falha", () => {
   const { store, storage } = ambiente();
   const d = store.inserir("faculdade.disciplinas", { nome:"Clínica",avaliacoes:[{id:"manual",nome:"Prova antiga",data:"2026-10-20",nota:8}],materiais:[],resumos:[] });

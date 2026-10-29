@@ -52,7 +52,7 @@ def testar(base):
         novo = f"{base}/resumo.html?disciplina={disciplina}"
         pagina.goto(novo)
         assert pagina.locator("#contagem,.editor-dica,#btn-salvar").count() == 0
-        assert pagina.locator(".editor-assinatura").inner_text() == "O essencial se revela: seu editor sem distrações"
+        assert pagina.locator(".editor-assinatura").inner_text() == "Seu editor sem distrações"
 
         editar(pagina, "Novo resumo", "Texto guardado automaticamente.")
         endereco = pagina.url

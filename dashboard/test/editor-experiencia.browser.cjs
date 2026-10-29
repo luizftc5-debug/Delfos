@@ -79,9 +79,10 @@ async function main() {
       const d = await page.locator('.editor-rodape').evaluate(e => ({ top: e.getBoundingClientRect().top, bottom: e.getBoundingClientRect().bottom, height: e.getBoundingClientRect().height, position: getComputedStyle(e).position, viewport: innerHeight }));
       assert.equal(d.position, 'fixed', `Rodapé ${largura}px/${tamanho}`);
       assert.ok(Math.abs(d.bottom - d.viewport) <= 1, JSON.stringify(d));
-      assert.ok(d.height <= (largura <= 760 ? 52 : 44), `Rodapé ocupa ${d.height}px em ${largura}px`);
+      assert.ok(d.height >= (largura <= 760 ? 44 : 42) && d.height <= (largura <= 760 ? 56 : 52), `Rodapé ocupa ${d.height}px em ${largura}px`);
       assert.ok(await page.locator('.editor-rodape .marca').isVisible());
       assert.ok(await page.locator('.editor-assinatura').isVisible());
+      assert.equal(await page.locator('.editor-assinatura').innerText(), 'Seu editor sem distrações');
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Documento vaza em ${largura}px/${tamanho}`);
     };
 

@@ -1,0 +1,63 @@
+.acesso-shell { max-width: 1320px; min-height: 100dvh; margin: 0 auto; padding: 0 56px; display: flex; flex-direction: column; }
+.acesso-cabecalho { min-height: 98px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.acesso-cabecalho .portal-link { color: var(--texto-3); font-size: 12px; }
+.acesso-grade { display: grid; grid-template-columns: 1fr minmax(0, 450px); gap: clamp(40px, 8vw, 120px); align-items: center; flex: 1; padding: 36px 0 60px; }
+.acesso-apresentacao h2 { font: 400 clamp(38px, 4.6vw, 62px)/1.2 var(--font-voz); letter-spacing: -.04em; margin: 0; }
+.acesso-apresentacao h2 em { font: inherit; color: var(--texto-2); }
+.acesso-apresentacao > p:last-of-type { font-size: 16px; line-height: 1.8; max-width: 39ch; color: var(--texto-2); margin: 28px 0 0; }
+.acesso-editorial { display: grid; gap: 18px; margin-top: 44px; padding-top: 24px; border-top: 1px solid var(--linha-forte); max-width: 38ch; color: var(--texto-3); font-size: 12px; }
+.acesso-cartao { min-width: 0; padding: 32px 34px; border: 1px solid var(--linha-forte); border-radius: 14px; background: var(--superficie); }
+.acesso-cartao > .portal-eyebrow { margin-bottom: 14px; }
+.acesso-cartao h1 { margin: 0; font: 400 30px/1.25 var(--font-voz); letter-spacing: -.025em; }
+.acesso-frase { margin: 14px 0 24px; font-size: 13px; line-height: 1.7; color: var(--texto-2); }
+.acesso-cartao .seg { width: 100%; margin-bottom: 24px; }
+.acesso-cartao .seg button { flex: 1; min-height: 37px; font-size: 13px; }
+.acesso-google { text-align: center; }
+.acesso-google .card-note { margin: 10px 0 0; font-size: 11px; line-height: 1.6; }
+#google-botao { min-height: 42px; display: flex; justify-content: center; }
+#google-botao[hidden] { display: none; }
+.google-indisponivel { min-height: 42px; font-size: 13px; border-color: var(--linha-forte); }
+.google-indisponivel:disabled { opacity: .65; }
+.acesso-separador { display: flex; align-items: center; gap: 14px; margin: 24px 0; color: var(--texto-3); font-size: 10px; }
+.acesso-separador::before, .acesso-separador::after { content: ""; height: 1px; flex: 1; background: var(--linha-forte); }
+.acesso-cartao .entrada-form { gap: 17px; }
+.acesso-cartao .field { margin: 0; }
+.acesso-cartao .field label { font-size: 12px; }
+.acesso-cartao input:not([type="checkbox"]) { min-height: 43px; font-size: 14px; }
+.acesso-cartao .hint { font-size: 10px; line-height: 1.6; }
+.acesso-cartao .entrada-manter { font-size: 11px; line-height: 1.6; }
+.acesso-cartao #btn-enviar { min-height: 44px; }
+.acesso-cartao .entrada-nota { font-size: 10px; line-height: 1.7; margin-bottom: 0; }
+.acesso-cartao .notice { margin-bottom: 20px; font-size: 12px; }
+.acesso-estado { margin: 0; color: var(--texto-2); font-size: 12px; line-height: 1.7; }
+.acesso-estado:empty { display: none; }
+.acesso-local { margin: 16px 0 22px; }
+.google-pendente { margin: 10px 0 22px; }
+.google-pendente > p:first-child { font-weight: 500; overflow-wrap: anywhere; }
+.google-pendente .field { margin-block: 18px; }
+.google-pendente .entrada-manter { margin-block: 20px; }
+.google-pendente .btn + .btn { margin-top: 8px; }
+.acesso-rodape { display: flex; align-items: center; justify-content: space-between; min-height: 72px; border-top: 1px solid var(--linha); color: var(--texto-3); font-size: 11px; gap: 20px; }
+.acesso-rodape a { color: inherit; text-decoration: none; }
+.acesso-rodape a:hover { text-decoration: underline; text-underline-offset: 4px; }
+@media (max-width: 900px) {
+  .acesso-shell { padding-inline: 28px; }
+  .acesso-grade { grid-template-columns: 1fr minmax(0, 420px); gap: 32px; }
+  .acesso-apresentacao h2 { font-size: 40px; }
+  .acesso-apresentacao > p:last-of-type { font-size: 14px; }
+  .acesso-editorial { display: none; }
+  .acesso-cartao { padding: 28px; }
+}
+@media (max-width: 700px) {
+  .acesso-shell { padding-inline: 20px; }
+  .acesso-cabecalho { min-height: 80px; }
+  .acesso-grade { display: block; padding-top: 18px; padding-bottom: 36px; }
+  .acesso-apresentacao { display: none; }
+  .acesso-cartao { max-width: 450px; margin: 0 auto; padding: 27px 24px; }
+  .acesso-cartao h1 { font-size: 27px; }
+}
+@media (max-width: 360px) {
+  .acesso-shell { padding-inline: 14px; }
+  .acesso-cartao { padding: 24px 18px; }
+  .acesso-cabecalho .portal-link { font-size: 11px; }
+}

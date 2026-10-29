@@ -23,7 +23,8 @@ test('32 modelos distintos respeitam os recursos e limites reais do painel',()=>
     assert.ok(categorias.has(m.categoria),m.nome);
     assert.ok(icones.includes(m.icone.slice(4)),m.nome);assert.ok(cores.includes(m.cor),m.nome);
     assert.ok(m.nome.length<=40 && m.descricao.length<=160 && m.proposito.length<=2000,m.nome);
-    assert.ok(m.campos.length>=4 && m.campos.length<=8,m.nome);
+    if(m.especial==='alimentacao')assert.equal(m.campos.length,0);
+    else assert.ok(m.campos.length>=4 && m.campos.length<=8,m.nome);
     assert.equal(new Set(m.campos.map(c=>c.id)).size,m.campos.length,m.nome);
     for(const c of m.campos) {
       assert.match(c.id,/^[a-zA-Z][a-zA-Z0-9_]{0,23}$/);

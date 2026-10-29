@@ -580,13 +580,13 @@ const Abas = (() => {
           $("[data-exemplos]").innerHTML = ex.map((e, i) => `<button type="button" class="chip" data-exemplo="${i}" aria-pressed="${est.exemplos.has(i)}">${esc(e)}</button>`).join("");
           const ativos = editando ? [...existentes, ...novosCampos.filter((x) => est.escolhidos.has(x.id))] : s.campos.filter((x) => est.escolhidos.has(x.id));
           const vistaRotulo = UI.vistas([s.visual.vista])[0]?.nome || "Lista";
-          $("[data-mini-registros]").textContent = s.especial === "alimentacao" ? "Hoje e dieta" : academia ? "Treinos" : "Registros";
+          $("[data-mini-registros]").textContent = s.especial === "alimentacao" ? "Plano diário" : academia ? "Treinos" : "Registros";
           $("[data-previa-campos]").innerHTML = s.especial === "alimentacao"
-            ? `<span>Refeições</span><span>Alimentos</span><span>Calorias</span><span>Metas</span>`
+            ? `<span>Café da manhã</span><span>Almoço</span><span>Lanche da tarde</span><span>Janta</span><span>Alimentos e calorias</span>`
             : academia
             ? `<span>Dia de treino</span><span>Exercícios</span><span>Cargas</span>`
             : `<span>Nome</span>${s.naAgenda ? "<span>Data</span>" : ""}${ativos.slice(0, 3).map((x) => `<span>${esc(x.rotulo)}</span>`).join("")}${ativos.length > 3 ? `<span>+${ativos.length - 3}</span>` : ""}`;
-          $("[data-previa-resumo]").innerHTML = s.especial === "alimentacao" ? "Seu plano alimentar por refeição, com as calorias de hoje contra a meta." : academia ? "Seus exercícios serão organizados por dia de treino."
+          $("[data-previa-resumo]").innerHTML = s.especial === "alimentacao" ? "Suas refeições lado a lado, com alimentos, calorias e check por dia. Você pode acrescentar outras refeições." : academia ? "Seus exercícios serão organizados por dia de treino."
             : `${UI.desenhoVista(s.visual.vista)}<span>${esc(vistaRotulo)}, ${ativos.length ? `${ativos.length} ${ativos.length === 1 ? "campo adicional" : "campos adicionais"}` : "nome e data"}${s.naAgenda ? ", na agenda" : ""}${s.checkin ? ", marcação diária" : ""}</span>`;
           $("[data-resumo-estrutura]").textContent = s.especial === "alimentacao" ? "Refeições e calorias" : academia ? "Dias de treino" : `${vistaRotulo}, ${ativos.length} ${ativos.length === 1 ? "campo" : "campos"}`;
           $("[data-adicionar-campo]").disabled = ativos.length >= 8;

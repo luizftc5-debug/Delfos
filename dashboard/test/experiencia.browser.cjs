@@ -47,41 +47,41 @@ async function main() {
     const inserir = async p => page.evaluate(p => Store.inserir('pilares', p).id, p);
     const abrir = async id => page.goto(`${base}/pilar.html?id=${id}`);
 
-    // O modelo da imagem: campos antigos, data preservada e check independente por dia.
-    const legado = await inserir({ nome: 'Minhas refeições', modelo: 'personalizado', modeloOrigem: 'alimentacao', rotuloItem: 'refeição', naAgenda: true, campos: modelos.obter('alimentacao').campos.filter(c => !['calorias', 'rotina'].includes(c.id)).map(c => c.id === 'ingredientes' ? { ...c, rotulo: 'Ingredientes' } : c), itens: [] });
+    // O modelo antigo abre o mesmo plano, preservando os originais e o histórico.
+    const camposAntigos = [
+      { id: 'refeicao', rotulo: 'Refeição', tipo: 'select', opcoes: ['Café da manhã', 'Almoço'] },
+      { id: 'ingredientes', rotulo: 'Ingredientes', tipo: 'textarea' },
+      { id: 'calorias', rotulo: 'Calorias', tipo: 'number' },
+      { id: 'rotina', rotulo: 'Rotina', tipo: 'simNao' },
+      { id: 'nota', rotulo: 'Minha nota', tipo: 'text' }
+    ];
+    const antigo = { id: 'cafe-antigo', descricao: 'Café da manhã', data: ontem,
+      extras: { refeicao: 'Café da manhã', ingredientes: 'Pão com ovo, mamão e uva', calorias: 350, rotina: true, nota: 'Meu campo personalizado' },
+      feitos: [ontem], registrosRotina: { [ontem]: { alimento: 'Pão com ovo', calorias: 200 } } };
+    const legado = await inserir({ nome: 'Minhas refeições', modelo: 'personalizado', modeloOrigem: 'alimentacao', rotuloItem: 'refeição', naAgenda: true, campos: camposAntigos, itens: [antigo] });
+    const cafe = () => page.locator('.ali-plano [data-refeicao-coluna="refeicao-cafe"] [data-comi]');
     await abrir(legado);
-    await page.getByRole('button', { name: 'Abrir o formulário completo', exact: true }).click();
-    await page.getByLabel('Nome', { exact: true }).fill('Café da manhã');
-    await page.locator('.modal [name="data"]').fill(ontem);
-    await page.getByLabel('Alimento', { exact: true }).fill('Pão com ovo, mamão e uva');
-    await page.getByLabel('Calorias (kcal)', { exact: true }).fill('350');
-    await page.getByLabel('Alimentação de rotina', { exact: true }).check();
-    await salvarForm();
-    await page.locator('[data-rotina]').check();
-    assert.match(await page.locator('#rotina-alimentar').innerText(), /350 kcal/);
-    await page.locator('#rotina-data').fill(ontem);
-    assert.equal(await page.locator('[data-rotina]').isChecked(), false);
-    await page.locator('[data-rotina]').check();
-    await page.reload();
-    assert.equal(await page.locator('[data-rotina]').isChecked(), true);
-    const registro = await page.evaluate(id => Store.achar('pilares', id).itens[0], legado);
-    assert.deepEqual(registro.feitos, [ontem, hoje]);
-    assert.equal(registro.data, ontem); assert.equal(registro.extras.ingredientes, 'Pão com ovo, mamão e uva');
+    assert.equal(await page.locator('.ali-plano .ali-coluna').count(), 4);
+    assert.equal(await page.evaluate(id => Store.achar('pilares', id).planoDiario, legado), undefined);
+    await cafe().focus(); await page.keyboard.press('Space');
+    assert.equal(await cafe().isChecked(), true);
+    assert.equal(await cafe().evaluate(e => e === document.activeElement), true);
+    assert.equal((await page.locator('.ali-kcal .voz').innerText()).trim(), '350');
+    await page.locator('#ali-data').fill(ontem);
+    assert.equal(await cafe().isChecked(), true);
+    assert.equal((await page.locator('.ali-kcal .voz').innerText()).trim(), '200');
+    await page.locator('[data-ali="hoje"]').click(); await page.reload();
+    assert.equal(await cafe().isChecked(), true);
+    assert.deepEqual(await page.evaluate(id => Store.achar('pilares', id).itens[0], legado), antigo);
     assert.equal(await page.evaluate(id => UI.compromissos().filter(c => c.area === `pilar:${id}`).length, legado), 0);
-    await page.locator('#lista li').first().hover();
-    await page.locator('#lista [data-editar]').first().click();
+    await page.locator('[data-ali="editar-item"]').click();
     await page.getByLabel('Calorias (kcal)', { exact: true }).fill('450'); await salvarForm();
-    assert.match(await page.locator('#rotina-alimentar').innerText(), /350 kcal/);
-    await page.locator('[data-rotina]').uncheck(); await page.locator('[data-rotina]').check();
-    assert.match(await page.locator('#rotina-alimentar').innerText(), /450 kcal/);
-    await page.locator('details.filtros-opcoes summary').click();
-    await page.locator('#f-periodo').selectOption('hoje');
-    await page.getByRole('button', { name: 'Limpar filtros', exact: true }).click();
-    assert.equal(await page.locator('#f-periodo').inputValue(), 'todos');
-    await page.locator('[data-secao="ajustes"]').click(); await page.locator('#btn-campos').click();
-    assert.match(await page.locator('.modal').innerText(), /Alimento/); assert.doesNotMatch(await page.locator('.modal').innerText(), /Ingredientes/);
-    await page.locator('.modal [data-acao="fechar"]').click();
-    console.log('OK: modelo antigo, alimento, calorias, data, checks, persistência e histórico.');
+    assert.equal((await page.locator('.ali-kcal .voz').innerText()).trim(), '350');
+    await cafe().uncheck(); await cafe().check();
+    assert.equal((await page.locator('.ali-kcal .voz').innerText()).trim(), '450');
+    await page.locator('.ali-registros-antigos summary').click();
+    assert.match(await page.locator('.ali-registros-antigos').innerText(), /Meu campo personalizado/);
+    console.log('OK: plano antigo adaptado, quatro refeições, teclado, data, checks e histórico preservado.');
 
     // Tela própria: rotina completa em um cadastro, registro pontual e histórico congelado.
     const dedicado = await inserir({ nome: 'Diário alimentar', modelo: 'alimentacao', rotuloItem: 'refeição', naAgenda: false, campos: [], itens: [], plano: [], diario: {} });
@@ -93,17 +93,17 @@ async function main() {
     await page.locator('[name="inicio"]').fill(ontem);
     await salvarForm();
     await page.locator('[data-ali="hoje"]').click();
-    await page.locator('[data-comi]').check();
+    await cafe().check();
     assert.equal((await page.locator('.ali-kcal .voz').innerText()).trim(), '400');
     await page.locator('#ali-data').fill(ontem);
-    assert.equal(await page.locator('[data-comi]').isChecked(), false);
-    await page.locator('[data-comi]').check();
+    assert.equal(await cafe().isChecked(), false);
+    await cafe().check();
     await page.locator('[data-ali="editar-item"]').click();
     await page.getByLabel('Calorias (kcal)', { exact: true }).fill('500'); await salvarForm();
     assert.equal((await page.locator('.ali-kcal .voz').innerText()).trim(), '400');
     await page.locator('[data-ali="hoje"]').click();
     assert.equal((await page.locator('.ali-kcal .voz').innerText()).trim(), '400');
-    await page.locator('[data-comi]').uncheck(); await page.locator('[data-comi]').check();
+    await cafe().uncheck(); await cafe().check();
     assert.equal((await page.locator('.ali-kcal .voz').innerText()).trim(), '500');
     await page.locator('#ali-extra-nome').fill('Uva'); await page.locator('#ali-extra-kcal').fill('70');
     await page.locator('[data-extra] button').click();
@@ -113,7 +113,7 @@ async function main() {
     assert.equal((await page.locator('.ali-kcal .voz').innerText()).trim(), '500');
     await page.locator('#ali-data').fill(ontem);
     assert.equal((await page.locator('.ali-kcal .voz').innerText()).trim(), '470');
-    await page.locator('[data-ali="editar-refeicao"]').click();
+    await page.getByRole('button', { name: 'Editar refeição Café da manhã', exact: true }).click();
     await page.locator('[data-acao="excluir"]').click();
     await page.locator('.modal.formulario').waitFor({ state: 'detached' });
     assert.equal((await page.locator('.ali-kcal .voz').innerText()).trim(), '470');
@@ -125,8 +125,20 @@ async function main() {
     await page.getByLabel('Alimentação de rotina', { exact: true }).uncheck();
     await page.locator('[name="inicio"]').fill(hoje); await salvarForm();
     assert.equal((await page.locator('.ali-kcal .voz').innerText()).trim(), '560');
-    assert.equal(await page.evaluate(id => Store.achar('pilares', id).plano.length, dedicado), 0);
-    console.log('OK: diário com data, cadastro da rotina, edição, calorias congeladas e exclusão preservando histórico.');
+    assert.equal(await page.evaluate(id => Store.achar('pilares', id).plano.some(r => r.itens.length), dedicado), false);
+    await page.locator('[data-ali="refeicao"]').click();
+    await page.getByLabel('Refeição', { exact: true }).fill('Ceia'); await salvarForm();
+    const ceia = () => page.getByLabel('Comi Ceia hoje', { exact: true });
+    assert.equal(await ceia().isDisabled(), true);
+    await page.getByRole('button', { name: 'Adicionar alimento em Ceia', exact: true }).click();
+    await page.getByLabel('Alimento', { exact: true }).fill('Iogurte');
+    await page.getByLabel('Quantidade', { exact: true }).fill('1 pote');
+    await page.getByLabel('Calorias (kcal)', { exact: true }).fill('120'); await salvarForm();
+    await ceia().check(); await page.reload();
+    assert.equal(await ceia().isChecked(), true);
+    assert.equal((await page.locator('.ali-kcal .voz').innerText()).trim(), '680');
+    assert.equal(await page.locator('.ali-plano [data-refeicao-coluna="refeicao-cafe"]').count(), 0);
+    console.log('OK: refeições extras, alimentos e quantidades, checks por data, edição e exclusão preservando histórico.');
 
     const corridaAntiga = modelos.obter('corrida');
     const antigos = corridaAntiga.campos.filter(c => c.id !== 'esforco').map(c => c.id === 'distanciaKm' ? { ...c, rotulo: 'Minha distância' } : c);
@@ -165,6 +177,16 @@ async function main() {
       await page.getByRole('radio', { name: m.nome, exact: true }).click();
       await page.locator('[data-acao="avancar"]').click(); await page.locator('[data-acao="avancar"]').click();
       await page.locator('[data-acao="criar"]').click(); await page.waitForURL('**/pilar.html?id=*');
+      if (m.especial === 'alimentacao') {
+        assert.equal(await page.locator('.ali-plano .ali-coluna').count(), 4);
+        await page.getByRole('button', { name: 'Adicionar alimento em Almoço', exact: true }).click();
+        await page.getByLabel('Alimento', { exact: true }).fill('Arroz e feijão');
+        await page.getByLabel('Quantidade', { exact: true }).fill('1 prato');
+        await page.getByLabel('Calorias (kcal)', { exact: true }).fill('400'); await salvarForm();
+        await page.getByLabel('Comi Almoço hoje', { exact: true }).check(); await page.reload();
+        assert.equal(await page.getByLabel('Comi Almoço hoje', { exact: true }).isChecked(), true);
+        await conferirLargura(m.nome); continue;
+      }
       assert.equal(await page.locator('#dica-modelo').innerText(), m.orientacao);
       await page.getByRole('button', { name: 'Abrir o formulário completo', exact: true }).click();
       const form = page.locator('.modal.formulario');

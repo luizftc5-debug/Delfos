@@ -1,5 +1,5 @@
 /* Editor de resumos — página inteira, sem barra lateral, só o texto.
-   Abre a partir da página de uma disciplina:
+   Abre a partir da página de uma disciplina ou da seção Resumos de uma aba:
      resumo.html?disciplina=<id>            → resumo novo
      resumo.html?disciplina=<id>&id=<resumo> → editar um existente
 
@@ -14,15 +14,16 @@
 
 (() => {
   const { fmt } = UI;
-  const CAMINHO = "faculdade.disciplinas";
-  const disciplinaId = UI.parametro("disciplina");
+  const contexto = Resumos.resolver(new URLSearchParams(location.search));
+  const CAMINHO = contexto?.caminho;
+  const disciplinaId = contexto?.id;
   let resumoId = UI.parametro("id");
   UI.aplicarAparencia?.();
   UI.realcarBotoes?.(document);
   const assinatura = document.querySelector(".editor-rodape .marca");
   if (assinatura) assinatura.innerHTML = UI.logotipo();
 
-  const disciplina = Store.achar(CAMINHO, disciplinaId);
+  const disciplina = contexto?.obter();
 
   if (!disciplina) {
     document.getElementById("editor-raiz").innerHTML =
@@ -30,21 +31,21 @@
     document.querySelector(".card").appendChild(
       UI.vazio({
         icone: "◌",
-        titulo: "Disciplina não encontrada",
-        texto: "Volte para a lista de disciplinas e abra o resumo por lá.",
-        rotuloAcao: "Ver disciplinas",
-        aoAcionar: () => (location.href = "faculdade.html"),
+        titulo: "Espaço de resumos não encontrado",
+        texto: "Volte à sua aba e abra o resumo por lá. Seus textos continuam guardados na aba em que foram criados.",
+        rotuloAcao: "Voltar às minhas abas",
+        aoAcionar: () => (location.href = "index.html"),
       })
     );
     return;
   }
 
-  const voltarHref = `disciplina.html?id=${encodeURIComponent(disciplinaId)}`;
+  const voltarHref = contexto.href;
   document.getElementById("voltar").href = voltarHref;
   document.getElementById("voltar-nome").textContent = disciplina.nome;
 
   const resumoAtual = () =>
-    (Store.achar(CAMINHO, disciplinaId)?.resumos || []).find((r) => r.id === resumoId) || null;
+    contexto.lista().find((r) => r.id === resumoId) || null;
 
   /* --------------------------------- Ícones --------------------------------
      Os do painel (UI.icone) e alguns próprios do editor, no mesmo traço. */
@@ -120,6 +121,7 @@
   const folha = document.getElementById("folha");
   const campoTitulo = document.getElementById("titulo");
   const elEstado = document.getElementById("estado");
+  const exportacao = EditorExportar.instalar({ titulo: () => campoTitulo.value, corpo });
 
   selFonte.innerHTML = FONTES.map((f) => `<option value="${fmt.escape(f.valor)}">${fmt.escape(f.rotulo)}</option>`).join("");
   selTamanho.innerHTML = TAMANHOS.map((t) => `<option value="${t}"${t === 16 ? " selected" : ""}>${t}</option>`).join("");
@@ -783,7 +785,7 @@
   }
   async function exportar(como) {
     const titulo = campoTitulo.value.trim() || "Resumo";
-    if (como === "imprimir") { window.print(); return; }
+    if (como === "imprimir") { await exportacao.imprimir(); return; }
     if (como === "txt") { baixar(`${titulo}\n\n${corpo.innerText}`, "text/plain;charset=utf-8", nomeArquivo("txt")); return; }
     if (como === "copiar") {
       try { await navigator.clipboard.writeText(`${titulo}\n\n${corpo.innerText}`); UI.toast("Texto copiado."); }
@@ -792,12 +794,7 @@
     }
     if (como === "word") {
       const corpoHTML = await htmlComImagens();
-      const doc = `<!doctype html><html><head><meta charset="utf-8"><title>${fmt.escape(titulo)}</title>
-        <style>body{font-family:Calibri,Arial,sans-serif;font-size:12pt;line-height:1.5}
-        .callout{border-left:4px solid #999;padding:6pt 10pt;background:#f3f3f3}
-        table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:4pt 6pt}
-        ul.checklist li[data-feito]{text-decoration:line-through;color:#777}</style></head>
-        <body><h1>${fmt.escape(titulo)}</h1>${corpoHTML}</body></html>`;
+      const doc = EditorExportar.word(titulo, corpoHTML);
       baixar(`﻿${doc}`, "application/msword", nomeArquivo("doc"));
       UI.toast("Arquivo do Word baixado.");
     }
@@ -844,7 +841,7 @@
 
   function guardarEndereco() {
     if (!resumoId) return;
-    history.replaceState(null, "", `resumo.html?disciplina=${encodeURIComponent(disciplinaId)}&id=${encodeURIComponent(resumoId)}`);
+    history.replaceState(null, "", contexto.endereco(resumoId));
     document.getElementById("btn-excluir").hidden = false;
   }
 
@@ -884,13 +881,14 @@
     if (!resumoId) resumoId = Store.uid("re");
     gravando = true;
     try {
+      if (!contexto.garantir()) throw new Error("Esta aba não está mais disponível.");
       if (anterior) {
         const atualizado = Store.subAtualizar(CAMINHO, disciplinaId, "resumos", resumoId, dados);
-        if (!atualizado) throw new Error("A disciplina não está mais disponível.");
+        if (!atualizado) throw new Error("Esta aba não está mais disponível.");
       }
       else {
         const novo = Store.subInserir(CAMINHO, disciplinaId, "resumos", { id: resumoId, ...dados, anexos: [] });
-        if (!novo) throw new Error("A disciplina não está mais disponível.");
+        if (!novo) throw new Error("Esta aba não está mais disponível.");
       }
       guardarEndereco();
       marcarSalvo();
@@ -1131,11 +1129,13 @@
   const medirBarras = () => {
     document.documentElement.style.setProperty("--editor-topo-altura", `${document.querySelector(".editor-topo").offsetHeight}px`);
     document.documentElement.style.setProperty("--editor-barra-altura", `${document.querySelector(".editor-barra").offsetHeight}px`);
+    document.documentElement.style.setProperty("--editor-rodape-altura", `${document.querySelector(".editor-rodape").offsetHeight}px`);
   };
   if (typeof ResizeObserver === "function") {
     const medidas = new ResizeObserver(medirBarras);
     medidas.observe(document.querySelector(".editor-topo"));
     medidas.observe(document.querySelector(".editor-barra"));
+    medidas.observe(document.querySelector(".editor-rodape"));
   }
   medirBarras();
 })();

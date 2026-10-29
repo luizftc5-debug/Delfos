@@ -83,6 +83,20 @@ def testar(base):
             assert dados['modeloOrigem']==modelo['id']
             assert dados['nome']==modelo['nome']+' pessoal'
             assert dados['itens']==[]
+            if modelo.get('especial')=='alimentacao':
+                assert dados['modelo']=='alimentacao' and dados['campos']==[]
+                expect(page.locator('.ali-plano .ali-coluna')).to_have_count(4)
+                page.get_by_role('button',name='Adicionar alimento em Almoço',exact=True).click()
+                page.get_by_label('Alimento',exact=True).fill('Arroz e feijão')
+                page.get_by_label('Quantidade',exact=True).fill('1 prato')
+                page.get_by_label('Calorias (kcal)',exact=True).fill('400')
+                page.locator('.modal.formulario [data-acao="confirmar"]').click()
+                page.locator('.modal.formulario').wait_for(state='detached')
+                page.get_by_label('Comi Almoço hoje',exact=True).check()
+                page.reload()
+                expect(page.get_by_label('Comi Almoço hoje',exact=True)).to_be_checked()
+                assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
+                continue
             assert dados['agruparPor']==modelo['agruparPor']
             assert dados['visual']['vista']==modelo['visual']['vista']
             assert [(c['id'],c['tipo'],c['opcoes']) for c in dados['campos']]==[(c['id'],c['tipo'],c['opcoes']) for c in modelo['campos']],modelo['nome']

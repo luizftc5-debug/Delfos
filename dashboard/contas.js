@@ -259,11 +259,12 @@
   async function excluir(caminho, item, rotulo) {
     const chave = `${caminho.endsWith("contas") ? "conta" : "cartao"}:${item.id}`;
     const vinculados = Financas.lancamentosDe(chave).length;
+    const resumos = (item.resumos || []).length;
 
-    if (vinculados) {
+    if (vinculados || resumos) {
       const ok = await UI.confirmar({
         titulo: `Excluir ${rotulo.toLowerCase()} "${item.nome}"?`,
-        descricao: `${vinculados} ${vinculados === 1 ? "lançamento ficará" : "lançamentos ficarão"} sem conta/cartão informado. Os lançamentos em si não são apagados.`,
+        descricao: [vinculados ? `${vinculados} ${vinculados === 1 ? "lançamento ficará" : "lançamentos ficarão"} sem conta/cartão informado. Os lançamentos em si não são apagados.` : "", resumos ? `${resumos} ${resumos === 1 ? "resumo será apagado" : "resumos serão apagados"} com ${rotulo.toLowerCase() === "conta" ? "a conta" : "o cartão"}.` : ""].filter(Boolean).join(" "),
         rotuloConfirmar: "Excluir",
         perigo: true,
       });

@@ -403,7 +403,7 @@ def testar(base):
                       const ids = [...document.querySelectorAll('[id]')].map(e => e.id);
                       return ids.length === new Set(ids).size;
                     }"""), f'IDs duplicados em {rota}'
-                    for tab in page.locator('[data-secao]').all():
+                    for tab in page.locator('[data-secao]:visible').all():
                         tab.click()
                         expect(tab).to_have_attribute('aria-selected','true')
                         assert page.locator('[data-painel]:visible').count() == 1
@@ -540,7 +540,7 @@ def testar(base):
         outra.evaluate('Personalizacao.pular();Store.definirPreferencias({experiencia:{lembretes:{resumoDoDia:false}}})')
         for rota in rotas[:7]:
             outra.goto(f'{base}/{rota}')
-            for tab in outra.locator('[data-secao]').all():
+            for tab in outra.locator('[data-secao]:visible').all():
                 tab.click()
                 sem_excesso_horizontal(outra)
         # Com poucas abas o perfil também ocupa o rodapé da janela.

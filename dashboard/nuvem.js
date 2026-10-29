@@ -64,7 +64,8 @@ const Nuvem = (() => {
       e.financeiro.transacoes.length + e.financeiro.metas.length + e.financeiro.contas.length +
       e.financeiro.cartoes.length + e.financeiro.investimentos.length + e.faculdade.disciplinas.length +
       e.faculdade.prazos.length + e.projetos.length + e.oportunidades.length +
-      (e.pessoal?.compromissos?.length || 0) + (e.pilares?.length || 0);
+      (e.pessoal?.compromissos?.length || 0) + (e.pilares?.length || 0) +
+      (e.cadernos || []).reduce((total, c) => total + (c.resumos?.length || 0), 0);
     return n > 0;
   }
 

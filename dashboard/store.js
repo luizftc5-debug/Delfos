@@ -347,6 +347,7 @@ const Store = (() => {
       oportunidades: [],
       pessoal: { compromissos: [], rotina: [] },
       pilares: [], // abas criadas pelo próprio usuário — ver PALETA_PILAR
+      cadernos: [], // resumos opcionais das abas fixas, com identidade estável
     };
   }
 
@@ -581,6 +582,7 @@ const Store = (() => {
     });
 
     out.oportunidades = Array.isArray(e.oportunidades) ? e.oportunidades : [];
+    out.cadernos = Array.isArray(e.cadernos) ? e.cadernos : [];
     // v4 → v5: aba nova para compromissos pessoais (consultas, tarefas, recados).
     out.pessoal = { compromissos: e.pessoal?.compromissos || [] };
     // 2.7: a rotina da semana (aulas, trabalho, treino), separada dos

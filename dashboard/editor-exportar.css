@@ -1,0 +1,15 @@
+/* Só o documento entra na impressão, inclusive quando aberta por Ctrl+P. */
+.resumo-impressao { display: none; }
+@media print {
+  @page { size: A4; margin: 0; }
+  html, body.editor-body { display: block !important; margin: 0 !important; padding: 0 !important; background: #fff !important; color: #202020 !important; }
+  body.editor-body > * { display: none !important; }
+  body.editor-body > .resumo-impressao { display: table !important; }
+  .resumo-impressao { width: 100%; border: 0; border-collapse: collapse; border-spacing: 0; table-layout: fixed; }
+  .resumo-impressao > thead { display: table-header-group; }
+  .resumo-impressao > tfoot { display: table-footer-group; }
+  .resumo-impressao > thead > tr > td, .resumo-impressao > tfoot > tr > td { height: 18mm; padding: 0; border: 0; }
+  .resumo-impressao > tbody > tr > .resumo-impressao-pagina { padding: 0 20mm; border: 0; vertical-align: top; }
+  .resumo-impressao > tbody > tr { break-inside: auto; page-break-inside: auto; }
+  .resumo-exportado { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}

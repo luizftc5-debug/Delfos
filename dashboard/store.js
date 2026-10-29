@@ -86,6 +86,7 @@ const Store = (() => {
       desempenho: "auto", // auto | leve | completo (leve: sem desfoque, sombras grandes, animações; Google só sob demanda)
       voz: "serifa", // serifa = Gloock (a voz, como o logotipo) | sans = Funnel Sans em tudo
       contadores: true, // números ao lado das abas na barra
+      barraLateralRecolhida: false, // no computador, mostra só os ícones das abas
       paginaInicial: "home", // qual aba abre primeiro em cada visita
       semanaComeca: 1, // 0 domingo, 1 segunda (calendário)
       ordemAbas: [], // ids da barra ("financeiro", "pilar:<id>"), na ordem escolhida

@@ -1,6 +1,10 @@
 /* Visão geral: Meu dia, Minhas abas e Dinheiro. */
 
 (() => {
+  if (!Sessao.ativo() && Personalizacao.precisaConfigurar() && !new URLSearchParams(location.search).has("local")) {
+    location.replace("inicio.html");
+    return;
+  }
   UI.iniciarPagina("home");
 
   const { fmt } = UI;

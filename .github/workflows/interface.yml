@@ -2,9 +2,9 @@ name: Interface
 
 on:
   push:
-    paths: ["dashboard/**", ".github/workflows/interface.yml"]
+    paths: ["dashboard/**", "index.html", ".github/workflows/interface.yml"]
   pull_request:
-    paths: ["dashboard/**", ".github/workflows/interface.yml"]
+    paths: ["dashboard/**", "index.html", ".github/workflows/interface.yml"]
   workflow_dispatch:
 
 permissions:
@@ -63,3 +63,4 @@ jobs:
           node dashboard/test/experiencia.browser.cjs
           node dashboard/test/editor-experiencia.browser.cjs
           node dashboard/test/editor-exportar.browser.cjs
+          node dashboard/test/portal-sidebar.browser.cjs

@@ -10,6 +10,7 @@ Roda na **Cloudflare** (Workers + banco D1), no plano gratuito, sem máquina par
 | Função | Como funciona |
 |---|---|
 | **Contas** | Cadastro com nome, e-mail e senha. Na primeira abertura, o painel pede para entrar ou criar conta. |
+| **Entrar com Google** | Botão oficial do Google, com assinatura do ID token conferida no servidor e nonce de uso único. A sessão e a sincronização são as mesmas do login por senha. Contas antigas só são vinculadas depois de confirmar a senha anterior. |
 | **Senha guardada do jeito certo** | A senha nunca sai do aparelho: vira uma chave por PBKDF2-SHA256 com 600 mil iterações (recomendação da OWASP) e só essa chave viaja. O servidor guarda um hash dela com sal aleatório por conta. Nem quem tiver o banco inteiro vê a senha. |
 | **Senha vazada é recusada** | Ao criar ou trocar a senha, o painel confere na base do *Have I Been Pwned* se ela já apareceu em vazamentos, como pede a norma do NIST (SP 800-63B). Só os 5 primeiros caracteres de um hash da senha saem do aparelho. |
 | **Sessões** | Toda vez que o navegador é aberto, o Delfos pede a senha — a menos que se marque **Manter conectado** (aí vale 30 dias). Sem marcar, a sessão vale no máximo 12 h e some ao fechar o navegador. No banco fica só o hash do token. Sair encerra na hora (em todas as abas). Trocar a senha desconecta os outros aparelhos. |
@@ -75,6 +76,45 @@ caminho.
 Depois de ligado, na primeira abertura aparece a tela de entrar. **No aparelho onde você já usa o
 Delfos, escolha "Criar conta"**: o painel pergunta se quer levar os dados que já estão ali para a
 conta nova — diga que sim. Nos outros aparelhos, só **Entrar**.
+
+## Habilitar Entrar com Google
+
+O login depende do Worker publicado e de `API_PUBLICA` em `dashboard/sessao.js`.
+Enquanto esse endereço estiver vazio, o painel continua funcionando localmente;
+não existe autenticação remota, nem por senha nem por Google. A tela de entrada
+explica essa condição e mantém a opção de usar os dados locais.
+
+O identificador público do cliente Web já usado pelo Delfos está em
+`GOOGLE_CLIENT_ID`, na seção `[vars]` de `wrangler.toml`. Ele não é uma senha nem
+um client secret. Para usar outro projeto Google, substitua esse valor. No Google
+Auth Platform, configure a aplicação Web e autorize a origem do site, por exemplo
+`https://luizftc5-debug.github.io` (sem `/Delfos/dashboard`). Para desenvolvimento,
+autorize também a origem e porta exatas do servidor local. A mesma origem deve
+estar na variável `ORIGENS` do Worker. Veja o [guia oficial de configuração do Google](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid).
+
+O login carrega o script oficial de Google Identity Services e pede somente
+identidade básica. Não usa os escopos de Calendar/Drive de `dashboard/config.js`
+e não concede acesso aos arquivos ou à agenda da pessoa. O fluxo com callback no
+navegador não precisa de client secret nem de uma URI de retorno no Worker.
+
+`GET /api/saude` publica `google: { clientId }`; sem uma configuração válida o
+identificador vem vazio e a opção fica indisponível. A migração `0004_google.sql`
+guarda a associação do `sub` do Google com o id da conta Delfos e os desafios
+temporários. A publicação existente aplica essa migração antes de atualizar o Worker.
+
+A verificação usa `jose`, as chaves públicas oficiais do Google, algoritmo RS256,
+emissor, público, validade, data de emissão, e-mail verificado e nonce. O cache
+respeita `Cache-Control` e a idade das chaves; o nonce dura cinco minutos e só pode
+concluir uma autenticação. O servidor aceita apenas as origens de `ORIGENS` e
+limita emissão de desafios e tentativas. O ID token não é salvo no navegador nem
+no banco. Mais detalhes na [documentação de verificação do Google](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token).
+
+Quem já tinha uma conta com o mesmo e-mail confirma a senha Delfos para vincular
+o Google. Isso conserva id, senha, estado, versões e anexos, sem criar uma cópia
+da conta. Uma conta criada pelo Google recebe um código de recuperação, mostrado
+uma única vez. Esse código também permite definir uma senha Delfos por
+**Esqueci minha senha**, caso queira usar senha ou confirmar as ações que a exigem.
+Não existe uma senha padrão para contas Google.
 
 ## Perguntas comuns
 

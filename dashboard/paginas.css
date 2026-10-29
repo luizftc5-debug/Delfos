@@ -1,3 +1,5 @@
+@import url("sidebar.css");
+
 /* Delfos 2.4 alpha — uma tarefa por seção, uma hierarquia por página.
    A identidade fica na tipografia e na paleta; controles usam texto legível. */
 .resumos-editor-busca { display: block; max-width: 620px; margin-bottom: 20px; }

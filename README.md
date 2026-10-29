@@ -109,7 +109,13 @@ python dashboard/test/alimentacao_planilhas.browser.py
 
 ## Como abrir
 
-**Online (recomendado):** <https://luizftc5-debug.github.io/Delfos/dashboard>
+**Página de entrada:** <https://luizftc5-debug.github.io/Delfos/>.
+A apresentação também está em `dashboard/inicio.html`; o painel continua em `dashboard/index.html`.
+
+A entrada oferece e-mail, criação de conta e Google. O acesso remoto depende do Worker publicado
+e de `API_PUBLICA` configurada em `dashboard/sessao.js` — veja [a ativação das contas](backend/README.md).
+Enquanto as contas não estão ligadas, **Usar neste aparelho** mantém o acesso aos dados locais;
+os formulários informam a indisponibilidade sem simular um login.
 
 **No seu computador**, pela pasta `dashboard`:
 

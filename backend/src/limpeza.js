@@ -27,6 +27,7 @@ export async function limpar(env) {
     db.prepare("DELETE FROM textos WHERE chave LIKE 'v:%' AND CAST(substr(chave, 3) AS INTEGER) NOT IN (SELECT id FROM versoes)"),
     db.prepare("DELETE FROM sessoes WHERE expira_em < ?").bind(Date.now()),
     db.prepare("DELETE FROM tentativas WHERE em < ?").bind(Date.now() - DIA_MS),
+    db.prepare("DELETE FROM google_desafios WHERE expira_em <= ? OR usado = 1").bind(Date.now()),
   ]);
 
   // Anexos citados, por conta.

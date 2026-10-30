@@ -53,6 +53,7 @@ A aproximação não grava preferências; a escolha de recolher acompanha o back
 A largura, os ícones e a identificação do perfil acompanham a transição da barra;
 o nome da marca e o D se alternam suavemente. O conteúdo ocupa o espaço liberado
 durante o movimento. Modo leve e redução de movimento mantêm a resposta imediata.
+A retração preserva os espaçamentos verticais dos ícones para evitar saltos nos atalhos.
 No celular, a marca e a navegação inferior mantêm a composição existente,
 independentemente dessa escolha.
 

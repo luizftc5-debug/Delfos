@@ -94,8 +94,10 @@ async function testarSidebar(browser, base) {
     assert.equal(await toggle().getAttribute('aria-expanded'), 'true');
     assert.ok(await toggle().isVisible());
     assert.equal(await preferencia(), false);
+    await estabilizar(page);
     await capturar(page, 'sidebar-expandida-desktop');
     const antes = await page.locator('.main').boundingBox();
+    const centrosAntes = await page.locator('#sidebar .nav-item').evaluateAll(itens => itens.map(e => ({ nome: e.getAttribute('aria-label'), centro: e.getBoundingClientRect().top + e.getBoundingClientRect().height / 2 })));
     const transicao = await page.locator('#sidebar').evaluate(e => ({ propriedades: getComputedStyle(e).transitionProperty, duracoes: getComputedStyle(e).transitionDuration }));
     assert.match(transicao.propriedades, /width/); assert.ok(transicao.duracoes.split(',').some(d => parseFloat(d) > .1));
     const quadroRecolhendo = await medirQuadroIntermediario('click', () => toggle().click()); await estado(true);
@@ -105,6 +107,9 @@ async function testarSidebar(browser, base) {
     assert.equal(await page.locator('.marca-expandida').isVisible(), false);
     assert.ok(await page.locator('.marca-recolhida').isVisible());
     assert.ok(antes.x - (await page.locator('.main').boundingBox()).x >= 100, 'Recolher não devolveu espaço para a página');
+    const centrosDepois = await page.locator('#sidebar .nav-item').evaluateAll(itens => itens.map(e => ({ nome: e.getAttribute('aria-label'), centro: e.getBoundingClientRect().top + e.getBoundingClientRect().height / 2 })));
+    assert.deepEqual(centrosDepois.map(x => x.nome), centrosAntes.map(x => x.nome));
+    centrosAntes.forEach((x, i) => assert.ok(Math.abs(x.centro - centrosDepois[i].centro) <= 1, `A aba ${x.nome} mudou de posição vertical ao recolher: ${x.centro} → ${centrosDepois[i].centro}`));
     for (const link of await page.locator('#sidebar .nav-item').all()) {
       const nome = await link.getAttribute('aria-label');
       assert.ok(nome, 'Aba sem nome acessível na barra recolhida');
@@ -145,6 +150,14 @@ async function testarSidebar(browser, base) {
     assert.equal(await toggle().isVisible(), false);
     await sairDaBarra(); await aproximarDaBarra(); await estado(false);
     assert.equal(await page.evaluate(() => localStorage.getItem('organizador.estado.v2')), depoisDeRecolher);
+
+    // Uma aba mais abaixo também continua sob o mesmo ponto do ponteiro.
+    await toggle().click(); await estado(true); await sairDaBarra();
+    const alvoFechado = await page.evaluate(() => document.elementFromPoint(38, 720)?.closest('.nav-item')?.getAttribute('aria-label'));
+    assert.ok(alvoFechado, 'O ponto de teste deve estar sobre uma aba visível');
+    await page.mouse.move(38, 720); await estado(false);
+    const alvoAberto = await page.evaluate(() => document.elementFromPoint(38, 720)?.closest('.nav-item')?.getAttribute('aria-label'));
+    assert.equal(alvoAberto, alvoFechado, 'Expandir não pode trocar a aba sob o ponteiro');
 
     await page.locator('.sidebar-scroll').evaluate(e => e.scrollTop = e.scrollHeight);
     await conferirRodape();

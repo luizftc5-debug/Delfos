@@ -78,7 +78,7 @@
     pilar = Store.achar(CAMINHO, id);
     if (!pilar) return (location.href = "index.html");
 
-    document.title = `${pilar.nome} · ${UI.NOME}`;
+    document.title = `${pilar.nome}, ${UI.NOME}`;
     // A cor da aba é um hex do usuário, então entra como variável na página
     // (--tint): o quadradinho dos dias marcados e os destaques leem dela.
     const raiz = $("conteudo");
@@ -223,7 +223,7 @@
     const { indicadores, lembretes } = Acompanhamento.analisar(pilar, UI.hojeISO());
     const bloco = $("acompanhamento-modelo");
     bloco.hidden = !indicadores.length && !lembretes.length;
-    $("acompanhamento-conteudo").innerHTML = `${indicadores.length ? `<dl class="acompanhamento-numeros">${indicadores.map(i => `<div><dt>${fmt.escape(i.rotulo)}</dt><dd>${i.unidade === "R$" ? fmt.moeda(i.valor) : `${fmt.decimal(i.valor, 1)} ${fmt.escape(i.unidade)}`}</dd>${i.dica ? `<p class="card-note">${fmt.escape(i.dica)}</p>` : ""}</div>`).join("")}</dl>` : ""}${lembretes.length ? `<h3 class="section-title">Próximas datas dos registros</h3><ul class="list">${lembretes.map(l => `<li><button class="btn ghost sm" data-retomar="${fmt.escape(l.itemId)}">${fmt.escape(l.nome)}</button><span class="meta">${fmt.escape(l.rotulo)} · ${fmt.data(l.data)}</span></li>`).join("")}</ul>` : ""}`;
+    $("acompanhamento-conteudo").innerHTML = `${indicadores.length ? `<dl class="acompanhamento-numeros">${indicadores.map(i => `<div><dt>${fmt.escape(i.rotulo)}</dt><dd>${i.unidade === "R$" ? fmt.moeda(i.valor) : `${fmt.decimal(i.valor, 1)} ${fmt.escape(i.unidade)}`}</dd>${i.dica ? `<p class="card-note">${fmt.escape(i.dica)}</p>` : ""}</div>`).join("")}</dl>` : ""}${lembretes.length ? `<h3 class="section-title">Próximas datas dos registros</h3><ul class="list">${lembretes.map(l => `<li><button class="btn ghost sm" data-retomar="${fmt.escape(l.itemId)}">${fmt.escape(l.nome)}</button><span class="meta">${fmt.escape(l.rotulo)}, ${fmt.data(l.data)}</span></li>`).join("")}</ul>` : ""}`;
     $("acompanhamento-conteudo").onclick = ev => {
       const b = ev.target.closest("[data-retomar]");
       const c = b && itens().find(i => i.id === b.dataset.retomar);
@@ -244,12 +244,12 @@
         ? "calorias não informadas" : `${fmt.decimal(registro.calorias, 0)} kcal`;
       return `<li><label class="rotina-refeicao">
         <input type="checkbox" class="check" data-rotina="${fmt.escape(c.id)}" ${(c.feitos || []).includes(dataRotina) ? "checked" : ""} />
-        <span><b>${fmt.escape(registro.nome || c.descricao)}</b><span class="meta">${fmt.escape(registro.alimento)} · ${kcal}</span></span>
+        <span><b>${fmt.escape(registro.nome || c.descricao)}</b><span class="meta">${fmt.escape(registro.alimento)}, ${kcal}</span></span>
       </label></li>`;
     }).join("");
     box.innerHTML = `<header class="bloco-cabecalho"><div>
         <h2 class="bloco-titulo">Alimentação de rotina</h2>
-        <p class="bloco-resumo">${marcadas.length} de ${rotina.length} ${rotina.length === 1 ? "refeição marcada" : "refeições marcadas"} · ${fmt.decimal(calorias, 0)} kcal informadas</p>
+        <p class="bloco-resumo">${marcadas.length} de ${rotina.length} ${rotina.length === 1 ? "refeição marcada" : "refeições marcadas"}, ${fmt.decimal(calorias, 0)} kcal informadas</p>
       </div></header><div class="bloco-corpo">
       <div class="ali-data"><label for="rotina-data">Data</label><input class="input" type="date" id="rotina-data" value="${dataRotina}" /><button class="btn ghost sm" data-rotina-hoje type="button">Hoje</button></div>
       ${rotina.length ? `<ul class="list">${linhas}</ul>` : `<p class="card-note">No cadastro da refeição, informe o alimento e ative <b>Alimentação de rotina</b>. Ela aparecerá aqui a partir da data cadastrada, pronta para dar o check a cada dia.</p>`}
@@ -385,7 +385,7 @@
     $("titulo-lista").lastChild.textContent = tipo === "habitos" ? "Hoje" : tipo === "leituras" ? "Sua biblioteca" : tipo === "trabalho" ? "Sua pauta" : fmt.capitalizar(Leituras.pluralizar(rotulo()));
     const feitos = L.itens.filter((i) => i.concluido).length;
     const emAberto = L.itens.length - feitos;
-    $("lista-resumo").textContent = Acompanhamento.alimentar(pilar) && L.itens.length ? `${L.itens.length} registros · ${L.itens.filter(ehRotinaAlimentar).length} de rotina (check por data acima)` : !L.itens.length ? ""
+    $("lista-resumo").textContent = Acompanhamento.alimentar(pilar) && L.itens.length ? `${L.itens.length} registros, ${L.itens.filter(ehRotinaAlimentar).length} de rotina (check por data acima)` : !L.itens.length ? ""
       : pilar.checkin ? `${L.itens.filter((c) => (c.feitos || []).includes(UI.hojeISO())).length} de ${L.itens.length} ${Leituras.pluralizar(rotulo())} marcados hoje`
       : `${emAberto} em aberto${feitos ? `, ${feitos} ${feitos === 1 ? "concluído" : "concluídos"}` : ""}`;
     $("registros-ferramentas").hidden = !L.itens.length;

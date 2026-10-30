@@ -10,9 +10,9 @@ const PlanoEnsino = (() => {
     const guardados=new Map();
     let arquivos=[],sugestao,etapa=1,ocupado=false,fechado=false;
     return new Promise(resolve=>UI.abrirModal(`
-      <header class="plano-modal-cab"><div><span class="eyebrow">Delfos · ${esc(disciplina.nome)}</span><h2 class="modal-title">Organizar pelo plano de ensino</h2></div><button class="btn ghost icon" type="button" data-fechar aria-label="Fechar importação">${UI.icone('fechar')}</button></header>
+      <header class="plano-modal-cab"><div><span class="eyebrow">${esc(disciplina.nome)}</span><h2 class="modal-title">Organizar pelo plano de ensino</h2></div><button class="btn ghost icon" type="button" data-fechar aria-label="Fechar importação">${UI.icone('fechar')}</button></header>
       <div class="plano-modal-corpo">
-        <p class="plano-etapa" data-etapa>1 de 2 · Seus documentos</p>
+        <p class="plano-etapa" data-etapa>1 de 2: Seus documentos</p>
         <section data-upload>
           <h3>Um ponto de partida para o semestre.</h3>
           <p>Anexe o edital, a ementa ou o plano de ensino. O Delfos procura assuntos, dias e horários de aula, avaliações e entregas. Você confere antes de incluir na agenda.</p>
@@ -64,7 +64,7 @@ const PlanoEnsino = (() => {
         });
         function mostrarEtapa(n) {
           etapa=n;$('[data-upload]').hidden=n!==1;$('[data-revisao]').hidden=n!==2;
-          $('[data-etapa]').textContent=n===1 ? '1 de 2 · Seus documentos' : '2 de 2 · Revisar e organizar';
+          $('[data-etapa]').textContent=n===1 ? '1 de 2: Seus documentos' : '2 de 2: Revisar e organizar';
           $('[data-voltar]').hidden=n===1;$('[data-avancar]').textContent=n===1 ? 'Ler documentos' : 'Guardar e organizar';
           $('.plano-modal-corpo').scrollTop=0;
         }
@@ -79,7 +79,7 @@ const PlanoEnsino = (() => {
             return `<details class="plano-grupo" ${itens.length && tipo==='assuntos' ? 'open' : ''}><summary>${titulo}<span>${itens.length}</span></summary>${itens.length ? `<ul>${itens.map((x,i)=>{
               const prefixo=`pl-${tipo}-${i}`;
               const semanal=tipo==='aulas' && x.diaSemana!==null && x.diaSemana!==undefined;
-              return `<li data-tipo="${tipo}" data-indice="${i}"><label class="plano-incluir"><input type="checkbox" data-incluir ${tipo==='assuntos' || x.data || semanal ? 'checked' : ''} aria-label="Incluir ${esc(x.texto || x.nome)}"><span>Incluir</span></label><div class="plano-item-corpo"><label class="field">${tipo==='assuntos' ? 'Assunto' : 'Nome'}<input class="input" data-nome maxlength="${tipo==='assuntos' ? 200 : 140}" value="${esc(x.texto || x.nome)}" id="${prefixo}"></label>${tipo==='assuntos' ? '' : `<div class="plano-item-datas">${semanal ? `<label class="field">Dia da semana<select class="input" data-dia>${modelo.DIAS.map((d,n)=>`<option value="${n}" ${x.diaSemana===n ? 'selected' : ''}>${d}</option>`).join('')}</select></label>` : `<label class="field">Data<input class="input" type="date" data-data value="${esc(x.data)}"></label>`}<label class="field">${tipo==='aulas' ? 'Início' : 'Horário (opcional)'}<input class="input" type="time" data-hora value="${esc(x.hora)}"></label>${tipo==='aulas' ? `<label class="field">Fim (opcional)<input class="input" type="time" data-hora-fim value="${esc(x.horaFim)}"></label>` : ''}</div>`}<details class="plano-fonte"><summary>Conferir trecho · ${esc(x.fonte)}</summary><p>${esc(x.trecho)}</p></details></div></li>`;
+              return `<li data-tipo="${tipo}" data-indice="${i}"><label class="plano-incluir"><input type="checkbox" data-incluir ${tipo==='assuntos' || x.data || semanal ? 'checked' : ''} aria-label="Incluir ${esc(x.texto || x.nome)}"><span>Incluir</span></label><div class="plano-item-corpo"><label class="field">${tipo==='assuntos' ? 'Assunto' : 'Nome'}<input class="input" data-nome maxlength="${tipo==='assuntos' ? 200 : 140}" value="${esc(x.texto || x.nome)}" id="${prefixo}"></label>${tipo==='assuntos' ? '' : `<div class="plano-item-datas">${semanal ? `<label class="field">Dia da semana<select class="input" data-dia>${modelo.DIAS.map((d,n)=>`<option value="${n}" ${x.diaSemana===n ? 'selected' : ''}>${d}</option>`).join('')}</select></label>` : `<label class="field">Data<input class="input" type="date" data-data value="${esc(x.data)}"></label>`}<label class="field">${tipo==='aulas' ? 'Início' : 'Horário (opcional)'}<input class="input" type="time" data-hora value="${esc(x.hora)}"></label>${tipo==='aulas' ? `<label class="field">Fim (opcional)<input class="input" type="time" data-hora-fim value="${esc(x.horaFim)}"></label>` : ''}</div>`}<details class="plano-fonte"><summary>Conferir trecho: ${esc(x.fonte)}</summary><p>${esc(x.trecho)}</p></details></div></li>`;
             }).join('')}</ul>` : '<p class="hint">Nenhum item identificado.</p>'}</details>`;
           }).join('');
         }

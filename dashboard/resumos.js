@@ -54,6 +54,9 @@ const Resumos = (() => {
     if (!raiz || raiz.querySelector("[data-resumos-editor]")) return;
     const contexto = daPagina(raiz), nav = raiz.querySelector("[data-navegacao-secoes]");
     if (!contexto || !nav) return;
+    // Hoje (3.0) é o dia; cadernos moram nas áreas. Quem já usa os resumos da
+    // visão geral continua com eles, mas o convite não ocupa o cabeçalho.
+    if (raiz.dataset.paginaSecoes === "index" && !contexto.ativo()) return;
     const { escape: esc } = UI.fmt;
     const botao = document.createElement("button");
     botao.type = "button"; botao.role = "tab"; botao.id = "secao-resumos-editor";

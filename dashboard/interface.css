@@ -1,39 +1,13 @@
 /* Delfos — composição de uso diário. Componentes base em theme.css;
    agrupamento de tarefas, contraste e navegação na camada compartilhada. */
-:root {
-  --sidebar-w: 228px;
-  --fundo: #111210;
-  --lateral: #0c0d0c;
-  --superficie: #1c1d1b;
-  --superficie-2: #282925;
-  --superficie-3: #343530;
-  --linha: rgba(237, 233, 225, .12);
-  --linha-forte: rgba(237, 233, 225, .22);
-  --texto-2: #c2bdb3;
-  --texto-3: #a29d93;
-  --r-lg: 16px;
-  --r-xl: 22px;
-  --shadow: 0 3px 14px rgba(0,0,0,.06);
-}
-:root[data-theme="light"] {
-  --fundo: #efede7;
-  --lateral: #e6e2d9;
-  --superficie: #fffcf6;
-  --superficie-2: #eae6dd;
-  --superficie-3: #ddd7cc;
-  --texto-2: #57534b;
-  --texto-3: #6c665c;
-  --linha: rgba(40,34,24,.12);
-  --linha-forte: rgba(40,34,24,.23);
-  --shadow: 0 3px 16px rgba(40,34,24,.035);
-}
+:root { --sidebar-w: 228px; }
 .main::before { display: none; }
 .main { padding: 38px 36px 80px; }
 .wrap { max-width: 1320px; }
 .sidebar { padding: 28px 14px 16px; border-right: 1px solid var(--linha); }
 .marca-topo { flex-direction: column; align-items: flex-start; gap: 10px; padding: 4px 12px 24px; }
 .marca-topo .logotipo { height: 31px; }
-.marca-assinatura { font-family: var(--font-voz); font-size: calc(12px * var(--escala-fonte, 1)); color: var(--texto-3); letter-spacing: .015em; }
+.marca-assinatura { font-family: var(--font-voz); font-size: calc(12px * var(--escala-fonte, 1)); color: var(--texto-3); letter-spacing: var(--tracking-titulo); }
 .marca-versao { display: none; }
 .nav { gap: 4px; }
 .nav-item { min-height: 44px; border-radius: 9px; padding: 10px 12px; gap: 12px; font-size: calc(14px * var(--escala-fonte, 1)); }
@@ -51,8 +25,8 @@
 .brand-name { font-size: calc(14px * var(--escala-fonte, 1)); }
 .topbar { align-items: center; margin-bottom: 24px; gap: 20px; }
 .topbar h1, .wrap:has(> .leitura:not([hidden]):not(.hidden)) > .topbar h1 {
-  font-family: var(--font-voz); font-size: calc(clamp(30px,3vw,38px) * var(--escala-fonte, 1)); font-weight: 450;
-  line-height: 1.16; letter-spacing: -.025em;
+  font-family: var(--font-voz); font-size: calc(clamp(30px,3vw,38px) * var(--escala-fonte, 1)); font-weight: var(--peso-voz);
+  line-height: 1.16; letter-spacing: var(--tracking-titulo);
 }
 .topbar .h1-ic { display: none; }
 .topbar-actions { justify-content: flex-end; gap: 9px; }
@@ -64,7 +38,7 @@
 .section-head .card-note { margin: 5px 0 0; line-height: 1.5; }
 .btn { min-height: 40px; border-radius: 10px; font-weight: 550; justify-content: center; }
 .btn.sm { min-height: 34px; }
-.btn.primary { box-shadow: 0 2px 4px rgba(0,0,0,.12); }
+.btn.primary { box-shadow: none; }
 .btn:active { transform: translateY(1px); }
 .card { border-color: var(--linha); box-shadow: var(--shadow); }
 .card-title { font-family: var(--font); font-weight: 600; }
@@ -107,7 +81,7 @@
 .pagina-hoje .leitura { margin: 0 0 24px; }
 .dia-resumo { display: flex; align-items: center; gap: 26px; padding: 18px 24px; margin-bottom: 24px; background: var(--superficie); border: 1px solid var(--linha); border-radius: 16px; }
 .dia-resumo .section-head { margin: 0; flex: 0 1 165px; }
-.dia-resumo .section-title { font-family: var(--font-voz); font-size: calc(21px * var(--escala-fonte, 1)); font-weight: 450; line-height: 1.3; }
+.dia-resumo .section-title { font-family: var(--font-voz); font-size: calc(21px * var(--escala-fonte, 1)); font-weight: var(--peso-voz); line-height: 1.3; }
 .dia-numeros { margin: 0; flex: 1; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
 .dia-numeros > div { display: flex; flex-direction: column-reverse; align-items: flex-start; gap: 3px; padding-left: 24px; border-left: 1px solid var(--linha); }
 .dia-numeros dt { font-size: calc(12px * var(--escala-fonte, 1)); color: var(--texto-3); }

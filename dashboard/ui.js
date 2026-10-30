@@ -544,7 +544,7 @@ const UI = (() => {
 
     (e.pessoal?.compromissos || []).forEach((c) => {
       if (!c.data || (!incluirConcluidos && c.concluido)) return;
-      itens.push({ id: c.id, titulo: c.descricao, data: c.data, ...daArea("pessoal"), tipo: c.tipo || "compromisso", concluido: !!c.concluido });
+      itens.push({ id: c.id, titulo: c.descricao, data: c.data, hora: c.hora || "", ...daArea("pessoal"), tipo: c.tipo || "compromisso", concluido: !!c.concluido });
     });
 
     // Abas criadas pelo usuário: mesma forma de item, cor e rótulo próprios.
@@ -1266,7 +1266,9 @@ const UI = (() => {
     { nome: "objetivos", rotulo: "Objetivos do momento", tipo: "textarea", placeholder: "O que quer alcançar nos próximos meses." },
   ];
 
-  const DESTAQUES = [["osso", "Marfim"], ["louro", "Louro"], ["anil", "Anil"], ["cobre", "Cobre"], ["ameixa", "Ameixa"]];
+  // "osso" é o valor guardado do padrão desde a 1.6; na tela, o acento da 3.0. "anil" saiu da lista
+  // por ficar igual ao padrão, mas quem já o escolheu continua com ele (o CSS ainda o conhece).
+  const DESTAQUES = [["osso", "Azul mineral"], ["louro", "Louro"], ["cobre", "Cobre"], ["ameixa", "Ameixa"]];
 
   function linhaAjuste(titulo, texto, controle, compacta = false, embaixo = false) {
     return `<div class="ajuste-linha ${compacta ? "compacta" : ""} ${embaixo ? "embaixo" : ""}">
@@ -1436,7 +1438,6 @@ const UI = (() => {
 
         <div class="ajuste">
           ${linhaAjuste("Tamanho do texto", "Aumenta ou diminui as letras, sem aplicar zoom à interface.", segPref("tamanho", [["compacto", "Menor"], ["normal", "Normal"], ["grande", "Maior"]], xp.tamanho || "normal"))}
-          ${linhaAjuste("Fonte da leitura e dos títulos", "A serifa é a voz do Delfos, a mesma letra do logotipo; sem serifa, tudo fica na letra da interface.", segPref("voz", [["serifa", "Serifa"], ["sans", "Sem serifa"]], xp.voz || "serifa"))}
           ${linhaAjuste("Movimento", "Luz que segue o mouse, destaques que deslizam e a entrada das páginas.", switchPref("movimento", (xp.movimento || "completo") !== "reduzido"))}
           ${linhaAjuste("Desempenho", `Leve tira o desfoque atrás das janelas, as sombras grandes e as animações, e só baixa o Google quando você pede. Automático liga o leve sozinho em computador mais simples${aparelhoFraco() ? " (é o caso deste)" : ""}.`, segPref("desempenho", [["auto", "Automático"], ["leve", "Leve"], ["completo", "Completo"]], xp.desempenho || "auto"))}
         </div>
@@ -1863,9 +1864,9 @@ const UI = (() => {
       { valor: "light", rotulo: "Claro" },
       { valor: "auto", rotulo: "Automático" },
     ],
-    // O padrão é a noite: sem escolha gravada, o painel abre escuro.
+    // Sem escolha gravada, segue o sistema; o claro é a apresentação principal (3.0).
     atual() {
-      try { return localStorage.getItem(tema.KEY) || "dark"; } catch { return "dark"; }
+      try { return localStorage.getItem(tema.KEY) || "auto"; } catch { return "auto"; }
     },
     /** O tema de fato na tela: "auto" segue o claro/escuro do sistema. */
     aplicado() {
@@ -1883,7 +1884,7 @@ const UI = (() => {
         meta.name = "theme-color";
         document.head.appendChild(meta);
       }
-      meta?.setAttribute("content", t === "light" ? "#ede9e1" : "#111110");
+      meta?.setAttribute("content", t === "light" ? "#f5f7f9" : "#17212b");
     },
     definir(v) {
       try { localStorage.setItem(tema.KEY, v); } catch { /* modo anônimo */ }

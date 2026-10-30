@@ -241,9 +241,11 @@
     ]) || "Nada marcado nos próximos 30 dias";
 
     const atrasados = filtrada ? [] : atrasadosTodos;
-    const proximos = filtrada
+    // No mesmo dia, o que tem hora vem primeiro, na ordem da hora; o resto, depois.
+    const porHora = (x, y) => x.data.localeCompare(y.data) || (x.hora ? 0 : 1) - (y.hora ? 0 : 1) || (x.hora || "").localeCompare(y.hora || "");
+    const proximos = (filtrada
       ? todos.filter((i) => (diaSelecionado ? i.data === diaSelecionado : i.data >= inicioSemana && i.data <= UI.isoMaisDias(inicioSemana, 6)))
-      : proximosTodos;
+      : proximosTodos).sort(porHora);
 
     box.innerHTML = "";
     if (!atrasados.length && !proximos.length) {
@@ -289,7 +291,7 @@
         : c && c.itens.length >= 3 ? `<span class="agenda-nota">Semana cheia</span>` : "";
       return `<section class="agenda-grupo ${g.classe || ""}">
           <h3 class="agenda-cab"><span>${g.titulo}</span>${nota}</h3>
-          <ol class="agenda-lista">${g.itens.map(linhaAgenda).join("")}</ol>
+          <ol class="agenda-lista costura">${g.itens.map((i, n) => linhaAgenda(i, g.itens[n - 1]?.data === i.data)).join("")}</ol>
         </section>`;
     }).join("");
 
@@ -316,18 +318,29 @@
     renderAgenda();
   }
 
-  function linhaAgenda(i) {
+  /**
+   * Uma linha da costura do dia (3.0): data só na primeira linha de cada dia,
+   * horário em números tabulares, um ponto na cor da área sobre a linha que
+   * atravessa a agenda, e a origem por extenso embaixo (a cor nunca é a única
+   * pista). Sem horário, o ponto fica vazio: a agenda não inventa hora.
+   */
+  function linhaAgenda(i, mesmoDia = false) {
     const d = new Date(i.data + "T00:00:00");
     const dias = UI.diasAte(i.data);
     const u = UI.urgencia(i.data);
-    return `<li>
+    const fixa = ["pessoal", "financeiro", "faculdade", "projetos"].includes(i.area);
+    const cor = fixa ? `var(--s-${i.area})` : fmt.escape(i.cor || "var(--texto-3)");
+    const hora = i.hora ? `${fmt.escape(i.hora)}${i.horaFim ? `<small>${fmt.escape(i.horaFim)}</small>` : ""}` : "";
+    return `<li${mesmoDia ? ' class="continua"' : ""}>
         <a class="agenda-linha" href="${destino(i)}">
-          <span class="agenda-dia${dias === 0 ? " hoje" : ""}"><b>${d.getDate()}</b><small>${dias === 0 ? "hoje" : DIAS_SEMANA[d.getDay()]}</small></span>
+          <span class="agenda-dia${dias === 0 ? " hoje" : ""}"${mesmoDia ? ' aria-hidden="true"' : ""}><b>${d.getDate()}</b><small>${dias === 0 ? "hoje" : DIAS_SEMANA[d.getDay()]}</small></span>
+          <span class="agenda-hora">${hora}</span>
+          <span class="agenda-no${i.hora ? "" : " sem-hora"}" style="--marca:${cor}" aria-hidden="true"></span>
           <span class="agenda-texto">
             <span class="t">${fmt.escape(i.titulo)}</span>
-            <span class="m">${marcaArea(i)}${fmt.escape(fmt.capitalizar(i.areaRotulo || ""))}${i.tipo ? `, ${fmt.escape(i.tipo)}` : ""}${i.hora ? ` · ${fmt.escape(i.hora)}${i.horaFim ? `–${fmt.escape(i.horaFim)}` : ""}` : ""}</span>
+            <span class="m">${fmt.escape(fmt.capitalizar(i.areaRotulo || ""))}${i.tipo ? `, ${fmt.escape(i.tipo)}` : ""}</span>
           </span>
-          <span class="badge ${u.nivel}">${quando(i.data)}</span>
+          ${dias < 0 ? `<span class="badge ${u.nivel}">${quando(i.data)}</span>` : ""}
         </a>
       </li>`;
   }

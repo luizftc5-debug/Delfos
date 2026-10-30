@@ -5,20 +5,6 @@
 .resumos-editor-busca { display: block; max-width: 620px; margin-bottom: 20px; }
 [data-resumos-lista] .grow { min-width: 0; overflow-wrap: anywhere; }
 [data-resumos-lista] a { color: inherit; }
-.pagina-organizada {
-  --linha: rgba(237, 233, 225, .1);
-  --texto-2: #bdb7ae;
-  --texto-3: #a29a8e;
-}
-:root[data-theme="light"] .pagina-organizada {
-  --fundo: #f0ede7;
-  --lateral: #e9e5dd;
-  --superficie: #fffdf8;
-  --superficie-2: #f3f0e9;
-  --texto-2: #615b51;
-  --texto-3: #71695d;
-  --linha: rgba(44, 36, 24, .12);
-}
 .pagina-organizada .main { padding: 40px 40px 90px; }
 .pagina-organizada .main::before { display: none; }
 .pagina-organizada .wrap { max-width: 1260px; }
@@ -38,14 +24,16 @@
 .pagina-organizada .nav-nova { margin-top: 22px; border: 1px solid var(--linha-forte); border-radius: 8px; background: none; }
 .pagina-organizada .topbar,
 .pagina-organizada .wrap:has(> .leitura:not([hidden])) > .topbar { align-items: center; margin-bottom: 28px; gap: 20px; }
-.pagina-organizada .topbar h1 { font-family: var(--font-voz); font-size: calc(clamp(30px, 3.2vw, 42px) * var(--escala-fonte, 1)); font-weight: 400; line-height: 1.2; letter-spacing: -.025em; }
+.pagina-organizada .topbar h1 { font-family: var(--font-voz); font-size: calc(clamp(30px, 3.2vw, 42px) * var(--escala-fonte, 1)); font-weight: var(--peso-voz); line-height: 1.2; letter-spacing: var(--tracking-titulo); }
 .pagina-organizada .topbar .h1-ic { display: none; }
 .pagina-organizada .topbar .sub { font-size: calc(14px * var(--escala-fonte, 1)); max-width: 64ch; margin-top: 9px; line-height: 1.5; }
 .pagina-organizada .topbar-actions { gap: 8px; }
 .pagina-organizada .topbar-actions:empty { display: none; }
 .pagina-organizada .eyebrow { font:calc(11px * var(--escala-fonte, 1)) var(--font); letter-spacing: .1em; margin-bottom: 10px; }
-.pagina-organizada .btn { min-height: 40px; border-radius: 8px; font-size: calc(13px * var(--escala-fonte, 1)); font-weight: 550; }
-.pagina-organizada .btn.sm { min-height: 34px; font-size: calc(12px * var(--escala-fonte, 1)); }
+.pagina-organizada .btn { min-height: 40px; border-radius: var(--r-md); font-size: calc(14px * var(--escala-fonte, 1)); font-weight: 600; }
+.pagina-organizada .btn.sm { min-height: 36px; font-size: calc(13px * var(--escala-fonte, 1)); }
+/* Mesma especificidade da regra acima, então vem depois dela: no toque, 44 px. */
+@media (pointer: coarse) { .pagina-organizada .btn, .pagina-organizada .btn.sm { min-height: var(--toque); } }
 .pagina-organizada .btn.primary { box-shadow: none; }
 .pagina-organizada .familia-paginas { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 0 0 28px; }
 .familia-paginas a { color: var(--texto-3); font-size: calc(12px * var(--escala-fonte, 1)); text-decoration: none; padding-bottom: 4px; }
@@ -55,7 +43,7 @@
 .pagina-secoes { display: flex; gap: 26px; align-items: stretch; overflow-x: auto; overscroll-behavior-x: contain; border-bottom: 1px solid var(--linha-forte); margin: 0 0 24px; padding: 0 1px; scrollbar-width: thin; }
 .pagina-secoes button { position: relative; flex: 0 0 auto; border: 0; background: none; padding: 14px 0 16px; color: var(--texto-3); font:500 calc(14px * var(--escala-fonte, 1)) var(--font); cursor: pointer; white-space: nowrap; }
 .pagina-secoes button[aria-selected="true"] { color: var(--texto); }
-.pagina-secoes button[aria-selected="true"]::after { content: ""; position: absolute; height: 2px; bottom: 0; left: 0; right: 0; background: var(--texto); }
+.pagina-secoes button[aria-selected="true"]::after { content: ""; position: absolute; height: 2px; bottom: 0; left: 0; right: 0; background: var(--acento); }
 .pagina-secoes button:focus-visible { outline: 2px solid var(--destaque); outline-offset: -2px; border-radius: 3px; }
 .pagina-painel { min-width: 0; outline: none; }
 .pagina-painel:focus-visible { outline: 2px solid var(--destaque); outline-offset: 6px; }
@@ -77,13 +65,15 @@
 .pagina-organizada .leitura b { font-weight: 600; color: var(--texto); }
 
 /* Contêineres estáveis. Título e ação na mesma linha; contexto em segundo plano. */
-.pagina-bloco { min-width: 0; background: var(--superficie); border: 1px solid var(--linha); border-radius: 12px; margin: 0; overflow-wrap: anywhere; }
-.bloco-cabecalho { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 20px; padding: 22px 24px 18px; }
-.bloco-titulo { grid-column: 1; margin: 0; font:550 calc(17px * var(--escala-fonte, 1))/1.4 var(--font); letter-spacing: -.015em; }
+/* 3.0: uma seção não é caixa. O título, o fio de cima e o espaço separam os
+   assuntos; superfície fica para o que abre como unidade (cartão, janela). */
+.pagina-bloco { min-width: 0; background: none; border: 0; border-top: 1px solid var(--linha); border-radius: 0; margin: 0; overflow-wrap: anywhere; }
+.bloco-cabecalho { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--e-1) var(--e-5); padding: var(--e-5) 0 var(--e-4); }
+.bloco-titulo { grid-column: 1; margin: 0; font: var(--peso-voz) calc(19px * var(--escala-fonte, 1))/1.3 var(--font); letter-spacing: var(--tracking-titulo); }
 .bloco-resumo { grid-column: 1; color: var(--texto-3); font-size: calc(12px * var(--escala-fonte, 1)); line-height: 1.5; font-weight: 400; }
 .bloco-resumo:empty { display: none; }
 .bloco-acoes { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
-.bloco-corpo { padding: 0 24px 24px; min-width: 0; }
+.bloco-corpo { padding: 0 0 var(--e-6); min-width: 0; }
 .bloco-titulo .swatch { display: none; }
 .pagina-bloco .card { box-shadow: none; }
 .pagina-bloco .list { display: flex; flex-direction: column; gap: 0; }
@@ -91,7 +81,7 @@
 .pagina-bloco .list > li:last-child { border-bottom: 0; }
 .pagina-bloco .list .title { font-weight: 550; font-size: calc(15px * var(--escala-fonte, 1)); }
 .pagina-bloco .list .meta { font-size: calc(12px * var(--escala-fonte, 1)); line-height: 1.6; margin-top: 4px; }
-.pagina-bloco .list .row-actions { background: var(--superficie); }
+.pagina-bloco .list .row-actions { background: var(--fundo); }
 .pagina-bloco .list .row-actions .btn { min-height: 34px; }
 .pagina-bloco .list.cartoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 16px; }
 .pagina-bloco .list.cartoes > li {
@@ -113,7 +103,7 @@
 .pagina-bloco .list.cartoes > li > .row-actions { grid-area: acoes; position: static; transform: none; justify-content: flex-end; padding: 0; background: none; z-index: 2; }
 .pagina-bloco .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 56px 24px; border: 0; background: transparent; }
 .pagina-bloco .empty-icon { width: 38px; height: 38px; margin-bottom: 18px; background: none; color: var(--texto-3); }
-.pagina-bloco .empty-title { font:400 calc(25px * var(--escala-fonte, 1))/1.3 var(--font-voz); margin: 0; }
+.pagina-bloco .empty-title { font: var(--peso-voz) calc(25px * var(--escala-fonte, 1))/1.3 var(--font-voz); margin: 0; }
 .pagina-bloco .empty-text { font-size: calc(14px * var(--escala-fonte, 1)); max-width: 43ch; line-height: 1.6; margin: 12px 0 0; color: var(--texto-3); }
 .pagina-bloco .empty .btn { margin-top: 22px; }
 .pagina-bloco .notas { gap: 0; }
@@ -140,7 +130,7 @@
 .pagina-indicadores > .card { padding: 4px 24px; border: 0; background: none; box-shadow: none; border-radius: 0; min-width: 0; }
 .pagina-indicadores > .card:first-child { padding-left: 0; }
 .pagina-indicadores > .card + .card { border-left: 1px solid var(--linha); }
-.pagina-indicadores .stat-value { font:500 calc(28px * var(--escala-fonte, 1))/1.25 var(--font); letter-spacing: -.025em; margin: 10px 0 6px; overflow-wrap: anywhere; }
+.pagina-indicadores .stat-value { font: var(--peso-voz) calc(28px * var(--escala-fonte, 1))/1.25 var(--font); letter-spacing: var(--tracking-titulo); font-variant-numeric: tabular-nums; margin: 10px 0 6px; overflow-wrap: anywhere; }
 .pagina-indicadores .stat-label { font-size: calc(12px * var(--escala-fonte, 1)); }
 .pagina-indicadores .stat-sub { font-size: calc(12px * var(--escala-fonte, 1)); line-height: 1.5; }
 .pagina-organizada .mes-nav { justify-content: flex-start; gap: 12px; margin: -10px 0 20px; }
@@ -148,13 +138,11 @@
 .pagina-index #pilares { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 14px; }
 .pagina-index #pilares .ladrilho { border: 1px solid var(--linha); border-radius: 10px; padding: 20px; }
 .pagina-index .agenda-filtros { gap: 12px; }
-.pagina-index .semana-dias { gap: 6px; margin-bottom: 22px; }
-.pagina-index .semana-dia { background: var(--superficie-2); }
-.pagina-index #sec-notas .bloco-cabecalho { padding: 22px 20px 18px; }
-.pagina-index #sec-notas .bloco-corpo { padding: 0 20px 20px; }
+.pagina-index .agenda-consulta { margin-top: var(--e-5); padding-top: var(--e-4); border-top: 1px solid var(--linha); }
+.pagina-index .semana-dias { gap: var(--e-1); margin-bottom: var(--e-4); }
 .pagina-index #sec-notas .empty { padding: 16px 0; align-items: flex-start; text-align: left; }
 .pagina-index #sec-notas .empty-icon { display: none; }
-.pagina-index #sec-notas .empty-title { font:500 calc(15px * var(--escala-fonte, 1)) var(--font); }
+.pagina-index #sec-notas .empty-title { font: 600 calc(15px * var(--escala-fonte, 1)) var(--font); }
 .pagina-organizada #disciplinas > .grid, .pagina-organizada #projetos > .grid,
 .pagina-organizada #contas > .grid, .pagina-organizada #cartoes > .grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 18px; }
 .pagina-organizada .pilar-cartao, .pagina-organizada .resumo-cartao { border: 1px solid var(--linha); background: var(--superficie-2); box-shadow: none; border-radius: 10px; padding: 20px; }
@@ -230,7 +218,7 @@
 .registro-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
 .registros-trabalho > div > #lista > .empty { padding: 40px 0; text-align: left; align-items: flex-start; border: 0; background: none; }
 .registros-trabalho .empty-icon { display: none; }
-.registros-trabalho .empty-title { font: 400 calc(28px * var(--escala-fonte, 1))/1.35 var(--font-voz); margin: 0; }
+.registros-trabalho .empty-title { font: var(--peso-voz) calc(28px * var(--escala-fonte, 1))/1.35 var(--font-voz); margin: 0; }
 .registros-trabalho .empty-text { max-width: 48ch; color: var(--texto-3); font-size: calc(14px * var(--escala-fonte, 1)); line-height: 1.7; margin: 14px 0 0; }
 .registros-trabalho .empty .btn { margin-top: 22px; }
 .historico-habito { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 18px; padding: 16px 0; border-bottom: 1px solid var(--linha); }
@@ -290,9 +278,9 @@
   .pagina-secoes button { font-size: calc(13px * var(--escala-fonte, 1)); padding-top: 10px; padding-bottom: 14px; }
   .painel-conteudo, .painel-dupla, .painel-analises { grid-template-columns: minmax(0, 1fr); gap: 18px; }
   .painel-descricao { margin-bottom: 18px; }
-  .bloco-cabecalho { padding: 20px 18px 16px; gap: 7px 12px; }
+  .bloco-cabecalho { padding: var(--e-5) 0 var(--e-3); gap: var(--e-1) var(--e-3); }
   .bloco-acoes { gap: 6px; max-width: 100%; }
-  .bloco-corpo { padding: 0 18px 20px; }
+  .bloco-corpo { padding: 0 0 var(--e-5); }
   .bloco-titulo { font-size: calc(16px * var(--escala-fonte, 1)); }
   .bloco-resumo { font-size: calc(11px * var(--escala-fonte, 1)); }
   .bloco-acoes .btn { font-size: calc(12px * var(--escala-fonte, 1)); padding-left: 10px; padding-right: 10px; }
@@ -335,7 +323,7 @@
 .vista-dica b { color: var(--texto-2); font-weight: 550; }
 .vista-dica:empty { display: none; }
 .comeco-aba { padding: 18px 0 8px; max-width: 760px; }
-.comeco-titulo { margin: 0 0 22px; font: 400 calc(28px * var(--escala-fonte, 1))/1.3 var(--font-voz); }
+.comeco-titulo { margin: 0 0 22px; font: var(--peso-voz) calc(28px * var(--escala-fonte, 1))/1.3 var(--font-voz); }
 .comeco-passos { list-style: none; counter-reset: passo; padding: 0; margin: 0 0 26px; display: grid; gap: 22px; }
 .comeco-passos > li { counter-increment: passo; position: relative; padding-left: 42px; font-size: calc(14px * var(--escala-fonte, 1)); line-height: 1.6; color: var(--texto-3); }
 .comeco-passos > li::before {
@@ -385,7 +373,7 @@
 .rotina-resumo b { color: var(--texto); font-weight: 550; }
 .rotina-resumo:empty { display: none; }
 .rotina-vazia { margin: 0 0 22px; max-width: 62ch; color: var(--texto-3); font-size: calc(14px * var(--escala-fonte, 1)); line-height: 1.65; }
-.rotina-vazia-titulo { margin: 0 0 8px; color: var(--texto); font: 400 calc(26px * var(--escala-fonte, 1))/1.3 var(--font-voz); }
+.rotina-vazia-titulo { margin: 0 0 8px; color: var(--texto); font: var(--peso-voz) calc(26px * var(--escala-fonte, 1))/1.3 var(--font-voz); }
 .rotina-vazia b { color: var(--texto-2); }
 .rotina-dica { margin: 18px 0 0; color: var(--texto-3); font-size: calc(12.5px * var(--escala-fonte, 1)); line-height: 1.55; }
 
@@ -395,7 +383,7 @@
 .rotina-dia:last-child { padding-right: 0; }
 .rotina-dia.hoje { box-shadow: inset 0 2px 0 var(--texto); }
 .rotina-dia-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; min-height: 30px; }
-.rotina-dia-cab h3 { margin: 0; display: flex; align-items: baseline; gap: 7px; min-width: 0; font: 400 calc(19px * var(--escala-fonte, 1))/1.2 var(--font-voz); color: var(--texto); }
+.rotina-dia-cab h3 { margin: 0; display: flex; align-items: baseline; gap: 7px; min-width: 0; font: var(--peso-voz) calc(19px * var(--escala-fonte, 1))/1.2 var(--font-voz); color: var(--texto); }
 .rotina-dia.fds .rotina-dia-cab h3 { color: var(--texto-2); }
 .rotina-hoje { font: 550 calc(11px * var(--escala-fonte, 1))/1 var(--font); color: var(--sobre-destaque); background: var(--destaque); border-radius: 999px; padding: 3px 7px; }
 .rotina-dia-total { flex: none; color: var(--texto-3); font-size: calc(11.5px * var(--escala-fonte, 1)); font-variant-numeric: tabular-nums; }
@@ -459,7 +447,7 @@
 .ali-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
 .ali-placar { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 14px 28px; margin-top: 22px; }
 .ali-kcal { display: flex; align-items: baseline; gap: 10px; grid-row: span 2; }
-.ali-kcal .voz { font: 400 calc(52px * var(--escala-fonte, 1))/1 var(--font-voz); color: var(--texto); }
+.ali-kcal .voz { font: var(--peso-voz) calc(52px * var(--escala-fonte, 1))/1 var(--font-voz); color: var(--texto); }
 .ali-kcal > span:last-child { color: var(--texto-3); font-size: calc(14px * var(--escala-fonte, 1)); }
 .ali-barra { height: 8px; }
 .ali-macros { display: flex; flex-wrap: wrap; gap: 10px 28px; }

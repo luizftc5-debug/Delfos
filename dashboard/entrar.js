@@ -149,8 +149,12 @@
   trocarModo(params.get("modo") === "criar" ? "criar" : params.get("modo") === "recuperar" ? "recuperar" : "entrar", false);
   if (!contasDisponiveis) {
     ocupar(false); $("acesso-local").hidden = false;
-    avisar("O acesso por conta ainda não está disponível neste endereço. Você pode usar o Delfos neste aparelho, com os dados guardados neste navegador.");
-    $("google-nota").textContent = "O acesso pelo Google será liberado junto com as contas.";
+    avisar("As contas ainda não estão ligadas neste endereço. Use o Delfos neste aparelho: os dados ficam guardados neste navegador.");
+    // Sem servidor, nada abaixo funciona: a tela mostra só o caminho que funciona (3.0).
+    ["modo", "google-area", "email-separador", "form"].forEach(id => { const el = $(id); if (el) el.hidden = true; });
+    $("acesso-titulo").textContent = "Use o Delfos neste aparelho";
+    $("frase").textContent = "Sem conta, seus compromissos e anotações ficam só neste navegador. Faça backup pelo perfil quando quiser levar para outro lugar.";
+    $("acesso-local").classList.add("primary");
   } else Sessao.saude().then(s => {
     pedeConvite = s.cadastro === "convite"; googleClientId = s.google?.clientId || ""; trocarModo(modo, false);
     if (!googleClientId) $("google-nota").textContent = "O Google está indisponível neste momento. Use seu e-mail para entrar ou criar conta.";

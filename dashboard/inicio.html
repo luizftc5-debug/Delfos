@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Delfos — espaço para o que importa</title>
   <meta name="description" content="Organize sua rotina, seus estudos, suas finanças e seus projetos em um espaço feito para você. Conheça o Delfos." />
-  <meta name="theme-color" content="#111110" />
+  <meta name="theme-color" content="#f5f7f9" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <script src="portal-tema.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:wght@400;500;600&family=Gloock&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400..700;1,400..600&display=swap" />
   <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="portal.css" />
 </head>
@@ -20,47 +20,46 @@
     <header class="portal-cabecalho">
       <a class="portal-marca" href="inicio.html" aria-label="Delfos, início"><span class="portal-logotipo" aria-hidden="true"></span></a>
       <nav aria-label="Navegação principal" class="portal-nav">
-        <a class="portal-conhecer" href="#possibilidades">Conheça o Delfos</a>
+        <a class="portal-conhecer" href="#possibilidades">Como funciona</a>
         <a href="entrar.html" data-entrar>Entrar</a>
-        <a class="btn primary" href="entrar.html?modo=criar" data-criar>Criar conta <span aria-hidden="true">↗</span></a>
+        <a class="btn primary" href="entrar.html?modo=criar" data-criar>Criar conta</a>
       </nav>
     </header>
     <main id="principal">
       <section class="portal-hero" aria-labelledby="portal-titulo">
         <div class="portal-hero-texto">
-          <p class="portal-eyebrow">Sua vida tem muitas partes. O seu espaço pode ser um só.</p>
-          <h1 id="portal-titulo">Mais clareza.<br>Mais espaço para<br><em>o que importa.</em></h1>
-          <p class="portal-descricao">A rotina, os estudos, os planos e as pequenas conquistas. Reúna tudo no Delfos e encontre o próximo passo, no seu ritmo.</p>
+          <h1 id="portal-titulo">A prova, a consulta e o treino no mesmo dia.</h1>
+          <p class="portal-descricao">O Delfos junta compromissos, estudos, dinheiro e rotina numa agenda só. Cada coisa continua na sua área, com o próprio histórico.</p>
           <div class="portal-hero-acoes">
-            <a class="btn primary portal-cta" href="entrar.html?modo=criar" data-criar>Começar meu espaço <span aria-hidden="true">↗</span></a>
-            <a class="portal-link" href="entrar.html?provedor=google" data-entrar>Entrar com o Google <span aria-hidden="true">→</span></a>
+            <a class="btn primary portal-cta" href="entrar.html?modo=criar" data-criar>Criar conta</a>
+            <a class="portal-link" href="entrar.html?provedor=google" data-entrar>Entrar com o Google</a>
           </div>
-          <p class="portal-local" data-local><a href="index.html?local=1">Usar neste aparelho</a><span>Sem conta, seus dados ficam neste navegador.</span></p>
+          <p class="portal-local" data-local><a href="index.html?local=1">Usar sem conta, neste aparelho</a><span>Seus dados ficam só neste navegador.</span></p>
         </div>
-        <div class="portal-previa" aria-label="Exemplo de organização no Delfos">
-          <div class="portal-previa-topo"><span class="portal-previa-d" aria-hidden="true"></span><span>Seu dia, com clareza.</span><span class="portal-previa-ponto" aria-hidden="true"></span></div>
+        <figure class="portal-previa" aria-label="Exemplo do dia no Delfos, com dados fictícios">
           <div class="portal-previa-corpo">
-            <p class="portal-eyebrow">Um espaço do seu jeito</p>
-            <h2>Hoje, o essencial.</h2>
-            <div class="portal-exemplo"><span class="portal-check feita" aria-hidden="true">✓</span><div><b>Dar o primeiro passo</b><small>Um pouco de cada vez também é progresso.</small></div><span class="portal-exemplo-hora">feito</span></div>
-            <div class="portal-exemplo"><span class="portal-check" aria-hidden="true"></span><div><b>Retomar os estudos</b><small>Seus resumos, no ponto em que parou.</small></div><span class="portal-exemplo-hora">estudos</span></div>
-            <div class="portal-exemplo"><span class="portal-check" aria-hidden="true"></span><div><b>Cuidar dos seus planos</b><small>Veja o que cabe no seu dia.</small></div><span class="portal-exemplo-hora">pessoal</span></div>
-            <div class="portal-previa-abas"><span>Rotina</span><span>Estudos</span><span>Finanças</span><span>+ Seu mundo</span></div>
+            <p class="portal-previa-titulo">Hoje <span>sexta-feira, 30 de outubro</span></p>
+            <ol class="agenda-lista costura">
+              <li><span class="agenda-linha"><span class="agenda-dia hoje"><b>30</b><small>hoje</small></span><span class="agenda-hora">09:00</span><span class="agenda-no" style="--marca:var(--s-faculdade)" aria-hidden="true"></span><span class="agenda-texto"><span class="t">Prova de clínica médica</span><span class="m">Faculdade</span></span></span></li>
+              <li class="continua"><span class="agenda-linha"><span class="agenda-dia" aria-hidden="true"><b>30</b><small>hoje</small></span><span class="agenda-hora">12:30</span><span class="agenda-no" style="--marca:#8a6fc2" aria-hidden="true"></span><span class="agenda-texto"><span class="t">Almoço do plano</span><span class="m">Alimentação</span></span></span></li>
+              <li class="continua"><span class="agenda-linha"><span class="agenda-dia" aria-hidden="true"><b>30</b><small>hoje</small></span><span class="agenda-hora">15:00</span><span class="agenda-no" style="--marca:var(--s-pessoal)" aria-hidden="true"></span><span class="agenda-texto"><span class="t">Consulta de rotina</span><span class="m">Pessoal</span></span></span></li>
+              <li class="continua"><span class="agenda-linha"><span class="agenda-dia" aria-hidden="true"><b>30</b><small>hoje</small></span><span class="agenda-hora"></span><span class="agenda-no sem-hora" style="--marca:var(--s-financeiro)" aria-hidden="true"></span><span class="agenda-texto"><span class="t">Pagar a fatura do cartão</span><span class="m">Financeiro, sem horário</span></span></span></li>
+            </ol>
           </div>
-          <p class="portal-previa-legenda">Uma prévia. O seu Delfos começa com as suas escolhas.</p>
-        </div>
+          <figcaption class="portal-previa-legenda">Exemplo com dados fictícios.</figcaption>
+        </figure>
       </section>
       <section class="portal-possibilidades" id="possibilidades" aria-labelledby="possibilidades-titulo">
-        <div class="portal-secao-cab"><p class="portal-eyebrow">Do seu jeito</p><h2 id="possibilidades-titulo">O que faz parte<br>da sua vida cabe aqui.</h2></div>
+        <h2 id="possibilidades-titulo">Uma agenda que sabe de onde cada coisa veio.</h2>
         <div class="portal-recursos">
-          <article><span class="portal-numero">01 /</span><h3>Rotina com direção</h3><p>Uma visão do dia e uma semana organizada, com seus compromissos e hábitos por perto.</p></article>
-          <article><span class="portal-numero">02 /</span><h3>Espaço para aprender</h3><p>Resumos sem distrações, matérias e revisões para continuar de onde você parou.</p></article>
-          <article><span class="portal-numero">03 /</span><h3>Planos que ganham forma</h3><p>Finanças, projetos e abas próprias para acompanhar o que você quer construir.</p></article>
+          <article><h3>O dia em ordem</h3><p>Com horário primeiro, sem horário depois. A prova que mexe na semana aparece junto da consulta e do treino.</p></article>
+          <article><h3>Estudos que continuam</h3><p>Disciplinas, avaliações, quanto falta para a média e um editor de resumos sem distrações.</p></article>
+          <article><h3>Dinheiro sem planilha</h3><p>Lançamentos, contas, faturas e metas. Importe o extrato do banco e revise antes de gravar.</p></article>
         </div>
       </section>
-      <section class="portal-convite" aria-labelledby="convite-titulo"><div><p class="portal-eyebrow">O essencial se revela.</p><h2 id="convite-titulo">Comece pelo que importa para você.</h2></div><a class="btn primary portal-cta" href="entrar.html?modo=criar" data-criar>Criar meu espaço <span aria-hidden="true">↗</span></a></section>
+      <section class="portal-convite" aria-labelledby="convite-titulo"><h2 id="convite-titulo">Comece pelo dia de hoje.</h2><a class="btn primary portal-cta" href="entrar.html?modo=criar" data-criar>Criar conta</a></section>
     </main>
-    <footer class="portal-rodape"><a class="portal-marca" href="inicio.html" aria-label="Delfos, início"><span class="portal-logotipo" aria-hidden="true"></span></a><span>O essencial se revela.</span><a href="entrar.html" data-entrar>Entrar no Delfos <span aria-hidden="true">↗</span></a></footer>
+    <footer class="portal-rodape"><a class="portal-marca" href="inicio.html" aria-label="Delfos, início"><span class="portal-logotipo" aria-hidden="true"></span></a><a href="entrar.html" data-entrar>Entrar no Delfos</a></footer>
   </div>
   <script src="sessao.js"></script>
   <script src="portal.js"></script>

@@ -18,7 +18,7 @@
 .editor-body .editor-acoes .btn { min-height: 32px; font-size: calc(12px * var(--escala-fonte, 1)); padding: 6px 10px; }
 .editor-body .editor-barra {
   top: var(--editor-topo-altura, 44px); flex-direction: column; align-items: stretch; gap: 0;
-  padding: 6px 18px; background: var(--superficie); box-shadow: 0 5px 16px -14px rgba(0,0,0,.4);
+  padding: 6px 18px; background: var(--superficie); border-bottom: 1px solid var(--linha);
 }
 .editor-formatacao { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; width: 100%; min-width: 0; }
 .editor-body .editor-grupo {
@@ -27,6 +27,7 @@
 }
 .editor-body .editor-grupo:last-of-type { border-right: 1px solid var(--linha); }
 .editor-body .editor-btn { height: 32px; min-width: 32px; padding: 0 7px; border-radius: 5px; font-size: calc(13px * var(--escala-fonte, 1)); }
+@media (pointer: coarse) { .editor-body .editor-btn, .editor-body .editor-select { height: var(--toque); min-width: var(--toque); } }
 .editor-body .editor-btn .ico { width: 17px; height: 17px; }
 .editor-body .editor-select { height: 32px; border-color: transparent; background: transparent; font-size: calc(12px * var(--escala-fonte, 1)); padding: 4px 6px; }
 .editor-body #fonte.editor-select { max-width: 143px; }
@@ -37,7 +38,7 @@
 .editor-body .editor-folha {
   flex: 1; min-width: 0; max-width: 900px; margin: 0 auto;
   padding: 38px 56px 64px; border: 1px solid var(--linha); border-radius: 12px;
-  background: var(--superficie); box-shadow: 0 8px 32px -24px rgba(0,0,0,.35);
+  background: var(--superficie);
   min-height: max(480px, calc(100dvh - var(--editor-topo-altura, 44px) - var(--editor-barra-altura, 50px) - var(--editor-rodape-altura, 34px) - 56px));
 }
 .editor-body .editor-folha[data-largura="estreita"] { max-width: 720px; }
@@ -55,7 +56,7 @@
 }
 .editor-body .editor-rodape .marca { flex: 0 0 auto; color: var(--texto); }
 .editor-body .editor-rodape .logotipo { height: 19px; }
-.editor-assinatura { font-family: var(--font-voz); font-size: calc(12px * var(--escala-fonte, 1)); line-height: 1.35; font-weight: 400; text-align: right; letter-spacing: -.015em; }
+.editor-assinatura { font-family: var(--font-voz); font-size: calc(12px * var(--escala-fonte, 1)); line-height: 1.35; font-weight: var(--peso-voz); text-align: right; letter-spacing: var(--tracking-titulo); }
 .editor-body .editor-busca { justify-content: center; }
 .editor-body .menu-simbolos { width: 304px; max-width: calc(100vw - 16px); padding: 16px; max-height: min(580px, calc(100dvh - 180px)); overflow-y: auto; }
 .simbolos-cabeca { font-size: calc(15px * var(--escala-fonte, 1)); font-weight: 600; padding-bottom: 8px; }

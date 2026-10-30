@@ -249,36 +249,30 @@ async function testarPortal(browser, base) {
     await page.goto(base + '/inicio.html');
     await page.locator('h1').waitFor({ state: 'visible' });
     assert.equal(new URL(page.url()).pathname, '/inicio.html', 'A apresentação deve abrir sem conta');
-    const entrar = page.getByRole('link', { name: 'Entrar', exact: true }).first();
-    const criar = () => page.getByRole('link', { name: 'Criar conta', exact: true }).first();
-    assert.match(await entrar.getAttribute('href'), /entrar\.html$/);
-    assert.match(await criar().getAttribute('href'), /entrar\.html\?modo=criar$/);
-    assert.match(await page.getByRole('link', { name: 'Entrar com o Google', exact: true }).getAttribute('href'), /entrar\.html\?provedor=google$/);
+    // Sem servidor (API_PUBLICA vazia), a apresentação não promete conta: o
+    // caminho que funciona, usar neste aparelho, é a ação principal (3.0).
+    const comecar = () => page.getByRole('link', { name: 'Começar neste aparelho', exact: true }).first();
+    assert.match(await comecar().getAttribute('href'), /index\.html\?local=1$/);
+    assert.equal(await page.getByRole('link', { name: 'Entrar com o Google', exact: true }).count(), 0, 'Sem servidor, não se oferece Google');
+    assert.equal(await page.getByRole('link', { name: 'Criar conta', exact: true }).count(), 0, 'Sem servidor, não se oferece criar conta');
     for (const tema of ['light', 'dark']) {
       await page.evaluate(t => localStorage.setItem('organizador.tema', t), tema); await page.reload();
       for (const largura of [1440, 768, 390, 320]) {
         await page.setViewportSize({ width: largura, height: 900 }); await larguraSemExcesso(page);
-        assert.ok(await criar().isVisible(), `Acesso para criar conta oculto em ${largura}px`);
+        assert.ok(await comecar().isVisible(), `Acesso local oculto em ${largura}px`);
         if (largura !== 768) await capturar(page, `portal-${tema}-${largura}`);
       }
     }
-    await criar().click(); await page.waitForURL('**/entrar.html?modo=criar');
-    await page.locator('#f-nome').waitFor({ state: 'visible' });
-    assert.equal(await page.locator('#modo [data-modo="criar"]').getAttribute('aria-pressed'), 'true');
-    assert.ok(await page.locator('#btn-enviar').isDisabled(), 'Sem servidor, o cadastro deve explicar a indisponibilidade');
-    assert.ok(await page.locator('#google-indisponivel').isDisabled());
-    assert.ok(await page.getByRole('link', { name: 'Usar neste aparelho', exact: true }).isVisible());
+    // Um link antigo para criar conta continua chegando a uma tela honesta.
+    await page.goto(base + '/entrar.html?modo=criar');
+    await page.locator('#acesso-local').waitFor({ state: 'visible' });
+    assert.ok(await page.locator('#form').isHidden(), 'Sem servidor, o formulário de conta não aparece');
+    assert.ok(await page.locator('#google-area').isHidden());
+    assert.ok(await page.locator('#modo').isHidden());
+    assert.match(await page.locator('#aviso-texto').textContent(), /ainda não estão ligadas/);
     await larguraSemExcesso(page); await capturar(page, 'cadastro-sem-servidor');
-    for (const tema of ['light', 'dark']) {
-      await page.evaluate(t => UI.tema.definir(t), tema);
-      for (const width of [1440, 320]) {
-        await page.setViewportSize({ width, height: 900 }); await larguraSemExcesso(page);
-        await capturar(page, `cadastro-${tema}-${width}`);
-      }
-    }
     await page.goto(base + '/entrar.html');
-    assert.ok(await page.locator('#f-email').isVisible());
-    assert.ok(await page.locator('#btn-enviar').isDisabled());
+    assert.ok(await page.locator('#form').isHidden());
     assert.ok(await page.getByRole('link', { name: 'Usar neste aparelho', exact: true }).isVisible());
     for (const tema of ['light', 'dark']) {
       await page.evaluate(t => UI.tema.definir(t), tema);
@@ -327,6 +321,11 @@ async function testarEntrada(browser, base) {
     });
     const page = await ctx.newPage(), erros = [];
     page.setDefaultTimeout(10000); page.on('pageerror', e => erros.push(e.message));
+    // Com servidor, a apresentação oferece conta e Google, não o acesso local.
+    await page.goto(base + '/inicio.html');
+    assert.match(await page.getByRole('link', { name: 'Criar conta', exact: true }).first().getAttribute('href'), /entrar\.html\?modo=criar$/);
+    assert.ok(await page.getByRole('link', { name: 'Entrar com o Google', exact: true }).isVisible());
+    assert.ok(await page.locator('[data-local]').isHidden());
     await page.goto(base + '/entrar.html?modo=criar');
     await page.locator('#f-nome').waitFor({ state: 'visible' });
     assert.equal(await page.locator('#modo [data-modo="criar"]').getAttribute('aria-pressed'), 'true');

@@ -709,19 +709,48 @@ const UI = (() => {
   // a foto do perfil) sem a página precisar repassar os mesmos argumentos.
   let paginaAtiva = "home";
   let opcoesAtivas = {};
+  let barraRevelada = false;
+  let ponteiroBarra = null;
+  let pontoAoRecolher = null;
+  const barraDesktop = matchMedia("(min-width: 901px)");
 
   function aplicarEstadoBarra() {
-    const recolhida = experiencia().barraLateralRecolhida === true;
+    const preferirRecolhida = experiencia().barraLateralRecolhida === true;
+    if (!preferirRecolhida || !barraDesktop.matches) {
+      barraRevelada = false;
+      pontoAoRecolher = null;
+    }
+    const recolhida = preferirRecolhida && !barraRevelada;
     document.documentElement.dataset.barraRecolhida = recolhida ? "sim" : "nao";
     const botao = document.getElementById("btn-recolher-sidebar");
     if (botao && botao.getAttribute("aria-expanded") !== String(!recolhida)) {
-      const rotulo = recolhida ? "Expandir barra lateral" : "Recolher barra lateral";
-      botao.setAttribute("aria-label", rotulo);
       botao.setAttribute("aria-expanded", String(!recolhida));
-      botao.title = rotulo;
-      botao.innerHTML = icone(recolhida ? "direita" : "esquerda");
     }
   }
+
+  function revelarBarra() {
+    if (!barraDesktop.matches || barraRevelada || experiencia().barraLateralRecolhida !== true) return;
+    barraRevelada = true;
+    aplicarEstadoBarra();
+    window.dispatchEvent(new Event("resize"));
+  }
+
+  function revelarBarraPorFoco(ev) {
+    if (ev.target.matches(":focus-visible")) revelarBarra();
+  }
+
+  function mesmoPontoAoRecolher(ev) {
+    return pontoAoRecolher && ev.clientX === pontoAoRecolher.x && ev.clientY === pontoAoRecolher.y;
+  }
+
+  function registrarPonteiroBarra(ev) {
+    if (ev.pointerType === "mouse") ponteiroBarra = { x: ev.clientX, y: ev.clientY };
+  }
+
+  barraDesktop.addEventListener("change", () => {
+    barraRevelada = false;
+    aplicarEstadoBarra();
+  });
 
   function montarLayout(ativo, opcoes = {}) {
     const { idAtivo = "" } = opcoes;
@@ -729,6 +758,29 @@ const UI = (() => {
     opcoesAtivas = opcoes;
     const el = document.getElementById("sidebar");
     if (!el) return;
+    // A aproximação só revela a navegação nesta visita; não grava preferências.
+    // Depois de recolher, é preciso sair da barra e aproximar de novo.
+    el.onpointerenter = ev => {
+      if (ev.pointerType !== "mouse") return;
+      registrarPonteiroBarra(ev);
+      // A retração pode gerar uma nova entrada sem o mouse ter se movido.
+      if (mesmoPontoAoRecolher(ev)) return;
+      pontoAoRecolher = null;
+      revelarBarra();
+    };
+    el.onpointermove = registrarPonteiroBarra;
+    el.onpointerleave = ev => {
+      if (ev.pointerType !== "mouse") return;
+      registrarPonteiroBarra(ev);
+      if (!mesmoPontoAoRecolher(ev)) pontoAoRecolher = null;
+    };
+    el.removeEventListener("focusin", revelarBarraPorFoco);
+    el.addEventListener("focusin", revelarBarraPorFoco);
+    el.onclick = ev => {
+      if (ev.target.closest(".marca-topo") && barraDesktop.matches && document.documentElement.dataset.barraRecolhida === "sim") {
+        ev.preventDefault(); revelarBarra();
+      }
+    };
     aplicarEstadoBarra();
     const rolagemAnterior = el.querySelector(".sidebar-scroll")?.scrollTop || 0;
     const c = contagens();
@@ -815,13 +867,21 @@ const UI = (() => {
     el.querySelector(".sidebar-scroll").scrollTop = rolagemAnterior;
     document.getElementById("btn-recolher-sidebar").addEventListener("click", () => {
       const anterior = experiencia().barraLateralRecolhida === true;
+      const reveladaAnterior = barraRevelada;
+      const pontoAnterior = pontoAoRecolher;
+      const teclado = document.activeElement?.matches(":focus-visible");
+      barraRevelada = false;
+      pontoAoRecolher = ponteiroBarra;
       try {
-        Store.definirPreferencias({ experiencia: { barraLateralRecolhida: !anterior } });
+        if (!anterior) Store.definirPreferencias({ experiencia: { barraLateralRecolhida: true } });
         aplicarEstadoBarra();
+        if (teclado) document.querySelector(".main")?.focus({ preventScroll: true });
         window.dispatchEvent(new Event("resize"));
       } catch (err) {
         // O Store pode ter mudado a memória antes de a persistência falhar.
         Store.estado().preferencias.experiencia.barraLateralRecolhida = anterior;
+        barraRevelada = reveladaAnterior;
+        pontoAoRecolher = pontoAnterior;
         aplicarEstadoBarra();
         toast(err.message);
       }
@@ -3157,7 +3217,8 @@ const UI = (() => {
       for (let n = el; n && n !== container; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; }
       const aplicar = () => {
         realce.style.transform = `translate(${x}px, ${y}px)`;
-        realce.style.width = `${el.offsetWidth}px`;
+        // A largura acompanha a barra mesmo com o ponteiro parado na expansão.
+        realce.style.width = `calc(100% - ${container.clientWidth - el.offsetWidth}px)`;
         realce.style.height = `${el.offsetHeight}px`;
       };
       if (visivel) aplicar(); else semTransicao(realce, aplicar);
@@ -3169,6 +3230,12 @@ const UI = (() => {
       if (el && container.contains(el)) posicionar(el);
     });
     container.addEventListener("pointerleave", () => { realce.style.opacity = "0"; visivel = false; });
+    const lateral = container.closest(".sidebar");
+    lateral.ontransitionend = (ev) => {
+      if (ev.target !== lateral || ev.propertyName !== "width" || !visivel) return;
+      const alvo = container.querySelector(".nav-subitem:hover, .nav-item:hover");
+      if (alvo) posicionar(alvo);
+    };
   }
 
   function indicadorAbas(abas) {

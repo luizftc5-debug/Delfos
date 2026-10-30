@@ -89,6 +89,19 @@ Aplicação estática multi-página em `dashboard/`, sem build. Dependências ex
 | `data.js` | Conteúdo inicial (seed), lido só na primeira abertura |
 | `exercicios.js` | Catálogo de exercícios da aba Academia (`const EXERCICIOS`), carregado só por `pilar.html` |
 
+### Página inicial (raiz do site)
+
+`index.html` na raiz do repositório é a **página inicial pública** (<https://luizftc5-debug.github.io/Delfos/>).
+Antes era só um redirecionamento para `dashboard/inicio.html`; agora é uma página própria, separada do
+painel: não carrega `ui.js`, `store.js` nem `sessao.js`, não pede login e não lê nem grava dados. É um
+hero de rolagem em `<canvas>` (sequência de 239 frames WebP do vídeo do notebook, em
+`inicio/frames/desktop|mobile/`), a camada do D recortada do último frame (`inicio/assets/delfos-d.webp`),
+a seção "O que faz parte da sua vida cabe aqui" e o rodapé. "Conhecer o Delfos" leva a
+`dashboard/inicio.html` (a apresentação com Entrar/Criar conta); "Começar meu espaço" e "Entrar" vão
+direto a `dashboard/entrar.html`. O logotipo é `dashboard/marca.svg` aplicado como máscara, como no
+portal. Código em `inicio/js/delfos-hero.js` (constantes no topo) e `inicio/css/`; guia, comandos ffmpeg
+e decisões em `inicio/README.md`. `dashboard/test/portal-sidebar.browser.cjs` confere os links da raiz.
+
 ### Contas de usuário e back end
 
 `backend/` é um Cloudflare Worker + banco D1 (guia em `backend/README.md`, publicado pelo workflow

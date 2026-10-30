@@ -1,5 +1,16 @@
 # Delfos
 
+<p align="center">
+  <a href="https://luizftc5-debug.github.io/Delfos/"><strong>→ Abrir a página inicial do Delfos</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://luizftc5-debug.github.io/Delfos/dashboard/inicio.html">Conhecer o painel</a>
+</p>
+
+> A página inicial (`index.html` na raiz, arquivos em [`inicio/`](inicio/)) é a apresentação do
+> Delfos: um hero de rolagem com o notebook abrindo e o D da marca subindo da tela. Ela é
+> independente do painel e leva à apresentação (`dashboard/inicio.html`) e à entrada. Detalhes
+> técnicos em [`inicio/README.md`](inicio/README.md).
+
 Painel para acompanhar quatro frentes ao mesmo tempo — **Financeiro**, **Faculdade**, **Projetos** e
 **Pessoal** — com alerta automático quando prazos de áreas diferentes caem na mesma semana. Além
 dessas quatro, você pode criar **abas suas**, com nome, ícone e cor próprios.

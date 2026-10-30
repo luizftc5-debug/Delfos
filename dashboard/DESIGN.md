@@ -46,8 +46,16 @@ No computador, o controle ao lado da marca recolhe a barra para uma faixa de
 ícones das abas ativas. O símbolo D substitui o logotipo completo e o perfil
 mostra apenas a foto ou as iniciais. Nomes acessíveis e dicas de cada ícone
 continuam disponíveis; expandir devolve nomes, contadores e ações da barra.
-A escolha acompanha as preferências e o backup. No celular, a marca e a
-navegação inferior mantêm a composição existente, independentemente dessa escolha.
+A faixa recolhida não mostra seta: aproximar o mouse revela a barra, que fica
+aberta até a seta de recolher ser acionada. Depois disso, o mouse precisa sair
+e se aproximar de novo para abri-la. O foco por teclado também revela a navegação.
+A aproximação não grava preferências; a escolha de recolher acompanha o backup.
+A largura, os ícones e a identificação do perfil acompanham a transição da barra;
+o nome da marca e o D se alternam suavemente. O conteúdo ocupa o espaço liberado
+durante o movimento. Modo leve e redução de movimento mantêm a resposta imediata.
+A retração preserva os espaçamentos verticais dos ícones para evitar saltos nos atalhos.
+No celular, a marca e a navegação inferior mantêm a composição existente,
+independentemente dessa escolha.
 
 Cada página abre na tarefa principal. Apenas uma seção aparece por vez. Registros,
 gráficos, perguntas e configurações não devem disputar a mesma sequência vertical.

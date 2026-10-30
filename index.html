@@ -1,12 +1,94 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta http-equiv="refresh" content="0;url=dashboard/inicio.html" />
-  <title>Delfos</title>
-  <link rel="icon" href="dashboard/favicon.svg" type="image/svg+xml" />
-  <script>location.replace("dashboard/inicio.html" + location.search + location.hash);</script>
-</head>
-<body><p><a href="dashboard/inicio.html">Abrir o Delfos</a></p></body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Delfos — o essencial se revela</title>
+    <meta name="description" content="Rotina, estudos, finanças e projetos num só espaço. Conheça o Delfos." />
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" href="dashboard/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="dashboard/apple-touch-icon.png" />
+
+    <!-- Primeiro frame (placeholder) com prioridade alta, no tamanho certo para cada tela.
+         O media precisa bater com MOBILE_BREAKPOINT (600px) em inicio/js/delfos-hero.js. -->
+    <link rel="preload" as="fetch" crossorigin="anonymous" href="inicio/frames/mobile/frame_0001.webp" media="(max-width: 600px) and (prefers-reduced-motion: no-preference)" fetchpriority="high" />
+    <link rel="preload" as="fetch" crossorigin="anonymous" href="inicio/frames/desktop/frame_0001.webp" media="(min-width: 601px) and (prefers-reduced-motion: no-preference)" fetchpriority="high" />
+    <link rel="modulepreload" href="inicio/js/delfos-hero.js" />
+
+    <!-- Tipografia da marca (a mesma do painel): Gloock nos momentos de marca, Funnel Sans no resto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Carregada sem bloquear a primeira pintura: o texto aparece na fonte do sistema e troca quando a da marca chega -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:wght@400;500&family=Gloock&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:wght@400;500&family=Gloock&display=swap" /></noscript>
+
+    <link rel="stylesheet" href="inicio/css/delfos-hero.css" />
+    <link rel="stylesheet" href="inicio/css/pagina.css" />
+  </head>
+  <body>
+    <a class="pular" href="#depois">Pular a animação</a>
+
+    <main>
+      <!-- ═══════════════ HERO ═══════════════ -->
+      <section class="dh" data-delfos-hero aria-label="Apresentação do Delfos">
+        <div class="dh__sticky">
+          <canvas
+            class="dh__canvas"
+            role="img"
+            aria-label="Um notebook prateado com o logo D na tampa gira e se abre; da tela escura surge um D metálico que flutua para cima."
+          ></canvas>
+
+          <div class="dh__glow" aria-hidden="true"></div>
+          <img class="dh__d" src="inicio/assets/delfos-d.webp" width="464" height="552" alt="" aria-hidden="true" decoding="async" fetchpriority="low" />
+
+          <div class="dh__captions">
+            <div class="dh__cap" data-initial>
+              <p class="dh__eyebrow">Delfos</p>
+              <p class="dh__headline">Sua vida tem muitas partes. O seu espaço pode ser um só.</p>
+            </div>
+            <div class="dh__cap">
+              <p class="dh__headline">Abra. O essencial se revela.</p>
+            </div>
+            <div class="dh__cap dh__cap--final">
+              <h1 class="dh__title"><span class="sr-only">Delfos</span><span class="logotipo" aria-hidden="true"></span></h1>
+              <p class="dh__assinatura">O essencial se revela.</p>
+              <a class="dh__cta" href="dashboard/inicio.html">Conhecer o Delfos</a>
+            </div>
+          </div>
+
+          <div class="dh__loader" role="progressbar" aria-label="Carregando animação" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+
+          <noscript>
+            <img class="dh__noscript" src="inicio/frames/desktop/frame_0239.webp" alt="Notebook prateado aberto com um D metálico flutuando acima da tela." />
+            <style>.dh{height:auto}.dh__sticky{position:relative}</style>
+          </noscript>
+        </div>
+      </section>
+      <!-- ═══════════════ /HERO ═══════════════ -->
+
+      <section class="frentes" id="depois" aria-labelledby="frentes-titulo">
+        <h2 id="frentes-titulo">O que faz parte da sua vida cabe aqui.</h2>
+        <dl>
+          <div><dt>Rotina</dt><dd>Uma visão do dia e uma semana organizada, com compromissos e hábitos por perto.</dd></div>
+          <div><dt>Estudos</dt><dd>Resumos sem distrações, matérias e revisões para continuar de onde parou.</dd></div>
+          <div><dt>Finanças</dt><dd>Quanto entrou, saiu e sobrou, e o que ainda falta pagar.</dd></div>
+          <div><dt>Projetos</dt><dd>Planos e abas próprias para acompanhar o que você quer construir.</dd></div>
+        </dl>
+        <div class="acoes">
+          <a class="botao" href="dashboard/entrar.html?modo=criar">Começar meu espaço</a>
+          <a class="link" href="dashboard/entrar.html">Entrar</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="rodape">
+      <a class="rodape__logo" href="dashboard/inicio.html" aria-label="Delfos, conhecer o painel"><span class="logotipo" aria-hidden="true"></span></a>
+      <p>O essencial se revela.</p>
+    </footer>
+
+    <script type="module">
+      import { initDelfosHero } from './inicio/js/delfos-hero.js';
+      initDelfosHero(document.querySelector('[data-delfos-hero]'), { basePath: 'inicio/' });
+    </script>
+  </body>
 </html>

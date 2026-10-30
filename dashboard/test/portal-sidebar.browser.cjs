@@ -12,7 +12,7 @@ const server = http.createServer((req, res) => {
   if (!arquivo.startsWith(origem + path.sep)) { res.writeHead(403); res.end(); return; }
   fs.stat(arquivo, (erro, stat) => {
     if (erro || !stat.isFile()) { res.writeHead(404); res.end(); return; }
-    const tipo = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.svg': 'image/svg+xml' }[path.extname(arquivo)];
+    const tipo = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.svg': 'image/svg+xml', '.webp': 'image/webp' }[path.extname(arquivo)];
     res.writeHead(200, { 'Content-Type': tipo || 'application/octet-stream' });
     fs.createReadStream(arquivo).pipe(res);
   });
@@ -238,7 +238,13 @@ async function testarPortal(browser, base) {
     page.setDefaultTimeout(10000); page.on('pageerror', e => erros.push(e.message));
     await page.goto(base + '/index.html');
     await page.waitForURL('**/inicio.html');
+    // A raiz do site é a página inicial com o hero; ela leva à apresentação e à entrada.
     await page.goto(base + '/site/index.html');
+    await page.locator('[data-delfos-hero] canvas').waitFor({ state: 'attached' });
+    assert.equal(await page.locator('.dh__cta').getAttribute('href'), 'dashboard/inicio.html');
+    assert.equal(await page.locator('.frentes .link').getAttribute('href'), 'dashboard/entrar.html');
+    assert.equal(await page.locator('.frentes .botao').getAttribute('href'), 'dashboard/entrar.html?modo=criar');
+    await page.locator('.dh__cta').evaluate(a => a.click());
     await page.waitForURL('**/site/dashboard/inicio.html');
     await page.goto(base + '/inicio.html');
     await page.locator('h1').waitFor({ state: 'visible' });

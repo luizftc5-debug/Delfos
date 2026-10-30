@@ -1,0 +1,254 @@
+/* ==========================================================================
+   Delfos — Hero scroll-driven
+   Tudo com prefixo .dh para não colidir com o CSS existente do site.
+   ========================================================================== */
+
+.dh {
+  --dh-bg: #000;
+  --dh-fg: #ede9e1; /* marfim da marca */
+  --dh-muted: #a8a399; /* cinza quente; 8,1:1 sobre preto (AAA) */
+  --dh-font: "Funnel Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --dh-voz: Gloock, Georgia, "Times New Roman", serif;
+
+  position: relative;
+  height: var(--dh-height, 500vh); /* = SECTION_HEIGHT no JS; mesmo valor → zero layout shift */
+  background: var(--dh-bg);
+  color: var(--dh-fg);
+  font-family: var(--dh-font);
+  -webkit-font-smoothing: antialiased;
+}
+
+.dh__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh; /* viewport "pequeno": a barra do Safari/Chrome mobile não esconde a base do notebook */
+  overflow: hidden;
+  background: var(--dh-bg);
+  container-type: size; /* habilita cqw/cqh abaixo */
+  contain: layout paint;
+}
+
+.dh__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: var(--dh-bg);
+  will-change: opacity;
+}
+
+/* Brilho atrás do D — gradiente puro (sem filter: blur, que é caro em mobile) */
+.dh__glow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(240, 226, 204, 0.32),
+    rgba(214, 196, 170, 0.12) 45%,
+    rgba(0, 0, 0, 0) 72%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
+}
+
+.dh__d {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  transform-origin: 50% 50%;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+/* ---------- Legendas ---------- */
+.dh__captions {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.dh__cap {
+  position: absolute;
+  left: 50%;
+  /* Logo abaixo da área segura do notebook. Mesma conta do JS (FIT/SAFE_AREA) →
+     o texto já nasce no lugar certo, sem CLS antes do JS rodar. */
+  top: var(--dh-cap-top, calc(46cqh + min(29.66cqw, 40cqh, 635px)));
+  width: min(92%, 64rem);
+  margin: 0;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, 20px);
+  will-change: transform, opacity;
+}
+
+/* A 1ª legenda já aparece no progresso 0 — visível desde o primeiro paint (bom p/ LCP). */
+.dh__cap[data-initial] {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+
+.dh__cap--final {
+  top: var(--dh-final-top, 70%);
+}
+
+.dh__eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: clamp(0.75rem, 0.68rem + 0.3vw, 0.95rem);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dh-muted);
+}
+
+.dh__headline {
+  margin: 0;
+  font-family: var(--dh-voz);
+  font-size: clamp(1.55rem, 0.9rem + 1.7vw, 2.75rem);
+  line-height: 1.12;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  color: var(--dh-fg);
+  text-wrap: balance;
+}
+
+.dh__title {
+  margin: 0 auto;
+  width: clamp(9rem, 6rem + 12vw, 17rem);
+  color: var(--dh-fg);
+  line-height: 0;
+}
+/* Logotipo da marca (dashboard/marca.svg) pintado na cor do texto, como no portal */
+.logotipo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 453 / 124;
+  background: currentColor;
+  -webkit-mask: url("../../dashboard/marca.svg") center / contain no-repeat;
+  mask: url("../../dashboard/marca.svg") center / contain no-repeat;
+}
+
+/* Assinatura da marca: caixa alta espaçada com um fio curto em cima */
+.dh__assinatura {
+  margin: 1.1rem 0 0;
+  font-size: clamp(0.7rem, 0.64rem + 0.2vw, 0.82rem);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dh-muted);
+}
+.dh__assinatura::before {
+  content: "";
+  display: block;
+  width: 28px;
+  height: 1px;
+  margin: 0 auto 0.85rem;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.dh__cta {
+  display: inline-block;
+  margin-top: 1.6rem;
+  padding: 0.8rem 1.6rem;
+  border: 1px solid rgba(237, 233, 225, 0.55);
+  border-radius: 10px;
+  color: var(--dh-fg);
+  font: 500 0.98rem/1 var(--dh-font);
+  text-decoration: none;
+  pointer-events: auto; /* as legendas não recebem clique; o botão sim */
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.dh__cta:hover {
+  background: var(--dh-fg);
+  color: #0b0b0b;
+  border-color: var(--dh-fg);
+}
+.dh__cta:focus-visible {
+  outline: 2px solid var(--dh-fg);
+  outline-offset: 3px;
+}
+
+.dh__sub {
+  margin: 0.6rem 0 0;
+  font-size: clamp(1rem, 0.9rem + 0.5vw, 1.35rem);
+  line-height: 1.35;
+  color: var(--dh-muted);
+  text-wrap: balance;
+}
+
+/* ---------- Loader discreto ---------- */
+.dh__loader {
+  position: absolute;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  width: 88px;
+  height: 2px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateX(-50%);
+  transition: opacity 0.6s ease 0.2s;
+}
+.dh__loader span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.65);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.25s linear;
+}
+.dh.is-loaded .dh__loader {
+  opacity: 0;
+}
+
+/* ---------- Movimento reduzido: frame final estático, sem scroll longo ---------- */
+.dh--static {
+  height: auto;
+}
+.dh--static .dh__sticky {
+  position: relative;
+}
+.dh--static .dh__cap--final {
+  top: var(--dh-cap-top);
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Antes do JS: já evita os 500vh → sem layout shift */
+  .dh {
+    height: auto;
+  }
+  .dh__sticky {
+    position: relative;
+  }
+  .dh__cap[data-initial] {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .dh__loader span {
+    transition: none;
+  }
+}
+
+/* Sem JS */
+.dh__noscript {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--dh-bg);
+}

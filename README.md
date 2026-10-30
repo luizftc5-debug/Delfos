@@ -1,5 +1,16 @@
 # Delfos
 
+<p align="center">
+  <a href="https://luizftc5-debug.github.io/Delfos/"><strong>→ Abrir a página inicial do Delfos</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://luizftc5-debug.github.io/Delfos/dashboard/">Abrir o painel</a>
+</p>
+
+> A página inicial (`index.html` na raiz, arquivos em [`inicio/`](inicio/)) é a apresentação do
+> Delfos: um hero de rolagem com o notebook abrindo e o D da marca subindo da tela. Ela é
+> independente do painel e leva a ele pelo botão **Abrir o Delfos**. Detalhes técnicos em
+> [`inicio/README.md`](inicio/README.md).
+
 ### Interface revisada em outubro de 2026
 
 A visão geral agora reúne uma agenda com filtros por dia e por período, resumo

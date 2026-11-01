@@ -445,9 +445,9 @@
     box.innerHTML = `
       <div class="cal-topo">
         <div class="mes-nav cal-nav">
-          <button type="button" class="btn ghost sm icon" data-cal="-1" aria-label="Mês anterior">‹</button>
+          <button type="button" class="btn ghost sm icon" data-cal="-1" aria-label="Mês anterior">${UI.icone("esquerda")}</button>
           <strong class="cal-mes">${fmt.escape(fmt.capitalizar(nomeMes))}</strong>
-          <button type="button" class="btn ghost sm icon" data-cal="1" aria-label="Próximo mês">›</button>
+          <button type="button" class="btn ghost sm icon" data-cal="1" aria-label="Próximo mês">${UI.icone("direita")}</button>
           <button type="button" class="btn ghost sm" data-cal="hoje">Hoje</button>
         </div>
         ${semData ? `<span class="card-note">${semData} sem data (aparecem nas outras vistas)</span>` : ""}

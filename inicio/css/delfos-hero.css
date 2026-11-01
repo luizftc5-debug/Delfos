@@ -7,8 +7,8 @@
   --dh-bg: #000;
   --dh-fg: #ede9e1; /* marfim da marca */
   --dh-muted: #a8a399; /* cinza quente; 8,1:1 sobre preto (AAA) */
-  --dh-font: "Funnel Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI",
-    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --dh-font: "Jost", "Futura", "Century Gothic",
+    sans-serif;
   --dh-voz: "Noto Serif Display", "Iowan Old Style", Georgia, "Times New Roman", serif;
 
   position: relative;
@@ -161,7 +161,7 @@
   margin-top: 1.6rem;
   padding: 0.8rem 1.6rem;
   border: 1px solid rgba(237, 233, 225, 0.55);
-  border-radius: 10px;
+  border-radius: 4px;
   color: var(--dh-fg);
   font: 500 0.98rem/1 var(--dh-font);
   text-decoration: none;

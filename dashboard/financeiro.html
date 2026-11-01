@@ -9,7 +9,8 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300..600;1,300..500&family=Noto+Serif+Display:wght@300..700&display=swap" />
+    <link rel="stylesheet" href="tokens.css" />
     <link rel="stylesheet" href="theme.css" />
     <link rel="stylesheet" href="interface.css" />
     <link rel="stylesheet" href="areas.css" />
@@ -43,12 +44,6 @@
           </div>
           <p class="leitura" id="leitura"></p>
           <div class="grid g4 fin-faixa area-resumo" id="faixa"></div>
-          <nav class="area-atalhos" aria-label="Nesta página">
-            <a href="#sec-lancamentos">Lançamentos</a>
-            <a href="#sec-apagar">A pagar</a>
-            <a href="#sec-metas">Metas</a>
-            <a href="#sec-analise">Análise</a>
-          </nav>
           <div class="area-conteudo">
             <div class="area-principal">
               <section class="section area-painel" id="sec-lancamentos">
@@ -95,79 +90,82 @@
               </section>
             </aside>
           </div>
-          <details class="area-detalhes" id="sec-analise">
-            <summary>Entender seus gastos e o ritmo do mês</summary>
-            <div class="area-detalhes-corpo">
-              <div class="area-analises">
+          <section class="area-mais" aria-labelledby="mais-titulo">
+            <h2 class="rotulo" id="mais-titulo">Mais nesta área</h2>
+            <details class="area-detalhes" id="sec-analise">
+              <summary>Entender seus gastos e o ritmo do mês</summary>
+              <div class="area-detalhes-corpo">
+                <div class="area-analises">
+                  <section class="card">
+                    <div class="card-head">
+                      <h2 class="card-title">Para onde foi o dinheiro</h2>
+                      <span class="card-note" id="cat-nota"></span>
+                    </div>
+                    <div id="categorias"></div>
+                  </section>
+                  <section class="card ritmo">
+                    <div class="card-head">
+                      <h2 class="card-title">Ritmo do mês</h2>
+                      <span class="card-note">gasto somado dia a dia</span>
+                    </div>
+                    <div id="ritmo"></div>
+                  </section>
+                  <section class="card">
+                    <div class="card-head">
+                      <h2 class="card-title">Entradas e saídas</h2>
+                      <span class="card-note">últimos 6 meses</span>
+                    </div>
+                    <div id="grafico-meses"></div>
+                  </section>
+                  <section class="card">
+                    <div class="card-head">
+                      <h2 class="card-title">Maiores gastos do mês</h2>
+                    </div>
+                    <div id="maiores"></div>
+                  </section>
+                </div>
+              </div>
+            </details>
+            <details class="area-detalhes">
+              <summary>Alertas e acompanhamento</summary>
+              <div class="area-detalhes-corpo">
                 <section class="card">
                   <div class="card-head">
-                    <h2 class="card-title">Para onde foi o dinheiro</h2>
-                    <span class="card-note" id="cat-nota"></span>
+                    <h2 class="card-title">Para acompanhar</h2>
                   </div>
-                  <div id="categorias"></div>
-                </section>
-                <section class="card ritmo">
-                  <div class="card-head">
-                    <h2 class="card-title">Ritmo do mês</h2>
-                    <span class="card-note">gasto somado dia a dia</span>
-                  </div>
-                  <div id="ritmo"></div>
-                </section>
-                <section class="card">
-                  <div class="card-head">
-                    <h2 class="card-title">Entradas e saídas</h2>
-                    <span class="card-note">últimos 6 meses</span>
-                  </div>
-                  <div id="grafico-meses"></div>
-                </section>
-                <section class="card">
-                  <div class="card-head">
-                    <h2 class="card-title">Maiores gastos do mês</h2>
-                  </div>
-                  <div id="maiores"></div>
+                  <ul class="notas" id="notas"></ul>
                 </section>
               </div>
-            </div>
-          </details>
-          <details class="area-detalhes">
-            <summary>Alertas e acompanhamento</summary>
-            <div class="area-detalhes-corpo">
-              <section class="card">
-                <div class="card-head">
-                  <h2 class="card-title">Para acompanhar</h2>
-                </div>
-                <ul class="notas" id="notas"></ul>
-              </section>
-            </div>
-          </details>
-          <details class="area-detalhes">
-            <summary>Ajustar limites e preferências</summary>
-            <div class="area-detalhes-corpo">
-              <section class="section" id="sec-perguntas">
-                <div class="section-head">
-                  <h2 class="section-title">Preferências da área</h2>
-                  <span class="card-note">Cada resposta deixa a leitura mais sua. Dá para mudar depois em Limites e preferências.</span>
-                </div>
-                <div class="perguntas" id="perguntas"></div>
-              </section>
-            </div>
-          </details>
-          <details class="area-detalhes">
-            <summary>Documentos do Google Drive</summary>
-            <div class="area-detalhes-corpo">
-              <section class="section">
-                <div class="section-head">
-                  <h2 class="section-title">Documentos no Google Drive</h2>
-                  <span class="google-state" id="google-status"><span class="google-dot"></span><span id="google-texto">Não conectado</span></span>
-                </div>
-                <div class="card">
-                  <p class="card-note" style="margin:0 0 12px;">Conecte para ver os documentos financeiros mais recentes do seu Drive: extratos, boletos, comprovantes.</p>
-                  <button class="btn" id="google-connect-btn" type="button">Conectar ao Google</button>
-                  <div id="google-drive-list" style="margin-top:12px;"></div>
-                </div>
-              </section>
-            </div>
-          </details>
+            </details>
+            <details class="area-detalhes">
+              <summary>Ajustar limites e preferências</summary>
+              <div class="area-detalhes-corpo">
+                <section class="section" id="sec-perguntas">
+                  <div class="section-head">
+                    <h2 class="section-title">Preferências da área</h2>
+                    <span class="card-note">Cada resposta deixa a leitura mais sua. Dá para mudar depois em Limites e preferências.</span>
+                  </div>
+                  <div class="perguntas" id="perguntas"></div>
+                </section>
+              </div>
+            </details>
+            <details class="area-detalhes">
+              <summary>Documentos do Google Drive</summary>
+              <div class="area-detalhes-corpo">
+                <section class="section">
+                  <div class="section-head">
+                    <h2 class="section-title">Documentos no Google Drive</h2>
+                    <span class="google-state" id="google-status"><span class="google-dot"></span><span id="google-texto">Não conectado</span></span>
+                  </div>
+                  <div class="card">
+                    <p class="card-note" style="margin:0 0 12px;">Conecte para ver os documentos financeiros mais recentes do seu Drive: extratos, boletos, comprovantes.</p>
+                    <button class="btn" id="google-connect-btn" type="button">Conectar ao Google</button>
+                    <div id="google-drive-list" style="margin-top:12px;"></div>
+                  </div>
+                </section>
+              </div>
+            </details>
+          </section>
         </div>
       </main>
     </div>

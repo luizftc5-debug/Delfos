@@ -9,7 +9,8 @@
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Noto+Serif+Display:wght@300..600&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300..600;1,300..500&family=Noto+Serif+Display:wght@300..700&display=swap" />
+    <link rel="stylesheet" href="tokens.css" />
     <link rel="stylesheet" href="theme.css" />
     <link rel="stylesheet" href="interface.css" />
     <link rel="stylesheet" href="areas.css" />
@@ -63,38 +64,41 @@
               <div id="resumos-campos" class="fin-coluna"></div>
             </div>
           </div>
-          <details class="area-detalhes">
-            <summary>Preferências desta área</summary>
-            <div class="area-detalhes-corpo">
-              <section class="section" id="sec-perguntas" hidden>
-                <div class="section-head">
-                  <h2 class="section-title">Preferências da área</h2>
-                </div>
-                <div class="perguntas" id="perguntas"></div>
-              </section>
-            </div>
-          </details>
-          <details class="area-detalhes">
-            <summary>Personalizar campos e aparência</summary>
-            <div class="area-detalhes-corpo">
-              <section class="section">
-                <div class="section-head">
-                  <h2 class="section-title">Ajustes da aba</h2>
-                </div>
-                <div class="card">
-                  <p class="proposito-aba" id="proposito-aba" hidden><b>Propósito</b><span></span></p>
-                  <p class="card-note" id="nota-ajustes" style="margin:0 0 12px;"></p>
-                  <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button class="btn" id="btn-editar-aba-2">Personalizar aba</button>
-                    <button class="btn" id="btn-campos">Campos desta aba</button>
-                    <button class="btn" id="btn-layout">Layout e exibição</button>
-                    <button class="btn" id="btn-refazer-questionario" hidden>Refazer o questionário inicial</button>
-                    <button class="btn danger" id="btn-excluir-aba">Excluir esta aba</button>
+          <section class="area-mais" aria-labelledby="mais-titulo">
+            <h2 class="rotulo" id="mais-titulo">Mais nesta área</h2>
+            <details class="area-detalhes">
+              <summary>Preferências desta área</summary>
+              <div class="area-detalhes-corpo">
+                <section class="section" id="sec-perguntas" hidden>
+                  <div class="section-head">
+                    <h2 class="section-title">Preferências da área</h2>
                   </div>
-                </div>
-              </section>
-            </div>
-          </details>
+                  <div class="perguntas" id="perguntas"></div>
+                </section>
+              </div>
+            </details>
+            <details class="area-detalhes">
+              <summary>Personalizar campos e aparência</summary>
+              <div class="area-detalhes-corpo">
+                <section class="section">
+                  <div class="section-head">
+                    <h2 class="section-title">Ajustes da aba</h2>
+                  </div>
+                  <div class="card">
+                    <p class="proposito-aba" id="proposito-aba" hidden><b>Propósito</b><span></span></p>
+                    <p class="card-note" id="nota-ajustes" style="margin:0 0 12px;"></p>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                      <button class="btn" id="btn-editar-aba-2">Personalizar aba</button>
+                      <button class="btn" id="btn-campos">Campos desta aba</button>
+                      <button class="btn" id="btn-layout">Layout e exibição</button>
+                      <button class="btn" id="btn-refazer-questionario" hidden>Refazer o questionário inicial</button>
+                      <button class="btn danger" id="btn-excluir-aba">Excluir esta aba</button>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </details>
+          </section>
         </div>
       </main>
     </div>

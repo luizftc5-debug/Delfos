@@ -1,332 +1,192 @@
-# Design System: Delfos, interface cotidiana
+# Design System: Delfos, "Coluna"
 
-## Revisão de 25/10/2026
+Revisão de 1º de novembro de 2026. Substitui a direção "marfim" (1.8) e a
+revisão de 25/10. Auditoria que motivou a mudança: `DESIGN_AUDIT.md` na raiz;
+capturas antes e depois em `design-audit/`.
 
-### Segunda revisão: composição e escrita
+## Em uma linha
 
-O painel usa uma região principal por página, com controles e registros da mesma
-tarefa agrupados. Informação de contexto ocupa uma coluna secundária; análises,
-preferências e integrações menos frequentes ficam em painéis expansíveis.
-`areas.css` compõe as páginas internas e `editor.css` cuida da área de escrita.
+**O caráter vem de tipografia, espaço e fio, na voz e nas cores do quadro de
+identidade.** Nada vira caixa sem ser objeto; a cor só existe onde carrega
+informação; a coluna do símbolo é o único ornamento, e ela aparece como fio.
 
-- Visão geral: contagens em faixa compacta, agenda principal e acesso às áreas ao lado.
-- Faculdade: disciplinas e entregas antes das médias e do planejamento.
-- Financeiro: lançamentos e filtros juntos; pagamentos, fixos e metas no contexto.
-- Pessoal: calendário e lista com acesso imediato; alertas ficam próximos, sem disputar a tela.
-- Projetos: projetos e oportunidades primeiro; resultados em relatórios expansíveis.
-- Navegação: ícones regulares monocromáticos, sem corpo duotone ou fundo colorido; nomes sempre visíveis.
-- Editor: grupos funcionais centralizados, status estável no centro e folha de leitura delimitada.
-- Rodapé do editor: somente logo e assinatura em serifa, sem métricas ou dicas de atalhos.
-- Salvamento automático: status acessível sem mover foco; falhas e versões concorrentes ficam explícitas.
+## 1. Marca
 
-Referências utilizadas para as decisões de composição:
-[hierarquia visual](https://www.nngroup.com/articles/visual-hierarchy-ux-definition/),
-[agrupamento por região](https://www.nngroup.com/articles/common-region/),
-[exibição gradual de opções](https://www.nngroup.com/articles/progressive-disclosure/),
-[ícones com rótulos](https://www.nngroup.com/articles/icon-usability/),
-[barras de ferramentas](https://developer.apple.com/design/human-interface-guidelines/toolbars)
-e [mensagens de status acessíveis](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html).
+O quadro de identidade (D com coluna, "Delfos" em serifa firme, "O ESSENCIAL
+SE REVELA." espaçado, paleta preto/carvão/grafite/marfim/cinza quente) é a
+referência. Arquivos em `marca/`.
 
-### Base da primeira revisão
+- **Símbolo**: o D com coluna dórica (capitel em degrau, fuste com duas
+  caneluras, base). Desenhado em geometria a partir do quadro, num caminho só
+  (`SIMBOLO` em `ui.js`, `UI.simbolo()`, `icone("delfos")`). Em 32px ou menos
+  (favicon) usa a variação monolítica, de uma canelura só, para não virar
+  borrão. Se aparecer o arquivo original do quadro, refazer o traçado sobre ele.
+- **Logotipo**: "Delfos" em Noto Serif Display 650 convertida em contorno
+  (`LOGOTIPO`, `UI.logotipo()`), nunca texto digitado. O par "lf" tem um
+  respiro a mais para a barra do "f" não tocar o "l".
+- **Assinatura**: "O essencial se revela.", sempre esta, em Jost, caixa alta,
+  espaçamento 0,32em, cinza. Barra lateral, entrada, boas-vindas, página
+  inicial. "Organização para o que importa" saiu.
+- **Ícone de app**: símbolo marfim em quadrado preto (`apple-touch-icon.png`,
+  `marca/icone-app-*.svg`). Favicon com raio 7/32.
+- Área livre: nada a menos de meia altura do símbolo.
 
-A identidade continua em preto, marfim e cinzas quentes. A interface agora
-prioriza orientação e ação: títulos curtos em serifa, resumos em sans-serif,
-agenda como centro da visão geral e áreas organizadas em superfícies discretas.
-`interface.css`, carregado após `theme.css`, define essa camada visual compartilhada.
+## 2. Tokens
 
-- A leitura automática é apoio, não o título da página. O nome da área continua visível.
-- A visão geral abre com saudação, agenda filtrável por dia e resumo dos compromissos.
-- O resumo financeiro fica recolhido e pode ser ocultado nas preferências existentes.
-- Superfícies delimitam agenda, resumo e destinos de navegação. Não encaixotar cada número.
-- A navegação móvel é estável: Visão geral, as três primeiras áreas da ordem escolhida e Mais.
-- Organizar áreas fica acessível na barra e na visão geral. Ocultar não exclui dados nem compromissos.
-- Criar área oferece pontos de partida e mantém campos e prévia revisáveis.
-- Movimento responde a controles e respeita redução de movimento. A luz que seguia o ponteiro foi desativada.
-- Os temas e as preferências existentes continuam disponíveis.
+Um arquivo só: **`tokens.css`**, carregado antes de tudo. Nenhum outro arquivo
+redefine cor, tipo, espaço, raio ou movimento (as preferências do perfil no fim
+de `theme.css` são a única exceção, por serem escolha do usuário).
 
-As seções abaixo documentam a base anterior e seus componentes. Em caso de
-diferença sobre hierarquia, navegação e superfícies, prevalece esta revisão.
+### Cor
 
-## Base visual anterior: 1.8, "marfim"
-
-Delfos é o nome de um oráculo, e o painel faz o que um oráculo faz: lê a
-situação e diz o que ela é. Desde a 1.7, **em toda página, a leitura é o
-título**: a frase vem grande e leve, os números ficam ao pé dela, numa razão
-aberta, e o resto se organiza por espaço e fio, não por caixa.
-
-A 1.8 ganhou **identidade de marca**: o logotipo "Delfos" numa serifa
-clássica, marfim sobre preto, com a assinatura "Organização para o que
-importa". O painel inteiro passou a falar na voz do logotipo: a leitura, os
-títulos e os números grandes estão na mesma família de serifa, sobre a paleta
-da marca (preto, carvão, grafite, marfim, cinza quente).
-
-O formato deste documento segue a skill `stitch-design-taste` (atmosfera,
-cor, tipografia, componentes, layout, movimento, proibições), adaptado a um
-painel de uso diário.
-
-## O que já foi tentado (e por que saiu)
-
-1. **"Estúdio"**: etiqueta em caixa alta acima de todo título, monoespaçada em
-   rótulo de dado, metadados colados com ponto médio, preto falso, `→` no fim
-   de link. Vícios de tela gerada por IA.
-2. **"Azulejo baiano"**: ornamento temático de fundo competindo com a leitura.
-   Decoração temática não é personalidade.
-3. **"Oráculo sóbrio" v1.2 a v1.3**: filete colorido na borda de todo cartão,
-   ícones de glifo digitado, tudo em caixa com o mesmo raio.
-4. **"Oráculo sóbrio, segunda leitura" v1.4 a v1.6**: o princípio era bom,
-   mas a página continuava um kit de cartões iguais com borda de 1px sobre
-   quase-preto, a voz em serifa (Newsreader) lembrava a interface de um
-   assistente de IA, as faixas de números eram três ou quatro cartões
-   idênticos, os selos eram pílulas em toda linha, havia pontinhos coloridos
-   antes de tudo e os ícones eram desenhados à mão. No celular, a navegação
-   era uma faixa rolável no alto: um site espremido, não um app.
-5. **"Consulta" v1.7**: a voz sem serifa (Funnel Display) sobre basalto
-   esverdeado. Funcionava, mas não tinha marca: quando o logotipo chegou, numa
-   serifa de alto contraste, a voz sem serifa e o cinza esverdeado brigavam
-   com ele. A serifa voltou, mas outra: de exibição, leve e de alto contraste,
-   a mesma família do logotipo, sobre neutros quentes. O que lia como "tela de
-   assistente" na 1.6 era a Newsreader de texto, pesada, sobre grafite frio.
-
-## 1. Atmosfera
-
-Um dossiê sóbrio, lido de noite. A interface é calma e quase sem cor; quem
-fala é a frase do alto. Densidade de app diário (5 de 10), variação contida
-(5 de 10: alinhado à esquerda, assimetria só onde o conteúdo pede), movimento
-contido (4 de 10: um único momento de entrada, a leitura, e respostas ao
-gesto).
-
-**A ousadia fica num lugar só**: a leitura, em Noto Serif Display leve, como
-título de toda página que tem leitura. Todo o resto é quieto. O efeito é o do
-quadro da marca: uma frase em serifa marfim sobre preto, muito espaço em
-volta.
-
-## Marca
-
-- **Logotipo**: "Delfos" na serifa do quadro da identidade, vetorizado da
-  imagem original (um caminho SVG só, `LOGOTIPO` em `ui.js`, preenchido com a
-  cor do texto). Nunca é texto digitado numa fonte parecida: é o desenho.
-  `UI.logotipo()` devolve o SVG; quem o usa dá o nome por `aria-label`.
-  Aparece no alto da barra lateral (24px de altura, com a versão baixinha na
-  linha de base), no alto do celular, na entrada, nas boas-vindas e no rodapé
-  do editor de resumos.
-- **D**: a primeira letra do logotipo, sozinha (`icone("delfos")`), para onde
-  o nome inteiro não cabe: o título "O que o Delfos entendeu" e o favicon.
-- **Favicon** (`favicon.svg`): o D marfim num quadrado preto de cantos
-  suaves; os fios finos do D ganham um traço do mesmo tom para não sumir em
-  16px. **Ícone da tela inicial** (`apple-touch-icon.png`, 180px): o
-  logotipo inteiro em marfim sobre preto, como os ícones do quadro.
-- **Assinatura**: "Organização para o que importa", em Funnel Sans 10,5px,
-  caixa alta espaçada (0,3em), em cinza, com um fio curto de 28px em cima.
-  Só na entrada e nas boas-vindas, embaixo do logotipo. É a única caixa alta
-  espaçada do painel, porque é assinatura de marca, não rótulo.
-- **Área livre**: o logotipo nunca encosta em nada; nada fica a menos da
-  altura do "e" dele.
-
-## 2. Cor
-
-A paleta da marca, e nada além dela no cromo: **preto** `#0b0b0b`,
-**carvão** `#1f1f1f`, **grafite** `#3a3a3a`, **marfim** `#ede9e1` e **cinza
-quente** `#d6d1c7`. Neutros quentes, nunca preto puro nem branco puro. Botão
-primário é marfim sobre preto (no claro, preto sobre marfim), foco é marfim.
-Cor existe para três coisas e só para elas: identificar pilar, distinguir as
-duas séries de dinheiro e marcar urgência.
-
-| Token | Escuro (padrão) | Claro | Papel |
+| Token | Escuro | Claro | Papel |
 |---|---|---|---|
-| `--fundo` | `#111110` | Marfim `#ede9e1` | a página |
-| `--lateral` | Preto `#0b0b0b` | `#e5e0d6` | a barra lateral (plano de trás) |
-| `--superficie` | `#181817` | `#f6f3ed` | objeto que se toca (janela, meta, conta) |
-| `--superficie-2` | Carvão `#1f1f1f` | `#e3ded4` | controle, item ativo |
-| `--superficie-3` | `#2a2a29` | Cinza quente `#d6d1c7` | controle pressionado |
-| `--linha` | marfim a 8% | preto a 9% | fio de 1px, translúcido, tingido |
-| `--texto` | Marfim `#ede9e1` | `#111110` | texto |
-| `--texto-2` | `#aba69d` | `#48453f` | apoio |
-| `--texto-3` | `#8d8980` | `#66625a` | legenda (4,5:1 ou mais sobre fundo e superfície) |
-| `--s-pessoal` | malva `#b9719b` | `#944d77` | pilar |
-| `--s-financeiro` | louro `#76a15e` | `#477b3b` | pilar |
-| `--s-faculdade` | ardósia `#508ac5` | `#32669d` | pilar |
-| `--s-projetos` | bronze `#c08849` | `#a06522` | pilar |
-| `--serie-entrada` / `--serie-saida` | `#508ac5` / `#c08849` | `#32669d` / `#a06522` | entradas e saídas nos gráficos |
-| `--st-critical` | `#d36757` | `#af3e30` | só urgência, nunca série |
+| `--fundo` | `#0e0e0d` | marfim `#ede9e1` | a página |
+| `--lateral` | preto `#0b0b0b` | `#e6e1d7` | o plano de trás |
+| `--superficie` | `#151514` | `#f4f1eb` | objeto (janela, menu, meta) |
+| `--superficie-2` | carvão `#1f1f1f` | `#e2ddd3` | controle |
+| `--superficie-3` | `#2a2a28` | cinza quente `#d6d1c7` | controle escolhido |
+| `--linha` / `--linha-forte` | marfim a 9% / 17% | preto a 10% / 19% | fio de 1px |
+| `--texto` | marfim | `#121211` | primário (15:1) |
+| `--texto-2` | `#b3aea5` | `#46423b` | secundário (7,4:1 ou mais) |
+| `--texto-3` | `#8e897f` | `#615c54` | terciário (4,6:1 ou mais em toda superfície) |
 
-**Validado, não escolhido a olho** (`validate_palette.py` da skill de
-dataviz, rodado de novo na 1.8 contra o fundo e a superfície novos dos dois
-temas, `#111110`, `#181817`, `#ede9e1` e `#f6f3ed`): os quatro
-pilares, em ordem, passam faixa de luminosidade, croma mínimo, separação para
-daltonismo e o piso de visão normal entre vizinhos; entradas × saídas passam
-com folga. O par verde × bronze (Financeiro × Projetos, que não são vizinhos)
-**não** se separa bem para deuteranopia; por isso, desde a 1.7, toda marca de
-pilar que aparece junto de outra leva o **ícone da área e o nome** ao lado
-(codificação secundária). Cor nunca é o único canal.
+Três níveis de texto, todos AA sobre fundo, lateral e as três superfícies
+(contas no fim da auditoria da Fase 4). Nunca `#000` nem `#fff`.
 
-Uma luz ambiente fixa (radial, marfim a 5,5%, sem cor) entra pelo alto da
-área principal, como a luz na nave de um templo. É o único gradiente do
-painel (e some no modo leve).
+**Sem acento metálico** (decisão do Luiz): o quadro é preto e marfim chapados;
+o champanhe do D em 3D fica só no vídeo da página inicial.
 
-## 3. Tipografia
+Cor fora do cromo, e só para dado: as quatro áreas (`--s-*`, validadas para
+daltonismo, sem mudança), entrada × saída (`--serie-*`) e estado
+(`--st-*`, dessaturados). Vermelho só para atraso e negativo; âmbar só para
+"hoje/amanhã"; o resto dos prazos fica em cinza. Número grande nunca fica
+verde: subir é o normal.
 
-| Papel | Fonte | Onde |
+### Tipografia
+
+| Papel | Família | Por quê |
 |---|---|---|
-| **Voz** | **Noto Serif Display** (300 a 600, Google Fonts, 41 KB) | a leitura, o título das páginas sem leitura, títulos de seção, janelas, números grandes, o dia na agenda |
-| **Dado e interface** | **Funnel Sans** | todo o resto: texto corrido, rótulos, botões, tabelas, a assinatura |
-| **Marca** | o logotipo (desenho, não fonte) | barra lateral, entrada, boas-vindas |
+| Voz | **Noto Serif Display** (300 a 700) | É a família do logotipo: escolhida desenhando "Delfos" em 16 serifas de exibição e comparando com o quadro (peso firme, D largo, contraste alto, "f" estreito). Algarismos alinhados, pesos de 100 a 900. Newsreader (lembrava assistente de IA, já descartada na 1.6), Fraunces (a serifa padrão de landing gerada), Instrument Serif (um peso só) e Playfair (algarismos antigos) foram descartadas. |
+| Todo o resto | **Jost** (300 a 600) | O desenho geométrico da assinatura do quadro (O redondo, caixa alta leve), sem cair na Montserrat. Tem algarismos tabulares, sinal de menos e todos os acentos. |
 
-A voz foi escolhida contra o logotipo, não a olho: "Delfos" foi desenhado em
-mais de 90 famílias de serifa do Google Fonts e comparado com o recorte do quadro da
-marca (proporção, altura de x, contraste, desenho do D, do "f" e do "s"). A
-Noto Serif Display ficou porque é a que mais conversa com o logotipo (leve,
-alto contraste, terminais afilados) e porque serve de dado: algarismos
-alinhados por padrão (a Playfair, a outra finalista, usa algarismos antigos,
-que descem abaixo da linha em "R$ 316,20"), sinal de menos de verdade
-(U+2212) e acentos completos. Só o eixo de peso é baixado (41 KB; com o eixo
-de largura seriam 76 KB).
+Um par, no máximo. Inter, Space Mono e as outras do editor de resumos são
+conteúdo do usuário (fonte que ele escolhe para o texto), não identidade.
 
-- **Pesos**: 300 na leitura, nos títulos de página e nos números grandes (em
-  40px ou mais, o fio fino é a elegância da letra); 350 a 450 entre 20 e 34px;
-  500 nos títulos de seção e de janela; o negrito da leitura é 500. Abaixo de
-  20px, só em frase curta e com peso 450 ou mais (a linha de apoio do novo
-  lançamento, o título "O que o Delfos entendeu"): fio de 300 some em tela
-  comum.
-- **Espaço entre letras**: quase nenhum. A serifa de exibição já vem justa;
-  -0,012em na leitura, -0,01em nos títulos, 0 no que é pequeno.
+**Escala** (`--t-*`): miúdos fixos para interface (11, 12, 13), corpo 15, e
+dali para cima razão 1,25 (19, 23, 29, 37, 46, 57), mais 17 para texto de
+destaque. Nada de meio pixel.
 
-- **Leitura**: `UI.ajustarLeitura` mede a frase e põe `data-tam` (g, m, p,
-  pp): 46, 39, 32 ou 27px no computador; 30, 27, 24 ou 21px no celular.
-  Frase curta é título grande; frase longa desce de corpo para nunca virar
-  parede de seis linhas.
-- **Dinheiro grande** (`.stat-value`, `.hero-value`): `UI.dinheiroGrande`
-  separa "R$" e centavos em corpo menor; o inteiro lê primeiro. Negativo é
-  "R$ −48,83": o sinal de menos de verdade (U+2212, não o hífen), colado no
-  número e em vermelho de aviso; o hífen ficava baixo e curto ao lado do R$
-  suspenso e parecia sujeira. No texto corrido vale o mesmo sinal
-  (`fmt.moeda`): com o hífen, a linha podia quebrar entre "-" e "R$".
-- Números em coluna usam `tabular-nums`; número grande sozinho, proporcional.
-- Nada de caixa alta em rótulo, nada de monoespaçada, nada de travessão no
-  texto da interface (ponto, dois-pontos, vírgula ou parênteses no lugar).
-- Preferência do perfil "Fonte da leitura e dos títulos": **Serifa** (padrão,
-  a voz da marca) ou **Sem serifa** (Funnel Sans em tudo). Os valores
-  guardados são `serifa` e `sans`, os mesmos desde a 1.6.
+- Serifa grande: peso 300, espaçamento -0,032em (37px para cima) a -0,022em.
+- Títulos de seção: serifa 23, peso 400.
+- Rótulo de grupo (`.rotulo`, `.stat-label`, cabeçalho de tabela, dia da
+  semana): Jost 11, peso 500, caixa alta, +0,12em. Um por grupo, nunca acima
+  de todo título; datas agrupadas continuam em frase.
+- Leitura (a frase do Delfos): serifa 23 leve, cinza, com o que importa em
+  marfim. Fica abaixo do título, até 34em.
+- Texto corrido: até 68ch (`--medida`).
+- Números: tabulares em coluna; proporcionais e na voz quando grandes e sozinhos.
 
-## 4. Componentes
+### Espaço
 
-- **Cabeça corrida**: numa página com leitura, o `h1` vira uma linha pequena
-  com o ícone da aba na cor dela (`UI.marcarCabeca`) e a descrição ao lado;
-  quem é grande é a leitura. Página sem leitura (Contas, Investimentos, uma
-  disciplina, um projeto) mantém o título grande, na voz, em peso 300.
-- **Razão de números**: toda faixa `.g3`/`.g4` de `.stat-value` vira colunas
-  abertas entre dois fios, separadas por fio vertical, sem fundo nem caixa.
-  No celular, duas colunas. Nenhuma página precisou mudar o HTML para isso.
-- **Superfície** (`.card`): tom levemente acima do fundo, fio translúcido e
-  um brilho de 1px no alto (no escuro). Só para o que é objeto: janela,
-  meta, conta, projeto, gráfico. Cartão que só tem estado vazio perde o fundo
-  e ganha contorno tracejado: é um espaço a preencher.
-- **Selo** (`.badge`): texto, não pílula. "em 2 dias" em âmbar, "atrasado há
-  3 dias" em vermelho; o de pilar leva o ícone da área.
-- **Ícone de área**: os quatro pilares têm ícone em máscara CSS
-  (`--ic-pessoal`, `--ic-financeiro`, `--ic-faculdade`, `--ic-projetos`, e
-  `--ic-cartao` para cartão de crédito); `.swatch`, `.eyebrow`, `.nota-area`
-  e os selos usam o ícone no lugar do pontinho. Ponto colorido só sobra onde
-  a cor é o único dado (aba criada pelo usuário, item do calendário).
-- **Ícones**: Phosphor regular (MIT), copiados para `ui.js` (`ICONES`) e
-  `resumo.js` (`ICONES_ED`), sem CDN. Só a marca (o logotipo e o D) é
-  desenho próprio. Glifo digitado no começo de botão ou link ("+ ", "← ", "⇩ ") vira
-  ícone sozinho (`UI.realcarBotoes`).
-- **Selo da aba** (`UI.seloAba`): na barra lateral, na folha "Mais" e na
-  lista de abas do perfil, toda aba tem o mesmo selo, fixa ou criada:
-  quadrado de 26px, raio 8, fundo a 14% da cor da aba e fio a 12%, ícone na
-  cor dela em duas camadas (contorno + corpo do Phosphor duotone a 20%). A
-  aba aberta fica com o selo cheio. A Visão geral, que não é pilar, fica em
-  grafite e enche em marfim. Na barra do celular o ícone vai solto, como nos
-  apps do telefone.
-- **Botões**: primário em marfim (no claro, em preto); comum em superfície; fantasma para ação
-  secundária. Raio 10. Cedem a 97% ao clique.
-- **Janelas**: raio 22, fundo desfocado atrás, título na voz. Ganham nome
-  (`aria-labelledby`), foco dentro, Tab circulando nelas e foco de volta a
-  quem abriu. No celular, a folha "Mais" sobe de baixo.
-- **Barras**: comparação sem trilho (o valor escrito ao lado dá a escala);
-  progresso de meta com trilho (o trilho é o que falta).
-- **Retrato**: quadrado de cantos suaves, nunca círculo.
-- **Criador de abas** (1.8): nome, uma caixa de **Propósito** e, logo
-  abaixo, "O que o Delfos entendeu": uma lista curta (assunto, cada registro,
-  jeito de anotar, campos, meta, vista), cada linha com o trecho do texto que
-  a justificou em tom mais baixo. É texto, não cartão. Aparência (ícone e
-  cor) fica num `details` fechado: a grade de ícones só é desenhada ao abrir.
-  A prévia mostra os campos em linhas (nome à esquerda, tipo à direita) e a
-  vista em pílulas.
+Grade de 4 (`--e-1` a `--e-20`: 4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80).
+Seções separadas por 48; colunas por 64. 97% dos espaçamentos do tema estão na
+grade; o resto é fio de 1 ou 2px.
 
-**Raio por hierarquia** (vale em todo lugar): janela 22, superfície 16,
-controle 10, miúdo 6, pílula só para escolha (chips, segmentos, interruptor).
+### Raio
 
-## 5. Layout
+Quase reto, uma linguagem só: **2** (miúdo), **4** (controle, botão, campo,
+pílula de filtro), **6** (superfície, janela). Pílula total só no interruptor,
+que imita um objeto físico. Círculo só no ponto de cor (calendário) e no
+marcador de hoje; o retrato é quadrado de raio 4.
 
-```
-┌──────────────┬──────────────────────────────────────────────────────┐
-│ Delfos   1.8 │ ◉ Visão geral  Segunda-feira, 12 de outubro  [+] [+] │
-│              │                                                      │
-│ ◉ Visão  5   │ Boa tarde, Luiz. Relatório de estágio venceu há      │
-│ ◯ Pessoal 1  │ 2 dias. No mês, sobrou R$ 316,20.   (leitura, 46px)  │
-│ ▭ Financ. 1  │──────────────────────────────────────────────────────│
-│ ▯ Faculd. 4  │ Saldo         │ Sobrou     │ Próximo      │ A pagar  │
-│ ↗ Projetos   │ R$ 6.239,10   │ R$ 316,20  │ Consulta…    │ R$ 300   │
-│ + Nova aba   │──────────────────────────────────────────────────────│
-│              │ Agenda                       │ O que o Delfos notou   │
-│              │ Atrasado                     │ ...                    │
-│              │ 10 sáb  Relatório de estágio │ Em números             │
-│              │ Esta semana   Semana cheia   │ ...                    │
-│              │ 14 qua  Consulta ...         │                        │
-│ (LF) Luiz    │ Suas abas (índice em duas colunas)                    │
-└──────────────┴──────────────────────────────────────────────────────┘
-```
+### Profundidade
 
-- **Barra lateral** num plano atrás (`--lateral`), sem borda; cada aba com
-  o seu selo colorido (a cor ali identifica a aba, que é o uso que a cor tem
-  no Delfos); contagem em algarismo simples (vermelho só na visão geral,
-  quando há algo vencendo).
-- **Visão geral**: a saudação abre a leitura em tom mais baixo; a razão traz
-  saldo, o mês, o próximo compromisso e o que falta pagar; a agenda vai
-  semana a semana com o dia do mês grande à esquerda (o único "momento de
-  segunda leitura" da página) e a semana cheia marcada no próprio cabeçalho
-  (saiu a pilha de avisos do topo); "O que o Delfos notou" e "Em números"
-  ficam soltos na coluna lateral; as abas viram um índice.
-- **Celular** (até 900px): o alto é só a marca e o retrato; a navegação é
-  uma barra de abas fixa embaixo, ao alcance do polegar, com as quatro
-  primeiras abas e "Mais" (a aba aberta sempre aparece nela). Área segura do
-  iPhone respeitada (`viewport-fit=cover`, `env(safe-area-inset-*)`).
-- Conteúdo até 1160px, alinhado à esquerda; números tabulares à direita.
+Contraste de superfície e fio, nunca sombra em superfície. Só o que flutua
+(janela, menu, aviso) leva `--shadow-pop`: um fio forte mais uma sombra longa
+tingida de preto. Sem desfoque atrás das janelas: o fundo escurece a 72%.
 
-## 6. Movimento
+### Movimento
 
-- Três curvas (`--ease-saida`, `--ease-mola`, `--ease-troca`) e três tempos
-  (160/280/460 ms). Nada linear.
-- **Um momento de entrada só**: a leitura chega (opacidade, 10px e um leve
-  desfoque, 620 ms). As seções já estão no lugar; cascata em toda seção era
-  tique de tela gerada.
-- A luz que segue o ponteiro ficou só no que leva a algum lugar (linha do
-  índice de abas, `a.card`); cartão parado não acende.
-- Destaque deslizante no menu, sublinhado que corre nas abas, trilho na
-  escolha única, mola no interruptor: respostas ao gesto, não enfeite.
-- Barras aparecem sem animar largura (só propriedades de compositor).
-- Tudo de ponteiro fica em `(hover: hover) and (pointer: fine)`; com
-  "reduzir movimento" (sistema ou perfil) nada disso acontece.
-- **Modo leve** (1.8, `data-leve="sim"`): o mesmo desenho sem o que pesa na
-  placa de vídeo. Sem sombras, sem a luz radial do fundo, sem desfoque atrás
-  das janelas (fundo mais opaco no lugar), sem destaque deslizante e com
-  transições a quase zero. Liga sozinho em aparelho fraco (até 4 núcleos ou
-  4 GB, ou economia de dados) e pode ser escolhido no perfil.
+Uma curva: `cubic-bezier(0.22, 1, 0.36, 1)`. Três tempos: 180, 280, 420 ms.
+Sem mola, sem quique. Movimento só para confirmar (botão cede a 0,98, janela
+sobe 8px) ou guiar (o fio da coluna cresce no item ativo da barra, o
+sublinhado corre no botão terciário, a seta da sanfona gira). A luz que seguia
+o ponteiro saiu. Com "reduzir movimento", os tempos viram 0,01 ms.
+
+## 3. Componentes
+
+- **Barra lateral**: plano preto; símbolo + logotipo + assinatura no alto; o
+  item ativo não é um bloco cheio, é texto marfim com **um fio vertical de
+  1,5px à esquerda (a coluna)**. Contagens em algarismo pequeno; vermelho só
+  na Visão geral quando há atraso.
+- **Barra de abas do celular**: plano preto, fio em cima; a aba aberta ganha
+  um fio marfim por cima. Contagens em número sobrescrito, sem bolha vermelha.
+- **Botões**: primário marfim chapado (preto no claro); secundário só fio;
+  terciário (`.ghost`) texto com sublinhado que corre da esquerda no hover.
+  Hover muda a superfície, não a cor. Pressionado: 0,98. Foco: fio marfim de
+  1,5px a 3px de distância. Desabilitado: 38%. Carregando:
+  `aria-busy="true"` troca o rótulo por um anel fino. 40px de altura (44 no
+  celular). Um primário por tela: estado vazio e coluna de contexto usam o
+  secundário.
+- **Campos**: superfície, fio forte, raio 4; o foco troca o fio por marfim
+  (sem halo). Erro: fio vermelho. Checkbox próprio, quadrado de raio 2.
+- **Filtros**: retângulos de raio 4 com fio; escolhido em `--superficie-3`.
+- **Seção**: título na voz e fio; nunca caixa. Na coluna de contexto, o título
+  vira rótulo em caixa alta sobre um fio forte.
+- **Razão de números**: fio forte em cima, fio embaixo, colunas separadas por
+  fio, rótulo em caixa alta, número na voz leve. Substituiu a placa marfim.
+- **Objeto** (`.card`): superfície em tom, fio de 1px, raio 6, sem sombra.
+  Só para o que se toca como coisa: meta, conta, investimento, resumo.
+- **Tabela**: sem moldura; cabeçalho em rótulo; linhas por fio; total com fio
+  forte. No celular, lista.
+- **Janela**: raio 6, sombra de flutuação, título na voz leve 29, rodapé
+  separado por fio. O diálogo nunca mostra anel de foco (só os controles).
+- **Aviso**: marfim chapado sobre o escuro (inverso), raio 4.
+- **Estado vazio**: alinhado à esquerda, sem ícone em caixa: frase na voz,
+  explicação curta, uma ação secundária.
+- **Mais nesta área**: as seções menos frequentes de cada área numa lista só,
+  com rótulo, cada uma abrindo no lugar (sanfona de fio, seta que gira).
+- **Agenda**: a semana em sete colunas de fio, o dia na voz; o selecionado
+  ganha superfície e o fio da coluna por cima; hoje tem um ponto.
+
+## 4. Ícones
+
+Grade de 24, traço de 1,25, pontas retas, cantos em quina. **Seis próprios**
+(`PROPRIOS` em `ui.js`), na lógica da coluna: templo (Visão geral), busto
+sobre plinto (Pessoal), colunas de moedas (Financeiro), livro com lombada
+(Faculdade), colunas que sobem com capitel (Projetos), grade (aba criada). O
+resto é **Phosphor Light** (MIT), o peso que casa com 1,25. As máscaras de área
+em CSS (`--ic-*`) usam os mesmos desenhos. Prévia: `icons/index.html`
+(gerada por `design-audit/scripts/gerar-icones.cjs`).
+
+## 5. Microcopy
+
+Português claro, frase curta, sem adjetivo vazio. O Delfos fala na primeira
+pessoa do painel só na leitura. Datas por extenso, número com unidade, verbo
+no lugar de substantivo ("Lançar custo", não "Lançamento de custo"). Nada de
+travessão na interface; nada de "num só lugar", "simples", "poderoso".
+
+## 6. O que já foi tentado (e por que saiu)
+
+1. **Estúdio**: etiqueta em caixa alta acima de todo título, monoespaçada.
+2. **Azulejo baiano**: ornamento temático competindo com a leitura.
+3. **Oráculo sóbrio** (1.2 a 1.6): filete colorido em todo cartão, ícones
+   desenhados à mão sem sistema, Newsreader pesada.
+4. **Consulta** (1.7): voz sem serifa; brigava com o logotipo.
+5. **Marfim** (1.8) e a revisão de 25/10: a marca antiga (serifa fina, sem o
+   símbolo), três camadas de tokens que se contradiziam, 18 raios, 38 tamanhos
+   de fonte, a placa marfim invertida e tudo em cartão com sombra.
 
 ## 7. Proibições
 
-- Serifa fora da voz (em rótulo, botão, tabela, campo); Inter; Geist;
-  monoespaçada em rótulo.
-- Escrever "Delfos" numa fonte parecida no lugar do logotipo.
-- Cor no cromo (botão, foco, fundo): a marca é preto e marfim.
-- Travessão (— ou –) no texto da interface.
-- Caixa alta com espaçamento em rótulo (a assinatura da marca é a exceção);
-  etiqueta acima de todo título.
-- Fileira de cartões iguais para números; caixa dentro de caixa.
-- Pílula em todo selo; pontinho colorido antes de tudo.
-- Ícone desenhado à mão (fora a marca); glifo digitado como ícone.
-- Preto puro; sombra cinza genérica; brilho ou gradiente colorido.
-- Cascata de entrada em toda seção; animação de largura e altura.
-- Cor como único canal de informação; vermelho fora de urgência.
-- Metadados colados com " · " (só sobrevive no título da aba do navegador).
+- Escrever "Delfos" numa fonte no lugar do logotipo; usar outra assinatura.
+- Definir cor, tamanho, espaço ou raio fora de `tokens.css`.
+- Sombra em superfície; desfoque; gradiente decorativo; luz que segue o ponteiro.
+- Caixa para o que não é objeto; caixa dentro de caixa.
+- Mais de um botão primário visível por área.
+- Raio fora de 2/4/6; pílula fora do interruptor.
+- Cor como enfeite; verde em número grande; âmbar em prazo distante.
+- Caixa alta espaçada fora de rótulo de grupo e assinatura.
+- Ícone digitado (‹ › ↗ +) no lugar de ícone de verdade.
+- Travessão no texto da interface; hífen como sinal de menos em dinheiro.

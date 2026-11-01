@@ -2,7 +2,7 @@
 
 O essencial se revela. A interface deve ajudar a pessoa a reconhecer onde está,
 encontrar o próximo passo e voltar ao trabalho sem atravessar configurações.
-A identidade continua no símbolo, no logotipo, na serifa e nos neutros quentes.
+A identidade está no símbolo, no logotipo e no sistema visual "Dia em comum" (abaixo).
 
 ## Organização da informação
 
@@ -165,22 +165,58 @@ página para a sua rotina.” Conte se refere à escrita, sem captação de voz.
 preparo e download são informados antes de gerar; Como funciona contém os requisitos e
 detalhes técnicos. Falhas mostram a próxima ação e conservam a alternativa manual.
 
-## Identidade visual
+## Identidade visual — "Dia em comum" (3.0)
 
-- Símbolo: D com coluna; usar os vetores existentes, sem redesenhar a marca.
-- Marca completa: `UI.logotipo()` compõe o símbolo D como inicial e os vetores de elfos,
-  sem outro D ao lado. Entrada e boas-vindas usam a mesma composição estática.
-- Versão: linha discreta no alto à direita da região principal, fora do link da marca,
-  no fluxo da página para não cobrir ações, inclusive no celular.
-- Tipografia de marca: Gloock/Georgia nos nomes de página e momentos de orientação.
-- Dados, campos, botões e títulos internos: Funnel Sans/system-ui.
-- Paleta: preto `#0b0b0b`, carvão `#1f1f1f`, grafite `#3a3a3a`, marfim `#ede9e1`, cinza quente
-  `#d6d1c7`. O tema claro usa superfícies quentes com texto escuro.
-- A prévia no criador usa marfim para separar o exemplo da área de configuração.
-- Cor identifica uma área ou comunica dados e estados. Não usar decoração colorida em cada caixa.
-- Ícones de navegação são monocromáticos, sem fundos ou medalhões. Sempre acompanhados de texto.
-- Rolagem: controles nativos com os neutros do contêiner, trilho discreto e polegar
-  arredondado. O sistema pode ocultar as barras; não substituir a rolagem por JavaScript.
+O dia é onde as áreas da vida se encontram: uma prova muda a semana, uma consulta ocupa um
+horário, uma refeição se repete. A interface é um instrumento de uso diário, preciso e
+legível, sem camada de decoração entre a pessoa e o plano. Antes de criar uma tela, confira
+os tokens no topo de `theme.css`; componentes não inventam cor, raio, sombra, tamanho nem tempo.
+
+**A única ousadia: a costura do dia.** Na agenda (`home.js`, `linhaAgenda`; CSS em
+`.agenda-linha`, `.agenda-no`, `.costura`), uma linha vertical atravessa os compromissos e
+cada um é um ponto na cor da área. Horário à esquerda em números tabulares; data só na
+primeira linha do dia; o que tem hora vem antes do que não tem; sem hora, o ponto fica vazio.
+A linha não mede duração nem desenha horário livre. Ela não se repete em outros lugares do
+painel; a entrada pública a mostra porque é o produto.
+
+| Token | Valor | Papel |
+|---|---|---|
+| `--fundo` | claro `#f5f7f9` (porcelana fria) · escuro `#17212b` (tinta azul) | plano contínuo, sem textura |
+| `--texto` | `#17212b` · `#f5f7f9` | conteúdo e títulos (15,2:1) |
+| `--texto-2` / `--texto-3` | `#526170`/`#5f6d7b` · `#a5b4c2`/`#8d9dac` | contexto; nunca abaixo de 4,5:1 |
+| `--linha-controle` | `#7f8d9b` · `#7b8e9e` | borda de campo que precisa ser vista (≥ 3:1) |
+| `--acento` | `#22589c` (azul mineral) · `#9cc4f5` | ação principal, seleção, foco; rótulo na cor do fundo |
+| `--st-critical` | `#9c3446` (vinho) · `#e8899a` | erro e atraso, sempre com texto |
+
+- **Tipografia:** uma família, Source Sans 3 (OFL, custo zero), pesos 400/600/700. A "voz"
+  (`--font-voz`) é a mesma família em `--peso-voz` (600). Escala `--fs-1..7`: 13, 16, 20, 25,
+  31, 39, 49. Texto corrido até `--medida` (68ch). Números que se comparam usam `tabular-nums`.
+  `--escala-fonte` base 1,0667 compensa o olho menor da fonte (regras escritas na base 15).
+- **Espaço:** grade de 4 (`--e-1..8`: 4, 8, 12, 16, 24, 32, 48, 64).
+- **Raio:** 4 miúdo, 8 controle, 12 superfície, 16 janela; pílula só para escolha.
+- **Elevação:** nenhuma em listas e seções. Uma sombra só (`--shadow-pop`), na janela
+  sobreposta. Seção é título + fio + espaço, nunca caixa (`.pagina-bloco`).
+- **Toque:** 44 × 44 px (`--toque`) em `pointer: coarse`; no mouse, os controles compactos
+  mantêm o desenho. Foco visível sempre no acento (`--foco`).
+- **Cor de área** (`--s-*`) é dado: ponto da costura, ícone da área. Nunca acento de UI.
+  As cores das abas próprias e as fontes dos resumos são conteúdo do usuário.
+- **Tema:** sem escolha gravada, segue o sistema; o claro é a apresentação principal.
+- **Marca:** símbolo D com coluna e `UI.logotipo()`; usar os vetores existentes.
+
+### Lista negra no Delfos
+
+Proibido salvo justificativa escrita aqui:
+
+- Fundo quase preto com um acento único; creme/bege com serifa de alto contraste.
+- Vidro desfocado (`backdrop-filter`), gradiente de fundo, brilho, luz que segue o ponteiro.
+- A mesma sombra embaixo de tudo; card em volta de seção; caixa dentro de caixa.
+- Etiqueta em caixa alta espaçada acima do título; palavra do título em outra cor ou itálico.
+- "01 / 02 / 03" quando não é sequência real; setas ↗ → no fim de botões ou links.
+- Metadados colados com " · " na interface (use vírgula ou outra linha).
+- Fade/slide ao rolar, hover que levanta card, animação que não responde a uma ação.
+- Slogan no lugar de informação ("Seu dia, com clareza."). O título diz onde a pessoa está.
+- Botão que não diz o que acontece ("Salvar" quando substitui; "Enviar").
+- Oferecer um caminho que não funciona naquele estado (ex.: criar conta sem servidor).
 
 ## Movimento
 

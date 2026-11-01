@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Visão geral · Delfos</title>
-  <meta name="theme-color" content="#111110" />
+  <meta name="theme-color" content="#f5f7f9" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400..700;1,400..600&display=swap" />
   <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="paginas.css" />
 </head>
@@ -21,7 +21,7 @@
       <div class="wrap" data-pagina-secoes="index">
         <header class="topbar">
           <div>
-            <h1>Seu dia, com clareza.</h1>
+            <h1>Hoje</h1>
             <p class="sub" id="sub-hoje">
             </p>
           </div>
@@ -35,21 +35,23 @@
           <button aria-controls="painel-dinheiro" data-secao="dinheiro" id="secao-dinheiro" role="tab" type="button">Dinheiro</button>
         </nav>
         <section aria-labelledby="secao-meu-dia" class="pagina-painel" data-painel="meu-dia" id="painel-meu-dia" role="tabpanel" tabindex="0">
-          <p class="painel-descricao">Sua agenda e o que merece atenção hoje.</p>
           <div class="painel-conteudo painel-dia">
             <p class="leitura" id="leitura">
             </p>
             <section class="pagina-bloco" id="sec-agenda">
               <header class="bloco-cabecalho">
                 <h2 class="bloco-titulo">Agenda</h2>
-                <span class="bloco-resumo" id="agenda-resumo">
+                <span class="bloco-resumo sr" id="agenda-resumo">
                 </span>
                 <div class="bloco-acoes">
                   <button class="btn sm" id="btn-agenda-novo" type="button">+ Compromisso</button>
                 </div>
               </header>
               <div class="bloco-corpo">
-                <!-- Filtros da agenda (2.3): o período, a semana e o dia. -->
+                <div id="agenda">
+                </div>
+                <div class="agenda-consulta">
+                <!-- Consulta da semana (3.0): depois da lista, que é o que se faz hoje. -->
                 <div class="agenda-filtros">
                   <div class="agenda-semana">
                     <button aria-label="Semana anterior" class="btn ghost sm icon" id="semana-anterior" type="button">
@@ -69,7 +71,6 @@
                 </div>
                 <div aria-label="Filtrar a agenda por dia" class="semana-dias" id="semana-dias" role="group">
                 </div>
-                <div id="agenda">
                 </div>
                 <a class="link-gaveta" href="pessoal.html">Abrir o calendário</a>
               </div>

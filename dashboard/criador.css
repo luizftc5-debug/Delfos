@@ -5,7 +5,7 @@
 .criacao [hidden] { display: none !important; }
 .criacao .criacao-cabecalho { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 26px 32px 20px; }
 .criacao-assinatura { display: block; font:calc(11px * var(--escala-fonte, 1)) var(--font); color: var(--texto-3); letter-spacing: .04em; margin-bottom: 9px; }
-.criacao .modal-title { font:400 calc(28px * var(--escala-fonte, 1))/1.2 var(--font-voz); letter-spacing: -.025em; margin: 0; }
+.criacao .modal-title { font: var(--peso-voz) calc(28px * var(--escala-fonte, 1))/1.2 var(--font-voz); letter-spacing: var(--tracking-titulo); margin: 0; }
 .criacao .btn { border-radius: 8px; min-height: 42px; font-size: calc(13px * var(--escala-fonte, 1)); box-shadow: none; }
 .criacao .btn.icon { min-width: 40px; }
 .criacao-passos { list-style: none; display: flex; align-items: center; gap: 30px; padding: 18px 32px; margin: 0; border-top: 1px solid var(--linha); border-bottom: 1px solid var(--linha); }
@@ -15,7 +15,7 @@
 .criacao-passos li[aria-current] > span { background: var(--texto); color: var(--sobre-claro); border-color: var(--texto); }
 .criacao-passos li[data-concluido] > span { border-color: var(--texto-3); color: var(--texto); }
 .criacao .criacao-corpo { display: block; padding: 28px 32px 30px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; min-height: 0; }
-.criacao-titulo { font:400 calc(27px * var(--escala-fonte, 1))/1.25 var(--font-voz); letter-spacing: -.02em; margin: 0; outline: none; }
+.criacao-titulo { font: var(--peso-voz) calc(27px * var(--escala-fonte, 1))/1.25 var(--font-voz); letter-spacing: var(--tracking-titulo); margin: 0; outline: none; }
 .criacao-titulo:focus-visible { outline: 2px solid var(--destaque); outline-offset: 5px; }
 .criacao-apoio { font:400 calc(14px * var(--escala-fonte, 1))/1.6 var(--font); color: var(--texto-3); margin: 10px 0 26px; max-width: 57ch; }
 .criacao-modelos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -56,7 +56,7 @@
 .criacao-preview .previa-topo { gap: 12px; }
 .criacao-preview .previa-icone { width: 30px; height: 30px; border-radius: 0; background: none; color: #5f584e; }
 .criacao-preview .previa-icone .ico { width: 26px; height: 26px; }
-.criacao-preview .previa-nome { font:400 calc(26px * var(--escala-fonte, 1))/1.25 var(--font-voz); letter-spacing: -.02em; overflow-wrap: anywhere; }
+.criacao-preview .previa-nome { font: var(--peso-voz) calc(26px * var(--escala-fonte, 1))/1.25 var(--font-voz); letter-spacing: var(--tracking-titulo); overflow-wrap: anywhere; }
 .criacao-preview .previa-desc { color: #6a6257; font-size: calc(12px * var(--escala-fonte, 1)); line-height: 1.5; margin-top: 5px; }
 .criacao-mini-nav { display: flex; flex-wrap: wrap; gap: 20px; border-bottom: 1px solid #cec7ba; margin-top: 24px; font-size: calc(11px * var(--escala-fonte, 1)); color: #746b5e; }
 .criacao-mini-nav > * { padding-bottom: 10px; font-weight: 400; }

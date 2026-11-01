@@ -35,7 +35,7 @@
 
   function render() {
     recarregar();
-    document.title = `${disciplina.nome} · ${UI.NOME}`;
+    document.title = `${disciplina.nome}, ${UI.NOME}`;
     document.getElementById("titulo").textContent = disciplina.nome;
     document.getElementById("etiqueta").textContent = `Disciplina ${disciplina.status || "ativa"}`;
     document.getElementById("subtitulo").innerHTML = disciplina.professor
@@ -355,7 +355,7 @@
     const anexos = plano.anexos || [];
     const assuntos = plano.assuntos || [];
     document.getElementById("plano-convite").hidden = !!(anexos.length || assuntos.length);
-    document.getElementById("plano-resumo").textContent = anexos.length ? `${anexos.length} ${anexos.length === 1 ? "documento" : "documentos"} · ${assuntos.length} assuntos` : "Opcional: comece pelos documentos da matéria";
+    document.getElementById("plano-resumo").textContent = anexos.length ? `${anexos.length} ${anexos.length === 1 ? "documento" : "documentos"}, ${assuntos.length} assuntos` : "Opcional: comece pelos documentos da matéria";
     const docs = document.getElementById("plano-documentos");
     docs.innerHTML = anexos.length ? `<div class="plano-anexos">${anexos.map(anexoHTML).join("")}</div>` : '<p class="card-note">Guarde o edital ou o plano de ensino e confira os itens encontrados antes de organizar sua agenda.</p>';
     ligarAnexos(docs, anexos);
@@ -363,7 +363,7 @@
     const aulas = [...(disciplina.aulas || [])].sort((a,b) => a.data.localeCompare(b.data) || (a.hora || "").localeCompare(b.hora || ""));
     document.getElementById("aulas-resumo").textContent = `${aulas.length} ${aulas.length === 1 ? "aula na agenda" : "aulas na agenda"}`;
     const box = document.getElementById("aulas");
-    box.innerHTML = aulas.length ? `<ul class="list">${aulas.map(a => `<li>${UI.marcaItem({data:a.data,nivel:"futuro"})}<span class="grow"><span class="title">${fmt.escape(a.nome || "Aula")}</span><span class="plano-aula-hora">${fmt.escape(fmt.data(a.data))}${a.hora ? ` · ${fmt.escape(a.hora)}${a.horaFim ? `–${fmt.escape(a.horaFim)}` : ""}` : ""}</span></span><span class="row-actions"><button class="btn ghost sm" type="button" data-aula-editar="${fmt.escape(a.id)}" aria-label="Editar aula ${fmt.escape(a.nome)}">Editar</button><button class="btn ghost sm" type="button" data-aula-excluir="${fmt.escape(a.id)}" aria-label="Excluir aula ${fmt.escape(a.nome)}">Excluir</button></span></li>`).join("")}</ul>` : '<p class="card-note">Importe os horários do plano ou adicione uma aula. Eles aparecem no calendário de todas as áreas.</p>';
+    box.innerHTML = aulas.length ? `<ul class="list">${aulas.map(a => `<li>${UI.marcaItem({data:a.data,nivel:"futuro"})}<span class="grow"><span class="title">${fmt.escape(a.nome || "Aula")}</span><span class="plano-aula-hora">${fmt.escape(fmt.data(a.data))}${a.hora ? `, ${fmt.escape(a.hora)}${a.horaFim ? `–${fmt.escape(a.horaFim)}` : ""}` : ""}</span></span><span class="row-actions"><button class="btn ghost sm" type="button" data-aula-editar="${fmt.escape(a.id)}" aria-label="Editar aula ${fmt.escape(a.nome)}">Editar</button><button class="btn ghost sm" type="button" data-aula-excluir="${fmt.escape(a.id)}" aria-label="Excluir aula ${fmt.escape(a.nome)}">Excluir</button></span></li>`).join("")}</ul>` : '<p class="card-note">Importe os horários do plano ou adicione uma aula. Eles aparecem no calendário de todas as áreas.</p>';
     box.querySelectorAll("[data-aula-editar]").forEach(b => b.addEventListener("click", () => editarAula(aulas.find(x => x.id === b.dataset.aulaEditar))));
     box.querySelectorAll("[data-aula-excluir]").forEach(b => b.addEventListener("click", () => excluirSub("aulas", aulas.find(x => x.id === b.dataset.aulaExcluir), "Aula")));
   }

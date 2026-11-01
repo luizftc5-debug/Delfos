@@ -1273,38 +1273,28 @@ paleta preto `#0B0B0B`, carvão `#1F1F1F`, grafite `#3A3A3A`, marfim `#EDE9E1`, 
 
 ### Direção visual
 
-**"Marfim" (v1.8; marca e voz trocadas na 2.2)**: o detalhe completo, com a marca, tokens, paleta validada e proibições, está em
-`dashboard/DESIGN.md`, a referência a consultar antes de mexer em qualquer coisa visual.
+**"Dia em comum" (3.0)**: tokens, a ousadia e a lista negra estão em `dashboard/DESIGN.md`
+("Identidade visual"), a referência a consultar antes de mexer em qualquer coisa visual. Pedido do
+Luiz: tirar a "cara de IA" e a falta de originalidade (fundo quase preto + marfim + serifa de alto
+contraste, vidro, luz de ponteiro). A escolha entre as duas direções da auditoria de 30/10/2026
+foi a A, por ser a que já é a força do produto: reunir as áreas no mesmo dia.
 
-O princípio, em uma linha: **a leitura é o título e cada assunto mora numa gaveta** (2.0): uma
-superfície delimitada que diz o essencial no puxador e guarda o resto dentro, cada registro no seu
-compartimento, com a marca colorida à esquerda (2.1) como único desenho do item, a leitura numa
-frase só e o que é análise em gavetas finas embaixo (2.2), sem caixa com borda dentro de caixa; o caráter vem de tipografia, espaço e hierarquia, na voz e nas cores do logotipo. Seis
-execuções anteriores foram descartadas e estão descritas no DESIGN.md (estúdio, azulejo baiano,
-oráculo sóbrio 1.2–1.3, a segunda leitura 1.4–1.6, a consulta 1.7, sem serifa, e a página aberta
-1.7–1.9, sem caixa, que o Luiz achou poluída).
-
-- **Marca**: símbolo e logotipo são desenho (`SIMBOLO`/`LOGOTIPO` em `ui.js`, `UI.simbolo()`,
-  `UI.logotipo()`), nunca "Delfos" digitado numa fonte parecida. O símbolo sozinho é
-  `icone("delfos")`, o favicon e o ícone da tela inicial. A assinatura ("O essencial se revela.",
-  caixa alta espaçada) só aparece na entrada e nas boas-vindas.
-- **Tipografia**: **Gloock** (um peso só, sem negrito falso; destaque pela cor) é a voz (leitura,
-  título de página sem leitura, títulos de seção, de gaveta e de janela, números grandes, o dia na
-  agenda). **Funnel Sans** é todo o resto. Algarismos alinhados (a voz já os tem por padrão);
-  tabular (`.num`) só onde números se alinham. Espaço entre letras quase nenhum.
-- **Cromo sem cor**: a paleta da marca, preto `#0b0b0b` (`--lateral`), carvão `#1f1f1f`, grafite
-  `#3a3a3a`, marfim `#ede9e1` (o texto no escuro, o fundo no claro) e cinza quente `#d6d1c7`;
-  `--fundo` escuro `#111110`. Primário e foco em marfim. Cor só identifica pilar (`--s-*`),
-  distingue entradas × saídas (`--serie-entrada` azul, `--serie-saida` bronze) e marca urgência
-  (`--st-critical`). O escuro é o padrão; o claro (marfim) é escolha explícita em
-  `[data-theme="light"]`. `theme-color` acompanha o fundo (`#111110` / `#ede9e1`).
-- **Raio por hierarquia**: janela 22, superfície 16, controle 10, miúdo 6, pílula só para escolha.
-  **Abas sublinhadas** (`.abas`) para seções irmãs, **pílulas** (`.chip`) para filtro,
-  **interruptor** (`.switch`) para ligar/desligar. Retrato em quadrado de cantos suaves.
-- **Movimento** (seção "Movimento" do `theme.css` + `UI.movimento`): uma entrada só (a leitura);
-  luz do ponteiro só no que leva a algum lugar (`a.card`, ladrilho de "Suas abas"); destaque deslizante
-  no menu, nas abas e na escolha única. Só com mouse; nada com "reduzir movimento".
+- **Uma família**: Source Sans 3 (OFL), 400/600/700; a voz é a mesma família em `--peso-voz`.
+  `--escala-fonte` base 1,0667 compensa o olho menor da fonte.
+- **Paleta**: porcelana fria `#f5f7f9` / tinta azul `#17212b`, acento azul mineral `#22589c`
+  (escuro `#9cc4f5`), vinho `#9c3446` para erro. Sem escolha gravada, o tema segue o sistema
+  (`UI.tema.atual()` devolve "auto"); o claro é a apresentação principal.
+- **A costura do dia** (home): linha vertical, ponto na cor da área, horário tabular. Única ousadia.
+- **Sem caixa**: `.pagina-bloco` é título + fio + espaço; faixa de números é razão aberta;
+  elevação só na janela (`--shadow-pop`). Sem `backdrop-filter`, sem luz de ponteiro (`--luz`
+  transparente), sem `.main::before`.
+- **Toque**: 44 px em `pointer: coarse`. Foco no acento (`--foco`).
+- **Sem servidor**, a entrada (`portal.js`) e o acesso (`entrar.js`) oferecem só "usar neste
+  aparelho"; criar conta e Google aparecem quando `Sessao.ativo()`.
+- Raio por hierarquia: 4 miúdo, 8 controle, 12 superfície, 16 janela; pílula só para escolha.
 - Metadados em frase ou com vírgula, nunca colados com " · " (só o título da aba do navegador).
+- Valores de preferência antigos continuam aceitos: `destaque: "osso"` é o acento (na tela,
+  "Azul mineral"); "anil" saiu da lista mas segue no CSS; `voz` não tem mais efeito visível.
 
 Dinheiro negativo sai com o sinal de menos (−, U+2212), nunca o hífen.
 Números decimais saem por `UI.fmt.decimal` (8,2, nunca `toFixed`, que escreve 8.2) e ordinais

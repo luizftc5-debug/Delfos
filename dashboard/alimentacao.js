@@ -96,7 +96,7 @@ const Alimentacao = (() => {
           <span class="card-note">${feitas} de ${configuradas.length} ${configuradas.length === 1 ? "refeição com alimentos marcada" : "refeições com alimentos marcadas"}</span></div>
         ${vazio ? `<p class="ali-apoio ali-primeiro-plano"><b>Monte sua dieta:</b> ${plano.length ? "Use Adicionar alimento em cada refeição para informar os alimentos, as quantidades e as calorias." : "Use Adicionar refeição para começar seu plano diário."} Você também pode importar um arquivo para revisar.</p>` : ""}
         <div class="rotina-semana ali-grade-plano">${ativas.map(r => refeicaoHTML(r, dia, hoje)).join("")}</div>
-        <p class="rotina-dica">${kcalTxt(totalPlano.kcal)} no plano${(() => { const d = totalPlano.kcal ? distribuicao(totalPlano) : null; return d ? `; proteína ${d.proteina}%, carboidrato ${d.carbo}%, gordura ${d.gordura}% das calorias` : ""; })()}${totalPlano.incompletos ? ` · ${totalPlano.incompletos} ${totalPlano.incompletos === 1 ? "alimento sem calorias informadas" : "alimentos sem calorias informadas"}` : ""}. Marque <b>Comi</b> quando fizer a refeição. Você pode editar o nome e o horário de cada uma.</p>
+        <p class="rotina-dica">${kcalTxt(totalPlano.kcal)} no plano${(() => { const d = totalPlano.kcal ? distribuicao(totalPlano) : null; return d ? `; proteína ${d.proteina}%, carboidrato ${d.carbo}%, gordura ${d.gordura}% das calorias` : ""; })()}${totalPlano.incompletos ? `, ${totalPlano.incompletos} ${totalPlano.incompletos === 1 ? "alimento sem calorias informadas" : "alimentos sem calorias informadas"}` : ""}. Marque <b>Comi</b> quando fizer a refeição. Você pode editar o nome e o horário de cada uma.</p>
       </section>
       <div class="ali-hoje">
         <div class="ali-hoje-cab">
@@ -183,7 +183,7 @@ const Alimentacao = (() => {
       <header class="rotina-dia-cab"><h3>
         <button type="button" class="ali-nome-plano" ${historica ? "disabled" : `data-ali="editar-refeicao" data-refeicao="${fmt.escape(r.id)}"`} aria-label="Editar refeição ${fmt.escape(r.nome)}">${fmt.escape(r.nome)}</button>
       </h3></header>
-      <div class="ali-coluna-resumo"><span class="rotina-dia-total">${r.hora ? `${fmt.escape(r.hora)} · ` : ""}${registrada.itens.length ? t.incompletos === registrada.itens.length ? "Calorias a informar" : kcalTxt(t.kcal) : "Adicione seus alimentos"}${t.incompletos && t.incompletos < registrada.itens.length ? ` · ${t.incompletos} sem kcal` : ""}</span>
+      <div class="ali-coluna-resumo"><span class="rotina-dia-total">${r.hora ? `${fmt.escape(r.hora)}, ` : ""}${registrada.itens.length ? t.incompletos === registrada.itens.length ? "Calorias a informar" : kcalTxt(t.kcal) : "Adicione seus alimentos"}${t.incompletos && t.incompletos < registrada.itens.length ? `, ${t.incompletos} sem kcal` : ""}</span>
         <label class="ali-comi"><input type="checkbox" class="check" data-comi="${fmt.escape(r.id)}" ${comi ? "checked" : ""} ${!registrada.itens.length && !comi ? "disabled" : ""} aria-label="Comi ${fmt.escape(r.nome)} ${iso === UI.hojeISO() ? "hoje" : `em ${fmt.data(iso)}`}" /><span>${comi ? "Feita" : "Comi"}</span></label></div>
       ${comi ? `<p class="ali-registro-nota">Check salvo nesta data. Alterações no plano valem para os próximos checks.</p>` : ""}
       <ul class="ali-itens">${registrada.itens.map((i) => itemHTML(i, historica || !r.itens.some(x => x.id === i.id) ? "historico" : "plano", r.id)).join("")}</ul>
@@ -488,7 +488,7 @@ const Alimentacao = (() => {
       <div class="modal-foot">
         <span class="modal-atalho" data-resumo></span><span class="modal-foot-espaco"></span>
         <button class="btn" type="button" data-acao="fechar">${nada ? "Fechar" : "Cancelar"}</button>
-        ${nada ? "" : `<button class="btn primary" type="button" data-acao="ok">Salvar dieta</button>`}
+        ${nada ? "" : `<button class="btn primary" type="button" data-acao="ok">${plano.length ? "Substituir o plano" : "Criar o plano alimentar"}</button>`}
       </div>`, {
       classe: "formulario wide revisar-arquivo-modal",
       aoMontar(modal, fechar) {
@@ -539,6 +539,8 @@ const Alimentacao = (() => {
           if (!b) return;
           modo = b.dataset.modo;
           modal.querySelectorAll("[data-modo]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+          // O botão diz o que vai acontecer com o plano atual.
+          const ok = $('[data-acao="ok"]'); if (ok) ok.textContent = modo === "acrescentar" ? "Acrescentar ao plano" : "Substituir o plano";
         });
         $('[data-acao="fechar"]').addEventListener("click", () => fechar(null));
         $('[data-acao="ok"]')?.addEventListener("click", () => {

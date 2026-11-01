@@ -53,11 +53,6 @@
               <div class="stat-sub">Contas menos faturas em aberto</div>
             </div>
           </div>
-          <nav class="area-atalhos" aria-label="Nesta página">
-            <a href="#sec-contas">Contas</a>
-            <a href="#sec-cartoes">Cartões</a>
-            <a href="#sec-balanco">Balanço</a>
-          </nav>
           <div class="area-duas">
             <section class="section area-painel" style="margin-top:28px;" id="sec-contas">
               <div class="section-head">
@@ -74,20 +69,23 @@
               <div id="cartoes"></div>
             </section>
           </div>
-          <details class="area-detalhes" id="sec-balanco">
-            <summary>Comparar participação nos gastos</summary>
-            <div class="area-detalhes-corpo">
-              <section class="section">
-                <div class="section-head">
-                  <h2 class="section-title">Balanço</h2>
-                  <span class="card-note">participação de cada conta e cartão nos gastos</span>
-                </div>
-                <div class="card">
-                  <div id="balanco"></div>
-                </div>
-              </section>
-            </div>
-          </details>
+          <section class="area-mais" aria-labelledby="mais-titulo">
+            <h2 class="rotulo" id="mais-titulo">Mais nesta área</h2>
+            <details class="area-detalhes" id="sec-balanco">
+              <summary>Comparar participação nos gastos</summary>
+              <div class="area-detalhes-corpo">
+                <section class="section">
+                  <div class="section-head">
+                    <h2 class="section-title">Balanço</h2>
+                    <span class="card-note">participação de cada conta e cartão nos gastos</span>
+                  </div>
+                  <div class="card">
+                    <div id="balanco"></div>
+                  </div>
+                </section>
+              </div>
+            </details>
+          </section>
         </div>
       </main>
     </div>

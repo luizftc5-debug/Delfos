@@ -432,6 +432,8 @@
     document.querySelector(`[data-dia="${b.dataset.dia}"]`)?.focus();
   });
   const moverSemana = (dias) => { inicioSemana = UI.isoMaisDias(inicioSemana, dias); diaSelecionado = ""; semanaFiltrada = true; document.getElementById("agenda-periodo").value = "semana"; renderSemana(); renderAgenda(); };
+  document.getElementById("semana-anterior").innerHTML = UI.icone("esquerda");
+  document.getElementById("semana-seguinte").innerHTML = UI.icone("direita");
   document.getElementById("semana-anterior").addEventListener("click", () => moverSemana(-7));
   document.getElementById("semana-seguinte").addEventListener("click", () => moverSemana(7));
   document.getElementById("agenda-hoje").addEventListener("click", () => { inicioSemana = UI.chaveSemana(UI.hojeISO()); diaSelecionado = UI.hojeISO(); renderSemana(); renderAgenda(); });

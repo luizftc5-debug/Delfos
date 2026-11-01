@@ -53,11 +53,6 @@
               <div class="stat-sub" id="s-etapas-d"></div>
             </div>
           </div>
-          <nav class="area-atalhos" aria-label="Nesta página">
-            <a href="#sec-projetos">Seus projetos</a>
-            <a href="#sec-oportunidades">Oportunidades</a>
-            <a href="#sec-resultados">Resultados</a>
-          </nav>
           <div class="area-conteudo">
             <div class="area-principal">
               <section class="section area-painel" id="sec-projetos">
@@ -83,39 +78,42 @@
               </section>
             </aside>
           </div>
-          <details class="area-detalhes" id="sec-resultados">
-            <summary>Acompanhar resultados e recebimentos</summary>
-            <div class="area-detalhes-corpo">
-              <div class="area-analises">
-                <section class="card">
-                  <div class="card-head">
-                    <h2 class="card-title" id="titulo-renda">Recebido por projeto</h2>
-                    <span class="card-note">marca na renda estimada</span>
+          <section class="area-mais" aria-labelledby="mais-titulo">
+            <h2 class="rotulo" id="mais-titulo">Mais nesta área</h2>
+            <details class="area-detalhes" id="sec-resultados">
+              <summary>Acompanhar resultados e recebimentos</summary>
+              <div class="area-detalhes-corpo">
+                <div class="area-analises">
+                  <section class="card">
+                    <div class="card-head">
+                      <h2 class="card-title" id="titulo-renda">Recebido por projeto</h2>
+                      <span class="card-note">marca na renda estimada</span>
+                    </div>
+                    <div id="renda-projetos"></div>
+                  </section>
+                  <section class="card">
+                    <div class="card-head">
+                      <h2 class="card-title">Últimos seis meses</h2>
+                      <span class="card-note" id="meses-nota"></span>
+                    </div>
+                    <div id="renda-meses"></div>
+                  </section>
+                </div>
+              </div>
+            </details>
+            <details class="area-detalhes">
+              <summary>Ajustar metas de trabalho</summary>
+              <div class="area-detalhes-corpo">
+                <section class="section" id="sec-perguntas" hidden>
+                  <div class="section-head">
+                    <h2 class="section-title">Preferências da área</h2>
+                    <span class="card-note">Cada resposta deixa a leitura mais sua.</span>
                   </div>
-                  <div id="renda-projetos"></div>
-                </section>
-                <section class="card">
-                  <div class="card-head">
-                    <h2 class="card-title">Últimos seis meses</h2>
-                    <span class="card-note" id="meses-nota"></span>
-                  </div>
-                  <div id="renda-meses"></div>
+                  <div class="perguntas" id="perguntas"></div>
                 </section>
               </div>
-            </div>
-          </details>
-          <details class="area-detalhes">
-            <summary>Ajustar metas de trabalho</summary>
-            <div class="area-detalhes-corpo">
-              <section class="section" id="sec-perguntas" hidden>
-                <div class="section-head">
-                  <h2 class="section-title">Preferências da área</h2>
-                  <span class="card-note">Cada resposta deixa a leitura mais sua.</span>
-                </div>
-                <div class="perguntas" id="perguntas"></div>
-              </section>
-            </div>
-          </details>
+            </details>
+          </section>
         </div>
       </main>
     </div>

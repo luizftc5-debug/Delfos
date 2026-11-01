@@ -1,0 +1,196 @@
+/* ===========================================================================
+   Delfos: tokens. A única fonte de verdade de cor, tipo, espaço, raio,
+   profundidade e movimento. Nenhum outro arquivo redefine estes valores
+   (fora as variantes do perfil no fim de theme.css). Decisões em DESIGN.md.
+
+   Paleta da marca (quadro de identidade): preto #0b0b0b, carvão #1f1f1f,
+   grafite #3a3a3a, marfim #ede9e1, cinza quente #d6d1c7. Nada além dela no
+   cromo; cor só identifica área, separa entrada × saída e marca urgência.
+   =========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* ---- Marca ---- */
+  --preto: #0b0b0b;
+  --carvao: #1f1f1f;
+  --grafite: #3a3a3a;
+  --marfim: #ede9e1;
+  --cinza-quente: #d6d1c7;
+
+  /* ---- Superfícies: profundidade por tom, não por sombra ---- */
+  --fundo: #0e0e0d;          /* a página */
+  --lateral: var(--preto);   /* o plano de trás (barra lateral) */
+  --superficie: #151514;     /* o que é objeto: janela, menu, conta */
+  --superficie-2: var(--carvao); /* controle */
+  --superficie-3: #2a2a28;   /* controle pressionado, item ativo */
+  --linha: rgba(237, 233, 225, 0.09);      /* fio de 1px */
+  --linha-forte: rgba(237, 233, 225, 0.17);
+
+  /* ---- Texto: três níveis, todos AA sobre fundo e superfícies ---- */
+  --texto: var(--marfim);   /* 15:1 */
+  --texto-2: #b3aea5;       /* 7,5:1 ou mais */
+  --texto-3: #8e897f;       /* 4,7:1 ou mais */
+  --sobre-claro: var(--preto); /* texto sobre marfim (botão primário) */
+
+  /* ---- Áreas (validadas para daltonismo; ver DESIGN.md) ---- */
+  --s-pessoal: #b9719b;
+  --s-financeiro: #76a15e;
+  --s-faculdade: #508ac5;
+  --s-projetos: #c08849;
+  --s-pessoal-wash: color-mix(in srgb, var(--s-pessoal) 14%, transparent);
+  --s-financeiro-wash: color-mix(in srgb, var(--s-financeiro) 14%, transparent);
+  --s-faculdade-wash: color-mix(in srgb, var(--s-faculdade) 14%, transparent);
+  --s-projetos-wash: color-mix(in srgb, var(--s-projetos) 14%, transparent);
+
+  --serie-entrada: #508ac5;
+  --serie-saida: #c08849;
+  --serie-contexto: #4a4844;
+
+  /* ---- Estado: dessaturado, e só onde há urgência de verdade ---- */
+  --st-good: #86a877;
+  --st-warning: #c2a265;
+  --st-critical: #d4705e;
+  --st-good-wash: color-mix(in srgb, var(--st-good) 12%, transparent);
+  --st-warning-wash: color-mix(in srgb, var(--st-warning) 12%, transparent);
+  --st-critical-wash: color-mix(in srgb, var(--st-critical) 12%, transparent);
+  --success-text: #93b583;
+  --warning-text: #cfae6a;
+  --critical-text: #df7b69;
+
+  --grid: rgba(237, 233, 225, 0.06);
+  --axis: rgba(237, 233, 225, 0.16);
+  --track: rgba(237, 233, 225, 0.08);
+
+  --destaque: var(--texto);
+  --sobre-destaque: var(--sobre-claro);
+
+  /* ---- Tipografia: um par ----
+     Noto Serif Display: a voz (a mesma serifa do logotipo).
+     Jost: todo o resto (o mesmo desenho geométrico da assinatura). */
+  --font-voz: "Noto Serif Display", Georgia, "Times New Roman", serif;
+  --font: "Jost", "Futura", "Century Gothic", ui-sans-serif, sans-serif;
+  --font-display: var(--font-voz);
+
+  /* Escala: miúdos fixos para interface; do corpo para cima, razão 1,25. */
+  --t-micro: 11px;  /* rótulo em caixa alta espaçada */
+  --t-xs: 12px;     /* legenda */
+  --t-sm: 13px;     /* apoio, metadado */
+  --t-base: 15px;   /* corpo e controles */
+  --t-lead: 17px;   /* leitura, texto de destaque */
+  --t-md: 19px;     /* 15 × 1,25 */
+  --t-lg: 23px;
+  --t-xl: 29px;
+  --t-2xl: 37px;
+  --t-3xl: 46px;
+  --t-4xl: 57px;
+
+  --peso-leve: 300;
+  --peso-normal: 400;
+  --peso-medio: 500;
+  --peso-forte: 600;
+
+  --track-titulo: -0.022em;   /* serifa grande */
+  --track-display: -0.032em;  /* 37px para cima */
+  --track-rotulo: 0.12em;     /* caixa alta miúda */
+  --track-assinatura: 0.32em;
+
+  --medida: 68ch;  /* comprimento de linha do texto corrido */
+
+  /* ---- Espaço: grade de 4 ---- */
+  --e-1: 4px;
+  --e-2: 8px;
+  --e-3: 12px;
+  --e-4: 16px;
+  --e-5: 20px;
+  --e-6: 24px;
+  --e-8: 32px;
+  --e-10: 40px;
+  --e-12: 48px;
+  --e-16: 64px;
+  --e-20: 80px;
+
+  /* ---- Raio: quase reto, uma linguagem só ----
+     2 para o miúdo, 4 para controle, 6 para superfície e janela.
+     Pílula só no interruptor (é um objeto físico). */
+  --r-xs: 2px;
+  --r-sm: 4px;
+  --r-md: 4px;
+  --r-lg: 6px;
+  --r-xl: 6px;
+  --r-pilula: 999px;
+
+  /* ---- Profundidade ----
+     Nada de sombra em superfície. Só o que flutua (janela, menu, aviso)
+     tem uma sombra, tingida do preto da marca. */
+  --brilho: none;
+  --shadow: none;
+  --shadow-lift: none;
+  --shadow-pop: 0 0 0 1px var(--linha-forte), 0 24px 64px -24px rgba(0, 0, 0, 0.7);
+
+  /* ---- Foco: fio marfim afastado, nunca halo ---- */
+  --foco: 0 0 0 1px var(--fundo), 0 0 0 2.5px var(--texto);
+  --foco-cor: var(--texto);
+
+  /* ---- Movimento: uma curva, três tempos ---- */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-saida: var(--ease);
+  --ease-troca: var(--ease);
+  --ease-mola: var(--ease);
+  --dur-1: 180ms;
+  --dur-2: 280ms;
+  --dur-3: 420ms;
+
+  --sidebar-w: 248px;
+}
+
+/* O claro é o lado marfim do quadro: fundo marfim, texto preto. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --fundo: var(--marfim);
+  --lateral: #e6e1d7;
+  --superficie: #f4f1eb;
+  --superficie-2: #e2ddd3;
+  --superficie-3: var(--cinza-quente);
+  --linha: rgba(11, 11, 11, 0.1);
+  --linha-forte: rgba(11, 11, 11, 0.19);
+
+  --texto: #121211;
+  --texto-2: #46423b;
+  --texto-3: #615c54;
+  --sobre-claro: #f4f1eb;
+
+  --s-pessoal: #944d77;
+  --s-financeiro: #477b3b;
+  --s-faculdade: #32669d;
+  --s-projetos: #a06522;
+  --s-pessoal-wash: color-mix(in srgb, var(--s-pessoal) 10%, transparent);
+  --s-financeiro-wash: color-mix(in srgb, var(--s-financeiro) 10%, transparent);
+  --s-faculdade-wash: color-mix(in srgb, var(--s-faculdade) 10%, transparent);
+  --s-projetos-wash: color-mix(in srgb, var(--s-projetos) 10%, transparent);
+
+  --serie-entrada: #32669d;
+  --serie-saida: #a06522;
+  --serie-contexto: #c9c3b8;
+
+  --st-good: #477b3b;
+  --st-warning: #8d6a1c;
+  --st-critical: #af3e30;
+  --st-good-wash: color-mix(in srgb, var(--st-good) 10%, transparent);
+  --st-warning-wash: color-mix(in srgb, var(--st-warning) 11%, transparent);
+  --st-critical-wash: color-mix(in srgb, var(--st-critical) 9%, transparent);
+  --success-text: #3d6b32;
+  --warning-text: #77570f;
+  --critical-text: #a33a2d;
+
+  --grid: rgba(11, 11, 11, 0.07);
+  --axis: rgba(11, 11, 11, 0.22);
+  --track: rgba(11, 11, 11, 0.08);
+
+  --shadow-pop: 0 0 0 1px var(--linha-forte), 0 24px 64px -28px rgba(40, 34, 24, 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-1: 0.01ms; --dur-2: 0.01ms; --dur-3: 0.01ms; }
+}

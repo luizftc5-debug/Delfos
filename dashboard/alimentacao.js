@@ -14,6 +14,9 @@
 const Alimentacao = (() => {
   const { fmt } = UI;
   const CAMINHO = "pilares";
+  // A semana e o cabeçalho reutilizam os mesmos formatadores a cada check.
+  const DATA_TITULO = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+  const DATA_SEMANA = new Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "numeric" });
   const OBJETIVOS = ["", "Perder peso", "Manter o peso", "Ganhar massa muscular", "Comer melhor", "Outro"];
   const uid = (p) => Store.uid(p);
   let dieta = null; // dieta.mjs, carregado na primeira vez
@@ -101,7 +104,7 @@ const Alimentacao = (() => {
       <div class="ali-hoje">
         <div class="ali-hoje-cab">
           <div>
-            <h2 class="ali-titulo">${hoje === UI.hojeISO() ? "Hoje, " : ""}${fmt.escape(new Date(`${hoje}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }))}</h2>
+            <h2 class="ali-titulo">${hoje === UI.hojeISO() ? "Hoje, " : ""}${fmt.escape(DATA_TITULO.format(new Date(`${hoje}T12:00:00`)))}</h2>
             <p class="ali-apoio">${meta ? (resta >= 0 ? `Faltam <b>${kcalTxt(resta)}</b> para a meta do dia.` : `<span class="atencao">${kcalTxt(-resta)} acima da meta do dia.</span>`) : `Defina uma meta de calorias em <b>Objetivos e metas</b> para acompanhar o dia.`}</p>
           </div>
           <div class="ali-acoes">
@@ -221,7 +224,7 @@ const Alimentacao = (() => {
     const dias = Array.from({ length: 7 }, (_, k) => UI.isoMaisDias(k - 6));
     const linhas = dias.map((iso) => {
       const c = consumoDe(plano, doDia(diario, iso));
-      return { iso, nome: fmt.capitalizar(new Date(`${iso}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "short", day: "numeric" })), valor: Math.round(c.kcal), meta: meta || 0, acima: meta ? c.kcal > meta * 1.1 : false };
+      return { iso, nome: fmt.capitalizar(DATA_SEMANA.format(new Date(`${iso}T12:00:00`))), valor: Math.round(c.kcal), meta: meta || 0, acima: meta ? c.kcal > meta * 1.1 : false };
     });
     const comRegistro = linhas.filter((l) => l.valor > 0);
     const media = comRegistro.length ? Math.round(comRegistro.reduce((t, l) => t + l.valor, 0) / comRegistro.length) : 0;

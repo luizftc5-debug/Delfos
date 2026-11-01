@@ -541,3 +541,10 @@
   .dia-cab > .row-actions { flex: 1 1 100%; max-width: 100%; flex-wrap: wrap; justify-content: flex-start; margin-left: 0; }
   #acompanhamento-conteudo li { flex-wrap: wrap; }
 }
+
+/* A estrutura mantém seu lugar enquanto o conteúdo local é preparado. */
+[data-pagina-secoes]:not([data-organizada]) > [data-navegacao-secoes][hidden] { display: flex !important; visibility: hidden; }
+@media(max-width:900px) { .pagina-organizada .sidebar { min-height: calc(72px + env(safe-area-inset-top)); } }
+
+.pagina-pilar .topbar h1 { min-block-size: calc(var(--font-xl) * var(--line-heading) * var(--escala-fonte, 1)); }
+.pagina-pilar .topbar .sub { min-block-size: calc(var(--font-sm) * var(--line-body) * var(--escala-fonte, 1)); }

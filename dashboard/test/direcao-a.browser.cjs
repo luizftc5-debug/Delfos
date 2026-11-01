@@ -117,22 +117,23 @@ async function main() {
         const medidas = await page.evaluate(() => ({
           excesso: document.documentElement.scrollWidth - innerWidth,
           fontesUI: [...document.querySelectorAll('main h1, main h2, main p, main button, main select')].filter(e => e.getBoundingClientRect().height > 0).map(e => getComputedStyle(e).fontFamily),
-          fontePronta: document.fonts.check('16px "Source Sans 3"'),
+          fontePronta: document.fonts.check('16px "Jost"') && document.fonts.check('16px "Noto Serif Display"'),
           dias: [...document.querySelectorAll('.semana-dia')].map(e => ({ largura: e.getBoundingClientRect().width, altura: e.getBoundingClientRect().height })),
         }));
         assert.ok(medidas.excesso <= 1, `${tema}/${width}: excesso horizontal de ${medidas.excesso}px`);
-        assert.ok(medidas.fontePronta && medidas.fontesUI.every(f => f.includes('Source Sans 3')), `${tema}/${width}: fonte da interface`);
+        assert.ok(medidas.fontePronta && medidas.fontesUI.every(f => f.includes('Jost') || f.includes('Noto Serif Display')), `${tema}/${width}: fonte da interface (Jost e a voz em Noto Serif Display)`);
         assert.ok(medidas.dias.every(d => d.largura >= 44 && d.altura >= 44), `${tema}/${width}: dias precisam de alvo de toque de 44px`);
         assert.ok(await page.locator('#home-planejar').isVisible());
         await capturar(page, `home-${tema}-${width}`);
       }
     }
-    assert.ok(fontes.some(f => f.status === 200 && f.url.startsWith(base + '/vendor/source-sans-3/')), 'Fonte precisa funcionar sem serviços externos');
+    assert.ok(fontes.some(f => f.status === 200 && f.url.startsWith(base + '/vendor/jost/')), 'Fonte precisa funcionar sem serviços externos');
+    assert.ok(fontes.some(f => f.status === 200 && f.url.startsWith(base + '/vendor/noto-serif-display/')), 'A voz precisa funcionar sem serviços externos');
     console.log('OK: tema claro padrão, preferência de tema escuro, fonte local, teclado e layout de 360 a 1440px com dias tocáveis.');
 
     await page.evaluate(ids => ids.forEach(id => Store.atualizar('pessoal.compromissos', id, { concluido: true })), compromissos.slice(0, -1).map(c => c.id));
     await page.reload();
-    assert.equal(await page.locator('#home-proxima-rotulo').innerText(), 'Seu horizonte');
+    assert.equal((await page.locator('#home-proxima-rotulo').textContent()).trim(), 'Seu horizonte');
     assert.match(await page.locator('#leitura').innerText(), /Plano do próximo trimestre/);
     console.log('OK: a próxima ação também apresenta planejamento além dos próximos 30 dias.');
 

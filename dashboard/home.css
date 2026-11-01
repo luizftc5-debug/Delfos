@@ -1,9 +1,9 @@
 /* Visão geral: uma próxima ação clara, com os planos seguintes ao alcance. */
-.pagina-index .topbar h1 { font: 700 calc(var(--font-h1, 31px) * var(--escala-fonte, 1))/1.2 var(--font); letter-spacing: -.025em; }
+.pagina-index .topbar h1 { font: var(--heading-weight, 400) calc(var(--font-2xl) * var(--escala-fonte, 1))/1.1 var(--font-voz); letter-spacing: -.02em; }
 .pagina-index .topbar .sub { font-size: calc(var(--font-base, 16px) * var(--escala-fonte, 1)); min-block-size: 1.5em; }
 .pagina-index .home-contexto { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr); gap: var(--space-8, 32px); margin: var(--space-2, 8px) 0 var(--space-10, 40px); }
 .home-contexto > * { min-width: 0; }
-.home-contexto-titulo { margin: 0 0 var(--space-3, 12px); font: 600 calc(var(--font-base, 16px) * var(--escala-fonte, 1))/1.5 var(--font); color: var(--texto-2); }
+.home-contexto-titulo { margin: 0 0 var(--space-3, 12px); font: 500 calc(var(--font-small, 13px) * var(--escala-fonte, 1))/1.5 var(--font); letter-spacing: var(--track-rotulo); text-transform: uppercase; color: var(--texto-3); }
 .pagina-index .home-prioridade .leitura { max-width: 38ch; font: 400 calc(var(--font-base, 16px) * var(--escala-fonte, 1))/1.5 var(--font); }
 /* Reservas acompanham a leitura real: título, contexto e ação. Conteúdo longo
    continua livre para crescer; depois de preenchido, usa a altura natural. */
@@ -12,7 +12,7 @@
   min-block-size: calc((var(--font-lg) * 1.25 + var(--font-base) * 3) * var(--escala-fonte, 1) + var(--space-2) * 2);
 }
 .home-proxima-link { display: grid; gap: var(--space-2, 8px); color: var(--texto); text-decoration: none; min-height: 44px; }
-.home-proxima-link > strong, .home-proxima-vazio > strong { font-size: calc(var(--font-lg, 25px) * var(--escala-fonte, 1)); font-weight: 700; line-height: 1.25; letter-spacing: -.015em; overflow-wrap: anywhere; }
+.home-proxima-link > strong, .home-proxima-vazio > strong { font-family: var(--font-voz); font-size: calc(var(--font-xl, 31px) * var(--escala-fonte, 1)); font-weight: 400; line-height: 1.25; letter-spacing: -.015em; overflow-wrap: anywhere; }
 .home-proxima-contexto { color: var(--texto-2); font-size: calc(var(--font-base, 16px) * var(--escala-fonte, 1)); }
 .home-proxima-abrir { display: inline-flex; align-items: center; gap: var(--space-2, 8px); color: var(--destaque); font-size: calc(var(--font-base, 16px) * var(--escala-fonte, 1)); font-weight: 600; }
 .home-proxima-abrir .ico { width: 16px; height: 16px; }
@@ -26,7 +26,7 @@
 .pagina-index :is(#sec-agenda, #sec-notas, #sec-abas, #sec-topo) { border: 0; border-radius: 0; background: none; box-shadow: none; }
 .pagina-index :is(#sec-agenda, #sec-notas, #sec-abas, #sec-topo) > .bloco-cabecalho { padding: 0 0 var(--space-5, 20px); gap: var(--space-2, 8px) var(--space-4, 16px); }
 .pagina-index :is(#sec-agenda, #sec-notas, #sec-abas, #sec-topo) > .bloco-corpo { padding: 0; }
-.pagina-index .bloco-titulo { font: 600 calc(var(--font-h2, 20px) * var(--escala-fonte, 1))/1.4 var(--font); letter-spacing: -.01em; }
+.pagina-index .bloco-titulo { font: var(--heading-weight, 400) calc(var(--font-lg, 25px) * var(--escala-fonte, 1))/1.2 var(--font-voz); letter-spacing: -.012em; }
 .pagina-index .bloco-resumo { margin-top: var(--space-1, 4px); font-size: calc(var(--font-small, 13px) * var(--escala-fonte, 1)); line-height: 1.5; }
 .pagina-index #agenda-resumo { display: block; min-block-size: 1.5em; }
 .pagina-index .agenda-filtros { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3, 12px); flex-wrap: wrap; padding: 0 0 var(--space-4, 16px); }
@@ -39,7 +39,7 @@
 .pagina-index .semana-dias:not(:has(> button)) { min-block-size: calc((var(--space-20) + var(--space-half)) * var(--escala-fonte, 1)); }
 .pagina-index .semana-dia { min-width: 0; min-height: 76px; padding: var(--space-2, 8px) 2px; border: 1px solid transparent; border-radius: 8px; background: none; }
 .pagina-index .semana-dia > span, .pagina-index .semana-dia > small { font-size: calc(var(--font-small, 13px) * var(--escala-fonte, 1)); }
-.pagina-index .semana-dia > b { font: 600 calc(var(--font-md, 20px) * var(--escala-fonte, 1))/1.2 var(--font); font-variant-numeric: tabular-nums; }
+.pagina-index .semana-dia > b { font: 300 calc(var(--font-lg, 25px) * var(--escala-fonte, 1))/1.1 var(--font-voz); font-variant-numeric: lining-nums; }
 .pagina-index .semana-dia.hoje { color: var(--destaque); border-color: var(--linha); }
 .pagina-index .semana-dia[aria-pressed="true"] { border-color: var(--destaque); background: var(--superficie-2); }
 .pagina-index .agenda-cab { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2, 8px); margin: var(--space-4, 16px) 0 var(--space-1, 4px); padding: 0; border: 0; font: 600 calc(var(--font-base, 16px) * var(--escala-fonte, 1))/1.5 var(--font); }
@@ -59,12 +59,12 @@
 .pagina-index #pilares .ladrilho::before, .pagina-index #pilares .ladrilho::after { display: none; }
 .pagina-index .ladrilho-selo { grid-area: icone; align-self: start; width: 24px; height: 24px; margin-top: 1px; }
 .pagina-index .ladrilho-nome { grid-area: nome; font: 600 calc(var(--font-md, 20px) * var(--escala-fonte, 1))/1.4 var(--font); overflow-wrap: anywhere; }
-.pagina-index .ladrilho-valor { grid-area: valor; font: 600 calc(var(--font-lg, 25px) * var(--escala-fonte, 1))/1.3 var(--font); }
+.pagina-index .ladrilho-valor { grid-area: valor; font: 300 calc(var(--font-lg, 25px) * var(--escala-fonte, 1))/1.3 var(--font-voz); }
 .pagina-index .ladrilho-valor > small { display: block; margin-top: var(--space-1, 4px); color: var(--texto-2); font: 400 calc(var(--font-base, 16px) * var(--escala-fonte, 1))/1.5 var(--font); }
 .pagina-index .ladrilho-sub { grid-area: contexto; font: 400 calc(var(--font-small, 13px) * var(--escala-fonte, 1))/1.5 var(--font); color: var(--texto-2); overflow-wrap: anywhere; }
 .pagina-index .trio { gap: var(--space-6, 24px); margin-bottom: var(--space-8, 32px); }
 .pagina-index .trio-item { padding: 0; background: none; border: 0; border-radius: 0; }
-.pagina-index .trio-item .stat-value { font: 600 calc(var(--font-h1, 31px) * var(--escala-fonte, 1))/1.3 var(--font); }
+.pagina-index .trio-item .stat-value { font: 300 calc(var(--font-xl, 31px) * var(--escala-fonte, 1))/1.2 var(--font-voz); }
 .pagina-index .trio-item .stat-label, .pagina-index .trio-item .stat-sub { font-size: calc(var(--font-base, 16px) * var(--escala-fonte, 1)); line-height: 1.5; }
 .home-finance-acoes { display: flex; flex-wrap: wrap; gap: var(--space-4, 16px) var(--space-6, 24px); }
 

@@ -8,7 +8,7 @@
   --dh-fg: #ede9e1; /* marfim da marca */
   --dh-muted: #a8a399; /* cinza quente; 8,1:1 sobre preto (AAA) */
   --dh-font: var(--font);
-  --dh-voz: var(--font);
+  --dh-voz: var(--font-voz);
 
   position: relative;
   height: var(--dh-height, 500vh); /* = SECTION_HEIGHT no JS; mesmo valor → zero layout shift */

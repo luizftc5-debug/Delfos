@@ -4,13 +4,13 @@
 .acesso-cabecalho .portal-link { color: var(--texto-2); }
 .acesso-grade { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 464px); gap: var(--space-16); align-items: start; flex: 1; padding-block: var(--space-16); }
 .acesso-apresentacao { padding-top: var(--space-4); }
-.acesso-apresentacao h2 { max-width: 19ch; margin: 0; font: 600 var(--font-2xl)/1.2 var(--font); letter-spacing: -.02em; text-wrap: balance; }
+.acesso-apresentacao h2 { max-width: 19ch; margin: 0; font: 300 var(--font-2xl)/1.15 var(--font-voz); letter-spacing: -.02em; text-wrap: balance; }
 .acesso-apresentacao > p { max-width: 48ch; margin: var(--space-6) 0 0; color: var(--texto-2); font-size: var(--font-md); line-height: 1.5; }
 .acesso-editorial { display: grid; gap: var(--space-6); max-width: 48ch; margin: var(--space-12) 0 0; }
 .acesso-editorial dt { margin-bottom: var(--space-1); font-size: var(--font-sm); font-weight: 600; }
 .acesso-editorial dd { margin: 0; color: var(--texto-2); font-size: var(--font-sm); line-height: 1.5; }
 .acesso-cartao { min-width: 0; max-width: none; padding-left: var(--space-12); border-left: 1px solid var(--linha); }
-.acesso-cartao h1 { margin: 0; font: 600 var(--font-xl)/1.25 var(--font); letter-spacing: -.015em; }
+.acesso-cartao h1 { margin: 0; font: 400 var(--font-xl)/1.2 var(--font-voz); letter-spacing: -.015em; }
 .acesso-frase { margin: var(--space-3) 0 var(--space-6); color: var(--texto-2); font-size: var(--font-sm); line-height: 1.5; }
 .acesso-cartao .seg { width: 100%; margin-bottom: var(--space-6); padding: var(--space-1); border-color: var(--linha-forte); background: var(--superficie); }
 .acesso-cartao .seg button { flex: 1; min-height: var(--control-size); padding: var(--space-2) var(--space-3); font-size: var(--font-sm); line-height: 1.4; }

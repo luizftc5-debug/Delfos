@@ -7,11 +7,14 @@
   <meta name="theme-color" content="#f5f7f9" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400..700;1,400..600&display=swap" />
+  <link rel="preload" href="vendor/source-sans-3/source-sans-3-roman.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
   <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="paginas.css" />
+  <link rel="stylesheet" href="home.css" />
+  <link rel="stylesheet" href="agenda.css" />
 </head>
 <body class="pagina-organizada pagina-index">
   <div class="app">
@@ -21,7 +24,7 @@
       <div class="wrap" data-pagina-secoes="index">
         <header class="topbar">
           <div>
-            <h1>Hoje</h1>
+            <h1>Visão geral</h1>
             <p class="sub" id="sub-hoje">
             </p>
           </div>
@@ -35,23 +38,33 @@
           <button aria-controls="painel-dinheiro" data-secao="dinheiro" id="secao-dinheiro" role="tab" type="button">Dinheiro</button>
         </nav>
         <section aria-labelledby="secao-meu-dia" class="pagina-painel" data-painel="meu-dia" id="painel-meu-dia" role="tabpanel" tabindex="0">
+          <div class="home-contexto">
+            <section class="home-prioridade" aria-labelledby="home-proxima-rotulo">
+              <h2 class="home-contexto-titulo" id="home-proxima-rotulo">Seu próximo passo</h2>
+              <div class="leitura" id="leitura"></div>
+            </section>
+            <nav class="home-planejar" aria-label="Planejar adiante" id="home-planejar">
+              <h2 class="home-contexto-titulo">Planejar adiante</h2>
+              <ul>
+                <li data-home-area="pessoal"><a href="pessoal.html#calendario">Calendário<span>Datas e próximos meses</span></a></li>
+                <li data-home-area="pessoal"><a href="pessoal.html#rotina">Rotinas<span>Sua semana habitual</span></a></li>
+                <li data-home-area="projetos"><a href="projetos.html">Projetos<span>Etapas e planos em curso</span></a></li>
+                <li data-home-area="financeiro"><a href="financeiro.html#planejamento">Metas financeiras<span>Objetivos e próximos passos</span></a></li>
+              </ul>
+            </nav>
+          </div>
           <div class="painel-conteudo painel-dia">
-            <p class="leitura" id="leitura">
-            </p>
             <section class="pagina-bloco" id="sec-agenda">
               <header class="bloco-cabecalho">
-                <h2 class="bloco-titulo">Agenda</h2>
-                <span class="bloco-resumo sr" id="agenda-resumo">
+                <h2 class="bloco-titulo">Sua agenda</h2>
+                <span class="bloco-resumo" id="agenda-resumo">
                 </span>
                 <div class="bloco-acoes">
                   <button class="btn sm" id="btn-agenda-novo" type="button">+ Compromisso</button>
                 </div>
               </header>
               <div class="bloco-corpo">
-                <div id="agenda">
-                </div>
-                <div class="agenda-consulta">
-                <!-- Consulta da semana (3.0): depois da lista, que é o que se faz hoje. -->
+                <!-- Filtros da agenda (2.3): o período, a semana e o dia. -->
                 <div class="agenda-filtros">
                   <div class="agenda-semana">
                     <button aria-label="Semana anterior" class="btn ghost sm icon" id="semana-anterior" type="button">
@@ -71,13 +84,14 @@
                 </div>
                 <div aria-label="Filtrar a agenda por dia" class="semana-dias" id="semana-dias" role="group">
                 </div>
+                <div id="agenda">
                 </div>
-                <a class="link-gaveta" href="pessoal.html">Abrir o calendário</a>
+                <a class="link-gaveta" href="pessoal.html#calendario">Abrir o calendário completo</a>
               </div>
             </section>
             <section class="pagina-bloco" id="sec-notas">
               <header class="bloco-cabecalho">
-                <h2 class="bloco-titulo">O que o Delfos notou</h2>
+                <h2 class="bloco-titulo">O que pede atenção</h2>
                 <span class="bloco-resumo" id="notas-resumo">
                 </span>
               </header>
@@ -91,7 +105,7 @@
           </div>
         </section>
         <section aria-labelledby="secao-minhas-abas" class="pagina-painel" data-painel="minhas-abas" id="painel-minhas-abas" role="tabpanel" tabindex="0">
-          <p class="painel-descricao">Um lugar para cada parte da sua vida.</p>
+          <p class="painel-descricao">Retome uma área e continue seus planos, projetos e assuntos.</p>
           <div class="painel-conteudo">
             <section class="pagina-bloco" id="sec-abas">
               <header class="bloco-cabecalho">
@@ -146,7 +160,10 @@
                 </div>
                 <dl class="figuras" id="sec-insights">
                 </dl>
-                <a class="link-gaveta" href="financeiro.html">Abrir o Financeiro</a>
+                <div class="home-finance-acoes">
+                  <a class="link-gaveta" href="financeiro.html">Abrir o Financeiro</a>
+                  <a class="link-gaveta" href="financeiro.html#planejamento">Ver metas e planejamento</a>
+                </div>
               </div>
             </section>
           </div>
@@ -167,6 +184,7 @@
   <script src="financas.js"></script>
   <script src="lancamento.js"></script>
   <script src="leituras.js"></script>
+  <script src="plano-alimentar.js"></script>
   <script src="home.js"></script>
 </body>
 </html>

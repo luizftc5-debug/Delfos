@@ -9,8 +9,12 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400..700;1,400..600&display=swap" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;600&family=Space+Mono:wght@400;700&family=Caveat:wght@500;700&display=swap" />
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
+  <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;600&family=Space+Mono:wght@400;700&family=Caveat:wght@500;700&display=swap" />
+  <link rel="preload" href="vendor/source-sans-3/source-sans-3-roman.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
   <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="interface.css" />
   <link rel="stylesheet" href="editor.css" />
@@ -33,9 +37,13 @@
         <button class="btn ghost sm" id="btn-excluir" type="button">Excluir</button>
       </div>
       </div>
+      <div class="editor-foco-controles">
+        <button class="btn ghost" id="btn-foco-ferramentas" type="button" aria-controls="editor-barra" aria-expanded="false">Ferramentas</button>
+        <button class="btn ghost" id="btn-sair-foco" type="button">Sair do foco</button>
+      </div>
     </header>
 
-    <div class="editor-barra">
+    <div class="editor-barra" id="editor-barra">
       <div class="editor-formatacao" role="toolbar" aria-label="Formatação do texto">
       <div class="editor-grupo" role="group" aria-label="Histórico">
         <button class="editor-btn" data-cmd="undo" title="Desfazer (Ctrl+Z)" aria-label="Desfazer" data-ico="desfazer" type="button"></button>
@@ -58,8 +66,8 @@
         <button class="editor-btn" data-cmd="italic" title="Itálico (Ctrl+I)" aria-label="Itálico" type="button"><i>I</i></button>
         <button class="editor-btn" data-cmd="underline" title="Sublinhado (Ctrl+U)" aria-label="Sublinhado" type="button"><u>S</u></button>
         <button class="editor-btn" data-cmd="strikeThrough" title="Tachado" aria-label="Tachado" type="button"><s>T</s></button>
-        <button class="editor-btn" data-cmd="superscript" title="Sobrescrito (Na⁺, x²)" aria-label="Sobrescrito" type="button">x<sup>2</sup></button>
-        <button class="editor-btn" data-cmd="subscript" title="Subscrito (H₂O)" aria-label="Subscrito" type="button">x<sub>2</sub></button>
+        <button class="editor-btn" data-cmd="superscript" title="Sobrescrito (Na⁺, x²)" aria-label="Sobrescrito" type="button"><span aria-hidden="true">x<sup>2</sup></span></button>
+        <button class="editor-btn" data-cmd="subscript" title="Subscrito (H₂O)" aria-label="Subscrito" type="button"><span aria-hidden="true">x<sub>2</sub></span></button>
         <button class="editor-btn" id="btn-limpar" title="Remover formatação da seleção" aria-label="Remover formatação" data-ico="limpar" type="button"></button>
       </div>
       <div class="editor-grupo" role="group" aria-label="Cores">
@@ -103,7 +111,7 @@
         <div class="editor-sumario-titulo">Sumário</div>
         <ol id="sumario-lista"></ol>
       </aside>
-      <div class="editor-folha" id="folha">
+      <div class="editor-folha" id="folha" role="main" aria-label="Resumo">
         <input class="editor-titulo" id="titulo" placeholder="Título do resumo" aria-label="Título do resumo" />
         <div class="editor-area" id="corpo" contenteditable="true" role="textbox" aria-multiline="true"
              aria-label="Corpo do resumo" spellcheck="true"></div>

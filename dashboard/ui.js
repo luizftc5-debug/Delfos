@@ -850,17 +850,7 @@ const UI = (() => {
         </button>
       </div>`;
 
-    const principal = document.querySelector(".main");
-    if (principal) {
-      let versao = principal.querySelector(":scope > .versao-painel");
-      if (!versao) {
-        versao = document.createElement("div");
-        versao.className = "versao-painel";
-        principal.prepend(versao);
-      }
-      versao.textContent = VERSAO;
-      versao.setAttribute("aria-label", `Versão ${VERSAO}`);
-    }
+    document.querySelector(".main > .versao-painel")?.remove();
 
     document.documentElement.dataset.barra = "sim";
     aplicarEstadoBarra();
@@ -1266,8 +1256,6 @@ const UI = (() => {
     { nome: "objetivos", rotulo: "Objetivos do momento", tipo: "textarea", placeholder: "O que quer alcançar nos próximos meses." },
   ];
 
-  // "osso" é o valor guardado do padrão desde a 1.6; na tela, o acento da 3.0. "anil" saiu da lista
-  // por ficar igual ao padrão, mas quem já o escolheu continua com ele (o CSS ainda o conhece).
   const DESTAQUES = [["osso", "Azul mineral"], ["louro", "Louro"], ["cobre", "Cobre"], ["ameixa", "Ameixa"]];
 
   function linhaAjuste(titulo, texto, controle, compacta = false, embaixo = false) {
@@ -1438,8 +1426,9 @@ const UI = (() => {
 
         <div class="ajuste">
           ${linhaAjuste("Tamanho do texto", "Aumenta ou diminui as letras, sem aplicar zoom à interface.", segPref("tamanho", [["compacto", "Menor"], ["normal", "Normal"], ["grande", "Maior"]], xp.tamanho || "normal"))}
-          ${linhaAjuste("Movimento", "Luz que segue o mouse, destaques que deslizam e a entrada das páginas.", switchPref("movimento", (xp.movimento || "completo") !== "reduzido"))}
-          ${linhaAjuste("Desempenho", `Leve tira o desfoque atrás das janelas, as sombras grandes e as animações, e só baixa o Google quando você pede. Automático liga o leve sozinho em computador mais simples${aparelhoFraco() ? " (é o caso deste)" : ""}.`, segPref("desempenho", [["auto", "Automático"], ["leve", "Leve"], ["completo", "Completo"]], xp.desempenho || "auto"))}
+          ${linhaAjuste("Estilo dos títulos", "Destaque dá mais peso aos títulos; Discreto mantém a mesma família com menos contraste de peso.", segPref("voz", [["serifa", "Destaque"], ["sans", "Discreto"]], xp.voz || "serifa"))}
+          ${linhaAjuste("Movimento", "Transições da barra lateral, dos destaques e das janelas.", switchPref("movimento", (xp.movimento || "completo") !== "reduzido"))}
+          ${linhaAjuste("Desempenho", `Leve reduz o movimento e só carrega o Google quando você pede. Automático liga o leve sozinho em computador mais simples${aparelhoFraco() ? " (é o caso deste)" : ""}.`, segPref("desempenho", [["auto", "Automático"], ["leve", "Leve"], ["completo", "Completo"]], xp.desempenho || "auto"))}
         </div>
       </div>
 
@@ -1864,9 +1853,9 @@ const UI = (() => {
       { valor: "light", rotulo: "Claro" },
       { valor: "auto", rotulo: "Automático" },
     ],
-    // Sem escolha gravada, segue o sistema; o claro é a apresentação principal (3.0).
+    // A direção A abre clara; escolhas existentes e Automático continuam valendo.
     atual() {
-      try { return localStorage.getItem(tema.KEY) || "auto"; } catch { return "auto"; }
+      try { return localStorage.getItem(tema.KEY) || "light"; } catch { return "light"; }
     },
     /** O tema de fato na tela: "auto" segue o claro/escuro do sistema. */
     aplicado() {
@@ -3163,37 +3152,6 @@ const UI = (() => {
   }
 
 
-  let luzLigada = false;
-  function ligarLuz() {
-    if (luzLigada) return;
-    luzLigada = true;
-    let alvos = [];
-    let x = 0;
-    let y = 0;
-    let agendado = false;
-    const pintar = () => {
-      agendado = false;
-      alvos.forEach((el) => {
-        const r = el.getBoundingClientRect();
-        el.style.setProperty("--mx", `${Math.round(x - r.left)}px`);
-        el.style.setProperty("--my", `${Math.round(y - r.top)}px`);
-      });
-    };
-    document.addEventListener("pointermove", (e) => {
-      if (e.pointerType !== "mouse") return;
-      x = e.clientX;
-      y = e.clientY;
-      // O cartão sob o ponteiro e os que o contêm (uma faixa dentro de outra).
-      alvos = [];
-      let el = e.target instanceof Element ? e.target.closest(".card, .pillar") : null;
-      while (el && alvos.length < 3) {
-        alvos.push(el);
-        el = el.parentElement?.closest(".card, .pillar") || null;
-      }
-      if (alvos.length && !agendado) { agendado = true; requestAnimationFrame(pintar); }
-    }, { passive: true });
-  }
-
   /** Coloca um elemento sobre outro sem animar (primeira aparição). */
   function semTransicao(el, fn) {
     el.style.transition = "none";
@@ -3306,7 +3264,6 @@ const UI = (() => {
     achar(".seg").forEach(trilhoSeg);
     achar(".abas").forEach(indicadorAbas);
     if (!temPonteiro()) return;
-    ligarLuz();
     achar(".sidebar .nav").forEach(realceDeslizante);
   }
 

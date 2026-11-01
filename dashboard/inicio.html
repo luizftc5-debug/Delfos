@@ -3,16 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Delfos — espaço para o que importa</title>
-  <meta name="description" content="Organize sua rotina, seus estudos, suas finanças e seus projetos em um espaço feito para você. Conheça o Delfos." />
+  <title>Delfos — rotina e planos</title>
+  <meta name="description" content="Organize compromissos, estudos, alimentação, treinos e dinheiro. Planeje a semana, acompanhe o mês e mantenha seus projetos no Delfos." />
   <meta name="theme-color" content="#f5f7f9" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <script src="portal-tema.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400..700;1,400..600&display=swap" />
-  <link rel="stylesheet" href="theme.css" />
+  <link rel="preload" href="vendor/source-sans-3/source-sans-3-roman.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
   <link rel="stylesheet" href="portal.css" />
+  <link rel="stylesheet" href="agenda.css" />
 </head>
 <body class="portal-body">
   <a class="portal-pular" href="#principal">Pular para o conteúdo</a>
@@ -22,44 +23,49 @@
       <nav aria-label="Navegação principal" class="portal-nav">
         <a class="portal-conhecer" href="#possibilidades">Como funciona</a>
         <a href="entrar.html" data-entrar>Entrar</a>
-        <a class="btn primary" href="entrar.html?modo=criar" data-criar>Criar conta</a>
+        <a class="btn" href="entrar.html?modo=criar" data-criar>Criar conta</a>
       </nav>
     </header>
     <main id="principal">
       <section class="portal-hero" aria-labelledby="portal-titulo">
         <div class="portal-hero-texto">
-          <h1 id="portal-titulo">A prova, a consulta e o treino no mesmo dia.</h1>
-          <p class="portal-descricao">O Delfos junta compromissos, estudos, dinheiro e rotina numa agenda só. Cada coisa continua na sua área, com o próprio histórico.</p>
+          <h1 id="portal-titulo">Organize o dia.<br>Continue seus planos.</h1>
+          <p class="portal-descricao">Seus compromissos, estudos, alimentação, treinos e dinheiro no mesmo lugar. Planeje a semana, acompanhe o mês e avance nos projetos que levam mais tempo.</p>
           <div class="portal-hero-acoes">
-            <a class="btn primary portal-cta" href="entrar.html?modo=criar" data-criar>Criar conta</a>
+            <a class="btn primary portal-cta" href="index.html?local=1" data-iniciar>Usar neste aparelho</a>
             <a class="portal-link" href="entrar.html?provedor=google" data-entrar>Entrar com o Google</a>
           </div>
-          <p class="portal-local" data-local><a href="index.html?local=1">Usar sem conta, neste aparelho</a><span>Seus dados ficam só neste navegador.</span></p>
+          <p class="portal-local" data-local>Sem conta, seus registros ficam neste navegador. Exporte um backup para guardar uma cópia.</p>
+          <p class="portal-contas" data-conta-nota>As contas e o acesso pelo Google ainda não estão disponíveis neste endereço.</p>
         </div>
-        <figure class="portal-previa" aria-label="Exemplo do dia no Delfos, com dados fictícios">
+        <div class="portal-previa" role="group" aria-label="Exemplo de organização no Delfos">
+          <div class="portal-previa-topo"><span>Exemplo do seu planejamento</span></div>
           <div class="portal-previa-corpo">
-            <p class="portal-previa-titulo">Hoje <span>sexta-feira, 30 de outubro</span></p>
+            <div class="portal-previa-titulo"><h2>Hoje</h2><span>Sexta, 30 de outubro</span></div>
             <ol class="agenda-lista costura">
               <li><span class="agenda-linha"><span class="agenda-dia hoje"><b>30</b><small>hoje</small></span><span class="agenda-hora">09:00</span><span class="agenda-no" style="--marca:var(--s-faculdade)" aria-hidden="true"></span><span class="agenda-texto"><span class="t">Prova de clínica médica</span><span class="m">Faculdade</span></span></span></li>
               <li class="continua"><span class="agenda-linha"><span class="agenda-dia" aria-hidden="true"><b>30</b><small>hoje</small></span><span class="agenda-hora">12:30</span><span class="agenda-no" style="--marca:#8a6fc2" aria-hidden="true"></span><span class="agenda-texto"><span class="t">Almoço do plano</span><span class="m">Alimentação</span></span></span></li>
               <li class="continua"><span class="agenda-linha"><span class="agenda-dia" aria-hidden="true"><b>30</b><small>hoje</small></span><span class="agenda-hora">15:00</span><span class="agenda-no" style="--marca:var(--s-pessoal)" aria-hidden="true"></span><span class="agenda-texto"><span class="t">Consulta de rotina</span><span class="m">Pessoal</span></span></span></li>
               <li class="continua"><span class="agenda-linha"><span class="agenda-dia" aria-hidden="true"><b>30</b><small>hoje</small></span><span class="agenda-hora"></span><span class="agenda-no sem-hora" style="--marca:var(--s-financeiro)" aria-hidden="true"></span><span class="agenda-texto"><span class="t">Pagar a fatura do cartão</span><span class="m">Financeiro, sem horário</span></span></span></li>
             </ol>
+            
+            <div class="portal-previa-rotinas"><h3>Rotinas do dia</h3><div><span><span class="portal-check feita" aria-hidden="true">✓</span>Café da manhã</span><span><span class="portal-check" aria-hidden="true"></span>Treino A</span></div></div>
+            <div class="portal-previa-planos"><h3>Além de hoje</h3><p>Segunda: entregar o trabalho</p><p>Este mês: revisar o orçamento</p><p>Projeto: preparar a viagem</p></div>
           </div>
-          <figcaption class="portal-previa-legenda">Exemplo com dados fictícios.</figcaption>
-        </figure>
-      </section>
-      <section class="portal-possibilidades" id="possibilidades" aria-labelledby="possibilidades-titulo">
-        <h2 id="possibilidades-titulo">Uma agenda que sabe de onde cada coisa veio.</h2>
-        <div class="portal-recursos">
-          <article><h3>O dia em ordem</h3><p>Com horário primeiro, sem horário depois. A prova que mexe na semana aparece junto da consulta e do treino.</p></article>
-          <article><h3>Estudos que continuam</h3><p>Disciplinas, avaliações, quanto falta para a média e um editor de resumos sem distrações.</p></article>
-          <article><h3>Dinheiro sem planilha</h3><p>Lançamentos, contas, faturas e metas. Importe o extrato do banco e revise antes de gravar.</p></article>
+          <p class="portal-previa-legenda">Dados fictícios. Você escolhe quais áreas usar.</p>
         </div>
       </section>
-      <section class="portal-convite" aria-labelledby="convite-titulo"><h2 id="convite-titulo">Comece pelo dia de hoje.</h2><a class="btn primary portal-cta" href="entrar.html?modo=criar" data-criar>Criar conta</a></section>
+      <section class="portal-possibilidades" id="possibilidades" aria-labelledby="possibilidades-titulo">
+        <div class="portal-secao-cab"><h2 id="possibilidades-titulo">Do compromisso de hoje ao plano de longo prazo.</h2></div>
+        <div class="portal-recursos">
+          <article><h3>Planeje sua rotina</h3><p>Monte a semana, consulte o calendário do mês e registre compromissos futuros. Marque refeições e treinos sem refazer seu plano a cada dia.</p></article>
+          <article><h3>Reúna seus estudos</h3><p>Organize disciplinas, materiais e prazos. Escreva resumos no editor e exporte seus textos quando precisar.</p></article>
+          <article><h3>Acompanhe o que leva tempo</h3><p>Divida projetos em etapas, acompanhe metas financeiras e crie abas para os assuntos que fazem parte da sua vida.</p></article>
+        </div>
+      </section>
+      <section class="portal-convite" aria-labelledby="convite-titulo"><div><h2 id="convite-titulo">Escolha suas áreas. Registre seu primeiro plano.</h2><p>Você pode ajustar tudo depois.</p></div><a class="btn primary portal-cta" href="index.html?local=1" data-iniciar>Usar neste aparelho</a></section>
     </main>
-    <footer class="portal-rodape"><a class="portal-marca" href="inicio.html" aria-label="Delfos, início"><span class="portal-logotipo" aria-hidden="true"></span></a><a href="entrar.html" data-entrar>Entrar no Delfos</a></footer>
+    <footer class="portal-rodape"><a class="portal-marca" href="inicio.html" aria-label="Delfos, início"><span class="portal-logotipo" aria-hidden="true"></span></a><span>Rotina, estudos e planos.</span><a href="entrar.html" data-entrar>Entrar no Delfos</a></footer>
   </div>
   <script src="sessao.js"></script>
   <script src="portal.js"></script>

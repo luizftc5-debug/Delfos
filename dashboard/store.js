@@ -84,7 +84,7 @@ const Store = (() => {
       destaque: "osso", // osso (marfim) | louro | anil | cobre | ameixa (cor do botão principal e do que está escolhido)
       movimento: "completo", // completo | reduzido
       desempenho: "auto", // auto | leve | completo (leve: sem desfoque, sombras grandes, animações; Google só sob demanda)
-      voz: "serifa", // serifa = Gloock (a voz, como o logotipo) | sans = Funnel Sans em tudo
+      voz: "serifa", // serifa = Noto Serif Display (a voz, como o logotipo) | sans = Jost em tudo
       contadores: true, // números ao lado das abas na barra
       barraLateralRecolhida: false, // no computador, mostra só os ícones das abas
       paginaInicial: "home", // qual aba abre primeiro em cada visita

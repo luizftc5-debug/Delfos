@@ -2490,7 +2490,7 @@ a.card::before, .pillar::before {
    dentro: a agenda semana a semana e as linhas de "Em números". */
 
 .valor-ruim { color: var(--critical-text); }
-.valor-bom { color: var(--success-text); }
+.valor-bom { color: var(--texto); } /* número grande não fica verde: entrar dinheiro é o normal */
 
 
 /* Agenda: semana a semana, o dia do mês grande à esquerda — o numeral é o

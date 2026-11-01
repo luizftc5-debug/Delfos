@@ -70,3 +70,15 @@
 
   :root[data-leve="sim"] :is(.sidebar, .sidebar *, .storage-aviso), :root[data-leve="sim"] .main::before { transition: none; }
 }
+
+/* Item aberto: não é um bloco cheio, é texto pleno com um fio vertical de
+   1,5px à esquerda, a coluna do símbolo. */
+.sidebar .nav-item { position: relative; }
+.sidebar .nav-item::before {
+  content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 1.5px;
+  background: var(--texto); transform: scaleY(0); transition: transform var(--t-medio) var(--ease-saida);
+}
+.sidebar .nav-item.active, .pagina-organizada .sidebar .nav-item.active { background: transparent; color: var(--texto); }
+.sidebar .nav-item.active::before { transform: scaleY(1); }
+.sidebar .nav-item:not(.active):hover { background: transparent; color: var(--texto); }
+@media (prefers-reduced-motion: reduce) { .sidebar .nav-item::before { transition: none; } }

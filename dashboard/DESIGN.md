@@ -1,4 +1,4 @@
-# Delfos — direção A: Dia em comum
+# Delfos — direção "Coluna" sobre a estrutura "Dia em comum"
 
 A interface reúne o que a pessoa precisa fazer e mantém seus planos ao alcance.
 O dia é uma entrada para a vida organizada, sem limitar o produto ao presente:
@@ -11,7 +11,7 @@ backup e a estrutura das abas existentes devem ser preservados.
 | Arquivo | Responsabilidade |
 | --- | --- |
 | `tokens.css` | Cores semânticas, tipografia, espaçamento, raios, elevação e movimento |
-| `fonts.css` | Source Sans 3 local; arquivos e licença OFL em `vendor/source-sans-3/` |
+| `fonts.css` | Jost e Noto Serif Display locais; arquivos e licenças OFL em `vendor/jost/` e `vendor/noto-serif-display/` |
 | `base.css` | Reset, botões e seus estados, foco, visibilidade e redução de movimento |
 | `theme.css` | Componentes internos, campos, listas, janelas e estados do painel |
 | `paginas.css` | Hierarquia e composição das páginas com seções |
@@ -32,29 +32,46 @@ conflitem com a decisão atual, em vez de empilhar correções de especificidade
 
 ## Cor e tipografia
 
-O tema claro é o padrão para uma instalação sem preferência. A escolha salva e a
-opção automática continuam sendo respeitadas. Cor comunica ação, seleção, erro ou
-dados; conclusão também precisa de check ou texto.
+**Direção "Coluna" (1º/11/2026).** A paleta e a voz vêm do quadro de identidade
+(símbolo D com coluna, logotipo em serifa, "O ESSENCIAL SE REVELA."): preto
+`#0B0B0B`, carvão `#1F1F1F`, grafite `#3A3A3A`, marfim `#EDE9E1`, cinza quente
+`#D6D1C7`. Substitui o azul-marinho e o acento azul da direção A. O tema claro
+continua o padrão para uma instalação sem preferência; a escolha salva e a
+opção automática continuam respeitadas. Cor comunica ação, seleção, erro ou
+dados; conclusão também precisa de check ou texto. Não há acento colorido no
+cromo: a ação primária é preto no claro e marfim no escuro.
 
-| Papel | Claro | Escuro |
+| Papel | Claro (lado marfim) | Escuro (lado preto) |
 | --- | --- | --- |
-| Fundo e superfície principal | `#F5F7F9` | `#17212B` |
-| Texto principal | `#17212B` | `#F5F7F9` |
-| Texto secundário | `#526170` | `#A5B4C2` |
-| Limite de controle | `#7F8D9B` | `#7B8E9E` |
-| Acento e foco | `#22589C` | `#9CC4F5` |
-| Atenção e erro | `#9C3446` | `#F1ADB7` |
+| Fundo e superfície principal | `#EDE9E1` | `#0E0E0D` |
+| Barra lateral | `#E6E1D7` | `#0B0B0B` |
+| Texto principal | `#121211` | `#EDE9E1` |
+| Texto secundário | `#46423B` | `#B3AEA5` |
+| Texto terciário | `#615C54` | `#8E897F` |
+| Limite de controle (3:1) | `#857F73` | `#6F6A61` |
+| Ação e foco | `#121211` | `#EDE9E1` |
+| Atenção e erro | `#A33A2D` | `#DF7B69` |
 
-`--linha` separa conteúdo discretamente; `--linha-forte` identifica controles.
-`--superficie-2` e `--superficie-3` são misturas da base com o acento, sem uma
-segunda paleta. Cores de áreas e séries de gráficos mantêm função informativa.
+`--superficie-2` e `--superficie-3` são misturas da base com o texto (5% e 10%
+no claro, 6% e 11% no escuro), sem segunda paleta. Cores de áreas e séries
+mantêm função informativa; a Faculdade usa uma ardósia acinzentada
+(`#4F6478` / `#8FA3B5`) para não reintroduzir azul no painel.
 
-Source Sans 3 é a família da interface, inclusive títulos. A escala central é
-13, 16, 20, 25, 31, 39 e 49 px. Texto e controles partem de 16 px; contexto breve
-pode usar 13 px; páginas usam 31 px. Pesos 400, 600 e 700 estabelecem hierarquia.
-O controle de tamanho aplica `--escala-fonte` ao texto, sem ampliar o layout com
-`zoom`. A preferência de títulos usa Destaque ou Discreto; chaves antigas de
-preferência permanecem compatíveis.
+Um par de famílias, ambas locais em `fonts.css` (SIL OFL, licenças em
+`vendor/jost/` e `vendor/noto-serif-display/`):
+
+- **Noto Serif Display** é a voz, a mesma serifa do logotipo: título da página,
+  títulos de seção e de bloco, a próxima ação, números grandes, dias da agenda.
+  Peso 300 em números e títulos grandes, 400 nos demais (`--heading-weight`).
+- **Jost** é todo o resto: texto, controles, rótulos, tabelas. É o desenho
+  geométrico da assinatura do quadro. Rótulo de grupo ("Precisa da sua
+  atenção", "Planejar adiante", grupos de ajustes) em 13 px, peso 500, caixa
+  alta com `--track-rotulo` (0,12em); nunca acima de todo título.
+
+A escala central é 13, 16, 20, 25, 31, 39 e 49 px (razão 1,25). Texto e
+controles partem de 16 px; contexto breve pode usar 13 px; páginas usam 39 px
+na voz. O controle de tamanho aplica `--escala-fonte` ao texto, sem `zoom`. A
+preferência de títulos Discreto (`data-voz="sans"`) troca a voz pela Jost.
 
 Texto de leitura usa `--reading-width: 68ch`, entrelinha de 1,5–1,6 e quebra que
 respeite o sentido. Valores, horários e séries comparáveis usam números tabulares.
@@ -66,8 +83,10 @@ Um título não isola uma palavra em outra cor ou família para parecer especial
   16 px no celular, conforme o espaço disponível.
 - Espaçamento em passos de 4 px: tokens de 4 até 96 px. Assuntos diferentes
   recebem mais espaço que título, contexto e ação do mesmo assunto.
-- Raios de 4 px para detalhes, 8 px para controles, 12–16 px para objetos e
-  janelas maiores. Uma seção não precisa de caixa para existir.
+- Raio quase reto, uma linguagem só: 2 px para detalhes, 4 px para controles e
+  filtros, 6 px para objetos e janelas. Pílula só no interruptor. Uma seção não
+  precisa de caixa para existir; a faixa de números do alto é uma razão aberta
+  entre um fio forte e um fio, sem moldura nem fundo.
 - Listas e seções não têm elevação. A sombra `--shadow-pop` pertence a camadas
   sobrepostas; não deve ser repetida sob cada bloco de conteúdo.
 - Cabeçalho identifica a página. Ação global fica nele; ação de uma tarefa fica
@@ -94,7 +113,9 @@ data. A rotina semanal de outras áreas continua independente desse histórico.
 
 ## Navegação e movimento
 
-No computador, a barra tem 236 px aberta e 76 px recolhida. Marca e perfil ficam
+No computador, a barra tem 236 px aberta e 76 px recolhida. O item aberto não é
+um bloco cheio: é texto pleno com um fio vertical de 1,5 px à esquerda, a coluna
+do símbolo. Marca e perfil ficam
 fixos; apenas a lista de abas rola. Recolhida, mostra D, ícones e foto ou iniciais
 do perfil, com nomes acessíveis. Não há seta ocupando o estado compacto.
 
@@ -104,8 +125,8 @@ aproximação não altera a preferência salva. A transição acompanha largura,
 identificação e conteúdo sem saltar a posição vertical dos ícones. No celular,
 a navegação inferior e os caminhos por toque continuam disponíveis.
 
-Tokens de movimento: 160 ms para resposta breve, 280 ms para troca e 460 ms para
-movimentos maiores, com `--ease-saida`. Movimento responde à ação e esclarece o
+Tokens de movimento: 180 ms para resposta breve, 280 ms para troca e 420 ms para
+movimentos maiores, uma curva só (`--ease-saida`), sem mola. Movimento responde à ação e esclarece o
 que mudou. Teclado, gravação e foco não dependem de uma animação. Respeitar
 `prefers-reduced-motion`, preferência de movimento e modo leve.
 

@@ -1273,6 +1273,16 @@ paleta preto `#0B0B0B`, carvão `#1F1F1F`, grafite `#3A3A3A`, marfim `#EDE9E1`, 
 
 ### Direção visual
 
+**Atual: direção "Coluna" (1º/11/2026), sobre a estrutura "Dia em comum" da direção A.**
+A fonte de verdade é `dashboard/DESIGN.md`; o que vem abaixo desta nota é histórico. Em resumo:
+paleta do quadro de identidade (preto `#0b0b0b`, carvão, grafite, marfim `#ede9e1`, cinza quente),
+sem acento azul; claro = lado marfim (padrão), escuro = lado preto; um par de fontes locais
+(`fonts.css`): **Noto Serif Display** na voz (títulos, próxima ação, números grandes) e **Jost** no
+resto; raio 2/4/6; faixa de números como razão aberta entre fios; item aberto da barra com um fio
+vertical (a coluna); ícones Phosphor Light mais seis próprios (`PROPRIOS` em `ui.js`: templo,
+pessoal, financeiro, faculdade, projetos, grade). A marca (símbolo D com coluna e logotipo) é a
+traçada do quadro, em `SIMBOLO`/`LOGOTIPO_ELFOS`. Todos os valores moram em `dashboard/tokens.css`.
+
 **"Marfim" (v1.8; marca e voz trocadas na 2.2)**: o detalhe completo, com a marca, tokens, paleta validada e proibições, está em
 `dashboard/DESIGN.md`, a referência a consultar antes de mexer em qualquer coisa visual.
 

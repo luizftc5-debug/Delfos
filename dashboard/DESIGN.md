@@ -1,246 +1,164 @@
-# Delfos 2.4 alpha
+# Delfos — direção A: Dia em comum
 
-O essencial se revela. A interface deve ajudar a pessoa a reconhecer onde está,
-encontrar o próximo passo e voltar ao trabalho sem atravessar configurações.
-A identidade continua no símbolo, no logotipo, na serifa e nos neutros quentes.
+A interface reúne o que a pessoa precisa fazer e mantém seus planos ao alcance.
+O dia é uma entrada para a vida organizada, sem limitar o produto ao presente:
+calendário, rotina semanal, próximos meses, projetos e metas continuam disponíveis.
+Esta direção altera a apresentação; registros, anexos, preferências, formatos de
+backup e a estrutura das abas existentes devem ser preservados.
 
-## Organização da informação
+## Proprietários do sistema
 
-O primeiro passo do criador reúne uma aba livre, seis modelos essenciais e 32
-modelos específicos. Busca e filtro de categoria precedem os grupos recolhidos;
-a busca abre os grupos que contêm resultados. A seleção atual permanece indicada
-mesmo quando o filtro muda. Setas e Home/End percorrem apenas as escolhas visíveis.
+| Arquivo | Responsabilidade |
+| --- | --- |
+| `tokens.css` | Cores semânticas, tipografia, espaçamento, raios, elevação e movimento |
+| `fonts.css` | Source Sans 3 local; arquivos e licença OFL em `vendor/source-sans-3/` |
+| `base.css` | Reset, botões e seus estados, foco, visibilidade e redução de movimento |
+| `theme.css` | Componentes internos, campos, listas, janelas e estados do painel |
+| `paginas.css` | Hierarquia e composição das páginas com seções |
+| `sidebar.css` | Barra lateral, estado compacto e transição |
+| `home.css` | Visão geral, próxima ação e acessos a planejamento |
+| `editor.css` | Área de escrita, ferramentas, foco e rodapé do editor |
+| `portal.css` e `acesso.css` | Entrada pública e acesso à conta |
+| `configuracoes.css` e `criador.css` | Configurações e criação de abas |
 
-`modelos-abas.js` é um catálogo local com estruturas explícitas para cada tema.
-O criador aplica essa estrutura diretamente, preservando-a quando o nome muda.
-Cada chamada retorna uma cópia, e a aba registra seu `modeloOrigem` para referência.
-Os modelos passam pelo mesmo saneamento do criador, com até oito campos e vistas
-compatíveis com agenda e marcação por dia. Não há metas numéricas predefinidas
-nem registros adicionados sem escolha; a geração por IA continua opcional.
-Estudos e Planejamento semanal são pontos de partida gerais; Saúde e cuidados e
-Casa e manutenção reaproveitam as estruturas existentes. Abas criadas anteriormente
-não são migradas quando o catálogo muda.
+As páginas carregam fontes, tokens e `base.css` antes dos componentes. A entrada
+pública usa essa base leve, sem carregar os componentes internos de `theme.css`.
+O acesso à conta conserva `theme.css` para a janela do código de recuperação e
+os avisos de seus fluxos. Novos componentes
+consomem esses tokens; não devem criar outra paleta ou redefinir o mesmo componente
+em arquivos de página. Medidas específicas de um recurso ficam no proprietário
+desse recurso, com nomes que expliquem seu propósito. Remover regras antigas que
+conflitem com a decisão atual, em vez de empilhar correções de especificidade.
 
-A navegação tem dois níveis com funções distintas:
+## Cor e tipografia
 
-- A barra lateral escolhe uma área da vida: Pessoal, Faculdade, Trabalho ou uma aba própria.
-- As seções da página escolhem uma tarefa: estudar, registrar, consultar resultados ou ajustar.
+O tema claro é o padrão para uma instalação sem preferência. A escolha salva e a
+opção automática continuam sendo respeitadas. Cor comunica ação, seleção, erro ou
+dados; conclusão também precisa de check ou texto.
 
-No computador, a barra lateral ocupa a altura da janela. Marca e perfil ficam fora
-da região rolável: só a lista de abas e suas ações rolam quando falta espaço.
-O perfil permanece no canto inferior esquerdo, inclusive com muitas abas, fonte
-maior e páginas longas. Atualizar o layout preserva a posição da lista.
+| Papel | Claro | Escuro |
+| --- | --- | --- |
+| Fundo e superfície principal | `#F5F7F9` | `#17212B` |
+| Texto principal | `#17212B` | `#F5F7F9` |
+| Texto secundário | `#526170` | `#A5B4C2` |
+| Limite de controle | `#7F8D9B` | `#7B8E9E` |
+| Acento e foco | `#22589C` | `#9CC4F5` |
+| Atenção e erro | `#9C3446` | `#F1ADB7` |
 
-A entrada pública fica em `inicio.html`, também acessível pela raiz do site;
-`index.html` do dashboard continua sendo o painel pessoal. A apresentação usa
-os desenhos existentes da marca e as mesmas fontes e cores, com acessos claros
-para entrar e criar conta. Quem já usa dados locais mantém uma alternativa de
-acesso enquanto as contas remotas não estiverem configuradas.
+`--linha` separa conteúdo discretamente; `--linha-forte` identifica controles.
+`--superficie-2` e `--superficie-3` são misturas da base com o acento, sem uma
+segunda paleta. Cores de áreas e séries de gráficos mantêm função informativa.
 
-A entrada com Google usa o botão oficial de identidade, separado das permissões
-de Agenda e Drive. A disponibilidade vem do servidor; uma interface sem servidor
-informa isso e não simula autenticação. Vincular um e-mail que já tem conta exige
-a senha atual do Delfos, conservando o identificador e os dados dessa conta.
+Source Sans 3 é a família da interface, inclusive títulos. A escala central é
+13, 16, 20, 25, 31, 39 e 49 px. Texto e controles partem de 16 px; contexto breve
+pode usar 13 px; páginas usam 31 px. Pesos 400, 600 e 700 estabelecem hierarquia.
+O controle de tamanho aplica `--escala-fonte` ao texto, sem ampliar o layout com
+`zoom`. A preferência de títulos usa Destaque ou Discreto; chaves antigas de
+preferência permanecem compatíveis.
 
-No computador, o controle ao lado da marca recolhe a barra para uma faixa de
-ícones das abas ativas. O símbolo D substitui o logotipo completo e o perfil
-mostra apenas a foto ou as iniciais. Nomes acessíveis e dicas de cada ícone
-continuam disponíveis; expandir devolve nomes, contadores e ações da barra.
-A faixa recolhida não mostra seta: aproximar o mouse revela a barra, que fica
-aberta até a seta de recolher ser acionada. Depois disso, o mouse precisa sair
-e se aproximar de novo para abri-la. O foco por teclado também revela a navegação.
-A aproximação não grava preferências; a escolha de recolher acompanha o backup.
-A largura, os ícones e a identificação do perfil acompanham a transição da barra;
-o nome da marca e o D se alternam suavemente. O conteúdo ocupa o espaço liberado
-durante o movimento. Modo leve e redução de movimento mantêm a resposta imediata.
-A retração preserva os espaçamentos verticais dos ícones para evitar saltos nos atalhos.
-No celular, a marca e a navegação inferior mantêm a composição existente,
-independentemente dessa escolha.
+Texto de leitura usa `--reading-width: 68ch`, entrelinha de 1,5–1,6 e quebra que
+respeite o sentido. Valores, horários e séries comparáveis usam números tabulares.
+Um título não isola uma palavra em outra cor ou família para parecer especial.
 
-Cada página abre na tarefa principal. Apenas uma seção aparece por vez. Registros,
-gráficos, perguntas e configurações não devem disputar a mesma sequência vertical.
-Os painéis ficam no DOM para preservar filtros e componentes enquanto a pessoa navega.
+## Composição e componentes
 
-| Página | Primeira seção | Outras tarefas |
-|---|---|---|
-| Visão geral | Meu dia: agenda e avisos | Minhas abas; Dinheiro |
-| Pessoal | Calendário | Compromissos; Visão geral |
-| Faculdade | Disciplinas | Prazos e agenda; Desempenho; Conexões |
-| Disciplina | Resumos | Avaliações; Prazos; Materiais; Plano e aulas |
-| Projetos | Projetos | Oportunidades; Resultados |
-| Projeto | Etapas | Financeiro; Anotações; Documentos; Detalhes |
-| Financeiro | Movimentações | A pagar; Planejamento; Análises; Conexões e ajustes |
-| Contas e cartões | Contas | Cartões; Balanço |
-| Conta/cartão | Movimentações | Saldo e análise |
-| Investimentos | Carteira | Distribuição |
-| Aba própria | Registros | Visão geral; Ajustes |
-| Academia | Treinos | Evolução; Ajustes |
+- Conteúdo até `--content-width: 1200px`; margens de 32 px no computador e
+  16 px no celular, conforme o espaço disponível.
+- Espaçamento em passos de 4 px: tokens de 4 até 96 px. Assuntos diferentes
+  recebem mais espaço que título, contexto e ação do mesmo assunto.
+- Raios de 4 px para detalhes, 8 px para controles, 12–16 px para objetos e
+  janelas maiores. Uma seção não precisa de caixa para existir.
+- Listas e seções não têm elevação. A sombra `--shadow-pop` pertence a camadas
+  sobrepostas; não deve ser repetida sob cada bloco de conteúdo.
+- Cabeçalho identifica a página. Ação global fica nele; ação de uma tarefa fica
+  junto da respectiva seção. Rótulos dizem o resultado: Criar resumo, Salvar
+  alterações, Adicionar refeição.
+- Listas priorizam alinhamento e espaço. Cards representam objetos que abrem
+  contexto próprio, como disciplinas e projetos. Evitar caixas dentro de caixas.
+- Uma seção por vez conserva o contexto. Abas usam `tablist`, `tab` e `tabpanel`,
+  IDs únicos, seleção anunciada e navegação por setas, Home e End.
+- Estado vazio explica a próxima ação e oferece um convite claro. Busca sem
+  resultados conserva seus controles e permite limpar filtros. Erro informa o
+  que falhou e como tentar de novo, sem simular sucesso.
 
-A ordem segue frequência de uso, proximidade entre conteúdo e controle e revelação
-progressiva de opções. Os rótulos descrevem tarefas reconhecíveis, sem exigir que a pessoa
-saiba como o código ou o modelo de dados estão organizados.
+A Visão geral conserva Meu dia, Minhas abas e Dinheiro. A próxima ação reduz a
+repetição de informações; Planejar adiante leva a calendário, rotinas, projetos e
+metas das áreas ativas. Semana e próximos 30 dias são consultas, sem substituir o
+calendário completo ou os planos de longo prazo.
 
-## Resumos nas abas
+Cada aba própria mantém Registros, Visão geral e Ajustes e as vistas compatíveis
+com seus campos. A apresentação depende do esquema, não apenas do nome da aba.
+Abrir uma tela ou mudar sua aparência não migra dados nem inventa registros.
+O plano alimentar conserva refeições, alimentos, calorias e checks separados por
+data. A rotina semanal de outras áreas continua independente desse histórico.
 
-O mesmo editor pode ser usado em qualquer aba. Resumos aparece por padrão nas
-disciplinas, na Faculdade, em Projetos e em modelos de estudo e trabalho. Nas
-abas próprias, a recomendação usa o modelo e os campos de assunto, matéria ou
-contexto; renomear uma aba não muda seu comportamento. Escola e cursinho podem
-usar a estrutura de Estudos ou Concursos e vestibulares. As demais abas oferecem
-Adicionar editor de resumos no cabeçalho ou em Ajustes. Ocultar a seção preserva
-todos os textos e permite reativá-la depois.
+## Navegação e movimento
 
-Disciplinas mantêm sua coleção original. Abas próprias, projetos, contas e cartões
-guardam os resumos no próprio registro; abas fixas usam cadernos com identidade
-estável. O editor volta para o contexto de origem, conserva o salvamento automático
-e mantém textos, imagens e preferências da folha no backup e na sincronização.
-Excluir uma aba ou registro que contém resumos informa que seus textos também
-serão apagados.
+No computador, a barra tem 236 px aberta e 76 px recolhida. Marca e perfil ficam
+fixos; apenas a lista de abas rola. Recolhida, mostra D, ícones e foto ou iniciais
+do perfil, com nomes acessíveis. Não há seta ocupando o estado compacto.
 
-## Composição
+A aproximação do mouse ou o foco por teclado expande a barra. A seta a recolhe;
+depois disso o mouse precisa sair antes de uma nova aproximação. A expansão por
+aproximação não altera a preferência salva. A transição acompanha largura,
+identificação e conteúdo sem saltar a posição vertical dos ícones. No celular,
+a navegação inferior e os caminhos por toque continuam disponíveis.
 
-O tamanho de texto é um fator de tipografia (`--escala-fonte`), aplicado nas
-declarações de fonte do dashboard. Não usar `zoom`, transformações ou medidas de
-layout para essa preferência. Densidade deixou de ser um controle da interface;
-valores antigos em backups não alteram o layout.
+Tokens de movimento: 160 ms para resposta breve, 280 ms para troca e 460 ms para
+movimentos maiores, com `--ease-saida`. Movimento responde à ação e esclarece o
+que mudou. Teclado, gravação e foco não dependem de uma animação. Respeitar
+`prefers-reduced-motion`, preferência de movimento e modo leve.
 
-O plano de ensino é opcional no cadastro. A leitura de PDF/DOCX/PPTX roda localmente;
-DOCX e PPTX extraem apenas XML de texto em worker, com limites de tamanho e tempo.
-A revisão separa assuntos, aulas, avaliações e entregas e conserva o trecho de origem.
-Só a confirmação grava anexos e agenda. Aulas recorrentes exigem um período explícito;
-faltas de informação ficam para revisão. As importações não executam conteúdo do documento.
-Uma gravação do Store reúne todos os registros, com identidade de origem para recuperar
-falhas e preservar edições ao reimportar. Os anexos usam o sistema existente de backup e nuvem.
+## Editor e exceções explícitas
 
-O cabeçalho identifica a página. A ação global aparece ali quando serve em todas as seções.
-Ações específicas pertencem ao conteúdo: criar resumo na seção Resumos, avaliação em
-Avaliações, cartão em Cartões e recebimento no financeiro de um projeto.
+O editor prioriza o documento: cabeçalho compacto, uma faixa de ferramentas com
+rolagem própria e título centralizado. O modo foco mantém Ferramentas e Sair do
+foco acessíveis por toque e teclado. O rodapé fica fixo, reserva seu espaço e
+respeita a área segura: mínimo de 44 px no computador e 46 px no celular, com a
+marca e a frase exata **Seu editor sem distrações**.
 
-Cada bloco tem título à esquerda, resumo abaixo e ações à direita. Não há puxador de gaveta
-na navegação principal. Listas usam linhas e espaçamento; cartões são reservados a objetos
-que abrem um contexto próprio, como disciplinas e projetos. Evitar caixas dentro de caixas.
+Impressão e exportação usam papel branco, título principal maior e centralizado,
+apenas o resumo, sem data de exportação, URL, título extra ou rodapé da interface.
+Formatação, tabelas, imagens e fontes escolhidas para o documento permanecem
+disponíveis. As fontes do conteúdo e dos símbolos são exceções à família única
+da interface; o tema não deve sobrescrever uma escolha do autor.
 
-Indicadores são uma faixa de consulta, sem quatro cartões decorativos iguais. Eles ficam
-nas seções de desempenho, resultados e resumo, sem empurrar o trabalho principal para baixo.
-A visão financeira mantém a faixa do mês junto das movimentações, onde os valores ajudam
-a interpretar o extrato. A agenda do dia pode usar uma coluna secundária de avisos no desktop.
+O editor pode ser adicionado a qualquer aba. É recomendado por padrão em estudo
+e trabalho; ocultar a seção preserva os textos. O retorno do editor conserva o
+contexto de origem e o salvamento automático continua visível.
 
-Nas abas próprias, Registros, Visão geral e Ajustes permanecem no topo. Os registros
-usam uma composição aberta: ação de criar junto do título da tarefa, busca e exibição
-em uma faixa e filtros secundários recolhidos. Uma coleção vazia apresenta um único
-convite de criação; uma busca sem resultados mantém os controles e oferece limpar filtros.
+A abertura cinematográfica da raiz, com notebook e D metálico, foi integrada
+separadamente e é uma exceção deliberada à contenção de efeitos no aplicativo.
+Seu movimento guiado pela rolagem, assets e geometria devem ser preservados.
+Isso não autoriza novos brilhos, gradientes ou animações decorativas no painel.
+Também são preservados o desenho vetorial da marca e as cores de dados escolhidas
+pelo usuário.
 
-A composição depende do esquema da aba, nunca de seu nome. Hábitos com período do dia
-ficam em grupos verticais, com marcação de hoje sempre visível; histórico fica em Visão
-geral e na apresentação detalhada. Leituras mostram primeiro os livros em andamento,
-sem inventar porcentagens a partir da quantidade total de páginas. Trabalho reúne
-prioridade, contexto e prazo; um quadro escolhido continua sendo quadro. Agrupamentos
-personalizados e valores desconhecidos continuam visíveis. Abas de outros esquemas
-usam o renderizador geral. Compacta e Detalhada conservam os valores salvos lista/cartoes;
-quadro, tabela e calendário permanecem disponíveis onde compatíveis.
+## Acessibilidade e qualidade
 
-Visão geral concentra indicadores e histórico; Ajustes separa Conteúdo e Apresentação,
-com exclusão no final. Abrir uma aba não altera seus campos, registros ou preferências.
+- Controles acionáveis com área mínima de 44 × 44 px; campos legíveis em telefone.
+- Foco visível, nomes acessíveis e alternativas a ações reveladas por hover.
+- Contraste AA para texto e estados, sem informação transmitida somente por cor.
+- Janelas contêm o foco, fecham com Escape e devolvem o foco à origem.
+- Painéis ocultos usam `hidden`; controles invisíveis não recebem foco.
+- Verificar 360 a 1440 px e além, teclado, toque, áreas seguras e texto ampliado.
+  Faixas de ferramentas e tabelas podem rolar localmente; o documento não vaza.
+- Fonte local com `font-display: swap`; carregamento sob demanda para recursos
+  pesados. Não remover efeitos ou funcionalidades preservados para obter uma nota.
 
-## Criação de abas
+Antes de entregar, testar persistência e backup, criação de abas, formulários,
+checks diários, planejamento futuro e exportação. Capturar desktop e celular nos
+dois temas; revisar a hierarquia, alinhamentos e interferências de CSS antigo.
+Medir desempenho e acessibilidade, informando os resultados reais.
 
-O criador tem três etapas e apenas um assunto visível por vez:
+## O que evitar
 
-1. Escolher: modelos com ícone, nome e uma linha explicando o uso; Aba livre é uma opção clara.
-2. Dar nome: nome e escolha explícita entre composição manual e IA local. O propósito é obrigatório para gerar.
-3. Revisar: prévia da estrutura antes de gravar. Campos, vista, agenda, metas e aparência são
-   ajustes opcionais, em grupos fechados. Campos próprios podem ser acrescentados nesta etapa.
+Não reintroduzir bege com serifa de alto contraste, preto com acento ácido,
+gradientes decorativos, vidro, blobs, luz que segue o mouse ou sombras em tudo.
+Evitar famílias adicionais na interface, etiquetas em caixa alta espaçada,
+índices 01/02 sem sequência real, metadados decorativos com bolinhas, palavras
+isoladas em cor especial e setas sem função no fim de botões.
 
-A prévia mostra a estrutura, sem fingir que há registros reais. Exemplos só viram dados após
-seleção explícita. Ações de voltar, continuar e criar permanecem no rodapé da janela; apenas
-seu corpo rola. A etapa atual fica visível. Personalizar uma aba usa as etapas de identidade
-e revisão, preservando registros e campos existentes.
-
-Uma interpretação nova do propósito não apaga escolhas manuais: a pessoa decide se aplica
-a sugestão. Falha de armazenamento mantém o formulário disponível e permite tentar novamente
-com o mesmo identificador, sem criar cópias da aba.
-
-O criador explica primeiro a intenção: “Conte o que você precisa. O Delfos prepara uma
-página para a sua rotina.” Conte se refere à escrita, sem captação de voz. O primeiro
-preparo e download são informados antes de gerar; Como funciona contém os requisitos e
-detalhes técnicos. Falhas mostram a próxima ação e conservam a alternativa manual.
-
-## Identidade visual
-
-- Símbolo: D com coluna; usar os vetores existentes, sem redesenhar a marca.
-- Marca completa: `UI.logotipo()` compõe o símbolo D como inicial e os vetores de elfos,
-  sem outro D ao lado. Entrada e boas-vindas usam a mesma composição estática.
-- Versão: linha discreta no alto à direita da região principal, fora do link da marca,
-  no fluxo da página para não cobrir ações, inclusive no celular.
-- Tipografia de marca: Gloock/Georgia nos nomes de página e momentos de orientação.
-- Dados, campos, botões e títulos internos: Funnel Sans/system-ui.
-- Paleta: preto `#0b0b0b`, carvão `#1f1f1f`, grafite `#3a3a3a`, marfim `#ede9e1`, cinza quente
-  `#d6d1c7`. O tema claro usa superfícies quentes com texto escuro.
-- A prévia no criador usa marfim para separar o exemplo da área de configuração.
-- Cor identifica uma área ou comunica dados e estados. Não usar decoração colorida em cada caixa.
-- Ícones de navegação são monocromáticos, sem fundos ou medalhões. Sempre acompanhados de texto.
-- Rolagem: controles nativos com os neutros do contêiner, trilho discreto e polegar
-  arredondado. O sistema pode ocultar as barras; não substituir a rolagem por JavaScript.
-
-## Movimento
-
-As respostas à ação usam os tempos e curvas existentes: entrada do painel selecionado,
-indicador único de seção, confirmação da marcação diária e atualização de filtros.
-Novos efeitos usam opacidade e transformação; busca responde sem animação a cada tecla.
-Efeitos anteriores são cancelados em trocas rápidas. Gravação e foco não dependem da
-animação. `UI.animar` aplica a mesma política de redução do sistema, perfil e modo leve;
-nessas condições o resultado aparece imediatamente. Não há efeitos contínuos novos.
-
-## Acessibilidade e adaptação
-
-- Abas com `tablist`, `tab` e `tabpanel`, relações por IDs únicos, seleção anunciada e foco visível.
-- Setas esquerda/direita, Home e End mudam as seções; Voltar/Avançar do navegador funcionam.
-- Links anteriores, como `#metas` e `#lista`, abrem a seção que contém o destino.
-- Painéis ocultos usam `hidden`: seus controles saem da navegação por teclado e da árvore acessível.
-- Modelos usam grupo de escolha única, com nome e descrição acessíveis, navegável com setas.
-- Nome vazio recebe erro próximo ao campo, com `aria-invalid`, mensagem e retorno do foco.
-- Janelas mantêm o foco dentro delas, Escape fecha e o foco volta ao controle de origem.
-- No celular, seções podem rolar horizontalmente dentro da navegação; o documento não deve vazar.
-  Os blocos passam para uma coluna. O criador mantém o rodapé visível em 320 px de largura.
-- Respeitar redução de movimento e modo leve. Movimento não transmite informação essencial.
-
-## Implementação e verificação
-
-`theme.css` mantém os componentes base. `paginas.css` define a composição das páginas e
-`paginas.js` controla as seções. `criador.css` e `abas.js` chegam sob demanda ao abrir o criador.
-Não há framework novo nem API de inferência. O modelo aberto roda em um worker WebGPU, carregado sob demanda.
-
-O teste `test/organizacao.browser.py` percorre páginas e seções nos temas claro e escuro,
-em desktop, tablet e celular. Verifica links antigos, teclado, visualizações dos registros,
-sete modelos, campos próprios, edição sem perda de registros e repetição após falha de gravação.
-O teste separado do editor cobre salvamento automático, símbolos, conflitos e recuperação.
-
-O editor mantém o cabeçalho e a formatação compactos. No celular, as ferramentas
-rolam em sua própria faixa; abrir a busca não empilha os grupos. O rodapé com a
-marca e a assinatura fica fixo em uma faixa discreta, com espaço reservado abaixo
-do documento e respeito à área segura do aparelho. O título é centralizado.
-O rodapé reserva 44 px no computador e 46 px no celular, com a frase
-“Seu editor sem distrações” ao lado da marca.
-
-A impressão e o PDF usam apenas o resumo em papel branco, com título principal
-maior e centralizado, sem cabeçalhos, rodapés ou metadados do navegador. Margens
-internas se repetem em cada página. A exportação para Word segue a mesma hierarquia;
-texto, tabelas, imagens e formatação do conteúdo permanecem disponíveis.
-
-## Configurações e IA local
-
-Configurações usa sete categorias por assunto, navegação lateral no desktop e seletor no celular.
-O cabeçalho e o rodapé permanecem visíveis, só o conteúdo rola. Indicadores de uso ficam recolhidos.
-Aparência separa tema e cor dos controles de leitura e desempenho. As preferências mantêm o
-salvamento automático, com retorno de estado verdadeiro em caso de falha de armazenamento.
-
-A criação manual não interpreta a digitação nem aciona o modelo. A pessoa edita, ordena e remove
-elementos na revisão; controles dependentes aparecem apenas quando necessários. No modo IA, o
-download e os requisitos aparecem antes da ação de gerar. Nunca chamar regras prontas de geração
-neural. A proposta é validada como dados antes de entrar na prévia; criação exige confirmação.
-
-`ia-local.js` gerencia cancelamento e ciclo de vida; `ia-local.worker.js` executa o modelo fora da
-thread da interface; `ia-local.modelo.mjs` define e valida o contrato. O bundle está versionado em
-`vendor/webllm` e é reproduzível pelo lockfile em `tools/ia-local`. Os testes de CI usam runtime
-simulado para inferência, exercitando o worker real e o contrato, sem baixar os pesos. Executar o
-modelo real requer validação adicional em aparelho com WebGPU e pesos disponíveis.
+Não transformar todos os assuntos em cards iguais, acrescentar ícones só para
+preencher espaço ou animar cada seção ao rolar. A identidade vem do D, da
+tipografia, do ritmo e da relação entre os planos da pessoa.

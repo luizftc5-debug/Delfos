@@ -4,27 +4,29 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Entrar · Delfos</title>
-  <meta name="theme-color" content="#111110" />
+  <meta name="theme-color" content="#f5f7f9" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Gloock&display=swap" />
   <script src="portal-tema.js"></script>
+  <link rel="preload" href="vendor/source-sans-3/source-sans-3-roman.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="base.css" />
   <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="portal.css" />
   <link rel="stylesheet" href="acesso.css" />
 </head>
 <body class="acesso-body">
   <div class="acesso-shell">
-    <header class="acesso-cabecalho"><a class="portal-marca" href="inicio.html" aria-label="Delfos, início"><span class="portal-logotipo" aria-hidden="true"></span></a><a class="portal-link" href="inicio.html">Voltar ao início <span aria-hidden="true">↗</span></a></header>
+    <header class="acesso-cabecalho"><a class="portal-marca" href="inicio.html" aria-label="Delfos, início"><span class="portal-logotipo" aria-hidden="true"></span></a><a class="portal-link" href="inicio.html">Voltar ao início</a></header>
 
-    <div class="acesso-grade"><section class="acesso-apresentacao" aria-labelledby="acesso-boas-vindas"><p class="portal-eyebrow">Um espaço para o seu mundo</p><h2 id="acesso-boas-vindas">Seu próximo passo<br>começa com<br><em>mais clareza.</em></h2><p>Estudos, planos, rotina e ideias. Tudo o que importa para você, com espaço para respirar.</p><div class="acesso-editorial"><span>01 / Escolha o que faz sentido.</span><span>02 / Organize no seu ritmo.</span><span>03 / Continue de onde parou.</span></div></section>
+    <div class="acesso-grade"><section class="acesso-apresentacao" aria-labelledby="acesso-boas-vindas"><h2 id="acesso-boas-vindas">O dia a dia e os planos que continuam.</h2><p>Consulte seus compromissos, organize a semana e acompanhe estudos, finanças e projetos ao longo do tempo.</p><dl class="acesso-editorial"><div><dt>Planejamento</dt><dd>Do próximo compromisso ao calendário dos próximos meses.</dd></div><div><dt>Estudos e projetos</dt><dd>Materiais, resumos, prazos e etapas no contexto de cada assunto.</dd></div><div><dt>Seus registros</dt><dd>Rotinas, refeições, treinos e dinheiro com histórico para consultar.</dd></div></dl></section>
     <main class="acesso-cartao entrada" id="acesso-conteudo">
-      <p class="portal-eyebrow">Bem-vindo ao seu espaço</p><h1 id="acesso-titulo">Bom ter você de volta.</h1>
-      <p class="acesso-frase" id="frase">Antes de tudo, entre na sua conta.</p>
+      <h1 id="acesso-titulo">Entrar no Delfos</h1>
+      <p class="acesso-frase" id="frase">Acesse os registros da sua conta.</p>
 
       <div class="notice info hidden" id="aviso" role="status"><span class="ic">●</span><span id="aviso-texto"></span></div>
+      <a class="btn primary block acesso-local" id="acesso-local" href="index.html?local=1" hidden>Usar neste aparelho</a>
 
       <div class="seg" id="modo" role="group" aria-label="Forma de acesso">
         <button type="button" data-modo="entrar" aria-pressed="true">Entrar</button>
@@ -36,7 +38,6 @@
       <div class="google-pendente" id="google-pendente" hidden><p id="google-conta"></p><p class="card-note" id="google-instrucao"></p><div class="field" id="google-campo-vinculo" hidden><label for="google-senha-vinculo">Senha atual do Delfos</label><input type="password" id="google-senha-vinculo" autocomplete="current-password" /></div><div class="field" id="google-campo-convite" hidden><label for="google-convite">Código de convite para a conta Google</label><input type="text" id="google-convite" autocomplete="off" /></div><label class="entrada-manter"><input class="check" type="checkbox" id="google-manter" /><span>Manter conectado neste aparelho</span></label><button class="btn primary block" id="google-confirmar" type="button">Continuar</button><button class="btn ghost block" id="google-cancelar" type="button">Usar outra forma de acesso</button></div>
       <p class="acesso-separador" id="email-separador"><span>ou continue com e-mail</span></p>
       <p class="acesso-estado" id="acesso-estado" role="status" aria-live="polite"></p>
-      <a class="btn block acesso-local" id="acesso-local" href="index.html?local=1" hidden>Usar neste aparelho <span aria-hidden="true">↗</span></a>
       <form id="form" class="entrada-form" novalidate>
         <h2 class="entrada-titulo so-recuperar hidden">Redefinir a senha</h2>
         <p class="card-note so-recuperar hidden" style="margin:0;">
@@ -62,7 +63,7 @@
             <button class="btn ghost sm" type="button" data-mostrar="f-senha" aria-label="Mostrar senha">Mostrar</button>
           </div>
           <span class="hint caps hidden" data-caps>Caps Lock ligado.</span>
-          <span class="hint so-criar so-recuperar hidden">Pelo menos 8 caracteres. Uma frase longa é mais forte e mais fácil de lembrar do que uma sigla com símbolos.</span>
+          <span class="hint so-criar so-recuperar hidden" id="senha-ajuda">Use pelo menos 8 caracteres. Uma frase longa pode ser mais fácil de lembrar.</span>
         </div>
         <div class="field so-criar so-recuperar hidden">
           <label for="f-confirmar">Repita a senha</label>
@@ -77,7 +78,7 @@
         <label class="entrada-manter">
           <input type="checkbox" class="check" id="f-manter" />
           <span>Manter conectado neste aparelho
-            <span class="hint">Sem marcar, o Delfos pede a senha de novo toda vez que o navegador for aberto. Não marque em computador dos outros.</span>
+            <span class="hint">Acesso por até 30 dias. Use esta opção apenas no seu aparelho.</span>
           </span>
         </label>
 

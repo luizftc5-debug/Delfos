@@ -27,6 +27,7 @@
   }
 
   const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
+  const porDataHora = (x, y) => x.data.localeCompare(y.data) || (x.hora ? 0 : 1) - (y.hora ? 0 : 1) || (x.hora || "").localeCompare(y.hora || "");
 
   /** Para onde leva um item da agenda: a página de onde ele veio. */
   function destino(i) {
@@ -74,6 +75,11 @@
     if (!Personalizacao.abaAtiva("financeiro")) document.getElementById("sec-topo").hidden = true;
     Organizacao.disponivel("minhas-abas", !document.getElementById("sec-abas").hidden);
     Organizacao.disponivel("dinheiro", !document.getElementById("sec-topo").hidden);
+    const acessos = [...document.querySelectorAll("[data-home-area]")];
+    acessos.forEach(el => { el.hidden = !Personalizacao.abaAtiva(el.dataset.homeArea); });
+    document.getElementById("home-planejar").hidden = acessos.every(el => el.hidden);
+    const projetosLink = document.querySelector('[data-home-area="projetos"] a');
+    projetosLink.firstChild.nodeValue = Personalizacao.rotuloAba("projetos");
 
     renderLeitura();
     renderSemana();
@@ -97,34 +103,30 @@
     const alvo = document.getElementById("leitura");
     if (!alvo) return;
 
-    const proximos = UI.compromissos();
+    const proximos = UI.compromissos().sort(porDataHora);
     const atrasados = proximos.filter((i) => (UI.diasAte(i.data) ?? 0) < 0);
     const naSemana = proximos.filter((i) => {
       const d = UI.diasAte(i.data);
       return d !== null && d >= 0 && d <= 7;
     });
 
-    const nome = (c) => fmt.escape(c.titulo);
-    let tempo;
-
-    if (atrasados.length) {
-      const pior = atrasados[0];
-      const dias = Math.abs(UI.diasAte(pior.data));
-      tempo = atrasados.length === 1
-        ? `<b>${nome(pior)}</b> venceu há <span class="destaque">${plural(dias, "dia", "dias")}</span>.`
-        : `<span class="destaque">${atrasados.length} coisas atrasadas</span>; a mais antiga é <b>${nome(pior)}</b>.`;
-    } else if (naSemana.length) {
-      const prox = naSemana[0];
-      tempo = `<b>${nome(prox)}</b> é o próximo, ${quando(prox.data)}.`;
-    } else if (proximos.length) {
-      tempo = `Semana livre; depois vem <b>${nome(proximos[0])}</b>, ${fmt.dataPorExtenso(proximos[0].data)}.`;
-    } else {
-      tempo = "Nada marcado por enquanto.";
+    const proximo = atrasados[0] || naSemana[0] || proximos[0];
+    document.getElementById("home-proxima-rotulo").textContent = atrasados.length
+      ? "Precisa da sua atenção" : naSemana.length ? "Seu próximo compromisso" : "Seu horizonte";
+    if (!proximo) {
+      alvo.innerHTML = `<p class="home-proxima-vazio"><strong>Nada marcado por enquanto.</strong><span>Consulte outros dias ou registre o que você quer planejar.</span></p>`;
+      return;
     }
-
-    const saud = Personalizacao.saudacao();
-    const abertura = saud !== "Visão geral" ? `<span class="saudacao">${fmt.escape(saud)}.</span> ` : "";
-    alvo.innerHTML = abertura + tempo;
+    const detalhes = [
+      proximo.areaRotulo,
+      UI.diasAte(proximo.data) > 1 ? fmt.dataPorExtenso(proximo.data) : quando(proximo.data),
+      proximo.hora ? `${proximo.hora}${proximo.horaFim ? `–${proximo.horaFim}` : ""}` : "",
+    ].filter(Boolean);
+    alvo.innerHTML = `<a class="home-proxima-link" href="${destino(proximo)}">
+      <strong>${fmt.escape(proximo.titulo)}</strong>
+      <span class="home-proxima-contexto">${detalhes.map(fmt.escape).join(", ")}</span>
+      <span class="home-proxima-abrir">Abrir ${UI.icone("direita")}</span>
+    </a>`;
   }
 
   /** Quando, em palavras: "hoje", "amanhã", "em 3 dias", "venceu há 2 dias". */
@@ -185,15 +187,10 @@
       pagarDetalhe.innerHTML = `${plural(pend.length, "conta", "contas")}; a próxima, ${fmt.escape(prox.descricao || "sem nome")}, <span class="badge ${u.nivel}">${u.rotulo}</span>`;
     }
 
-    // O puxador: o saldo, o mês e o que falta pagar, numa linha.
+    // O contexto do mês não repete os valores que já estão nos indicadores.
     document.getElementById("dinheiro-resumo").innerHTML = frase([
-      `saldo <b>${fmt.moeda(saldo)}</b>`,
-      atual.quantidade
-        ? (atual.resultado < 0
-          ? `<span class="alerta">faltou ${fmt.moeda(Math.abs(atual.resultado))}</span> em ${nomeMes}`
-          : `sobrou ${fmt.moeda(atual.resultado)} em ${nomeMes}`)
-        : "",
-      pend.length ? `a pagar ${fmt.moeda(soma)}` : "",
+      `${plural(atual.quantidade, "lançamento", "lançamentos")} em ${nomeMes}`,
+      pend.length ? `${plural(pend.length, "conta", "contas")} a pagar` : "sem contas pendentes",
     ]);
 
     renderInsights(atual, anterior, mes);
@@ -208,7 +205,7 @@
       const d = new Date(data + "T00:00:00");
       const n = todos.filter((c) => c.data === data).length;
       const ehHoje = data === UI.hojeISO();
-      return `<button type="button" class="semana-dia${ehHoje ? " hoje" : ""}" data-dia="${data}" aria-pressed="${data === diaSelecionado}" aria-label="${fmt.escape(fmt.dataPorExtenso(data))}, ${plural(n, "compromisso", "compromissos")}"${ehHoje ? ' aria-current="date"' : ""}><span>${DIAS_SEMANA[d.getDay()]}</span><b>${d.getDate()}</b><small>${n || ""}</small></button>`;
+      return `<button type="button" class="semana-dia${ehHoje ? " hoje" : ""}" data-dia="${data}" aria-pressed="${data === diaSelecionado}" aria-label="${DIAS_SEMANA[d.getDay()]} ${d.getDate()}${n ? ` ${n}` : ""}, ${fmt.escape(fmt.dataPorExtenso(data))}, ${plural(n, "compromisso", "compromissos")}"${ehHoje ? ' aria-current="date"' : ""}><span>${DIAS_SEMANA[d.getDay()]}</span><b>${d.getDate()}</b><small>${n || ""}</small></button>`;
     }).join("");
   }
 
@@ -232,18 +229,20 @@
     // O puxador conta o que há, sem depender do filtro: é o que se lê com a gaveta fechada.
     const hojeN = proximosTodos.filter((i) => UI.diasAte(i.data) === 0).length;
     const naSemana = proximosTodos.filter((i) => UI.diasAte(i.data) <= 7);
-    const prox = proximosTodos[0];
-    document.getElementById("agenda-resumo").innerHTML = frase([
-      atrasadosTodos.length ? `<span class="alerta">${plural(atrasadosTodos.length, "atrasado", "atrasados")}</span>` : "",
-      hojeN ? `${hojeN} hoje` : "",
-      prox ? `próximo: <b>${fmt.escape(prox.titulo)}</b>, ${quando(prox.data)}` : "",
-      naSemana.length > 1 ? `${naSemana.length} nos próximos 7 dias` : "",
-    ]) || "Nada marcado nos próximos 30 dias";
+    const destaConsulta = filtrada ? todos.filter(i => diaSelecionado ? i.data === diaSelecionado : i.data >= inicioSemana && i.data <= UI.isoMaisDias(inicioSemana, 6)) : null;
+    document.getElementById("agenda-resumo").innerHTML = destaConsulta
+      ? `${plural(destaConsulta.length, "compromisso", "compromissos")} ${diaSelecionado ? `em ${fmt.escape(fmt.dataPorExtenso(diaSelecionado))}` : "na semana exibida"}`
+      : frase([
+        atrasadosTodos.length ? `<span class="alerta">${plural(atrasadosTodos.length, "atrasado", "atrasados")}</span>` : "",
+        hojeN ? `${hojeN} hoje` : "",
+        `${plural(proximosTodos.length, "compromisso", "compromissos")} nos próximos 30 dias`,
+      ]);
 
     const atrasados = filtrada ? [] : atrasadosTodos;
-    const proximos = filtrada
+    // No mesmo dia, o que tem hora vem primeiro, na ordem da hora; o resto, depois.
+    const proximos = (filtrada
       ? todos.filter((i) => (diaSelecionado ? i.data === diaSelecionado : i.data >= inicioSemana && i.data <= UI.isoMaisDias(inicioSemana, 6)))
-      : proximosTodos;
+      : proximosTodos).sort(porDataHora);
 
     box.innerHTML = "";
     if (!atrasados.length && !proximos.length) {
@@ -289,7 +288,7 @@
         : c && c.itens.length >= 3 ? `<span class="agenda-nota">Semana cheia</span>` : "";
       return `<section class="agenda-grupo ${g.classe || ""}">
           <h3 class="agenda-cab"><span>${g.titulo}</span>${nota}</h3>
-          <ol class="agenda-lista">${g.itens.map(linhaAgenda).join("")}</ol>
+          <ol class="agenda-lista costura">${g.itens.map((i, n) => linhaAgenda(i, g.itens[n - 1]?.data === i.data)).join("")}</ol>
         </section>`;
     }).join("");
 
@@ -316,18 +315,23 @@
     renderAgenda();
   }
 
-  function linhaAgenda(i) {
+  function linhaAgenda(i, mesmoDia = false) {
     const d = new Date(i.data + "T00:00:00");
     const dias = UI.diasAte(i.data);
     const u = UI.urgencia(i.data);
-    return `<li>
+    const fixa = ["pessoal", "financeiro", "faculdade", "projetos"].includes(i.area);
+    const cor = fixa ? `var(--s-${i.area})` : fmt.escape(i.cor || "var(--texto-3)");
+    const hora = i.hora ? `${fmt.escape(i.hora)}${i.horaFim ? `<small>${fmt.escape(i.horaFim)}</small>` : ""}` : "";
+    return `<li${mesmoDia ? ' class="continua"' : ""}>
         <a class="agenda-linha" href="${destino(i)}">
-          <span class="agenda-dia${dias === 0 ? " hoje" : ""}"><b>${d.getDate()}</b><small>${dias === 0 ? "hoje" : DIAS_SEMANA[d.getDay()]}</small></span>
+          <span class="agenda-dia${dias === 0 ? " hoje" : ""}"${mesmoDia ? ' aria-hidden="true"' : ""}><b>${d.getDate()}</b><small>${dias === 0 ? "hoje" : DIAS_SEMANA[d.getDay()]}</small></span>
+          <span class="agenda-hora">${hora}</span>
+          <span class="agenda-no${i.hora ? "" : " sem-hora"}" style="--marca:${cor}" aria-hidden="true"></span>
           <span class="agenda-texto">
             <span class="t">${fmt.escape(i.titulo)}</span>
-            <span class="m">${marcaArea(i)}${fmt.escape(fmt.capitalizar(i.areaRotulo || ""))}${i.tipo ? `, ${fmt.escape(i.tipo)}` : ""}${i.hora ? ` · ${fmt.escape(i.hora)}${i.horaFim ? `–${fmt.escape(i.horaFim)}` : ""}` : ""}</span>
+            <span class="m">${fmt.escape(fmt.capitalizar(i.areaRotulo || ""))}${i.tipo ? `, ${fmt.escape(i.tipo)}` : ""}</span>
           </span>
-          <span class="badge ${u.nivel}">${quando(i.data)}</span>
+          ${dias < 0 ? `<span class="badge ${u.nivel}">${quando(i.data)}</span>` : ""}
         </a>
       </li>`;
   }
@@ -341,15 +345,13 @@
     const resumo = document.getElementById("notas-resumo");
     const alertas = todas.filter((n) => n.tipo === "alerta").length;
     if (!todas.length) {
-      resumo.textContent = "Nada pedindo ação agora";
+      resumo.textContent = "";
     } else {
-      const tmp = document.createElement("div");
-      tmp.innerHTML = todas[0].html;
       const classe = alertas ? "alerta" : "atencao";
-      resumo.innerHTML = `<span class="${classe}">${todas.length === 1 ? "1 aviso" : `${todas.length} avisos`}</span>; ${fmt.escape(tmp.textContent.trim())}`;
+      resumo.innerHTML = `<span class="${classe}">${plural(todas.length, "aviso", "avisos")} para revisar</span>`;
     }
     UI.renderNotas(document.getElementById("notas"), notasTodas ? todas : todas.slice(0, 3),
-      "Nada pedindo ação agora. Cada aba tem a própria leitura, com o que vai bem e o que mudou.");
+      "Nenhum aviso para revisar. Você pode continuar seus planos nas suas abas.");
     const mais = document.getElementById("notas-mais");
     mais.hidden = todas.length <= 3;
     mais.textContent = notasTodas ? "Mostrar só os três primeiros" : `Ver todos os ${todas.length} avisos`;
@@ -402,11 +404,30 @@
     // As abas criadas pelo usuário entram no mesmo índice, com a cor delas.
     (e.pilares || []).forEach((p) => {
       const abertos = (p.itens || []).filter((i) => !i.concluido);
+      let valor = `${abertos.length}`, rotuloValor = "em aberto";
+      let sub = p.descricao || `${urgentes(`pilar:${p.id}`)} nesta semana`;
+      if (p.modelo === "academia") {
+        const dias = p.dias || [];
+        const exercicios = dias.reduce((s, d) => s + (d.exercicios || []).length, 0);
+        const feitos = dias.filter(d => (d.feitos || []).includes(UI.hojeISO())).length;
+        valor = String(dias.length); rotuloValor = dias.length === 1 ? "dia de treino" : "dias de treino";
+        sub = exercicios ? `${plural(exercicios, "exercício", "exercícios")}${feitos ? ` · ${plural(feitos, "treino feito", "treinos feitos")} hoje` : ""}` : "Monte os exercícios do seu plano";
+      } else if (PlanoAlimentar.ehAba(p)) {
+        const { plano, diario } = PlanoAlimentar.preparar(p);
+        const hoje = UI.hojeISO(), feitas = diario[hoje]?.feitas || [];
+        const configuradas = plano.filter(r => r.itens.length && (!r.inicio || r.inicio <= hoje || feitas.includes(r.id)));
+        const comidas = configuradas.filter(r => feitas.includes(r.id)).length;
+        valor = configuradas.length ? `${comidas} de ${configuradas.length}` : String(plano.length);
+        rotuloValor = configuradas.length ? "refeições feitas hoje" : "refeições para organizar";
+        sub = configuradas.length ? "Seu plano e os checks de cada data" : "Adicione alimentos ao seu plano diário";
+      } else if (p.checkin) {
+        valor = `${(p.itens || []).filter(i => (i.feitos || []).includes(UI.hojeISO())).length} de ${(p.itens || []).length}`;
+        rotuloValor = "marcados hoje";
+      }
       linhas.push({
         id: `pilar:${p.id}`, href: `pilar.html?id=${encodeURIComponent(p.id)}`, corHex: p.cor, icone: p.icone,
         titulo: p.nome,
-        valor: `${abertos.length}`, rotuloValor: "em aberto",
-        sub: p.descricao || `${urgentes(`pilar:${p.id}`)} nesta semana`,
+        valor, rotuloValor, sub,
       });
     });
 
@@ -416,7 +437,7 @@
     linhas.splice(0, linhas.length, ...linhas.filter((c) => ordem.includes(c.id)).sort((a, b) => ordem.indexOf(a.id) - ordem.indexOf(b.id)));
 
     document.getElementById("abas-resumo").textContent = linhas.length
-      ? `${plural(linhas.length, "aba", "abas")}: ${linhas.map((c) => c.titulo).join(", ").replace(/, ([^,]*)$/, " e $1")}`
+      ? `${plural(linhas.length, "área", "áreas")} para consultar e continuar`
       : "Nenhuma aba ligada";
 
     grid.innerHTML = linhas

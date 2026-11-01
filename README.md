@@ -20,6 +20,14 @@ publicado (gratuito, na Cloudflare), o painel passa a exigir **conta** — cada 
 e senha, vê só os próprios dados e os encontra iguais no celular e no computador, com anexos e
 versões anteriores guardados no servidor.
 
+### Interface Dia em comum
+
+A direção A organiza o próximo compromisso e mantém calendário, rotina semanal, projetos e
+metas ao alcance. Os temas claro e escuro usam Source Sans 3 hospedada no próprio site.
+O editor tem ferramentas compactas, rodapé fixo e exportação limpa; a barra lateral se
+expande por aproximação ou teclado e recolhe com uma transição fluida.
+Detalhes e regras para novas telas em [dashboard/DESIGN.md](dashboard/DESIGN.md).
+
 ### Atualizações de leitura e faculdade
 
 - **Tamanho das letras**: Menor, Normal e Maior ajustam as fontes, sem zoom na

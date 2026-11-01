@@ -5,14 +5,16 @@
   if (Sessao.ativo() && Sessao.logado()) { location.replace(destino); return; }
   const $ = id => document.getElementById(id), form = $("form"), btn = $("btn-enviar"), erro = $("erro");
   const ROTULO = { entrar: "Entrar", criar: "Criar conta", recuperar: "Redefinir e entrar" };
-  const TITULO = { entrar: "Bom ter você de volta.", criar: "Seu espaço começa aqui.", recuperar: "Vamos recuperar seu acesso." };
-  const FRASE = { entrar: "Entre para continuar de onde parou.", criar: "Crie sua conta e reúna o que importa para você.", recuperar: "Use seu e-mail e o código de recuperação que você guardou." };
+  const TITULO = { entrar: "Entrar no Delfos", criar: "Criar conta", recuperar: "Recuperar acesso" };
+  const FRASE = { entrar: "Acesse os registros da sua conta.", criar: "Guarde seus registros na conta e acesse em outros aparelhos.", recuperar: "Use seu e-mail e o código de recuperação que você guardou." };
   let modo = "entrar", pedeConvite = false, contasDisponiveis = Sessao.ativo(), trabalhando = false;
   let googleClientId = "", googlePendente = null, googleVersao = 0, sdkGoogle = null;
   function avisar(texto) { $("aviso-texto").textContent = texto; $("aviso").classList.toggle("hidden", !texto); }
   function estado(texto) { $("acesso-estado").textContent = texto; }
   function ocupar(sim, texto = "") {
     trabalhando = sim;
+    form.setAttribute("aria-busy", String(sim));
+    $("google-pendente").setAttribute("aria-busy", String(sim));
     form.querySelectorAll("input, button").forEach(i => { i.disabled = sim || !contasDisponiveis; });
     $("modo").querySelectorAll("button").forEach(b => { b.disabled = sim; });
     ["google-confirmar", "google-cancelar", "google-senha-vinculo", "google-convite", "google-manter"].forEach(id => { $(id).disabled = sim; });
@@ -36,6 +38,7 @@
     });
     $("google-area").hidden = modo === "recuperar";
     $("f-senha").autocomplete = modo === "entrar" ? "current-password" : "new-password";
+    $("f-senha").setAttribute("aria-describedby", modo === "entrar" ? "erro" : "senha-ajuda erro");
     $("acesso-titulo").textContent = TITULO[modo]; $("frase").textContent = FRASE[modo]; btn.textContent = ROTULO[modo];
     erro.textContent = "";
     form.querySelectorAll("[aria-invalid]").forEach(el => el.removeAttribute("aria-invalid"));
@@ -85,8 +88,11 @@
         ({ usuario, codigoRecuperacao } = r);
       }
       await finalizar({ usuario, codigoRecuperacao, novaConta: modo === "criar", nome });
-    } catch (e) { ocupar(false); if (e.status === 409 && modo === "criar") trocarModo("entrar", false); erro.textContent = e.message; }
+    } catch (e) { ocupar(false); if (e.status === 409 && modo === "criar") trocarModo("entrar", false); erro.textContent = mensagemFalha(e); }
   });
+  function mensagemFalha(e) {
+    return /^Sem conexão com o servidor\./.test(e.message) ? "Não foi possível conectar ao servidor. Confira sua conexão e tente entrar novamente." : e.message;
+  }
   function carregarGoogle() {
     if (window.google?.accounts?.id) return Promise.resolve();
     return sdkGoogle ||= new Promise((resolve, reject) => {
@@ -111,7 +117,7 @@
         if (modo === "criar" && pedeConvite) mostrarPendente("criar"); else autenticarGoogle();
       } });
       google.accounts.id.renderButton(box, { type: "standard", theme: document.documentElement.dataset.theme === "light" ? "outline" : "filled_black", size: "large", shape: "rectangular", text: modo === "criar" ? "signup_with" : "signin_with", locale: "pt_BR", width: Math.max(200, Math.min(400, Math.floor(box.getBoundingClientRect().width))) });
-      $("google-indisponivel").hidden = true; $("google-nota").textContent = "Use sua conta Google. Não pedimos acesso ao seu Gmail.";
+      $("google-indisponivel").hidden = true; $("google-nota").textContent = "Usamos seu nome e e-mail. Agenda e Drive só são conectados se você escolher depois.";
     } catch (e) { if (versao === googleVersao) { $("google-botao").hidden = true; $("google-indisponivel").hidden = false; $("google-nota").textContent = e.message; } }
   }
   function mostrarPendente(etapa) {
@@ -136,7 +142,7 @@
       ocupar(false); p.email = e.dados?.email || p.email;
       if (e.dados?.vincularGoogle) mostrarPendente("vincular");
       else if (e.dados?.criarContaGoogle) mostrarPendente("criar");
-      else { $("google-erro").textContent = e.message; if (e.status === 410 || e.status === 401) { limparGoogle(); $("google-erro").textContent = e.message; prepararGoogle(); } }
+      else { $("google-erro").textContent = mensagemFalha(e); if (e.status === 410 || e.status === 401) { limparGoogle(); $("google-erro").textContent = mensagemFalha(e); prepararGoogle(); } }
     }
   }
   $("google-confirmar").onclick = autenticarGoogle;

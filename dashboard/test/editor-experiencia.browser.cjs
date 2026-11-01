@@ -67,6 +67,33 @@ async function main() {
     await page.reload();
     assert.match(await page.locator('#corpo').innerText(), /texto revisado/);
     assert.equal(page.url(), endereco);
+
+    // O foco tem saída explícita e mantém as ferramentas utilizáveis sem hover.
+    await page.locator('#btn-foco').click();
+    assert.ok(await page.locator('#btn-sair-foco').isVisible());
+    assert.equal(await page.locator('#editor-barra').isVisible(), false);
+    await page.locator('#btn-foco-ferramentas').click();
+    await page.getByRole('button', { name: 'Negrito', exact: true }).hover();
+    assert.ok(await page.locator('#editor-barra').isVisible(), 'Mover o ponteiro para a barra não pode ocultá-la');
+    assert.equal(await page.locator('#btn-foco-ferramentas').getAttribute('aria-expanded'), 'true');
+    await page.locator('#btn-foco-ferramentas').click();
+    await page.keyboard.press('Control+f');
+    assert.ok(await page.getByLabel('Buscar no texto', { exact: true }).isVisible(), 'Buscar deve revelar ferramentas no modo foco');
+    await page.keyboard.press('Escape'); await page.keyboard.press('Escape');
+    assert.equal(await page.locator('body').evaluate(e => e.classList.contains('modo-foco')), false);
+    const toque = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, locale: 'pt-BR', storageState: await ctx.storageState() });
+    await toque.route('**/*', r => r.request().url().startsWith(base) ? r.continue() : r.abort());
+    const tela = await toque.newPage();
+    await tela.goto(endereco); await tela.locator('#btn-foco').tap();
+    const sair = tela.locator('#btn-sair-foco'), tamanhoSaida = await sair.boundingBox();
+    assert.ok(await sair.isVisible() && tamanhoSaida.width >= 44 && tamanhoSaida.height >= 44, 'Sair do foco deve permanecer alcançável pelo toque');
+    await tela.locator('#btn-foco-ferramentas').tap();
+    await tela.locator('#btn-exportar').tap();
+    assert.ok(await tela.locator('.editor-menu').isVisible(), 'Exportar precisa continuar acessível no foco pelo toque');
+    await sair.tap();
+    assert.equal(await tela.locator('body').evaluate(e => e.classList.contains('modo-foco')), false);
+    assert.ok(await tela.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    await toque.close();
     if (process.env.DELFOS_QA_DIR) {
       fs.mkdirSync(process.env.DELFOS_QA_DIR, { recursive: true });
       for (const [nome, width] of [['desktop', 1440], ['celular', 390]]) {
@@ -101,6 +128,8 @@ async function main() {
         assert.ok(await controles.count() >= 26);
         for (const controle of await controles.all()) {
           assert.ok(await controle.isVisible(), await controle.getAttribute('aria-label'));
+          const alvo = await controle.boundingBox();
+          assert.ok(alvo.width >= 44 && alvo.height >= 44, `Área de toque menor que 44px: ${await controle.getAttribute('aria-label')}`);
           await controle.focus(); await controle.scrollIntoViewIfNeeded();
           const dentro = await controle.evaluate(e => { const r = e.getBoundingClientRect(), b = e.closest('.editor-formatacao').getBoundingClientRect(); return e === document.activeElement && r.left >= Math.max(0, b.left) - 1 && r.right <= Math.min(innerWidth, b.right) + 1; });
           assert.ok(dentro, `Ferramenta inacessível em ${largura}px: ${await controle.getAttribute('aria-label')}`);

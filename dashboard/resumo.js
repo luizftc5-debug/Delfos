@@ -662,6 +662,7 @@
     elBuscaN.textContent = `${atual + 1} de ${achados.length}`;
   }
   function abrirBusca() {
+    if (document.body.classList.contains("modo-foco")) mostrarFerramentasNoFoco(true);
     painelBusca.hidden = false;
     const s = getSelection();
     if (s.rangeCount && !s.isCollapsed && corpo.contains(s.anchorNode) && s.toString().length < 60) inpBusca.value = s.toString();
@@ -746,13 +747,23 @@
     marcarSujo();
   }
 
-  // Modo foco: só a folha; a barra volta ao passar o mouse no alto da tela.
-  document.getElementById("btn-foco").addEventListener("click", () => {
-    const ligado = document.body.classList.toggle("modo-foco");
-    document.getElementById("btn-foco").setAttribute("aria-pressed", String(ligado));
-    if (ligado) UI.toast("Modo foco. Leve o mouse ao alto da tela para ver a barra, ou aperte Esc para sair.");
-    corpo.focus();
-  });
+  // O foco tem controles próprios, sempre visíveis e operáveis por toque.
+  const botaoFoco = document.getElementById("btn-foco");
+  const botaoFerramentasFoco = document.getElementById("btn-foco-ferramentas");
+  function mostrarFerramentasNoFoco(abrir) {
+    document.body.classList.toggle("foco-ferramentas", abrir);
+    botaoFerramentasFoco.setAttribute("aria-expanded", String(abrir));
+    if (!abrir) fecharMenu();
+  }
+  function definirFoco(ligado) {
+    mostrarFerramentasNoFoco(false);
+    document.body.classList.toggle("modo-foco", ligado);
+    botaoFoco.setAttribute("aria-pressed", String(ligado));
+    corpo.focus({ preventScroll: true });
+  }
+  botaoFoco.addEventListener("click", () => definirFoco(!document.body.classList.contains("modo-foco")));
+  document.getElementById("btn-sair-foco").addEventListener("click", () => definirFoco(false));
+  botaoFerramentasFoco.addEventListener("click", () => mostrarFerramentasNoFoco(!document.body.classList.contains("foco-ferramentas")));
 
   /* --------------------------------- Exportar --------------------------------- */
 

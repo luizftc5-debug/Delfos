@@ -15,12 +15,10 @@
     <link rel="preload" as="fetch" crossorigin="anonymous" href="inicio/frames/desktop/frame_0001.webp" media="(min-width: 601px) and (prefers-reduced-motion: no-preference)" fetchpriority="high" />
     <link rel="modulepreload" href="inicio/js/delfos-hero.js" />
 
-    <!-- Tipografia da marca (a mesma do painel): Gloock nos momentos de marca, Funnel Sans no resto -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Carregada sem bloquear a primeira pintura: o texto aparece na fonte do sistema e troca quando a da marca chega -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:wght@400;500&family=Gloock&display=swap" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:wght@400;500&family=Gloock&display=swap" /></noscript>
+    <link rel="preload" href="dashboard/vendor/source-sans-3/source-sans-3-roman.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="dashboard/fonts.css" />
+    <link rel="stylesheet" href="dashboard/tokens.css" />
+    <script src="dashboard/portal-tema.js"></script>
 
     <link rel="stylesheet" href="inicio/css/delfos-hero.css" />
     <link rel="stylesheet" href="inicio/css/pagina.css" />

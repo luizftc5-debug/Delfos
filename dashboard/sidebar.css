@@ -1,4 +1,5 @@
 /* A barra lateral mantém seus controles fixos e só recolhe no computador. */
+.sidebar .marca-topo > a { display: inline-flex; align-items: center; min-height: var(--control-size); }
 .sidebar-cabecalho { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .sidebar .sidebar-cabecalho .marca-topo { min-width: 0; flex: 1; margin: 0; padding: 0; }
 .sidebar-cabecalho .marca-recolhida { display: none; }
@@ -9,21 +10,21 @@
   /* O conteúdo acompanha a largura, inclusive a luz e os avisos fixos. */
   .app { background: none; }
   .main::before, .storage-aviso { transition: left var(--t-medio) var(--ease-saida); }
-  .sidebar-cabecalho { height: 32px; margin-bottom: 24px; transition: gap var(--t-medio) var(--ease-saida); }
-  .sidebar .sidebar-cabecalho .marca-topo { position: relative; height: 32px; }
+  .sidebar-cabecalho { height: var(--control-size); margin-bottom: 24px; transition: gap var(--t-medio) var(--ease-saida); }
+  .sidebar .sidebar-cabecalho .marca-topo { position: relative; height: var(--control-size); }
   .sidebar-cabecalho :is(.marca-expandida, .marca-recolhida) {
     position: absolute; display: block;
     transition: opacity var(--t-rapido) var(--ease-saida), transform var(--t-medio) var(--ease-saida), visibility var(--t-rapido);
   }
-  .sidebar-cabecalho .marca-expandida { left: 0; top: 5px; }
+  .sidebar-cabecalho .marca-expandida { left: 0; top: 50%; transform: translateY(-50%); }
   .sidebar-cabecalho .marca-recolhida {
-    left: calc(50% - 14.5px); top: 1px; width: 29px; height: 30px;
-    opacity: 0; visibility: hidden; transform: scale(.85);
+    left: 50%; top: 50%; width: 29px; height: 30px;
+    opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(.85);
   }
   .sidebar-recolher {
-    display: inline-flex; align-items: center; justify-content: center; flex: 0 0 32px;
-    width: 32px; height: 32px; padding: 7px; border: 1px solid var(--linha);
-    border-radius: 8px; background: transparent; color: var(--texto-3); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; flex: 0 0 var(--control-size);
+    width: var(--control-size); height: var(--control-size); padding: 7px; border: 1px solid var(--linha);
+    border-radius: var(--r-md); background: transparent; color: var(--texto-3); cursor: pointer;
     overflow: hidden;
     transition: opacity var(--t-rapido) var(--ease-saida), width var(--t-medio) var(--ease-saida),
       flex-basis var(--t-medio) var(--ease-saida), padding var(--t-medio) var(--ease-saida), visibility var(--t-rapido);
@@ -54,10 +55,10 @@
   :root[data-barra-recolhida="sim"] .sidebar-cabecalho { gap: 0; }
   :root[data-barra-recolhida="sim"] .sidebar-recolher {
     opacity: 0; visibility: hidden; pointer-events: none;
-    width: 0; flex-basis: 0; padding: 0; border-width: 0;
+    width: 0; min-width: 0; flex-basis: 0; padding: 0; border-width: 0;
   }
-  :root[data-barra-recolhida="sim"] .sidebar-cabecalho .marca-expandida { opacity: 0; visibility: hidden; transform: translateX(-6px); }
-  :root[data-barra-recolhida="sim"] .sidebar-cabecalho .marca-recolhida { opacity: 1; visibility: visible; transform: scale(1); }
+  :root[data-barra-recolhida="sim"] .sidebar-cabecalho .marca-expandida { opacity: 0; visibility: hidden; transform: translate(-6px, -50%); }
+  :root[data-barra-recolhida="sim"] .sidebar-cabecalho .marca-recolhida { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
   :root[data-barra-recolhida="sim"] .sidebar .nav-item { padding: 6px 15px; gap: 0; }
   :root[data-barra-recolhida="sim"] .pagina-organizada .nav-item { padding: 11px 18px; }
   :root[data-barra-recolhida="sim"] .sidebar :is(.nav-label, .nav-count, .brand-text, .brand-caret) { opacity: 0; visibility: hidden; }

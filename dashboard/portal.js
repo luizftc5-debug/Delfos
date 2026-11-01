@@ -6,10 +6,6 @@
   });
   document.querySelectorAll("[data-local]").forEach(el => { el.hidden = Sessao.ativo(); });
   document.querySelectorAll("[data-conta-nota]").forEach(el => { el.hidden = contasAtivas; });
-  if (!contasAtivas) {
-    document.querySelectorAll("[data-criar]").forEach(a => { a.href = "index.html?local=1"; a.textContent = "Usar neste aparelho"; });
-    document.querySelectorAll("[data-entrar]").forEach(a => { a.hidden = true; });
-  }
   if (Sessao.logado()) {
     document.querySelectorAll("[data-entrar], [data-criar], [data-iniciar]").forEach(a => {
       a.href = "index.html";

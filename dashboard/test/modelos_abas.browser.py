@@ -10,6 +10,9 @@ class Silencioso(SimpleHTTPRequestHandler):
     def log_message(self,*_args):pass
 
 def abrir(page):
+    # A navegação monta a barra conforme a largura; is_visible não espera
+    # essa montagem e podia escolher o botão de celular ainda no desktop.
+    page.locator('#btn-nova-aba:visible,#btn-mais-abas:visible').wait_for()
     if page.locator('#btn-nova-aba').is_visible():page.locator('#btn-nova-aba').click()
     else:
         page.locator('#btn-mais-abas').click();page.locator('[data-acao="nova"]').click()

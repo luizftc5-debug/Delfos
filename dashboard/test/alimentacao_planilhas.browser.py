@@ -119,10 +119,15 @@ def testar(base, pasta):
         page.goto(base+'/index.html')
         page.locator('#btn-organizar').click()
         lista=page.locator('[data-abas]')
+        expect(lista.locator('li').last).to_be_visible()
+        # As linhas podem rolar sob o rodapé fixo do modal. Use a alça que
+        # a pessoa vê e toca, medindo depois de trazê-la para a área visível.
+        alca=lista.locator('li').last.locator('.ordem-alca')
+        alca.scroll_into_view_if_needed()
         ids=lambda: lista.locator('li').evaluate_all('(ls)=>ls.map((l)=>l.dataset.abaId)')
         antes=ids()
-        origem=lista.locator('li').last.bounding_box();destino=lista.locator('li').nth(1).bounding_box()
-        x0=origem['x']+origem['width']*0.55;y0=origem['y']+origem['height']/2
+        origem=alca.bounding_box();destino=lista.locator('li').nth(1).bounding_box()
+        x0=origem['x']+origem['width']/2;y0=origem['y']+origem['height']/2
         page.mouse.move(x0,y0);page.mouse.down()
         for k in range(1,16): page.mouse.move(x0,y0+(destino['y']+4-y0)*k/15)
         expect(lista.locator('li.arrastando')).to_have_count(1)

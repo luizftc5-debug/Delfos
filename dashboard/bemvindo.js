@@ -7,10 +7,10 @@
   const { fmt } = UI;
 
   const FRASES = [
-    "Antes de começar, me conta: quem é você?",
+    "Primeiro, o seu nome. O resto vem depois.",
     "E o que ocupa os seus dias?",
     "Agora escolha o que vale a pena acompanhar aqui.",
-    "Quase lá. Só os últimos ajustes.",
+    "Por último, como o painel se apresenta.",
   ];
 
   const primeiraVez = !Store.estado().perfil.configuradoEm;

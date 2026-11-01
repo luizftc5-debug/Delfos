@@ -195,3 +195,85 @@ arquivo único.
    editor? Sem sua autorização, mexo só no visual delas.
 5. **Assinatura única:** fica "O essencial se revela." (a do quadro) em todo lugar, substituindo
    "Organização para o que importa"?
+
+---
+
+# Fases 2 a 4: o que foi feito e o resultado
+
+Respostas do Luiz às perguntas da seção 6: (1) sem arquivo do quadro, redesenhar o símbolo a partir da
+imagem; (2) só preto e marfim, sem metálico; (3) ícones pela opção híbrida; (4) pode tirar pílulas,
+sanfonas e rodapé do editor; (5) assinatura "O essencial se revela.".
+
+Sistema completo em `dashboard/DESIGN.md`. Comparativo visual em `design-audit/comparativo.html`
+(antes e depois lado a lado, mesmas telas e dados).
+
+## Commits
+
+1. **Marca do quadro e tokens únicos**: símbolo D com coluna, logotipo em contorno, favicon, ícone de
+   app, `marca/`; `tokens.css` como fonte única; Jost no lugar de Funnel Sans; raio, fonte e espaço
+   levados à escala.
+2. **Componentes, ícones e composição sem caixas**: `interface.css` e `areas.css` reescritos;
+   pílulas e rodapé do editor fora; sanfonas juntas; Phosphor Light + 6 próprios; `icons/`.
+3. **Revisão final**: assinatura das telas de entrada, celular, foco, microcopy, documentação,
+   capturas depois e comparativo.
+
+## Os "tells" da auditoria, um a um
+
+| Achado | Antes | Depois |
+|---|---|---|
+| Marca desatualizada | D liso, logotipo fino, 3 assinaturas | Símbolo com coluna, logotipo firme, uma assinatura, em todas as telas e na página inicial |
+| Tokens em 3 camadas | `theme.css`, `interface.css`, locais | `tokens.css` único; `theme.css` sem tokens; nada redefine cor fora dele |
+| Raios | 18 valores | 2, 4, 6 (e o interruptor) |
+| Tamanhos de fonte | 38, com meios-pixels | escala de 11 passos (`--t-*`) |
+| Espaçamento | 54% fora da grade de 4 | 97% na grade (o resto é fio de 1–2px) |
+| Sombra em cartão | todo `.card` e botão primário | nenhuma; só o que flutua |
+| Desfoque | janelas, barra do celular, entrada da leitura | nenhum |
+| Luz que segue o ponteiro | sim | removida |
+| Placa marfim dos números | em quase toda página | razão aberta entre fios |
+| Tudo em cartão | todas as seções | seção = título + fio; cartão só para objeto |
+| Títulos em sans 600 | sim | voz em serifa; rótulo em caixa alta só no contexto |
+| Pílulas de atalho + 4 sanfonas | sim | removidas / "Mais nesta área" |
+| Cor de status como enfeite | âmbar em todo prazo, verde em número grande, foco bronze | âmbar só hoje/amanhã (decisão já do JS), número grande neutro, foco marfim |
+| Moldura de foco na janela | 2px marfim em volta do diálogo | só nos controles |
+| Estado vazio de template | ícone em caixa, tudo centralizado, botão primário | à esquerda, sem ícone, ação secundária |
+| Setas digitadas ‹ › | agenda e calendários | ícones |
+| Ícones | Phosphor Regular sem ajuste | Phosphor Light + 6 próprios na lógica da coluna |
+| "Num só lugar", "seu editor sem distrações" | página inicial, editor | reescritos / removidos |
+
+## Verificação
+
+- **Contraste (AA)**: texto primário 12 a 16:1; secundário 6,5 a 8,9:1; terciário 4,6 a 5,9:1 sobre
+  fundo, lateral e as superfícies de objeto e controle, nos dois temas. Botão primário 16:1. Os únicos
+  pares abaixo de 4,5 são texto terciário ou de estado sobre `--superficie-3`, combinação que o painel
+  não usa (essa superfície só leva texto primário: filtro e segmento escolhidos).
+- **Teclado**: "Pular para o conteúdo" primeiro; a ordem segue a leitura (marca, áreas, ações, conteúdo);
+  todo controle mostra o anel de 2px marfim a 3px de distância; o diálogo recebe foco sem anel e o Tab
+  circula dentro dele (comportamento de `abrirModal`, sem mudança).
+- **Responsivo**: 1440 e 390 em todas as telas; celular com alvos de 44px, barra de abas sem bolhas,
+  planilha em lista sem fios de célula, filtros em largura total.
+- **Claro e escuro**: o claro é o lado marfim do quadro (fundo marfim, primário preto), não uma
+  inversão: superfícies, linhas e estados têm valores próprios, validados à parte.
+- **Testes**: `node dashboard/test/store.test.cjs` passa (3/3). Nenhum arquivo de lógica mudou além de
+  três trocas de marcação (ícone no lugar de seta digitada em `home.js`, `calendario.js`, `pilar.js`) e
+  duas frases das boas-vindas.
+
+## Autocrítica: o que ainda não está no nível
+
+Pergunta feita em cada tela: "um designer da Apple aprovaria isso numa review?"
+
+1. **O símbolo foi redesenhado a olho a partir de uma imagem.** Está fiel na estrutura (D, capitel em
+   degrau, duas caneluras, base), mas as proporções exatas do quadro só virão do arquivo original.
+   Este é o ponto mais importante a resolver.
+2. **Cartões de conta, meta e investimento** ainda seguem o padrão "título + Editar/Excluir + valor".
+   Estão sóbrios (sem sombra, raio 6), mas não têm desenho próprio. Próximo passo: ações num menu de
+   três pontos e o valor como protagonista.
+3. **Grade do calendário do Pessoal** continua com a moldura e as células tingidas de antes; funciona,
+   mas é o elemento mais "de biblioteca" da tela.
+4. **Abas criadas pelo usuário** (`pilar.html`), **a tela de entrar** e o **editor de abas** não entraram
+   nas capturas (os dados de demonstração não têm aba própria, e a entrada só abre com o servidor
+   ligado). Herdam os mesmos componentes, mas não foram revisadas tela a tela.
+5. **Página inicial pública**: só fonte, assinatura e raio mudaram. O hero de vídeo continua centralizado
+   com a etiqueta "DELFOS" acima do título; num vídeo de rolagem isso se justifica (o D em 3D do vídeo
+   já é o D com coluna), mas a composição merece uma revisão própria.
+6. **Gráficos** (ritmo do mês, entradas × saídas) não foram redesenhados; ficam dentro de "Mais nesta
+   área" e seguem as regras antigas de cor validadas.

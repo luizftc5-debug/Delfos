@@ -129,7 +129,7 @@
   --shadow-pop: 0 0 0 1px var(--linha-forte), 0 24px 64px -24px rgba(0, 0, 0, 0.7);
 
   /* ---- Foco: fio marfim afastado, nunca halo ---- */
-  --foco: 0 0 0 1px var(--fundo), 0 0 0 2.5px var(--texto);
+  --foco: 0 0 0 2px var(--fundo), 0 0 0 4px var(--texto);
   --foco-cor: var(--texto);
 
   /* ---- Movimento: uma curva, três tempos ---- */

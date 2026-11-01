@@ -1,10 +1,11 @@
 # Delfos — agente de organização pessoal do Luiz
 
 O painel se chama **Delfos** (versão atual: **1.8**). O nome e a versão (`UI.NOME` / `UI.VERSAO`,
-em `ui.js`) aparecem no alto da barra lateral (o logotipo, com a versão ao lado), nos títulos das
-abas do navegador e no nome do arquivo de backup exportado. Desde a 1.8 o nome tem **logotipo**
-(desenho vetorizado do quadro da marca, `UI.logotipo()`) e assinatura, "Organização para o que
-importa"; ver "Delfos 1.8: a marca".
+em `ui.js`) aparecem nos títulos das abas do navegador e no nome do arquivo de backup exportado; no
+alto da barra lateral fica a marca (símbolo + logotipo + assinatura). A marca segue o quadro de
+identidade: **símbolo D com coluna**, logotipo em serifa (`UI.simbolo()`, `UI.logotipo()`) e a
+assinatura **"O essencial se revela."**; ver "Direção visual" (a seção "Delfos 1.8: a marca" ficou
+como histórico).
 
 Duas coisas **continuam** com o nome antigo, de propósito:
 
@@ -64,7 +65,8 @@ Aplicação estática multi-página em `dashboard/`, sem build. Dependências ex
 | `abas.js` | Criador/editor de abas próprias (`Abas.abrir`) com a caixa de propósito e "O que o Delfos entendeu"; tudo passa por `sanear`. Baixado só ao abrir "Nova aba" (`UI.abrirCriadorDeAbas`) |
 | `financas.js` | Cálculos derivados: saldo por conta, ciclo e fatura de cartão, balanço, investimentos, e a análise do mês (`analisarMes`, `recorrentes`, `acumuladoDiario`) |
 | `ui.js` | Componentes: layout (barra lateral, barra de abas do celular), ícones Phosphor (`UI.icone`), perfil, modais de formulário, avisos, gráficos, datas/urgência |
-| `theme.css` | Design system (tema claro/escuro) |
+| `tokens.css` | Tokens: única fonte de cor, tipo, espaço, raio, profundidade e movimento (claro/escuro) |
+| `theme.css` + `interface.css` + `areas.css` | Componentes base, camada de componentes e composição das áreas |
 | `config.js` + `google-integration.js` | Integração OAuth com Google Calendar e Drive (inclui busca/exportação de arquivos, usada pela importação em disciplina.js); as bibliotecas do Google são baixadas sob demanda (`carregarGoogle`) |
 | `data.js` | Conteúdo inicial (seed), lido só na primeira abertura |
 | `exercicios.js` | Catálogo de exercícios da aba Academia (`const EXERCICIOS`), carregado só por `pilar.html` |
@@ -356,7 +358,7 @@ antes/depois a cada gravação e apaga do IndexedDB os que sumiram do texto; exc
 O seletor de fonte tem, além das de sistema (Georgia, Arial…), um punhado de fontes do Google Fonts
 importadas só por `resumo.html`/`disciplina.html` (Merriweather, Lora, Inter, Space Mono, Caveat) —
 mais variedade para ler, escrever fórmula ou anotar à mão. É conteúdo do usuário, não design system:
-não confunda com a tipografia do painel (`dashboard/DESIGN.md`), que é Funnel Sans + Noto Serif
+não confunda com a tipografia do painel (`dashboard/DESIGN.md`), que é Jost + Noto Serif
 Display.
 
 ### As outras abas no molde do Financeiro (v1.5)
@@ -814,34 +816,46 @@ paleta preto `#0B0B0B`, carvão `#1F1F1F`, grafite `#3A3A3A`, marfim `#EDE9E1`, 
 
 ### Direção visual
 
-**"Marfim" (v1.8)**: o detalhe completo, com a marca, tokens, paleta validada e proibições, está em
-`dashboard/DESIGN.md`, a referência a consultar antes de mexer em qualquer coisa visual.
+**"Coluna" (redesenho de 1º/11/2026)**: o detalhe completo, com marca, tokens, componentes, ícones e
+proibições, está em `dashboard/DESIGN.md`, a referência a consultar antes de mexer em qualquer coisa
+visual. A auditoria que motivou a mudança está em `DESIGN_AUDIT.md` (raiz) e as capturas antes e depois
+em `design-audit/before|after/` (script `design-audit/scripts/capturas.cjs`, com dados fictícios).
 
-O princípio, em uma linha: **a leitura é o título e nada vira caixa sem motivo**; o caráter vem de
-tipografia, espaço e hierarquia, na voz e nas cores do logotipo. Cinco execuções anteriores foram
-descartadas e estão descritas no DESIGN.md (estúdio, azulejo baiano, oráculo sóbrio 1.2–1.3, a
-segunda leitura 1.4–1.6 e a consulta 1.7, sem serifa).
+O princípio, em uma linha: **o caráter vem de tipografia, espaço e fio, na voz e nas cores do quadro de
+identidade**; nada vira caixa sem ser objeto, cor só onde há informação.
 
-- **Marca**: o logotipo é desenho (`LOGOTIPO` em `ui.js`, `UI.logotipo()`), nunca "Delfos" digitado
-  numa fonte parecida. O D sozinho é `icone("delfos")` e o favicon; `apple-touch-icon.png` é o
-  logotipo em marfim sobre preto. A assinatura (caixa alta espaçada, fio curto em cima) só aparece
-  na entrada e nas boas-vindas.
-- **Tipografia**: **Noto Serif Display** (só o eixo de peso, 300 a 600) é a voz (leitura, título de
-  página sem leitura, títulos de seção e de janela, números grandes, o dia na agenda). **Funnel
-  Sans** é todo o resto. Algarismos alinhados (a voz já os tem por padrão); tabular (`.num`) só onde
-  números se alinham. Espaço entre letras quase nenhum: a serifa de exibição já vem justa.
-- **Cromo sem cor**: a paleta da marca, preto `#0b0b0b` (`--lateral`), carvão `#1f1f1f`, grafite
-  `#3a3a3a`, marfim `#ede9e1` (o texto no escuro, o fundo no claro) e cinza quente `#d6d1c7`;
-  `--fundo` escuro `#111110`. Primário e foco em marfim. Cor só identifica pilar (`--s-*`),
-  distingue entradas × saídas (`--serie-entrada` azul, `--serie-saida` bronze) e marca urgência
-  (`--st-critical`). O escuro é o padrão; o claro (marfim) é escolha explícita em
-  `[data-theme="light"]`. `theme-color` acompanha o fundo (`#111110` / `#ede9e1`).
-- **Raio por hierarquia**: janela 22, superfície 16, controle 10, miúdo 6, pílula só para escolha.
-  **Abas sublinhadas** (`.abas`) para seções irmãs, **pílulas** (`.chip`) para filtro,
-  **interruptor** (`.switch`) para ligar/desligar. Retrato em quadrado de cantos suaves.
-- **Movimento** (seção "Movimento" do `theme.css` + `UI.movimento`): uma entrada só (a leitura);
-  luz do ponteiro só no que leva a algum lugar (`a.card`, linha do índice); destaque deslizante
-  no menu, nas abas e na escolha única. Só com mouse; nada com "reduzir movimento".
+- **Tokens**: `dashboard/tokens.css` é a única fonte de cor, tipo (`--t-*`), espaço (`--e-*`, grade
+  de 4), raio (2/4/6), profundidade e movimento, e é carregado antes de `theme.css` em todas as
+  páginas. Nenhum outro CSS redefine esses valores (fora as preferências do perfil no fim de
+  `theme.css`). `interface.css` é a camada de componentes; `areas.css` compõe as áreas; `editor.css`
+  o editor de resumos.
+- **Marca** (arquivos em `marca/`): o símbolo é o **D com coluna dórica** (`SIMBOLO` em `ui.js`,
+  `UI.simbolo()`, `icone("delfos")`), desenhado a partir do quadro; o logotipo é Noto Serif Display 650
+  convertida em contorno (`LOGOTIPO`, `UI.logotipo()`). Nunca "Delfos" digitado numa fonte. A
+  assinatura é sempre **"O essencial se revela."** (Jost, caixa alta espaçada). Favicon com a variação
+  de uma canelura; `apple-touch-icon.png` é o símbolo marfim sobre preto. Se a marca mudar, refazer o
+  traçado (scripts de geração na história do commit "Marca do quadro e tokens únicos") e atualizar a
+  cópia do logotipo em `entrar.html`, `bemvindo.html` e `index.html` da raiz.
+- **Tipografia**: **Noto Serif Display** (300 a 700) é a voz: título da página, leitura, títulos de
+  seção e de janela, números grandes, o dia na agenda. **Jost** (300 a 600) é todo o resto. Rótulo de
+  grupo em Jost 11, caixa alta, +0,12em (`.rotulo`, `.stat-label`, cabeçalho de tabela); nunca acima
+  de todo título.
+- **Cromo sem cor**: paleta do quadro (preto `#0b0b0b`, carvão `#1f1f1f`, grafite `#3a3a3a`, marfim
+  `#ede9e1`, cinza quente `#d6d1c7`). Sem acento metálico. Cor só para área (`--s-*`), entrada ×
+  saída (`--serie-*`) e estado; vermelho só para atraso/negativo, âmbar só para hoje/amanhã, número
+  grande nunca verde.
+- **Componentes**: item ativo da barra = texto marfim com um fio vertical de 1,5px (a coluna);
+  botões em três níveis (primário marfim, secundário de fio, terciário com sublinhado que corre) com
+  `aria-busy` para carregando; um primário por área (vazio e contexto usam o secundário); seções
+  por título e fio, sem cartão; números do alto em razão aberta entre fios (a placa marfim saiu);
+  janelas de raio 6 sem moldura de foco no diálogo; foco de 2px marfim a 3px de distância.
+- **Estrutura**: as áreas não têm mais a fileira de pílulas de atalho; as sanfonas do pé ficam juntas
+  em `section.area-mais` ("Mais nesta área"); o editor de resumos não tem mais rodapé.
+- **Ícones**: seis próprios em traço (`PROPRIOS` em `ui.js`: templo, pessoal, financeiro, faculdade,
+  projetos, grade; grade de 24, traço 1,25, pontas retas) valem antes do Phosphor; o resto é
+  **Phosphor Light**. A chave `home` do Phosphor é um olho (pode estar em abas criadas): por isso o
+  templo se chama `templo`. Prévia em `icons/index.html` (`node design-audit/scripts/gerar-icones.cjs`).
+- **Movimento**: uma curva (`--ease`), 180/280/420 ms, sem mola; a luz que seguia o ponteiro saiu.
 - Metadados em frase ou com vírgula, nunca colados com " · " (só o título da aba do navegador).
 
 Dinheiro negativo sai com o sinal de menos (−, U+2212), nunca o hífen.

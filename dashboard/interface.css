@@ -45,11 +45,11 @@ b, strong { font-weight: var(--peso-medio); }
 /* Foco: fio marfim afastado. Contêiner com tabindex -1 (a janela) nunca
    ganha anel: o foco dele é só para leitor de tela. */
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: 1.5px solid var(--foco-cor);
+  outline: 2px solid var(--foco-cor) !important;
   outline-offset: 3px;
   border-radius: var(--r-xs);
 }
-[tabindex="-1"]:focus, [tabindex="-1"]:focus-visible { outline: none; }
+[tabindex="-1"]:focus, [tabindex="-1"]:focus-visible { outline: none !important; }
 ::selection { background: color-mix(in srgb, var(--texto) 24%, transparent); color: var(--texto); }
 
 /* ---------- Marca e navegação ---------- */
@@ -504,3 +504,29 @@ select.input, .field select { padding-right: 36px; background-position: right 12
 .empty .btn.primary:hover, .vazio .btn.primary:hover, .area-contexto .btn.primary:hover { background: var(--superficie-2); }
 /* Calendário do mês: grade de fios, sem moldura arredondada. */
 .cal-grade, .calendario-grade { border-radius: 0 !important; }
+
+/* Entrada e boas-vindas: a assinatura horizontal do quadro (símbolo,
+   logotipo, e a frase espaçada embaixo). */
+.marca-bloco { gap: var(--e-4); }
+.marca-bloco .marca-topo { flex-direction: row; align-items: center; gap: 12px; padding: 0; }
+.marca-bloco .simbolo { height: 40px; width: auto; }
+.marca-bloco .logotipo { height: 30px; width: auto; }
+.assinatura { font-family: var(--font); font-size: 10px; font-weight: var(--peso-normal); letter-spacing: var(--track-assinatura); text-transform: uppercase; color: var(--texto-3); }
+/* Nota: número na voz, sem caixa. */
+.nota-chip { background: none !important; border: 0 !important; padding: 0 !important; font-family: var(--font-voz); font-size: var(--t-md); font-weight: var(--peso-normal); color: var(--texto); font-variant-numeric: lining-nums; }
+
+/* Celular: a planilha é lista de cartões (theme.css); célula sem fio. */
+@media (max-width: 900px) {
+  table.sheet td, table.sheet tfoot td { padding: 0; border: 0; }
+  table.sheet tbody tr:hover td { background: none; }
+  table.sheet tbody tr { padding: var(--e-4) 0; }
+  table.sheet tfoot tr { border-top: 1px solid var(--linha-forte); padding-top: var(--e-3); }
+  .area-pagina .fin-filtros select.input { flex: 1 1 100%; width: 100%; }
+}
+
+/* Número com variação: o valor é texto corrido, sem vão entre R$, inteiro e centavos. */
+.stat-value.delta, .hero-value.delta { display: block; gap: 0; }
+/* Barras de comparação: 4px, ponta reta; a marca de meta é um fio. */
+.cat-barra { height: 4px; border-radius: 0; }
+.cat-barra > i { border-radius: 0; }
+.cat-barra > b { top: -4px; bottom: -4px; width: 1px; border-radius: 0; }

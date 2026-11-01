@@ -1,0 +1,59 @@
+/* A costura do dia (3.0) — a única ousadia do produto. Uma linha vertical
+   atravessa a agenda; cada compromisso é um ponto nela, na cor da área.
+   Horário à esquerda, em números tabulares; data só na primeira linha do
+   dia. A linha não mede duração nem desenha horário livre: só a ordem. */
+.costura > li { border: 0; margin: 0; }
+.costura .agenda-linha {
+  --no-y: 24px; /* centro do ponto: meia linha do título abaixo do padding */
+  display: grid;
+  grid-template-columns: 44px 52px 16px minmax(0, 1fr) auto;
+  column-gap: var(--space-4);
+  align-items: stretch;
+  min-height: 68px;
+  padding: 0;
+  margin: 0;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 0;
+  transition: background-color var(--t-rapido, 0.16s) var(--ease-saida, ease);
+}
+.agenda-linha > * { padding-block: var(--space-3); }
+.agenda-dia { display: flex; flex-direction: column; align-items: flex-start; line-height: 1; padding-left: var(--space-1); }
+.agenda-dia b {
+  font-family: var(--font-voz);
+  font-size: calc(var(--font-lg) * var(--escala-fonte, 1));
+  font-weight: var(--heading-weight);
+  letter-spacing: -.015em;
+  font-variant-numeric: tabular-nums;
+}
+.agenda-dia small { font-size: calc(var(--font-xs) * var(--escala-fonte, 1)); color: var(--texto-3); margin-top: var(--space-1); font-weight: 600; }
+.agenda-dia.hoje b, .agenda-dia.hoje small { color: var(--destaque); }
+.agenda-dia.hoje small { font-weight: 700; }
+.agenda-grupo.atrasado .agenda-dia b { color: var(--critical-text); }
+.costura li.continua .agenda-dia { visibility: hidden; }
+.agenda-hora { display: flex; flex-direction: column; align-items: flex-end; font-size: calc(var(--font-sm) * var(--escala-fonte, 1)); line-height: 1.45; font-weight: 600; color: var(--texto); font-variant-numeric: tabular-nums; }
+.agenda-hora small { font-size: calc(var(--font-xs) * var(--escala-fonte, 1)); font-weight: 400; color: var(--texto-3); }
+.agenda-no { position: relative; padding: 0; }
+.agenda-no::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; margin-left: -0.5px; background: var(--linha-forte); }
+.agenda-no::after {
+  content: ""; position: absolute; left: 50%; top: var(--no-y); width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%; background: var(--marca, var(--texto-3));
+  box-shadow: 0 0 0 3px var(--costura-fundo, var(--fundo));
+}
+.agenda-no.sem-hora::after { background: var(--costura-fundo, var(--fundo)); box-shadow: inset 0 0 0 2px var(--marca, var(--texto-3)), 0 0 0 3px var(--costura-fundo, var(--fundo)); }
+.costura > li:first-child .agenda-no::before { top: var(--no-y); }
+.costura > li:last-child .agenda-no::before { bottom: auto; height: var(--no-y); }
+.costura > li:only-child .agenda-no::before { display: none; }
+.agenda-linha .badge { align-self: start; padding-top: var(--space-3); }
+.agenda-texto { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.agenda-texto .t { font-size: calc(var(--font-sm) * var(--escala-fonte, 1)); font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+.agenda-texto .m { font-size: calc(var(--font-xs) * var(--escala-fonte, 1)); color: var(--texto-3); display: flex; align-items: center; gap: 7px; }
+.ponto-area { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+
+
+@media(max-width:760px) {
+  .costura .agenda-linha { grid-template-columns: 32px 40px 12px minmax(0,1fr); column-gap: var(--space-2); }
+  .costura .agenda-dia { grid-row: auto; }
+  .costura .agenda-dia b { font-size: var(--font-md); }
+  .costura .agenda-linha > .badge { grid-column: 4; grid-row: auto; padding-top: 0; padding-bottom: var(--space-2); }
+}

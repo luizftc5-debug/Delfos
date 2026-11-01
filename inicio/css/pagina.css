@@ -3,11 +3,11 @@
 html,
 body {
   margin: 0;
-  background: #000;
-  color: #ede9e1;
+  background: var(--fundo);
+  color: var(--texto);
 }
 body {
-  font-family: "Funnel Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: var(--font);
   -webkit-font-smoothing: antialiased;
   touch-action: manipulation;
 }
@@ -19,9 +19,9 @@ body {
   top: -4rem;
   z-index: 10;
   padding: 0.6rem 1rem;
-  border-radius: 10px;
-  background: #ede9e1;
-  color: #0b0b0b;
+  border-radius: var(--r-md);
+  background: var(--destaque);
+  color: var(--sobre-destaque);
   font-weight: 500;
   text-decoration: none;
 }
@@ -38,8 +38,8 @@ body {
 }
 .frentes h2 {
   margin: 0 0 clamp(2.5rem, 6vh, 4rem);
-  font-family: Gloock, Georgia, serif;
-  font-weight: 400;
+  font-family: var(--font);
+  font-weight: 600;
   font-size: clamp(2rem, 1.2rem + 2.6vw, 3.6rem);
   line-height: 1.08;
   letter-spacing: -0.005em;
@@ -60,14 +60,14 @@ body {
   border-left: 1px solid rgba(237, 233, 225, 0.1);
 }
 .frentes dt {
-  font-family: Gloock, Georgia, serif;
+  font-family: var(--font);
   font-size: 1.35rem;
-  font-weight: 400;
+  font-weight: 600;
   margin-bottom: 0.5rem;
 }
 .frentes dd {
   margin: 0;
-  color: #a8a399;
+  color: var(--texto-2);
   font-size: 1rem;
   line-height: 1.5;
 }
@@ -81,7 +81,8 @@ body {
   margin-top: clamp(2.5rem, 6vh, 4rem);
 }
 .link {
-  color: #ede9e1;
+  display: inline-flex; align-items: center; min-height: var(--control-size);
+  color: var(--texto);
   text-decoration: none;
   font-weight: 500;
 }
@@ -90,26 +91,26 @@ body {
   text-underline-offset: 5px;
 }
 .link:focus-visible {
-  outline: 2px solid #ede9e1;
+  outline: 2px solid var(--destaque);
   outline-offset: 3px;
   border-radius: 4px;
 }
 .botao {
   display: inline-block;
   padding: 0.95rem 1.9rem;
-  border-radius: 10px;
-  background: #ede9e1;
-  color: #0b0b0b;
+  border-radius: var(--r-md);
+  background: var(--destaque);
+  color: var(--sobre-destaque);
   font-weight: 500;
   font-size: 1rem;
   text-decoration: none;
   transition: background-color 0.2s ease;
 }
 .botao:hover {
-  background: #d6d1c7;
+  background: var(--destaque);
 }
 .botao:focus-visible {
-  outline: 2px solid #ede9e1;
+  outline: 2px solid var(--destaque);
   outline-offset: 3px;
 }
 
@@ -118,21 +119,21 @@ body {
   padding: 3rem 6vw calc(3rem + env(safe-area-inset-bottom));
   border-top: 1px solid rgba(237, 233, 225, 0.1);
   text-align: center;
-  color: #a8a399;
+  color: var(--texto-2);
 }
 .rodape__logo {
   display: block;
   width: 96px;
   margin: 0 auto 0.8rem;
-  color: #ede9e1;
+  color: var(--texto);
   line-height: 0;
 }
 
 .rodape p {
   margin: 0;
   font-size: 0.75rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 @media (max-width: 760px) {

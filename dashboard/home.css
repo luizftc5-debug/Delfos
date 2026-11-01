@@ -1,0 +1,78 @@
+/* Visão geral: uma próxima ação clara, com os planos seguintes ao alcance. */
+.pagina-index .topbar h1 { font: 700 calc(var(--font-h1, 31px) * var(--escala-fonte, 1))/1.2 var(--font); letter-spacing: -.025em; }
+.pagina-index .topbar .sub { font-size: calc(var(--font-base, 16px) * var(--escala-fonte, 1)); }
+.pagina-index .home-contexto { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr); gap: var(--space-8, 32px); margin: var(--space-2, 8px) 0 var(--space-10, 40px); }
+.home-contexto > * { min-width: 0; }
+.home-contexto-titulo { margin: 0 0 var(--space-3, 12px); font: 600 calc(var(--font-base, 16px) * var(--escala-fonte, 1))/1.5 var(--font); color: var(--texto-2); }
+.pagina-index .home-prioridade .leitura { max-width: 38ch; font: 400 calc(var(--font-base, 16px) * var(--escala-fonte, 1))/1.5 var(--font); }
+.home-proxima-link { display: grid; gap: var(--space-2, 8px); color: var(--texto); text-decoration: none; min-height: 44px; }
+.home-proxima-link > strong, .home-proxima-vazio > strong { font-size: calc(var(--font-lg, 25px) * var(--escala-fonte, 1)); font-weight: 700; line-height: 1.25; letter-spacing: -.015em; overflow-wrap: anywhere; }
+.home-proxima-contexto { color: var(--texto-2); font-size: calc(var(--font-base, 16px) * var(--escala-fonte, 1)); }
+.home-proxima-abrir { display: inline-flex; align-items: center; gap: var(--space-2, 8px); color: var(--destaque); font-size: calc(var(--font-base, 16px) * var(--escala-fonte, 1)); font-weight: 600; }
+.home-proxima-abrir .ico { width: 16px; height: 16px; }
+.home-proxima-vazio { display: grid; gap: var(--space-2, 8px); margin: 0; }
+.home-proxima-vazio > span { color: var(--texto-2); }
+.home-planejar ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2, 8px) var(--space-4, 16px); padding: 0; margin: 0; list-style: none; }
+.home-planejar a { display: grid; align-content: center; min-height: 44px; padding: var(--space-1, 4px) 0; text-decoration: none; color: var(--texto); font-size: calc(var(--font-base, 16px) * var(--escala-fonte, 1)); font-weight: 600; line-height: 1.35; }
+.home-planejar a > span { color: var(--texto-2); font-size: calc(var(--font-small, 13px) * var(--escala-fonte, 1)); font-weight: 400; margin-top: var(--space-1, 4px); }
+.home-planejar a:hover, .home-proxima-link:hover > strong { text-decoration: underline; text-underline-offset: 4px; }
+.pagina-index .painel-dia { grid-template-columns: minmax(0, 1fr) 300px; gap: var(--space-8, 32px); }
+.pagina-index :is(#sec-agenda, #sec-notas, #sec-abas, #sec-topo) { border: 0; border-radius: 0; background: none; box-shadow: none; }
+.pagina-index :is(#sec-agenda, #sec-notas, #sec-abas, #sec-topo) > .bloco-cabecalho { padding: 0 0 var(--space-5, 20px); gap: var(--space-2, 8px) var(--space-4, 16px); }
+.pagina-index :is(#sec-agenda, #sec-notas, #sec-abas, #sec-topo) > .bloco-corpo { padding: 0; }
+.pagina-index .bloco-titulo { font: 600 calc(var(--font-h2, 20px) * var(--escala-fonte, 1))/1.4 var(--font); letter-spacing: -.01em; }
+.pagina-index .bloco-resumo { margin-top: var(--space-1, 4px); font-size: calc(var(--font-small, 13px) * var(--escala-fonte, 1)); line-height: 1.5; }
+.pagina-index .agenda-filtros { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3, 12px); flex-wrap: wrap; padding: 0 0 var(--space-4, 16px); }
+.pagina-index .agenda-semana { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px 44px; gap: var(--space-1, 4px); flex: 1 1 320px; max-width: 420px; }
+.pagina-index .agenda-semana > .btn { width: 44px; padding-inline: 0; }
+.pagina-index .agenda-semana-rotulo { align-self: center; min-width: 0; white-space: normal; font: 600 calc(var(--font-base, 16px) * var(--escala-fonte, 1))/1.4 var(--font); text-align: center; }
+.pagina-index #agenda-periodo { min-height: 44px; width: auto; max-width: 100%; font-size: calc(var(--font-base, 16px) * var(--escala-fonte, 1)); }
+.pagina-index .semana-dias { gap: var(--space-1, 4px); margin: 0 0 var(--space-6, 24px); }
+.pagina-index .semana-dia { min-width: 0; min-height: 76px; padding: var(--space-2, 8px) 2px; border: 1px solid transparent; border-radius: 8px; background: none; }
+.pagina-index .semana-dia > span, .pagina-index .semana-dia > small { font-size: calc(var(--font-small, 13px) * var(--escala-fonte, 1)); }
+.pagina-index .semana-dia > b { font: 600 calc(var(--font-md, 20px) * var(--escala-fonte, 1))/1.2 var(--font); font-variant-numeric: tabular-nums; }
+.pagina-index .semana-dia.hoje { color: var(--destaque); border-color: var(--linha); }
+.pagina-index .semana-dia[aria-pressed="true"] { border-color: var(--destaque); background: var(--superficie-2); }
+.pagina-index .agenda-cab { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2, 8px); margin: var(--space-4, 16px) 0 var(--space-1, 4px); padding: 0; border: 0; font: 600 calc(var(--font-base, 16px) * var(--escala-fonte, 1))/1.5 var(--font); }
+.pagina-index .agenda-nota { font-size: calc(var(--font-small, 13px) * var(--escala-fonte, 1)); font-weight: 400; }
+.pagina-index .agenda-lista > li { border: 0; }
+
+
+
+
+.pagina-index .agenda-texto .t { font: 600 calc(var(--font-base, 16px) * var(--escala-fonte, 1))/1.5 var(--font); overflow-wrap: anywhere; }
+.pagina-index .agenda-texto .m { font-size: calc(var(--font-small, 13px) * var(--escala-fonte, 1)); line-height: 1.5; color: var(--texto-2); }
+
+.pagina-index .link-gaveta { display: inline-flex; align-items: center; min-height: 44px; font-size: calc(var(--font-base, 16px) * var(--escala-fonte, 1)); }
+.pagina-index .notas > li { padding: var(--space-4, 16px) 0; border: 0; font-size: calc(var(--font-base, 16px) * var(--escala-fonte, 1)); line-height: 1.5; }
+.pagina-index #pilares { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: var(--space-4, 16px); }
+.pagina-index #pilares .ladrilho { display: grid; grid-template-columns: 24px minmax(0, 1fr); grid-template-areas: "icone nome" "icone valor" "icone contexto"; align-content: start; gap: var(--space-2, 8px) var(--space-4, 16px); padding: var(--space-6, 24px); border-radius: 8px; background: none; box-shadow: none; transform: none; }
+.pagina-index #pilares .ladrilho::before, .pagina-index #pilares .ladrilho::after { display: none; }
+.pagina-index .ladrilho-selo { grid-area: icone; align-self: start; width: 24px; height: 24px; margin-top: 1px; }
+.pagina-index .ladrilho-nome { grid-area: nome; font: 600 calc(var(--font-md, 20px) * var(--escala-fonte, 1))/1.4 var(--font); overflow-wrap: anywhere; }
+.pagina-index .ladrilho-valor { grid-area: valor; font: 600 calc(var(--font-lg, 25px) * var(--escala-fonte, 1))/1.3 var(--font); }
+.pagina-index .ladrilho-valor > small { display: block; margin-top: var(--space-1, 4px); color: var(--texto-2); font: 400 calc(var(--font-base, 16px) * var(--escala-fonte, 1))/1.5 var(--font); }
+.pagina-index .ladrilho-sub { grid-area: contexto; font: 400 calc(var(--font-small, 13px) * var(--escala-fonte, 1))/1.5 var(--font); color: var(--texto-2); overflow-wrap: anywhere; }
+.pagina-index .trio { gap: var(--space-6, 24px); margin-bottom: var(--space-8, 32px); }
+.pagina-index .trio-item { padding: 0; background: none; border: 0; border-radius: 0; }
+.pagina-index .trio-item .stat-value { font: 600 calc(var(--font-h1, 31px) * var(--escala-fonte, 1))/1.3 var(--font); }
+.pagina-index .trio-item .stat-label, .pagina-index .trio-item .stat-sub { font-size: calc(var(--font-base, 16px) * var(--escala-fonte, 1)); line-height: 1.5; }
+.home-finance-acoes { display: flex; flex-wrap: wrap; gap: var(--space-4, 16px) var(--space-6, 24px); }
+
+@media (max-width: 1200px) {
+  .pagina-index .home-contexto { grid-template-columns: minmax(0, 1fr) minmax(240px, .8fr); gap: var(--space-6, 24px); }
+  .pagina-index .painel-dia { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .pagina-index .semana-dias { gap: var(--space-half); }
+  .pagina-index .home-contexto { grid-template-columns: minmax(0, 1fr); gap: var(--space-6, 24px); margin-bottom: var(--space-8, 32px); }
+  .pagina-index .agenda-semana { max-width: none; }
+  .pagina-index #agenda-periodo { flex: 1 1 100%; width: 100%; }
+  
+  
+  
+  .pagina-index #pilares .ladrilho { padding: var(--space-5, 20px); }
+  .pagina-index .trio { grid-template-columns: minmax(0, 1fr); }
+}
+
+.pagina-index .notas > li:only-child > .sinal:has(.ico[data-ico="check"]) { display: none; }

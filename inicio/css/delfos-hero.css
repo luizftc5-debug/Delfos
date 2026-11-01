@@ -7,9 +7,8 @@
   --dh-bg: #000;
   --dh-fg: #ede9e1; /* marfim da marca */
   --dh-muted: #a8a399; /* cinza quente; 8,1:1 sobre preto (AAA) */
-  --dh-font: "Funnel Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI",
-    Roboto, "Helvetica Neue", Arial, sans-serif;
-  --dh-voz: Gloock, Georgia, "Times New Roman", serif;
+  --dh-font: var(--font);
+  --dh-voz: var(--font);
 
   position: relative;
   height: var(--dh-height, 500vh); /* = SECTION_HEIGHT no JS; mesmo valor → zero layout shift */

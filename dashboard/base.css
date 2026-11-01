@@ -1,0 +1,134 @@
+/* Delfos — base leve compartilhada. Tokens em tokens.css.
+   Reset, botões, acesso por teclado e movimento servem também à entrada pública. */
+* { box-sizing: border-box; }
+
+/* As barras continuam nativas; a cor acompanha o tema da região rolável. */
+:where(*) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--texto-3) transparent;
+}
+:where(*)::-webkit-scrollbar { width: var(--r-xs); height: var(--r-xs); }
+:where(*)::-webkit-scrollbar-track { background: transparent; }
+:where(*)::-webkit-scrollbar-thumb { background: var(--texto-3); border-radius: var(--r-xs); }
+:where(*)::-webkit-scrollbar-thumb:hover { background: var(--texto-2); }
+html { scrollbar-color: var(--texto-3) var(--fundo); }
+html::-webkit-scrollbar-track { background: var(--fundo); }
+
+html, body { margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+/* Pesos da família são reais; não sintetizar versões artificiais. */
+html { font-synthesis-weight: none; }
+
+body {
+  font-family: var(--font);
+  background: var(--fundo);
+  color: var(--texto);
+  min-height: 100dvh;
+  font-size: calc(var(--font-sm) * var(--escala-fonte, 1));
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+a { color: inherit; }
+
+/* Toque: sem o atraso do toque duplo e sem o clarão cinza do WebKit — cada
+   controle já tem o próprio estado de pressionado. */
+a, button, input, select, textarea, label, summary { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+
+/* Âncoras (#calendario, #metas) param com folga do alto da tela. */
+section[id], h2[id], .card[id] { scroll-margin-top: 24px; }
+
+/* Opções do select nativo: cor explícita (o Windows no escuro pintava claro). */
+option { background-color: var(--superficie); color: var(--texto); }
+
+::selection { background: color-mix(in srgb, var(--texto) 22%, transparent); color: var(--texto); }
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--texto);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ------------------------------- Botões --------------------------------- */
+
+.btn {
+  min-height: var(--control-size);
+  border: 1px solid transparent;
+  background: var(--superficie-2);
+  color: var(--texto);
+  padding: 8px 15px;
+  line-height: 20px;
+  border-radius: var(--r-md);
+  font-size: calc(var(--font-sm) * var(--escala-fonte, 1));
+  font-weight: 550;
+  font-family: var(--font);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.btn .ico { width: 16px; height: 16px; margin-left: -2px; }
+.btn:hover { background: var(--superficie-3); }
+
+/* Ação principal usa o acento semântico do tema. */
+.btn.primary { background: var(--destaque); color: var(--sobre-destaque); }
+.btn.primary:hover { background: color-mix(in srgb, var(--destaque) 88%, var(--fundo)); }
+
+.btn.ghost { background: transparent; color: var(--texto-2); }
+.btn.ghost:hover { background: var(--superficie-2); color: var(--texto); }
+
+.btn.contorno { background: transparent; border-color: var(--linha-forte); }
+.btn.contorno:hover { background: var(--superficie-2); }
+
+.btn.danger { color: var(--critical-text); border-color: var(--linha-forte); background: transparent; }
+.btn.danger:hover { background: var(--st-critical-wash); border-color: var(--st-critical); }
+
+.btn.sm { min-height: var(--control-size); padding: var(--space-2) var(--space-3); line-height: var(--line-body); font-size: calc(var(--font-sm) * var(--escala-fonte, 1)); border-radius: var(--r-md); }
+.btn.icon { min-width: var(--control-size); padding: var(--space-2); }
+.btn.sm.icon { min-width: var(--control-size); padding: var(--space-2); }
+.btn.block { width: 100%; justify-content: center; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Área de interação compartilhada; os ícones continuam pequenos. */
+:where(button, select, summary, input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="color"])) {
+  min-height: var(--control-size);
+}
+:where(button, summary) { min-width: var(--control-size); }
+:where(label:has(> input[type="checkbox"]), label:has(> input[type="radio"])) { min-height: var(--control-size); align-items: center; }
+
+.sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+.hidden { display: none !important; }
+/* O atributo hidden precisa vencer o display de .btn, .card etc. — sem isto,
+   `el.hidden = true` não esconde nada que tenha display próprio. */
+[hidden] { display: none !important; }
+
+/* Respostas a ações, compartilhadas com o painel e com a entrada pública. */
+.btn {
+  transition-property: background-color, border-color, color, box-shadow, transform;
+  transition-duration: var(--t-medio);
+  transition-timing-function: var(--ease-saida);
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+  transition-duration: 90ms;
+  transition-timing-function: var(--ease-troca);
+}
+.btn .ico {
+  transition: transform var(--t-medio) var(--ease-mola), color var(--t-medio) var(--ease-saida), background-color var(--t-medio) var(--ease-saida);
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover:not(:disabled) .ico { transform: scale(1.1); }
+  .btn:hover:not(:disabled) .ico[data-ico="mais"] { transform: rotate(90deg) scale(1.06); }
+  .btn.primary:hover:not(:disabled) { box-shadow: 0 6px 18px -10px color-mix(in srgb, var(--texto) 55%, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
